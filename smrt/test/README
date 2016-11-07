@@ -1,0 +1,1 @@
+This directory contains only integration tests. Unit test are scattered in the directory along with the modules they are testing.
