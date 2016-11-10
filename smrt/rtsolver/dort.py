@@ -198,18 +198,32 @@ class DORT(object):
             # send a direct beam
 
             # incident angle at a given angle
-            # search the nearest outmu and use it. This implies a slight change of the incident intensity.
-            # TODO Ghi: implement inteprolation between two surroudning outmu
+            # use interpolation to get the based effective angle
 
             intensity_0 = np.zeros((2*len(outmu), 2*len(self.sensor.theta_inc)))  # 2 is for the two polarizations
 
             j0 = 0
             for theta in self.sensor.theta_inc:
-                i0 = np.argmin(abs(math.cos(theta) - outmu))  # could do better with an interpolation
+                mu_inc = math.cos(theta)
+                i0 = np.searchsorted(-outmu, -mu_inc)
+                if i0 == 0:
+                    for ipol in [0, 1]:
+                        intensity_0[2*i0 + ipol, j0] = 1.0 / (2 * math.pi * outweight[i0])
+                        j0 += 1
+                else:
+                    i1 = i0 - 1
+                    alpha = (outmu[i0]-mu_inc)/(outmu[i0]-outmu[i1])
+
+                    delta_0 = (1 - alpha) / (2 * math.pi * outweight[i0])
+                    delta_1 = alpha / (2 * math.pi * outweight[i1])
+
+                    for ipol in [0, 1]:
+                        intensity_0[2*i0 + ipol, j0] = delta_0
+                        intensity_0[2*i1 + ipol, j0] = delta_1
+                        j0 += 1
+
+
                 #print(i0, math.acos(outmu[i0])*180/math.pi, outweight[i0])
-                for ipol in [0, 1]:
-                    intensity_0[2*i0 + ipol, j0] = 1.0 / (2 * math.pi * outweight[i0])
-                    j0 += 1
 
             intensity_higher = 2 * extend_2pol_npol(intensity_0, 3)
 
