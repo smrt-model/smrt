@@ -1,9 +1,9 @@
 from distutils.core import setup, Command
-
+from setuptools import find_packages
 
 setup(
     name = "smrt",
-    packages = ["smrt"],
+    packages = find_packages(exclude='test'),
     version = "0.9",
     description = "Snow Microwave Radiative Transfer model",
     author = "Ghislain Picard, Melody Sandells, Henning Loewe",
