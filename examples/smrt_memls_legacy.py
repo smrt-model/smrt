@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 
 # general import for smrt
-from smrt import make_snowpack, make_model, sensor
+from smrt import make_snowpack, make_model, sensor_list
 
 # import for memls
 from smrt.utils import memls_legacy
@@ -14,7 +14,7 @@ snowpack = make_snowpack(thickness=[10], microstructure_model="exponential",
 
 # create the sensor
 theta = range(10, 80, 5)
-radiometer = sensor.passive(37e9, theta)
+radiometer = sensor_list.passive(37e9, theta)
 
 # create the EM Model
 m = make_model("iba", "dort")

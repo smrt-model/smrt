@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from smrt import make_snowpack, make_model, sensor
+from smrt import make_snowpack, make_model, sensor_list
 
 # prepare inputs
 thickness = [100]
@@ -16,7 +16,7 @@ snowpack = make_snowpack(thickness=thickness,
                          corr_length=corr_length)
 
 # create the sensor
-radiometer = sensor.amsre('37V')
+radiometer = sensor_list.amsre('37V')
 
 # create the model
 m = make_model("iba", "dort")

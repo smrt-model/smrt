@@ -3,8 +3,7 @@
 import numpy as np
 
 # local import
-from smrt import make_snowpack, make_model
-from smrt.core.sensor import amsre
+from smrt import make_snowpack, make_model, sensor_list
 
 # prepare inputs
 
@@ -32,7 +31,7 @@ snowpack = make_snowpack(thickness,
 m = make_model("dmrt_shortrange", "dort")
 
 # create the sensor
-sensor = amsre('37V')
+sensor = sensor_list.amsre('37V')
 
 # run the model
 res = m.run(sensor, snowpack)
