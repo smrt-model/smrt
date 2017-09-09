@@ -59,7 +59,7 @@ class Reflector(Substrate):
             print("active model is not yet fully implemented, need modification for the third component") # !!!
             self.stop_pol2_warning = True
 
-        if self.specular_reflection is None and self.backscatter_coefficient is None:
+        if self.specular_reflection is None and self.backscattering_coefficient is None:
             self.specular_reflection = 1
 
         if isinstance(self.specular_reflection, dict):  # we have a dictionary with polarization
