@@ -75,9 +75,7 @@ class Reflector(Substrate):
 
         if isinstance(self.backscattering_coefficient, dict):  # we have a dictionary with polarization
             diffuse_refl_coeff = np.empty(npol*len(mu1))
-            #coef = 1/np.pi if m > 0 else 1/(2*np.pi) # dirac to cosine series   
-            coef = 1.0 if m > 0 else 0.5  # dirac to cosine series   
-            #coef /= 4*np.pi * mu1  # convert backscattering coefficient to intensity
+            coef = 1.0 if m > 0 else 0.5  # dirac to cosine series
             coef /= mu1  # convert backscattering coefficient to intensity
             diffuse_refl_coeff[0::npol] += coef * self._get_refl(self.backscattering_coefficient['VV'], mu1)
             diffuse_refl_coeff[1::npol] += coef * self._get_refl(self.backscattering_coefficient['HH'], mu1)
@@ -93,8 +91,9 @@ class Reflector(Substrate):
         if self.specular_reflection is None and self.backscattering_coefficient is None:
             self.specular_reflection = 1
 
-        if npol > 2:
-            raise NotImplementedError("active model is not yet fully implemented, need modification for the third compunant")
+        if npol > 2 and not hasattr(self, "stop_pol2_warning"):
+            print("active model is not yet fully implemented, need modification for the third component") # !!!
+            self.stop_pol2_warning = True
 
         if isinstance(self.specular_reflection, dict):  # we have a dictionary with polarization
             abs_coeff = np.empty(npol*len(mu1))
