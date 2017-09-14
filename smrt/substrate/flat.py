@@ -27,7 +27,7 @@ class Flat(Substrate):
 
         :return: the reflection matrix
 """
-        eps_2 = self.permittivity_model(frequency, self.temperature)
+        eps_2 = self.permittivity(frequency)
 
         return fresnel_reflection_matrix(npol, eps_1, eps_2, mu1)
 
@@ -41,6 +41,6 @@ class Flat(Substrate):
 
         :return: the transmission matrix
 """
-        eps_2 = self.permittivity_model(frequency, self.temperature)
+        eps_2 = self.permittivity(frequency)
 
         return fresnel_transmission_matrix(npol, eps_1, eps_2, mu1)

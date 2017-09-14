@@ -22,6 +22,7 @@ import numpy as np
 import scipy.special.orthogonal
 import scipy.linalg
 import scipy.interpolate
+import scipy.sparse
 
 # local import
 from ..core.error import SMRTError
@@ -55,7 +56,7 @@ class DORT(object):
 """
         try:
             len(self.sensor.phi)
-        except:
+        except Exception:
             pass
         else:
             raise Exception("phi as an array must be implemented")
@@ -129,8 +130,12 @@ class DORT(object):
 
         #
         #   compute the cosine of the angles in all layers
+        # first compute the permittivity of the ground
 
-        n_stream, mu, weight, outmu, outweight = compute_stream(self.n_max_stream, self.permittivity)
+        permittivity_substrate = self.snowpack.substrate.permittivity(self.sensor.frequency) if self.snowpack.substrate is not None else None
+
+        n_stream, mu, weight, outmu, outweight, \
+        n_stream_substrate = compute_stream(self.n_max_stream, self.permittivity, permittivity_substrate)
 
         #
         # compute the incident intensity array depending on the sensor
@@ -160,16 +165,16 @@ class DORT(object):
                 intensity_down_m = intensity_higher
 
             # compute the upwelling intensity for mode m
-            intensity_up_m = self.dort_modem_banded(m, n_stream, mu, weight, outmu, intensity_down_m, special_return=special_return)
+            intensity_up_m = self.dort_modem_banded(m, n_stream, mu, weight, outmu, n_stream_substrate, intensity_down_m, special_return=special_return)
 
             if special_return:  # debugage
                 return intensity_up_m
 
             if compute_coherent_only:
                 # substrate the coherent contribution
-                intensity_up_m -= self.dort_modem_banded(m, n_stream, mu, weight, outmu, intensity_down_m, compute_coherent_only=True)
+                intensity_up_m -= self.dort_modem_banded(m, n_stream, mu, weight, outmu, n_stream_substrate, intensity_down_m, compute_coherent_only=True)
 
-            #if self.sensor.mode == 'A': print("res mod=", m, intensity_up_m[0:3, 0:3])
+            # if self.sensor.mode == 'A': print("res mod=", m, intensity_up_m[0:3, 0:3])
             # reconstruct the intensity
             if m == 0:
                 intensity_up = extend_2pol_npol(intensity_up_m, npol)
@@ -249,13 +254,9 @@ class DORT(object):
 
         return intensity_0, intensity_higher
 
-    def dort_modem_banded(self, m, n_stream, mu, weight, outmu, intensity_down_m, compute_coherent_only=False, special_return=False):
-
-        #special_return = "testeq"
-        #print("Warning: special_return is overwritten!!!!!!!!!!!!!!")
+    def dort_modem_banded(self, m, n_stream, mu, weight, outmu, n_stream_substrate, intensity_down_m, compute_coherent_only=False, special_return=False):
 
         n_stream0 = len(outmu)  # number of streams in the air
-        n_stream_sub = 0  # TODO Ghi: A CALCULER !!
 
         # Index convention
         # for phase, Ke, and R matrix pola must be the fast index, then stream, then +-
@@ -294,7 +295,7 @@ class DORT(object):
             nslnpol = nsl * npol  # number of streams * npol in layer l
             nsl2npol = 2 * nslnpol    # number of eigenvalues in layer l (should be 2*npol*n_stream)
             nslm1npol = (n_stream[l-1] * npol) if l > 0 else (n_stream0 * npol)  # number of streams * npol in the layer l-1 (lm1)
-            nslp1npol = (n_stream[l+1] * npol) if l < self.nlayer-1 else (n_stream_sub * npol)  # number of streams * nplo in the layer l+1 (lp1)
+            nslp1npol = (n_stream[l+1] * npol) if l < self.nlayer-1 else (n_stream_substrate * npol)  # number of streams * nplo in the layer l+1 (lp1)
 
             # solve the eigenvalue problem for layer l
             # TODO: deal with the case phase=0
@@ -496,103 +497,7 @@ def extend_2pol_npol(x, npol):
     return y
 
 
-def solve_eigenvalue_problem_disortorig(m, ke, ft_even_phase, mu, weight):
-    # """solve the homogeneous equation for a single layer and return eigne value and eigen vector
-
-    # :param m: mode
-    # :param Ke: extinction coefficient of the layer for mode m
-    # :param ft_even_phase: ft_even_phase function of the layer for mode m
-    # :param mu: cosines
-    # :param weight: weights
-
-    # :returns: alpha, E, Q
-    #"""
-    raise Exception("Error somewhere from mode=1. This may be due to an error in the Rayleigh phase function")
-    nsk = len(mu)
-
-    npol = 2 if m == 0 else 3
-
-    n = npol*nsk
-
-    # this coefficient comes from the 1/4pi normalization of the RT equation
-    coef = 0.5 if m == 0 else 0.25
-
-    # compute invmu
-    invmu = 1.0 / mu
-    invmu = np.repeat(invmu, npol)
-    #invmu = np.concatenate((invmu, -invmu))   # could be cached (per layer) because same for each mode
-    #mu = np.concatenate((mu, -mu))
-
-    if ft_even_phase is None:
-        # special case (important for the coherency)
-        beta = invmu * np.repeat(ke(mu), npol)
-        Ep = np.zeros((n, n))
-        En = np.eye(n, n)  # TODO: test with a sparse matrix if more performant
-        #raise Exception("a revoir solve_eigenvalue_problem_new")
-    else:
-        # calculate the A matrix. Eq (12)
-
-        weight = np.tile(np.repeat(weight, npol), 2)
-        Pw = ft_even_phase(m, np.concatenate((mu, -mu))) * (coef * weight[np.newaxis, :])
-        #raise Exception("change pw, third and fourth component... the - sign")
-
-        #print("Pw.shape=", Pw.shape)
-        F = Pw[0:n, 0:n]  # take the half quadran >0 >0
-        B = Pw[0:n, n:]   # take the half quadran <0 >0
-
-        #np.testing.assert_allclose(B, Pw[n:, 0:n])
-        #print("B=", B)
-        #print("B'=", Pw[n:, 0:n])
-
-        F[np.diag_indices(n)] -= np.repeat(ke(mu), npol)  # in the Tsang or Jin's equations, this operations is done on A and W, but this is more efficient to do it here on F
-
-        A = F + B
-        #A[np.diag_indices(n)] -= np.repeat(ke(mu), npol)
-        Ainvmu = invmu[:, np.newaxis] * A
-
-        W = F - B   # should be zero when the phase matrix is symmetric
-        #W[np.diag_indices(n)] -= np.repeat(ke(mu), npol)
-        Winvmu = invmu[:, np.newaxis] * W
-        #print("W=", W)
-
-        DiagProblem = np.matrix(Winvmu) * np.matrix(Ainvmu)
-
-        # diagonalise the matrix. Eq (13)
-        try:
-            beta, E = scipy.linalg.eig(DiagProblem, overwrite_a=True)
-        except scipy.linalg.LinAlgError:
-            diagonalization_failed = True
-        else:
-            diagonalization_failed = not np.allclose(beta.imag, 0)
-
-        if diagonalization_failed:
-            raise SMRTError("The diagonalization failed in DORT which very likely cause by single scattering albedo larger than 1."
-                            " It is often due to grain size too large to respect the Rayleigh/low-frequency assumption required by some ememodel (DMRT ShortRange, IBA, ...)"
-                            ". It is recommended to lower the size of the bigger grains.")
-
-        beta = np.sqrt(beta.real)
-
-        # debub only
-        # if True:
-        #     idx2 = np.argsort(beta)
-        #     idx2[0:n] = idx2[0:n][::-1]
-        #     beta = beta[idx2]
-        #     E = E[:, idx2]
-
-        AE = np.matrix(Ainvmu)*np.matrix(E/beta[np.newaxis, :])
-        Ep = (E + AE)*0.5
-        En = (E - AE)*0.5
-
-    Eu = np.hstack((Ep, En))  # upwelling
-    Ed = np.hstack((En, Ep))  # downwelling
-    #print("Eu=", Eu)
-    beta = np.concatenate((-beta, beta))
-
-    return beta, Eu, Ed
-    # !-----------------------------------------------------------------------------!
-
-
-def solve_eigenvalue_problem_picard(m, ke, ft_even_phase, mu, weight):
+def solve_eigenvalue_problem(m, ke, ft_even_phase, mu, weight):
     # """solve the homogeneous equation for a single layer and return eigne value and eigen vector
 
     # :param m: mode
@@ -677,10 +582,8 @@ def solve_eigenvalue_problem_picard(m, ke, ft_even_phase, mu, weight):
     return beta, Eu, Ed
     # !-----------------------------------------------------------------------------!
 
-solve_eigenvalue_problem = solve_eigenvalue_problem_picard
 
-
-def compute_stream(n_max_stream, permittivity):
+def compute_stream(n_max_stream, permittivity, permittivity_substrate):
     #     """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent layer and
     # use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
 
@@ -747,7 +650,17 @@ def compute_stream(n_max_stream, permittivity):
     outweight[-1] = 0.5*(outmu[-2] + outmu[-1])
     outweight[1:-1] = 0.5*(outmu[0:-2] - outmu[2:])
 
-    return n_stream, mu, abs(weight), outmu, outweight
+    # compute the number of stream in the substrate
+    if permittivity_substrate is None:
+        n_stream_substrate = n_stream[-1]  # same as last layer
+    else:
+        real_index = np.real(np.sqrt(permittivity_substrate / permittivity[-1]))
+
+        # calculate the angles (=node) in the substrate
+        relsin = real_index * np.sqrt(1 - mu_most_refringent[:]**2)
+        n_stream_substrate = np.sum (relsin < 1)   # count where real reflection occurs
+
+    return n_stream, mu, abs(weight), outmu, outweight, n_stream_substrate
 
 
 def gaussquad(n):

@@ -40,7 +40,7 @@ class SoilWegmuller(Substrate):
 
     def specular_reflection_matrix(self, frequency, eps_1, mu1, npol, compute_coherent_only=False):
 
-        eps_2 = self.permittivity_model(frequency, self.temperature)
+        eps_2 = self.permittivity(frequency)
 
         reflection_coefficients = fresnel_reflection_matrix(eps_1, eps_2, mu1, npol,return_as_diagonal=True)
 
@@ -60,7 +60,7 @@ class SoilWegmuller(Substrate):
         # this function is a bit complex because we have to change first and second component but not the third one.
         # this is an approximation, as the third component should be affected by the roughness...
 
-        eps_2 = self.permittivity_model(frequency, self.temperature)
+        eps_2 = self.permittivity(frequency)
 
         transmission_coefficients = fresnel_transmission_matrix(eps_1, eps_2, mu1, npol, return_as_diagonal=True)
 

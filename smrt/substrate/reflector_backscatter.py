@@ -43,7 +43,6 @@ def make_reflector(temperature=None, specular_reflection=None, backscattering_co
 
     """
 
-
     # create the instance
     return Reflector(temperature=temperature, specular_reflection=specular_reflection, backscattering_coefficient=backscattering_coefficient)
 

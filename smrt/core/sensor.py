@@ -15,7 +15,6 @@ import six
 from .error import SMRTError
 
 
-
 def passive(frequency, theta, polarization=None):
     """ Generic configuration for passive microwave sensor.
 

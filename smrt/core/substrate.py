@@ -26,7 +26,7 @@ It provides argument handling and calculation of the permittivity constant for s
         """
 
         self.temperature = temperature
-        self.permittivity_model = permittivity_model  # this is a function, so it becomes automatically a method of substrate
+        self.permittivity_model = permittivity_model  # this is a function, so it automatically becomes a method of substrate
 
         for arg in self.args:
             if arg in kwargs:
@@ -36,6 +36,15 @@ It provides argument handling and calculation of the permittivity constant for s
 
         for arg in self.optional_args:
             setattr(self, arg, kwargs.get(arg, self.optional_args[arg]))
+
+    def permittivity(self, frequency):
+        """compute the permittivity for the given frequency using permittivity_model. This method returns None when no permittivity model is
+        available. This must be handled by the calling code and interpreted suitably."""
+
+        if self.permittivity_model is None:
+            return None
+        else:
+            return self.permittivity_model(frequency, self.temperature)
 
 
 def get_substrate_model(substrate_model):
