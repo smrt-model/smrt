@@ -72,6 +72,8 @@ class Layer(object):
         params['frac_volume'] = frac_volume
 
         # TODO Ghi: send a warning for non valid_args
+        if thickness == 0:
+            raise SMRTError("Layer with thickness = 0 (or even <~wavelength) is not recommended, part of the code does not support it.")
 
         # make an instance of the micro-structure model
         if microstructure_model is not None:

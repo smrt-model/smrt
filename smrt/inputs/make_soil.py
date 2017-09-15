@@ -63,13 +63,18 @@ def make_soil(substrate_model, permittivity_model, temperature, moisture=None,
             permittivity_model = partial(soil_dielectric_constant_dobson, SM=moisture, S=sand, C=clay)
         else:
             raise SMRTError("The permittivity model '%s' is not recongized" % permittivity_model)
-    elif isinstance(permittivity_model, Number):  # a constant value
-        # create a function with 2 args that always return the same value
-        permittivity_model = lambda frequency, temperature, cst=permittivity_model: cst
-    elif not callable(permittivity_model):
-        raise SMRTError("The permittivity_model argument is not of the accepted types."
-                          "It must be a string with an implemented permittivity model name,"
-                          " a number or a function with two arguments.")
+    else:
+        if isinstance(permittivity_model, Number):  # a constant value
+            # create a function with 2 args that always return the same value
+            permittivity_model = lambda frequency, temperature, cst=permittivity_model: cst
+        elif not callable(permittivity_model):
+            raise SMRTError("The permittivity_model argument is not of the accepted types."
+                              "It must be a string with an implemented permittivity model name,"
+                              " a number or a function with two arguments.")
+        # check that other parameters are
+        if moisture is not None or sand is not None or clay is not None or drymatter is not None:
+            raise Warning("Setting moisture, clay, sand or drymatter when permittivity_model is a number or function is useless")
+
 
     # process the substrate_model argument
     if not isinstance(substrate_model, type):
