@@ -183,17 +183,11 @@ class DORT(object):
                 intensity_up[1::npol] += intensity_up_m[1::npol] * np.cos(m*self.sensor.phi)  # TODO Ghi: deals with an array of phi
                 intensity_up[2::npol] += intensity_up_m[2::npol] * np.sin(m*self.sensor.phi)  # TODO Ghi: deals with an array of phi
 
-            #print('ici', m,self.sensor.phi, intensity_up_m)
             # TODO: implement a convergence test if we want to avoid long computation when self.m_max is too high for the phase function.
 
         if self.atmosphere is not None:
             intensity_up = self.atmosphere.tbup(self.sensor.frequency, outmu, npol) + \
                         self.atmosphere.trans(self.sensor.frequency, outmu, npol) * intensity_up
-
-        #if self.sensor.mode == 'A':
-        #    i0 = np.argmin(abs(math.cos(self.sensor.theta_inc[6]) - outmu))
-        #    print("dB V=", np.degrees(self.sensor.theta_inc[6]), 10/np.log(10)*np.log(4*np.pi*outmu[i0]*intensity_up[3*i0+0, 3*6]))
-        #    print(intensity_up.shape)
 
         return outmu, intensity_up
 
@@ -226,9 +220,6 @@ class DORT(object):
                         intensity_0[2*i0 + ipol, j0] = delta_0
                         intensity_0[2*i1 + ipol, j0] = delta_1
                         j0 += 1
-
-
-                #print(i0, math.acos(outmu[i0])*180/math.pi, outweight[i0])
 
             intensity_higher = 2 * extend_2pol_npol(intensity_0, 3)
 
@@ -406,7 +397,6 @@ class DORT(object):
                 ###raise Exception("finish the implementation here")
                 ###Rtop_sub = self.snowpack.substrate.emission_matrix(self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], compute_coherent_only)  # sub-snow
                 Ttop_sub = self.snowpack.substrate.absorption_matrix(self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], npol, compute_coherent_only)  # sub-snow
-                #print("abs=", Ttop_sub, self.snowpack.substrate.temperature)
                 b[il_bottoml:il_bottoml+nslnpol, :] += (muleye(Ttop_sub) * self.snowpack.substrate.temperature)[:, np.newaxis]
 
         #   solve the boundary system BCx=b
@@ -482,11 +472,11 @@ def extend_2pol_npol(x, npol):
     if scipy.sparse.isspmatrix_dia(x):
         y = scipy.sparse.diags(extend_2pol_npol(x.diagonal(), npol))
     elif len(x.shape) == 1:
-        y = np.zeros(len(x)/2*npol)
+        y = np.zeros(len(x)//2*npol)
         y[0::npol] = x[0::2]
         y[1::npol] = x[1::2]
     elif len(x.shape) == 2:
-        y = np.zeros((x.shape[0]/2*npol, x.shape[1]/2*npol))
+        y = np.zeros((x.shape[0]//2*npol, x.shape[1]//2*npol))
         y[0::npol, 0::npol] = x[0::2, 0::2]
         y[0::npol, 1::npol] = x[0::2, 1::2]
         y[1::npol, 0::npol] = x[1::2, 0::2]
@@ -558,7 +548,6 @@ def solve_eigenvalue_problem(m, ke, ft_even_phase, mu, weight):
                                   " It is often due to grain size too large to respect the Rayleigh/low-frequency assumption required by some ememodel (DMRT ShortRange, IBA, ...)"
                                   ". It is recommended to lower the size of the bigger grains.")
 
-            #print(beta[beta.imag!=0])
             np.testing.assert_allclose(beta.imag, 0)
             beta = beta.real
 
@@ -599,7 +588,7 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate):
     mu_most_refringent, weight_most_refringent = gaussquad(n_max_stream)
 
     nlayer = len(permittivity)
-    mu = np.zeros((nlayer, n_max_stream))
+    mu = np.zeros((nlayer, n_max_stream), dtype=np.float64)
 
     #  calculate the nodes and weights of all the other layers
 
@@ -622,15 +611,15 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate):
     # weight(nsk,k)=0.5*(mu(nsk-1,k)+mu(nsk,k))
     # weight(2:nsk-1,k)=0.5*(mu(1:nsk-2,k)-mu(3:nsk,k))
 
-    weight = np.empty_like(mu, dtype=np.float64)
+    weight = np.empty_like(mu)
     weight[:, 0] = 1 - 0.5*(mu[:, 0] + mu[:, 1])
     for k in range(nlayer):   # TODO: parallel
-        if k != k_most_refringent:
-            nsk = n_stream[k]
-            weight[k, nsk-1] = 0.5*(mu[k, nsk-2] + mu[k, nsk-1])
-            weight[k, 1:nsk-1] = 0.5*(mu[k, 0:nsk-2] - mu[k, 2:nsk])  # TODO PERF: voir si pas mieux de faire un diff 2 ou de mettre avant et faire le calcul
-        else:
-            weight[k_most_refringent, :] = weight_most_refringent
+        #if True or k != k_most_refringent:
+        nsk = n_stream[k]
+        weight[k, nsk-1] = 0.5*(mu[k, nsk-2] + mu[k, nsk-1])
+        weight[k, 1:nsk-1] = 0.5*(mu[k, 0:nsk-2] - mu[k, 2:nsk])  # TODO PERF: voir si pas mieux de faire un diff 2 ou de mettre avant et faire le calcul
+        #else:
+        #    weight[k_most_refringent, :] = weight_most_refringent
 
     # ### calculate the angles (=node) in the air
     # real_index = np.real(np.sqrt(permittivity[0]/1.0))
