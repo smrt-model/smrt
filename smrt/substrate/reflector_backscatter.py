@@ -72,10 +72,12 @@ class Reflector(Substrate):
 
     def diffuse_reflection_matrix(self, m, frequency, eps_1, mu1, npol):
 
+        if m>0:
+            return 0
         if isinstance(self.backscattering_coefficient, dict):  # we have a dictionary with polarization
             diffuse_refl_coeff = np.empty(npol*len(mu1))
             coef = 1.0 if m > 0 else 0.5  # dirac to cosine series
-            coef /= mu1  # convert backscattering coefficient to intensity
+            coef /= mu1
             diffuse_refl_coeff[0::npol] += coef * self._get_refl(self.backscattering_coefficient['VV'], mu1)
             diffuse_refl_coeff[1::npol] += coef * self._get_refl(self.backscattering_coefficient['HH'], mu1)
         elif self.backscattering_coefficient is not None:
