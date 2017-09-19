@@ -532,26 +532,31 @@ def solve_eigenvalue_problem(m, ke, ft_even_phase, mu, weight):
             A[np.diag_indices(2*n)] += np.repeat(ke(mu), npol)
             A = invmu[:, np.newaxis] * A
 
-            #A = np.matrix(ft_even_phase(m, mu)) * scipy.sparse.diags(weight) + scipy.sparse.diags(np.repeat(ke(mu), npol))
-            #A = scipy.sparse.diags(invmu)*A
-
             # diagonalise the matrix. Eq (13)
             try:
                 beta, E = scipy.linalg.eig(A, overwrite_a=True)
             except scipy.linalg.LinAlgError:
                 diagonalization_failed = True
             else:
-                diagonalization_failed = not np.allclose(beta.imag, 0)
+                diagonalization_failed = (not np.allclose(beta.imag, 0)) or (not np.allclose(E.imag, 0))
 
             if diagonalization_failed:
                 raise SMRTError("The diagonalization failed in DORT which very likely cause by single scattering albedo larger than 1."
-                                  " It is often due to grain size too large to respect the Rayleigh/low-frequency assumption required by some ememodel (DMRT ShortRange, IBA, ...)"
-                                  ". It is recommended to lower the size of the bigger grains.")
+                                " It is often due to grain size too large (or too low stickiness parameter) to respect the Rayleigh/low-frequency assumption required by some ememodel (DMRT ShortRange, IBA, ...)"
+                                ". It is recommended to reduce the size of the bigger grains.")
 
-            np.testing.assert_allclose(beta.imag, 0)
+            #np.testing.assert_allclose(beta.imag, 0, atol=np.linalg.norm(beta)*1e-5)
+
+            mask = abs(E.imag)>np.linalg.norm(E)*1e-5
+            if np.any(mask):
+                print(np.any(mask, axis=1))
+                print(beta[np.any(mask, axis=1)])
+                print(beta)
+
+            #np.testing.assert_allclose(E.imag, 0, atol=np.linalg.norm(E)*1e-5)
+
             beta = beta.real
-
-            np.testing.assert_allclose(E.imag, 0)
+            #E = E.real
 
             # get the positive and negative beta
             # this should be improve a the mathematical level because there is no need to solve
