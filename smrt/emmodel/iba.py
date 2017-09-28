@@ -417,7 +417,8 @@ class IBA(object):
             This may not be suitable for high density material
 
         """
-        return self.k0 * self._effective_permittivity.imag / np.sqrt(self._effective_permittivity.real)
+
+        return self.k0 * self.frac_volume *  self.eps.imag * self.mean_sq_field_ratio(self.e0, self.eps)
 
     def ke(self, mu):
         """ IBA extinction coefficient matrix
