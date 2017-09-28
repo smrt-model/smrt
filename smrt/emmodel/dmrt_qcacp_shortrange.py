@@ -1,9 +1,36 @@
 # coding: utf-8
 
-""" This code is depreciated, please use dmrt_qcacp_shortrange or dmrt_qca_shortrange
-"""
+""" Compute scattering with DMRT QCACP Short range like in DMRT-ML. Short range means that it is accurate only for small
+and weakly sticky spheres (high stickiness value). It diverges (increasing scattering coefficient) if these conditions
+are not met. Numerically the size conditions can be evaluated with the ratio radius/wavelength as for Rayleigh scatterers.
+For the stickiness, it is more difficult as this depends on the size of the scatterers and the fractional volume. In any case, it is
+dangerous to use too small a stickiness value, especially if the grains are big.
 
-print("This code is depreciated, please use dmrt_qcacp_shortrange or dmrt_qca_shortrange")
+This model is only compatible with the SHS microstructure model.
+
+Examples:
+
+    from smrt import make_snowpack, make_sensor
+
+    density = [345.0]
+    temperature = [260.0]
+    thickness = [70]
+    radius = [750e-6]
+    stickiness = [0.1]
+
+    snowpack = make_snowpack(thickness, "sticky_hard_spheres",
+                        density=density, temperature=temperature, radius=radius, stickiness=stickiness)
+
+
+    # create the EM Model - Equivalent DMRTML
+    m = make_model("dmrt_shortrange", "dort")
+
+    # create the sensor
+    theta = np.arange(5.0, 80.0, 5.0)
+    radiometer = sensor.amsre()
+
+
+"""
 
 # Stdlib import
 import math
@@ -26,7 +53,7 @@ from .rayleigh import Rayleigh
 npol = 2
 
 
-class DMRT_ShortRange(Rayleigh):
+class DMRT_QCACP_ShortRange(Rayleigh):
 
     """ DMRT electromagnetic model in the short range limit (grains AND aggregates are small) as implemented in DMRTML
 

@@ -1,9 +1,36 @@
 # coding: utf-8
 
-""" This code is depreciated, please use dmrt_qcacp_shortrange or dmrt_qca_shortrange
-"""
+""" Compute scattering with DMRT QCA Short range. Short range means that it is accurate only for small
+and weakly sticky spheres (high stickiness value). It diverges (increasing scattering coefficient) if these conditions
+are not met. Numerically the size conditions can be evaluated with the ratio radius/wavelength as for Rayleigh scatterers.
+For the stickiness, it is more difficult as this depends on the size of the scatterers and the fractional volume. In any case, it is
+dangerous to use too small a stickiness value, especially if the grains are big.
 
-print("This code is depreciated, please use dmrt_qcacp_shortrange or dmrt_qca_shortrange")
+This model is only compatible with the SHS microstructure model.
+
+Examples:
+
+    from smrt import make_snowpack, make_sensor
+
+    density = [345.0]
+    temperature = [260.0]
+    thickness = [70]
+    radius = [750e-6]
+    stickiness = [0.1]
+
+    snowpack = make_snowpack(thickness, "sticky_hard_spheres",
+                        density=density, temperature=temperature, radius=radius, stickiness=stickiness)
+
+
+    # create the EM Model - Equivalent DMRTML
+    m = make_model("dmrt_shortrange", "dort")
+
+    # create the sensor
+    theta = np.arange(5.0, 80.0, 5.0)
+    radiometer = sensor.amsre()
+
+
+"""
 
 # Stdlib import
 import math
@@ -26,7 +53,7 @@ from .rayleigh import Rayleigh
 npol = 2
 
 
-class DMRT_ShortRange(Rayleigh):
+class DMRT_QCA_ShortRange(Rayleigh):
 
     """ DMRT electromagnetic model in the short range limit (grains AND aggregates are small) as implemented in DMRTML
 
@@ -55,39 +82,22 @@ class DMRT_ShortRange(Rayleigh):
         radius = layer.microstructure.radius
         t = layer.microstructure.compute_t()
 
-        # these formulations are taken from DMRT-ML Picard et al. 2013
-        #
-        # Solve the 0th-order solution: Eeff0
-        # Eeff0^2 + Eeff0 *[ (Ei-eo)/3*(1-4f)-eo] - eo (Ei-1)/3*(1-f) = 0
+        y = (es - e0) / (es + 2*e0)
 
-        b = (es - e0) * (1.0 - 4.0 * f) / 3.0 - e0
-        c = -e0 * (es - e0) * (1.0 - f) / 3.0
+        fy = f*y
 
-        discriminant = b**2 - 4 * c
+        k0 = (2 * math.pi / lmda) * cmath.sqrt(e0).real
+        Eeff = e0 + 3*fy*e0/(1-fy) * (1 + 2j/3* (k0 * radius)**3 * y * (1-f)**4 / ((1-fy)*(1+2*f-t*f*(1-f))**2) )
+        Ks =   2/(9*f) * k0 * (k0 * radius)**3 * abs(Eeff/e0 - 1)**2  * (1-f)**4 / (1+2*f-t*f*(1-f))**2  #  TODO: to further double check
 
-        # solution
-        Eeff0 = 0.5 * (-b + cmath.sqrt(discriminant))
+        beta = 2 * k0 * cmath.sqrt(Eeff).imag
 
-        if Eeff0.real < 1:
-            Eeff0 = 0.5 * (-b - cmath.sqrt(discriminant))
-
-        # Solve 1st-order solution: E
-        Eeff = e0 + (Eeff0 - e0) * (1 + 2.0j / 9.0 * (2 * math.pi * radius / lmda)**3 *
-                                    cmath.sqrt(Eeff0) * (es - e0) / (1.0 + (es - e0) / (3 * Eeff0) * (1.0 - f)) *
-                                    (1.0 - f)**4 / (1.0 + 2 * f - t * f * (1.0 - f))**2)
-
-        albedo = 2.0 / 9.0 * (2 * np.pi * radius / lmda)**3 * f / (2 * cmath.sqrt(Eeff).imag) *  \
-            abs((es - e0) / (1 + (es - e0) / (3 * Eeff0) * (1.0 - f)))**2 * \
-            (1.0 - f)**4 / (1.0 + 2 * f - t * f * (1.0 - f))**2
-        
-        if albedo >= 1:
+        if Ks >= beta:
             raise SMRTError("Grain diameter is too large for DMRT_ShortRange resulting in single scattering albedo larger than 1."
                             "It is recommended to decrease the size or used an alternative emmodel able to do Mie calculations.")
 
-        beta = 2 * math.pi / lmda * 2 * cmath.sqrt(Eeff).imag
-
         self._effective_permittivity = Eeff
-        self.ks = albedo * beta
+        self.ks = Ks
         self.ka = beta - self.ks
 
     def basic_check(self):
