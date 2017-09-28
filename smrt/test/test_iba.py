@@ -41,5 +41,5 @@ def test_iba_oneconfig():
     res = m.run(radiometer, snowpack)
 
     print(res.TbV(), res.TbH())
-    ok_(abs(res.TbV() - 247.73194248001127) < 1e-4)
-    ok_(abs(res.TbH() - 237.90435951106846) < 1e-4)
+    ok_(abs(res.TbV() - 247.92402889952112) < 1e-4)
+    ok_(abs(res.TbH() - 237.08967473175187) < 1e-4)

@@ -17,7 +17,7 @@ import scipy.fftpack
 # local import
 from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
-from .commonfunc import depolarization_factors, maxwell_garnett, polder_van_santen  # Maxwell-Garnett is default for IBA
+from .commonfunc import depolarization_factors, polder_van_santen
 
 #
 # For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
@@ -443,13 +443,13 @@ class IBA(object):
     def effective_permittivity(self):
         """ Calculation of complex effective permittivity of the medium.
 
-        The Maxwell-Garnett representation has been selected, and is taken from the
-        maxwell_garnett function in the smrt.emmodel.commonfunc module.
+        The Polder - van Staten has been selected as in MEMLS, and is taken from the
+        the smrt.emmodel.commonfunc module.
 
         :returns effective_permittivity: complex effective permittivity of the medium
 
         """
-        return maxwell_garnett(self.frac_volume, self.e0, self.eps, self.depol_xyz)
+        return polder_van_santen(self.frac_volume, self.e0, self.eps)
 
 
 class IBA_MM(IBA):

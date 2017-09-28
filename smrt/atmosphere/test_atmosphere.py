@@ -33,4 +33,4 @@ def test_simple_isotropic_atmosphere():
 
     print('TB 1: ', np.round(res1.TbV(),2), 'TB2: ', np.round(res2.TbV(),2))
 
-    ok_(abs(res2.TbV() - 206.79) < 1e-2)
+    ok_(abs(res2.TbV() -  211.7) < 1e-2)
