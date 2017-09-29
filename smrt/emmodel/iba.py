@@ -13,17 +13,28 @@ import numpy as np
 import scipy.integrate
 import scipy.fftpack
 
-
 # local import
 from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
-from .commonfunc import depolarization_factors, polder_van_santen
+from .effective_permittivity import depolarization_factors, polder_van_santen
 
 #
 # For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
 # initialisation and precomputation can be done in the prepare method that is called only once for each layer whereas
 # phase, ke and effective_permittivity can be called several times.
 #
+
+
+def derived_IBA(effective_permittivity_model=polder_van_santen):  # , absorption_calculation=None):
+    """return a new IBA model with variant from the default IBA which conformed to the Matlzer 1998.
+
+    :param effective_permittivity_model: permittivity mixing formula. Must be a function of 4 parameters (frac_volume, e0, es, depol_xyz).
+
+    :returns a new class inheriting from IBA but with patched methods
+    """
+    new_class_name = "IBA_%s" % (effective_permittivity_model.__name__)  # , absorption_calculation)
+
+    return type(new_class_name, (IBA), {'effective_permittivity_model' :effective_permittivity_model})
 
 
 class IBA(object):
@@ -56,6 +67,10 @@ class IBA(object):
 
     """
 
+    # default effective_permittivity_model is polder_van_santen in Matzler 1998 and Matzler&Wiesman 1999
+    effective_permittivity_model = polder_van_santen
+
+
     def __init__(self, sensor, layer):
 
         # Set size of phase matrix: active needs an extended phase matrix
@@ -76,10 +91,10 @@ class IBA(object):
         # Calculate depolarization factors and iba_coefficient
         self.depol_xyz = depolarization_factors()
         self._effective_permittivity = self.effective_permittivity()
-        self.iba_coeff = self.calc_iba_coeff()
+        self.iba_coeff = self.compute_iba_coeff()
 
         # Absorption coefficient for general lossy medium under assumption of low-loss medium.
-        self.ka = self.calc_ka()
+        self.ka = self.compute_ka()
 
         # Calculate scattering coefficient: integrate p11+p12 over mu
         k = 6  # number of samples. This should be adaptative depending on the size/wavelength
@@ -90,7 +105,7 @@ class IBA(object):
 
         assert(self.ks >= 0)
 
-    def calc_iba_coeff(self):
+    def compute_iba_coeff(self):
         """ Calculate angular independent IBA coefficient: used in both scattering coefficient and phase function calculations
 
             .. note::
@@ -391,7 +406,6 @@ class IBA(object):
                     self.cached_phase[m][npol * i + 2, 1::npol] = (decomposed_p32[m] * self.iba_coeff).imag * delta
                     self.cached_phase[m][npol * i + 2, 2::npol] = (decomposed_p33[m] * self.iba_coeff).real * delta
 
-
     def phase(self, mu, phi):
         """ IBA Phase function (not decomposed).
 
@@ -404,7 +418,7 @@ class IBA(object):
         """
         raise SMRTError('Phase calculation not yet implemented. Inputs need to be handled in a different way')
 
-    def calc_ka(self):
+    def compute_ka(self):
         """ IBA absorption coefficient calculated from the low-loss assumption of a general lossy medium.
 
         Calculates ka from wavenumber in free space (determined from sensor), and effective permittivity
@@ -418,7 +432,7 @@ class IBA(object):
 
         """
 
-        return self.k0 * self.frac_volume *  self.eps.imag * self.mean_sq_field_ratio(self.e0, self.eps)
+        return self.k0 * self.frac_volume *  self.eps.imag * abs(self.mean_sq_field_ratio(self.e0, self.eps))
 
     def ke(self, mu):
         """ IBA extinction coefficient matrix
@@ -443,13 +457,11 @@ class IBA(object):
     def effective_permittivity(self):
         """ Calculation of complex effective permittivity of the medium.
 
-        The Polder - van Staten has been selected as in MEMLS, and is taken from the
-        the smrt.emmodel.commonfunc module.
-
         :returns effective_permittivity: complex effective permittivity of the medium
 
         """
-        return polder_van_santen(self.frac_volume, self.e0, self.eps)
+
+        return type(self).effective_permittivity_model(self.frac_volume, self.e0, self.eps, self.depol_xyz)
 
 
 class IBA_MM(IBA):
@@ -465,11 +477,11 @@ class IBA_MM(IBA):
         effective_permittivity_imag = self.frac_volume * self.eps.imag * y2 * np.sqrt(self._effective_permittivity)
         self._effective_permittivity = self._effective_permittivity + 1j * effective_permittivity_imag
 
-        self.iba_coeff = self.calc_iba_coeff()
+        self.iba_coeff = self.compute_iba_coeff()
         ks_int, ks_err = scipy.integrate.quad(self._mm_integrand, 0, np.pi)
         self.ks = ks_int / 2.  # Matzler and Wiesmann, RSE, 1999, eqn (8)
         # General lossy medium under assumption of low-loss medium.
-        self.ka = self.calc_ka()
+        self.ka = self.compute_ka()
 
     def _mm_integrand(self, theta):
         # Calculate wavevector difference

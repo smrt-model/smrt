@@ -50,12 +50,13 @@ def depolarization_factors(length_ratio=None):
     return np.array([anisotropy_q, anisotropy_q, (1. - 2. * anisotropy_q)])
 
 
-def polder_van_santen(frac_volume, e0=None, eps=None):
-    """ Calculates effective permittivity of snow by solution of quadratic Polder Van Santen equation.
+def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None):
+    """ Calculates effective permittivity of snow by solution of quadratic Polder Van Santen equation for spherical inclusion.
 
     :param frac_volume: Fractional volume of snow
     :param e0: Permittivity of background (default is 1)
     :param eps: Permittivity of scattering material (default is 3.185 to compare with MEMLS)
+    :param depol_xyz: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into account here.
     :returns: Effective permittivity
 
     **Usage example:**
@@ -84,6 +85,10 @@ def polder_van_santen(frac_volume, e0=None, eps=None):
     c_quad = - eps * e0
 
     return (-b_quad + np.sqrt(b_quad**2 - 4. * a_quad * c_quad)) / (2. * a_quad)
+
+
+# synonym
+bruggeman = polder_van_santen
 
 
 def maxwell_garnett(frac_volume, e0, eps, depol_xyz=None):
