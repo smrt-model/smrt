@@ -34,6 +34,18 @@ import xarray as xr
 import pandas as pd
 
 
+def open_result(filename):
+    """read a result save to disk. See :py:meth:`Result.save` method."""
+    data = xr.open_dataarray(filename, autoclose=True)
+
+    #  argh... need to convert polarization in unicode!
+    for d in data.dims:
+        if d.startswith("polarization"):
+            data[d] = data[d].astype("U1")
+
+    return Result(data)
+
+
 class Result(object):
     """ Contains the results of a/many computations and provides convenience functions to access these results
 
@@ -58,7 +70,7 @@ class Result(object):
 
     def TbH(self, **kwargs):
         """Return H polarization. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
-        return _strongsqueeze(self.data.sel(polarization='H', **kwargs))
+        return _strongsqueeze(self.data.sel(polarization=b'H', **kwargs))
 
     def polarization_ratio(self, ratio="H_V", **kwargs):
         """Return polarization ratio. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
@@ -84,6 +96,10 @@ class Result(object):
         theta = np.array(self.data.theta)
         return 4*np.pi*np.cos(theta)*_strongsqueeze(self.data.sel(polarization_inc='V', polarization='H', **kwargs).sel_points(theta_inc=theta, theta=theta))
 
+
+    def save(self, filename):
+        """save a result to disk. Under the hood, this is a netCDF file produced by xarray (http://xarray.pydata.org/en/stable/io.html)."""
+        self.data.to_netcdf(filename)
     #def groupby(self, variable):
     #    """iterated over a given variable. Variable is typically frequency, theta, polarization or snowpack"""
     #
@@ -92,7 +108,7 @@ class Result(object):
     #    #    yield Result(data)
 
 
-# DON'T ERASE THIS, this is not need at this stage but could be.
+# DON'T ERASE THIS, this is not needed at this stage but could be.
 # This is ResultGroup is inspired from xarray, itself being inspired from pandas
 # There is probably a few rough corner, but it works.
 # The idea is to have the syntax: result.groupby(variabletoselect).methodinresult

@@ -53,7 +53,7 @@ import numpy as np
 from .error import SMRTError
 from .result import concat_results
 from .plugin import import_class
-
+from .sensitivity_study import SensitivityStudy
 
 
 
@@ -103,7 +103,7 @@ class Model(object):
         """ Run the model for the given sensor configuration and return the results
 
             :param sensor: sensor to use for the calculation
-            :param snowpack: snowpack to use for the calculation
+            :param snowpack: snowpack to use for the calculation. Can be a singel snowpack, a list or a SensitivityStudy object.
             :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and the values are from 1 to the number of snowpacks.
             :returns: result of the calculation(s) as a :py:class:`Results` instance
         """
@@ -125,6 +125,10 @@ class Model(object):
                 return concat_results(result_list, (dim, values))
 
         # second determine if we have several snowpack
+        if isinstance(snowpack, SensitivityStudy):
+            snowpack_dimension = (snowpack.variable, snowpack.values)
+            snowpack = snowpack.snowpacks.tolist()
+
         if isinstance(snowpack, collections.Sequence):
             if snowpack_dimension is None:
                 dimension_name, dimension_values = "Snowpack", None

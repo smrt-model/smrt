@@ -24,6 +24,7 @@ import numpy as np
 from oct2py import octave
 
 from smrt.core.result import Result, concat_results
+from smrt.core.sensitivity_study import SensitivityStudy
 
 # MEMLS model
 
@@ -70,10 +71,16 @@ def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=N
     if memls_path is not None:
         set_memls_path(memls_path)
 
+    if isinstance(snowpack, SensitivityStudy):
+            snowpack_dimension = (snowpack.variable, snowpack.values)
+            snowpack = snowpack.snowpacks.tolist()
+
     if isinstance(snowpack, collections.Sequence):
         result_list = [run(sensor, sp, scattering_choice=scattering_choice,
-                       atmosphere=atmosphere, memls_driver=memls_driver) for sp in snowpack]
-        return concat_results(result_list, ('snowpack', range(len(snowpack))))
+                           atmosphere=atmosphere, memls_driver=memls_driver) for sp in snowpack]
+        if snowpack_dimension is None:
+            snowpack_dimension = 'snowpack', range(len(snowpack))
+        return concat_results(result_list, snowpack_dimension)
 
     Tsky = atmosphere.tbdown() if atmosphere is not None else 0
     Tgnd = snowpack.substrate.temperature if snowpack.substrate is not None else 273

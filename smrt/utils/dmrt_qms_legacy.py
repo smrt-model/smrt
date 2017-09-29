@@ -24,9 +24,7 @@ import numpy as np
 from oct2py import octave, Struct
 
 from smrt.core.result import Result, concat_results
-
-
-
+from smrt.core.sensitivity_study import SensitivityStudy
 
 
 
@@ -53,20 +51,27 @@ except KeyError:
     pass
 
 
-def run(sensor, snowpack, dmrt_qms_path=None):
+def run(sensor, snowpack, dmrt_qms_path=None, snowpack_dimension=None, full_output=False):
     """call DMRT-QMS for the snowpack and sensor configuration given as argument. The :py:mod:`~smrt.microstructure_model.sticky_hard_spheres` microstructure model 
     must be used.
 
     :param snowpack: describe the snowpack.
     :param sensor: describe the sensor configuration.
+    :param full_output: determine if ks, ka and effective permittivity are return in addition to the result object
 """
 
     if dmrt_qms_path is not None:
         set_dmrt_qms_path(dmrt_qms_path)
 
+    if isinstance(snowpack, SensitivityStudy):
+            snowpack_dimension = (snowpack.variable, snowpack.values)
+            snowpack = snowpack.snowpacks.tolist()
+
     if isinstance(snowpack, collections.Sequence):
         result_list = [run(sensor, sp) for sp in snowpack]
-        return concat_results(result_list, ('snowpack', range(len(snowpack))))
+        if snowpack_dimension is None:
+            snowpack_dimension = 'snowpack', range(len(snowpack))
+        return concat_results(result_list, snowpack_dimension)
 
     Tg = snowpack.substrate.temperature if snowpack.substrate is not None else 273.0
 
@@ -101,7 +106,7 @@ def run(sensor, snowpack, dmrt_qms_path=None):
     TbV, TbH, deg0, ot, albedo, epsr_snow = octave.DMRT_QMS_passive(sensor.frequency/1e9,
                                                                     diameter, density, stickiness,
                                                                     thickness, temperature,
-                                                                    Tg, epsr_ground, rough)
+                                                                    Tg, epsr_ground, rough, nout=6)
 
     # squeeze extra dimension
     deg0 = deg0.squeeze()
@@ -112,40 +117,47 @@ def run(sensor, snowpack, dmrt_qms_path=None):
 
     coords = [('theta', sensor.theta), ('polarization', ['V', 'H'])]
 
-    return Result(np.vstack([TbV, TbH]).T, coords)
+    if full_output:
+        ke = ot / np.array([lay.thickness for lay in snowpack.layers])
+        ks = albedo * ke
+        ka = (1 - albedo) * ke
+        return Result(np.vstack([TbV, TbH]).T, coords), ks, ka, epsr_snow
+    else:
+        return Result(np.vstack([TbV, TbH]).T, coords)
 
 
 
 #
 # crash with octave
 #
-# def dmrt_qms_active(sensor, snowpack):
+def dmrt_qms_active(sensor, snowpack):
 
-#     Tg = snowpack.substrate.temperature if snowpack.substrate is not None else 273.0
+    print("Be careful, the returned results are completely wrong with my octave version.")
+    Tg = snowpack.substrate.temperature if snowpack.substrate is not None else 273.0
 
-#     ratio = 7
-#     rms = 0.10
-#     surf_model = 'NMM3D'       # pre-built NMM3D look up table
-#     epsr_ground = 5 + 0.5j
+    ratio = 7
+    rms = 0.10
+    surf_model = 'NMM3D'       # pre-built NMM3D look up table
+    epsr_ground = 5 + 0.5j
 
-#     diameter = np.float64([lay.microstructure.radius*200 for lay in snowpack.layers])
-#     density = np.float64([lay.frac_volume*0.917 for lay in snowpack.layers])
-#     thickness = np.float64([lay.thickness*100 for lay in snowpack.layers])
-#     stickiness = np.float64([min(lay.microstructure.stickiness, 1000) for lay in snowpack.layers])
-#     temperature = np.float64([lay.temperature for lay in snowpack.layers])
+    diameter = np.float64([lay.microstructure.radius*200 for lay in snowpack.layers])
+    density = np.float64([lay.frac_volume*0.917 for lay in snowpack.layers])
+    thickness = np.float64([lay.thickness*100 for lay in snowpack.layers])
+    stickiness = np.float64([min(lay.microstructure.stickiness, 1000) for lay in snowpack.layers])
+    temperature = np.float64([lay.temperature for lay in snowpack.layers])
 
 
-#     vv = []
-#     hh = []
-#     for deg0inc in np.degrees(sensor.theta_inc):
-#         res = octave.DMRT_QMS_active(sensor.frequency/1e9, deg0inc,
-#                                  thickness, density, diameter, stickiness, temperature,
-#                                  epsr_ground, rms, ratio, surf_model)
-#         print(res)
-#         vvdb, hvdb, vhdb, hhdb, ot, albedo, epsr_eff, vv_vol, hv_vol, vh_vol, hh_vol, vv_surf, hv_surf, vh_surf, hh_surf = res
-#         vv.append(vvdb)
-#         hh.append(hhdb)
+    vv = []
+    hh = []
+    for deg0inc in np.degrees(sensor.theta_inc):
+        res = octave.DMRT_QMS_active(sensor.frequency/1e9, deg0inc,
+                                 thickness, density, diameter, stickiness, temperature,
+                                 epsr_ground, rms, ratio, surf_model, nout=15)
+        print(res)
+        vvdb, hvdb, vhdb, hhdb, ot, albedo, epsr_eff, vv_vol, hv_vol, vh_vol, hh_vol, vv_surf, hv_surf, vh_surf, hh_surf = res
+        vv.append(vvdb)
+        hh.append(hhdb)
 
-#     return vv, hh
+    return vv, hh
 
 
