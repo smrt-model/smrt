@@ -70,7 +70,7 @@ class Result(object):
 
     def TbH(self, **kwargs):
         """Return H polarization. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
-        return _strongsqueeze(self.data.sel(polarization=b'H', **kwargs))
+        return _strongsqueeze(self.data.sel(polarization='H', **kwargs))
 
     def polarization_ratio(self, ratio="H_V", **kwargs):
         """Return polarization ratio. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
