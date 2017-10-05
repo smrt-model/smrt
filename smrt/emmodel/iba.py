@@ -34,7 +34,7 @@ def derived_IBA(effective_permittivity_model=polder_van_santen):  # , absorption
     """
     new_class_name = "IBA_%s" % (effective_permittivity_model.__name__)  # , absorption_calculation)
 
-    return type(new_class_name, (IBA), {'effective_permittivity_model' :effective_permittivity_model})
+    return type(new_class_name, (IBA, ), {'effective_permittivity_model' : staticmethod(effective_permittivity_model)})
 
 
 class IBA(object):
@@ -68,7 +68,7 @@ class IBA(object):
     """
 
     # default effective_permittivity_model is polder_van_santen in Matzler 1998 and Matzler&Wiesman 1999
-    effective_permittivity_model = polder_van_santen
+    effective_permittivity_model = staticmethod(polder_van_santen)
 
 
     def __init__(self, sensor, layer):
