@@ -55,7 +55,7 @@ class Reflector(Substrate):
     def specular_reflection_matrix(self, frequency, eps_1, mu1, npol, compute_coherent_only):
 
         if npol > 2 and not hasattr(self, "stop_pol2_warning"):
-            print("active model is not yet fully implemented, need modification for the third component") # !!!
+            print("active model is not yet fully implemented, need modification for the third component")  # !!!
             self.stop_pol2_warning = True
 
         if self.specular_reflection is None and self.backscattering_coefficient is None:
