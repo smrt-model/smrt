@@ -547,11 +547,12 @@ def solve_eigenvalue_problem(m, ke, ft_even_phase, mu, weight):
 
             #np.testing.assert_allclose(beta.imag, 0, atol=np.linalg.norm(beta)*1e-5)
 
-            mask = abs(E.imag)>np.linalg.norm(E)*1e-5
-            if np.any(mask):
-                print(np.any(mask, axis=1))
-                print(beta[np.any(mask, axis=1)])
-                print(beta)
+            if np.iscomplexobj(E):
+                mask = abs(E.imag)>np.linalg.norm(E)*1e-5
+                if np.any(mask):
+                    print(np.any(mask, axis=1))
+                    print(beta[np.any(mask, axis=1)])
+                    print(beta)
 
             #np.testing.assert_allclose(E.imag, 0, atol=np.linalg.norm(E)*1e-5)
 
@@ -609,7 +610,7 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate):
     # calculate the number of stream per layer
     n_stream = np.sum(real_reflection, axis=1)
 
-    assert all(n_stream > 2)
+    assert(all(n_stream > 2))
 
     # calculate the weight ("a" in Y-Q Jin)
     # weight(1,k)=1-0.5*(mu(1,k)+mu(2,k))
