@@ -23,9 +23,9 @@ def import_class(modulename, classname=None, root=None):
     # import the module
     try:
         module = importlib.import_module(modulename)
-    except ImportError:
+    except ImportError as e:
         # TODO: try to import all the modules. Do we want this ??
-        raise SMRTError("unable to find the module '%s' to import the class '%s' " % (modulename, classname))
+        raise SMRTError("Unable to find the module '%s' to import the class '%s'. The error is \"%s\""" % (modulename, classname, str(e)))
 
     if classname is None:  # search for the first class defined in the module
         for name, obj in inspect.getmembers(module):
@@ -34,7 +34,7 @@ def import_class(modulename, classname=None, root=None):
                 break
 
     if classname is None:
-        raise SMRTError("unable to find a class in the module '%s'" % modulename)
+        raise SMRTError("Unable to find a class in the module '%s'" % modulename)
 
     # get the class
     return getattr(module, classname)
