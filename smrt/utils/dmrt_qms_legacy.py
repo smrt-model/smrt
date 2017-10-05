@@ -99,11 +99,11 @@ def run(sensor, snowpack, dmrt_qms_path=None, snowpack_dimension=None, full_outp
 
     diameter = np.float64([lay.microstructure.radius*200 for lay in snowpack.layers])
     density = np.float64([lay.frac_volume*0.917 for lay in snowpack.layers])
-    thickness = np.float64([lay.thickness*100 for lay in snowpack.layers])
-    stickiness = np.float64([min(lay.microstructure.stickiness, 1000) for lay in snowpack.layers])
+    thickness = np.float64([lay.thickness*100.0 for lay in snowpack.layers])
+    stickiness = np.float64([min(lay.microstructure.stickiness, 1000.0) for lay in snowpack.layers])
     temperature = np.float64([lay.temperature for lay in snowpack.layers])
 
-    TbV, TbH, deg0, ot, albedo, epsr_snow = octave.DMRT_QMS_passive(sensor.frequency/1e9,
+    TbV, TbH, deg0, ot, albedo, epsr_snow = octave.DMRT_QMS_passive(sensor.frequency*1e-9,
                                                                     diameter, density, stickiness,
                                                                     thickness, temperature,
                                                                     Tg, epsr_ground, rough, nout=6)
@@ -135,10 +135,10 @@ def dmrt_qms_active(sensor, snowpack):
     print("Be careful, the returned results are completely wrong with my octave version.")
     Tg = snowpack.substrate.temperature if snowpack.substrate is not None else 273.0
 
-    ratio = 7
+    ratio = 7.0
     rms = 0.10
     surf_model = 'NMM3D'       # pre-built NMM3D look up table
-    epsr_ground = 5 + 0.5j
+    epsr_ground = 5.0 + 0.5j
 
     diameter = np.float64([lay.microstructure.radius*200 for lay in snowpack.layers])
     density = np.float64([lay.frac_volume*0.917 for lay in snowpack.layers])
@@ -150,7 +150,7 @@ def dmrt_qms_active(sensor, snowpack):
     vv = []
     hh = []
     for deg0inc in np.degrees(sensor.theta_inc):
-        res = octave.DMRT_QMS_active(sensor.frequency/1e9, deg0inc,
+        res = octave.DMRT_QMS_active(sensor.frequency*1e-9, float(deg0inc),
                                  thickness, density, diameter, stickiness, temperature,
                                  epsr_ground, rms, ratio, surf_model, nout=15)
         print(res)
