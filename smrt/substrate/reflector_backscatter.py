@@ -70,7 +70,7 @@ class Reflector(Substrate):
 
         return scipy.sparse.diags(spec_refl_coeff, 0)
 
-    def diffuse_reflection_matrix(self, m, frequency, eps_1, mu1, npol):
+    def ft_even_diffuse_reflection_matrix(self, m, frequency, eps_1, mu1, npol):
 
         if m>0:
             return 0

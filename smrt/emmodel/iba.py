@@ -242,10 +242,10 @@ class IBA(object):
 
         cached_mu = getattr(self, "cached_mu", None)
         if cached_mu is None or not np.array_equal(cached_mu, mu) or len(self.cached_phase) < m:
-            self.precompute_ft_phase(mu, max(m, self.m_max), npol)
+            self.precompute_ft_even_phase(mu, max(m, self.m_max), npol)
         return self.cached_phase[m]
 
-    def precompute_ft_phase(self, mu, m_max, npol):
+    def precompute_ft_even_phase(self, mu, m_max, npol):
         """ Calculation of the Fourier decomposed IBA phase function.
 
         This method calculates the Improved Born Approximation phase matrix for all
