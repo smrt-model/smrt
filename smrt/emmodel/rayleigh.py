@@ -321,6 +321,36 @@ class Rayleigh(object):
     # we use this one
     ft_even_phase = ft_even_phase_baseonUlaby
 
+
+    def phase(self, mu_s, mu_i, phi, npol=2):
+        # Tsang theory and application p271 Eq 7.2.16
+
+        mu_s = np.atleast_1d(mu_s)
+        mu_i = np.atleast_1d(mu_i)
+
+        sinphi = np.sin(phi)
+        cosphi = np.cos(phi)
+
+        fvv = np.outer(mu_s, mu_i) * cosphi + np.outer(np.sqrt(1 - mu_s**2), np.sqrt(1 - mu_i**2))
+        fhv = -mu_i[np.newaxis, :] * sinphi
+        fhh = cosphi
+        fvh = mu_s[:, np.newaxis] * sinphi
+
+        P = np.empty((len(mu_s) * npol, len(mu_i) * npol))
+        P[0::npol, 0::npol] = fvv * fvv
+        P[0::npol, 1::npol] = fvh * fvh
+        P[1::npol, 0::npol] = fhv * fhv
+        P[1::npol, 1::npol] = fhh * fhh
+
+        if npol == 3:
+            P[0::npol, 2::npol] = fvh * fvv
+            P[1::npol, 2::npol] = fhv * fhh
+            P[2::npol, 0::npol] = 2 * fvv * fhv
+            P[2::npol, 1::npol] = 2 * fvh * fhh
+            P[2::npol, 2::npol] = fvv * fhh + fvh * fhv
+
+        return 1.5 * self.ks * P
+
     def ke(self, mu):
         """return the extinction coefficient"""
         return np.full(len(mu), self.ks + self.ka)
