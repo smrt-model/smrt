@@ -280,12 +280,6 @@ class IBA(object):
         nsamples = 2**(m_max + 2) #* (m_max + 1)  # 2**4  # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok for passive case.
         dphi_interval = 2. * np.pi / nsamples  # sampling interval. Period is 2pi
         dphi = np.arange(0, 2. * np.pi, dphi_interval)  # evenly spaced from 0 to period (but not including period)
-        phi_diff = dphi[:, np.newaxis]  # This allows broadcasting
-
-        # Precompute arrays
-        cos_ti = mu
-        sin_ti = np.sqrt(1. - mu**2)
-        cos_pd = np.cos(phi_diff)
 
         # Determine size of mode-dependent array
         # 2 x 2 phase matrix for mode m=0, otherwise 3 x 3
@@ -293,118 +287,107 @@ class IBA(object):
         self.cached_phase = [np.empty((pm_size[m] * len(mu), pm_size[m] * len(mu))) for m in range(m_max + 1)]
         self.cached_mu = mu
 
-        # Precompute sin/cos theta
-        cos_t = np.array(mu)
-        sin_t = np.sqrt(1. - cos_t**2)
-        # Scattering angle
+        # cos and sin of scattering and incident angles in the main frame
+        cos_ti = np.array(mu)[np.newaxis, np.newaxis, :]
+        sin_ti = np.sqrt(1. - cos_ti**2)
 
-        cosT_3d = cos_t[np.newaxis, :, np.newaxis] * cos_ti[np.newaxis, np.newaxis, :] + sin_t[np.newaxis, :, np.newaxis] * sin_ti[np.newaxis, np.newaxis, :] * cos_pd[:, :, np.newaxis]
-        cosT_3d = np.clip(cosT_3d, -1.0, 1.0)  # Prevents occasional numerical error
+        cos_t = np.array(mu)[np.newaxis, :, np.newaxis]
+        sin_t = np.sqrt(1. - cos_t**2)
+
+        cos_pd = np.cos(dphi)[:, np.newaxis, np.newaxis]
+
+        # Scattering angle in the 1-2 frame
+        cosT = cos_t * cos_ti + sin_t * sin_ti * cos_pd
+        cosT = np.clip(cosT, -1.0, 1.0)  # Prevents occasional numerical error
+        cosT2 = cosT**2  # cos^2 (Theta)
+        sinT = np.sqrt(1. - cosT2)
+
+        # Create arrays of rotation angles: without the scattering angle denominator
+        cos_i1 = cos_t * sin_ti - cos_ti * sin_t * cos_pd
+        cos_i2 = cos_ti * sin_t - cos_t * sin_ti * cos_pd
+
+        # Apply non-zero scattering denominator
+        nonnullsinT = abs(sinT > 1e-6)
+        cos_i1[nonnullsinT] /= sinT[nonnullsinT]
+        cos_i2[nonnullsinT] /= sinT[nonnullsinT]
+
+        # Special condition if theta and theta_i = 0 to preserve azimuth dependency
+        dege_dphi = np.broadcast_to( (abs(sin_t) < 1e-6) & (abs(sin_ti) < 1e-6), cos_i1.shape)
+        cos_i1[dege_dphi] = 1.
+        cos_i2[dege_dphi] = np.broadcast_to(cos_pd, cos_i2.shape)[dege_dphi]
+
+        # Calculate rotation angles alpha, alpha_i
+        # Convention follows Matzler 2006, Thermal Microwave Radiation, p111, eqn 3.20
+        cosa = -np.clip(cos_i2, -1.0, 1.0)  # cos (pi - i2)
+        cosai = np.clip(cos_i1, -1.0, 1.0)  # cos (-i1)
+
+        # Calculate arrays of rotated phase matrix elements
+        # Shorthand to make equations shorter & marginally faster to compute
+        cosa2 = cosa**2  # cos^2 (alpha)
+        cosai2 = cosai**2  # cos^2 (alpha_i)
+        sina2 = 1 - cosa2  # sin^2 (alpha)
+        sinai2 = 1 - cosai2  # sin^2 (alpha_i)
+        sin2a = - 2 * cosa * np.sqrt(sina2)  # sin(2 alpha)
+        sin2ai = 2 * cosai * np.sqrt(sinai2)  # sin(2 alpha_i)
+        cos2a = 2 * cosa2 - 1  # cos(2 alpha): needed for active only
+        cos2ai = 2 * cosai2 - 1  # cos(2 alpha_i): needed for active only
+
+        # For pi < phi_diff <  2 * pi, it is necessary to change the sign of i2 and i1
+        # (see Matzler 2006 pg 113.)
+        # This will only affect the sin2a and sin2ai calculations: all others are cos and/or squared
+        change_sign = dphi >= np.pi
+        sin2a[change_sign, :, :] = -sin2a[change_sign, :, :]
+        sin2ai[change_sign, :, :] = -sin2ai[change_sign, :, :]
+
 
         # IBA phase function = rayleigh phase function * angular part of microstructure term
         # Calculate wavevector difference
-        k_diff = 2. * self.k0 * np.sqrt(self._effective_permittivity) * np.sqrt((1. - cosT_3d) / 2.)
+        k_diff = 2. * self.k0 * np.sqrt(self._effective_permittivity) * np.sqrt((1. - cosT) / 2.)
         # Calculate microstructure term
         if hasattr(self.microstructure, 'ft_autocorrelation_function'):
             ft_corr_fn = self.microstructure.ft_autocorrelation_function(k_diff)
-            #.reshape(len(dphi), k_diff.shape[1]*k_diff.shape[2]))
-            #print("ft_corr_fn=", ft_corr_fn.shape)
-            #ft_corr_fn = ft_corr_fn.reshape(k_diff.shape)  # reshape
         else:
             raise SMRTError("Fourier Transform of this microstructure model has not been defined, or there is a problem with its calculation")
 
-        for i, cos_t in enumerate(mu):  # Loop over the same incoming streams as outgoing. Theta will be rows, theta_i are columns
 
-            # Precompute sin/cos theta
-            sin_t = np.sqrt(1. - cos_t**2)
+        second_term = 0.5 * sin2a * cosT * sin2ai
+        p = ft_corr_fn * np.array([ (cosa2 * cosT2 * cosai2 + sina2 * sinai2 - second_term),  #p11
+                                    (cosa2 * cosT2 * sinai2 + sina2 * cosai2 + second_term),  #p12
+                                    (sina2 * cosT2 * cosai2 + cosa2 * sinai2 + second_term),  #p21
+                                    (sina2 * cosT2 * sinai2 + cosa2 * cosai2 - second_term)]) #p22
 
-            cosT = cosT_3d[:, i, :]
-            cosT2 = cosT**2  # cos^2 (Theta)
-            sinT = np.sqrt(1. - cosT2)
+        # Carry out fast fourier transform to give fourier decomposition
+        decomposed_p = np.fft.fft(p, axis=1) * (self.iba_coeff / dphi.size )
 
-            # Create arrays of rotation angles: without the scattering angle denominator
-            cos_i1 = cos_t * sin_ti - cos_ti * sin_t * cos_pd
-            cos_i2 = cos_ti * sin_t - cos_t * sin_ti * cos_pd
+        # mode = 0 component requires 2x2 phase matrix and delta = 1
+        self.cached_phase[0][0::2, 0::2] = decomposed_p[0, 0].real
+        self.cached_phase[0][0::2, 1::2] = decomposed_p[1, 0].real
+        self.cached_phase[0][1::2, 0::2] = decomposed_p[2, 0].real
+        self.cached_phase[0][1::2, 1::2] = decomposed_p[3, 0].real
 
-            # Apply non-zero scattering denominator
-            nullsinT = sinT < 1e-6
-            cos_i1[~nullsinT] /= sinT[~nullsinT]
-            cos_i2[~nullsinT] /= sinT[~nullsinT]
+        # Calculate extended matrix elements for active case
+        if npol == 3:
+            pp = ft_corr_fn * np.array([ 0.5 * ( cosa2 * cosT2 * sin2ai - sina2 * sin2ai + sin2a * cosT * cos2ai), # p13
+                                         0.5 * ( sina2 * cosT2 * sin2ai - cosa2 * sin2ai - sin2a * cosT * cos2ai), # p23
+                                               (-sin2a * cosT2 * cosai2 + sin2a * sinai2 - cos2a * cosT * sin2ai),      # p31
+                                               (-sin2a * cosT2 * sinai2 + sin2a * cosai2 + cos2a * cosT * sin2ai),      # p32
+                                         (-0.5 * sin2a * cosT2 * sin2ai - 0.5 * sin2a * sin2ai + cos2a * cosT * cos2ai)]) # p33
 
-            # Special condition if theta and theta_i = 0 to preserve azimuth dependency
-            if abs(cos_t) == 1.:
-                lost_dphi_info = np.broadcast_to(abs(sin_ti) < 1e-6, (len(cos_pd), len(mu)))
-                cos_i1[lost_dphi_info] = 1.
-                cos_i2[lost_dphi_info] = np.broadcast_to(cos_pd, (len(cos_pd), len(mu)))[lost_dphi_info]
+            decomposed_pp = np.fft.fft(pp, axis=1) * (self.iba_coeff / dphi.size)
 
-            # Prevent rounding errors causing abs(cosine) to exceed 1
-            cos_i1 = np.clip(cos_i1, -1.0, 1.0)
-            cos_i2 = np.clip(cos_i2, -1.0, 1.0)
-
-            # Calculate rotation angles alpha, alpha_i
-            # Convention follows Matzler 2006, Thermal Microwave Radiation, p111, eqn 3.20
-            cosa = -cos_i2  # cos (pi - i2)
-            cosai = cos_i1  # cos (-i1)
-
-            # Calculate arrays of rotated phase matrix elements
-            # Shorthand to make equations shorter & marginally faster to compute
-            cosa2 = cosa**2  # cos^2 (alpha)
-            cosai2 = cosai**2  # cos^2 (alpha_i)
-            sina2 = 1 - cosa2  # sin^2 (alpha)
-            sinai2 = 1 - cosai2  # sin^2 (alpha_i)
-            sin2a = - 2 * cosa * np.sqrt(sina2)  # sin(2 alpha)
-            sin2ai = 2 * cosai * np.sqrt(sinai2)  # sin(2 alpha_i)
-            cos2a = 2 * cosa2 - 1  # cos(2 alpha): needed for active only
-            cos2ai = 2 * cosai2 - 1  # cos(2 alpha_i): needed for active only
-
-            # For pi < phi_diff <  2 * pi, it is necessary to change the sign of i2 and i1
-            # (see Matzler 2006 pg 113.)
-            # This will only affect the sin2a and sin2ai calculations: all others are cos and/or squared
-            change_sign = np.broadcast_to(phi_diff >= np.pi, (len(phi_diff), len(mu)))
-            sin2a[change_sign] *= -1
-            sin2ai[change_sign] *= -1
-
-            p11 = ft_corr_fn[:, i, :] * (cosa2 * cosai2 * cosT2 + sina2 * sinai2 - 0.5 * sin2a * cosT * sin2ai)
-            p12 = ft_corr_fn[:, i, :] * (cosa2 * sinai2 * cosT2 + sina2 * cosai2 + 0.5 * sin2a * cosT * sin2ai)
-            p21 = ft_corr_fn[:, i, :] * (sina2 * cosai2 * cosT2 + cosa2 * sinai2 + 0.5 * sin2a * cosT * sin2ai)
-            p22 = ft_corr_fn[:, i, :] * (sina2 * sinai2 * cosT2 + cosa2 * cosai2 - 0.5 * sin2a * cosT * sin2ai)
-            # Carry out fast fourier transform to give fourier decomposition
-            decomposed_p11 = np.fft.fft(p11, axis=0) / dphi.size
-            decomposed_p12 = np.fft.fft(p12, axis=0) / dphi.size
-            decomposed_p21 = np.fft.fft(p21, axis=0) / dphi.size
-            decomposed_p22 = np.fft.fft(p22, axis=0) / dphi.size
-            # mode = 0 component requires 2x2 phase matrix and delta = 1
-            self.cached_phase[0][2 * i, 0::2] = (decomposed_p11[0] * self.iba_coeff).real
-            self.cached_phase[0][2 * i, 1::2] = (decomposed_p12[0] * self.iba_coeff).real
-            self.cached_phase[0][2 * i + 1, 0::2] = (decomposed_p21[0] * self.iba_coeff).real
-            self.cached_phase[0][2 * i + 1, 1::2] = (decomposed_p22[0] * self.iba_coeff).real
-
-            # Calculate extended matrix elements for active case
-            if npol == 3:
-                p13 = ft_corr_fn[:, i, :] * 0.5 * (cosa2 * sin2ai * cosT2 - sina2 * sin2ai + sin2a * cosT * cos2ai)
-                p23 = ft_corr_fn[:, i, :] * 0.5 * (sina2 * cosT2 * sin2ai - cosa2 * sin2ai - sin2a * cosT * cos2ai)
-                p31 = ft_corr_fn[:, i, :] * (-sin2a * cosT2 * cosai2 + sin2a * sinai2 - cos2a * cosT * sin2ai)
-                p32 = ft_corr_fn[:, i, :] * (-sin2a * cosT2 * sinai2 + sin2a * cosai2 + cos2a * cosT * sin2ai)
-                p33 = ft_corr_fn[:, i, :] * (-0.5 * sin2a * cosT2 * sin2ai - 0.5 * sin2a * sin2ai + cos2a * cosT * cos2ai)
-                decomposed_p13 = np.fft.fft(p13, axis=0) / dphi.size
-                decomposed_p23 = np.fft.fft(p23, axis=0) / dphi.size
-                decomposed_p31 = np.fft.fft(p31, axis=0) / dphi.size
-                decomposed_p32 = np.fft.fft(p32, axis=0) / dphi.size
-                decomposed_p33 = np.fft.fft(p33, axis=0) / dphi.size
-
-                for m in range(1, m_max + 1):
-                    delta = 2  # Delta is 1 for m=0 mode
-                    self.cached_phase[m][npol * i, 0::npol] = (decomposed_p11[m] * self.iba_coeff).real * delta
-                    self.cached_phase[m][npol * i, 1::npol] = (decomposed_p12[m] * self.iba_coeff).real * delta
-                    self.cached_phase[m][npol * i + 1, 0::npol] = (decomposed_p21[m] * self.iba_coeff).real * delta
-                    self.cached_phase[m][npol * i + 1, 1::npol] = (decomposed_p22[m] * self.iba_coeff).real * delta
-                    # For the even matrix:
-                    # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
-                    self.cached_phase[m][npol * i, 2::npol] = - (decomposed_p13[m] * self.iba_coeff).imag * delta
-                    self.cached_phase[m][npol * i + 1, 2::npol] = - (decomposed_p23[m] * self.iba_coeff).imag * delta
-                    self.cached_phase[m][npol * i + 2, 0::npol] = (decomposed_p31[m] * self.iba_coeff).imag * delta
-                    self.cached_phase[m][npol * i + 2, 1::npol] = (decomposed_p32[m] * self.iba_coeff).imag * delta
-                    self.cached_phase[m][npol * i + 2, 2::npol] = (decomposed_p33[m] * self.iba_coeff).real * delta
+            for m in range(1, m_max + 1):
+                delta = 2  # Delta is 1 for m=0 mode
+                self.cached_phase[m][0::npol, 0::npol] = decomposed_p[0, m].real * delta
+                self.cached_phase[m][0::npol, 1::npol] = decomposed_p[1, m].real * delta
+                self.cached_phase[m][1::npol, 0::npol] = decomposed_p[2, m].real * delta
+                self.cached_phase[m][1::npol, 1::npol] = decomposed_p[3, m].real * delta
+                # For the even matrix:
+                # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
+                self.cached_phase[m][0::npol, 2::npol] = - decomposed_pp[0, m].imag * delta
+                self.cached_phase[m][1::npol, 2::npol] = - decomposed_pp[1, m].imag * delta
+                self.cached_phase[m][2::npol, 0::npol] = decomposed_pp[2, m].imag * delta
+                self.cached_phase[m][2::npol, 1::npol] = decomposed_pp[3, m].imag * delta
+                self.cached_phase[m][2::npol, 2::npol] = decomposed_pp[4, m].real * delta
 
     def phase(self, mu, phi):
         """ IBA Phase function (not decomposed).
