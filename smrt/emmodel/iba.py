@@ -444,7 +444,10 @@ class IBA(object):
 
         """
 
-        return type(self).effective_permittivity_model(self.frac_volume, self.e0, self.eps, self.depol_xyz)
+        eps = type(self).effective_permittivity_model(self.frac_volume, self.e0, self.eps, self.depol_xyz)
+        if eps.imag < 0:
+            raise SMRTError("the imaginary part of the permittivity must be positive, by convention, in SMRT")
+        return eps
 
 
 class IBA_MM(IBA):
