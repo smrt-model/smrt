@@ -277,7 +277,7 @@ class IBA(object):
         if any(u == 1 for u in mu) and npol > 2:
             raise SMRTError("Phase matrix signs for sine elements of mode m = 2 incorrect")
 
-        nsamples = 2**(m_max + 2) #* (m_max + 1)  # 2**4  # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok for passive case.
+        nsamples = 2**(m_max + 3) #* (m_max + 1)  # 2**4  # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
         dphi_interval = 2. * np.pi / nsamples  # sampling interval. Period is 2pi
         dphi = np.arange(0, 2. * np.pi, dphi_interval)  # evenly spaced from 0 to period (but not including period)
 
