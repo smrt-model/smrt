@@ -83,10 +83,7 @@ class Model(object):
         """create a new model. It is not recommanded to instantiate Model class directly. Instead use the :py:meth:`make_model` function.
         """
 
-        if isinstance(emmodel, six.string_types):
-            self.emmodel = import_class(emmodel, root='smrt.emmodel')
-        else:
-            self.emmodel = emmodel  # can be a single value or an array with the same size as snowpack layers array
+        self.emmodel = emmodel  # can be a single value (class or string) or an array with the same size as snowpack layers array
 
         if isinstance(rtsolver, six.string_types):
             self.rtsolver = import_class(rtsolver, root='smrt.rtsolver')
@@ -146,22 +143,29 @@ class Model(object):
 
         # create a list of emmodel instances (ready to run)
         emmodel_instances = list()
-        if isinstance(self.emmodel, collections.Sequence):  # got a list of emmodel. TODO: adapt to iterator.
-            # check we have the same number as layer in the snowpack
-            assert(len(self.emmodel) == snowpack.nlayer)
 
-            # check these are different instances or instantiate them
-            for i, emmodel, lay in enumerate(zip(self.emmodel, snowpack.layers)):
-                assert inspect.isclass(emmodel)
+        def instantiate_emmodel(emmodel, sensor, layer, emmodel_kwargs):
+            # instantiate
+            if isinstance(emmodel, six.string_types):
+                emmodel = import_class(emmodel, root='smrt.emmodel')
+            assert inspect.isclass(emmodel)
+            return emmodel(sensor, layer, **emmodel_kwargs)  # create a emmodele
+
+        if isinstance(self.emmodel, collections.Sequence) and not isinstance(self.emmodel, six.string_types):
+            # check we have the same number as layer in the snowpack
+            assert (len(self.emmodel) == snowpack.nlayer)
+
+            for i, (emmodel, layer) in enumerate(zip(self.emmodel, snowpack.layers)):
                 if isinstance(self.emmodel_kwargs, collections.Sequence):
                     emmodel_kwargs = self.emmodel_kwargs[i]
                 else:
                     emmodel_kwargs = self.emmodel_kwargs
-                # instantiate
-                emmodel_instances.append(emmodel(sensor, snowpack.layers, **emmodel_kwargs))  # create a emmodele
+
+                emmodel_instances.append(instantiate_emmodel(emmodel, sensor, layer, emmodel_kwargs))
         else:  # the same model for all the layers
-            for lay in snowpack.layers:
-                emmodel_instances.append(self.emmodel(sensor, lay, **self.emmodel_kwargs))
+            for layer in snowpack.layers:
+                emmodel_instances.append(instantiate_emmodel(self.emmodel, sensor, layer, self.emmodel_kwargs))
+
 
         # need to create the rtsolver ?
         if inspect.isclass(self.rtsolver):
