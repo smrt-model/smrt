@@ -81,7 +81,7 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None):
     # Polder Van Santen / de Loor / Böttcher / Bruggeman formula
     # Solution of quadratic equation arising from eqn 9.2. in Sihvola: Electromagnetic Mixing Formulas and Applications
     a_quad = 2.
-    b_quad = eps - 2. - 3. * frac_volume * (eps - e0)
+    b_quad = eps - 2 * e0 - 3. * frac_volume * (eps - e0)
     c_quad = - eps * e0
 
     return (-b_quad + np.sqrt(b_quad**2 - 4. * a_quad * c_quad)) / (2. * a_quad)
