@@ -217,81 +217,23 @@ class IBA(object):
         :param npol: [Optional] number of polarizations - normally set from sensor properties
         :returns cached_phase[m]: cached phase matrix for all scattering streams for one Fourier Decomposition mode
 
-        The structure of the returned cached_phase is a block-by-block assembly of
-        individual phase matrices for each scattering geometry up to n-streams e.g.:
-
-        +--------+------------+------------+------------+------------+
-        + stream +   i=0      +    i=1     +     i      +    i=n     +
-        +--------+------------+------------+------------+------------+
-        |        | Pvvp  Pvhp | Pvvp  Pvhp | ...    ... | Pvvp  Pvhp |
-        + i=0    +            +            +            +            +
-        |        | Phvp  Phhp | Phvp  Phhp | ...    ... | Phvp  Phhp |
-        +--------+------------+------------+------------+------------+
-        |        | .      .   |  .      .  | ...    ... |  .      .  |
-        +  i     +            +            +            +            +
-        |        | .      .   |  .      .  | ...    ... |  .      .  |
-        +--------+------------+------------+------------+------------+
-        |        | Pvvp  Pvhp | Pvvp  Pvhp | ...    ... | Pvvp  Pvhp |
-        + i=n    +            +            +            +            +
-        |        | Phvp  Phhp | Phvp  Phhp | ...    ... | Phvp  Phhp |
-        +--------+------------+------------+------------+------------+
-
         """
         if npol is None:
             npol = self.npol  # npol is set from sensor mode except in call to energy conservation test
 
-        cached_mu = getattr(self, "cached_mu", None)
-        if cached_mu is None or not np.array_equal(cached_mu, mu) or len(self.cached_phase) < m:
+        if (not hasattr(self, "cached_mu")) or (not np.array_equal(self.cached_mu, mu)) or (len(self.cached_phase) < m):
             self.precompute_ft_even_phase(mu, max(m, self.m_max), npol)
         return self.cached_phase[m]
 
-    def precompute_ft_even_phase(self, mu, m_max, npol):
-        """ Calculation of the Fourier decomposed IBA phase function.
+    def phase(self, mu_s, mu_i, dphi, npol=2):
+        """ IBA Phase function (not decomposed).
 
-        This method calculates the Improved Born Approximation phase matrix for all
-        Fourier decomposition modes and stores the output in a cache so the calculation
-        is not repeated for each mode. The radiative transfer solver then accesses the cache.
-
-        The IBA phase function is given in Mätzler, C. (1998). Improved Born approximation for
-        scattering of radiation in a granular medium. *Journal of Applied Physics*, 83(11),
-        6111-6117. Here, calculation of the phase matrix is based on the phase matrix in
-        the 1-2 frame, which is then rotated according to the incident and scattering angles,
-        as described in e.g. *Thermal Microwave Radiation: Applications for Remote Sensing, Mätzler (2006)*.
-        Fourier decomposition is then performed to separate the azimuthal dependency from the incidence angle dependency.
-
-        :param mu: 1-D array of cosine of radiation stream angles (set by solver)
-        :param m_max: maximum Fourier decomposition mode needed
-        :param npol: number of polarizations considered (set from sensor characteristics)
-
-        Calculates cached_phase: Stored phase matrix for each Fourier mode m
-
-        .. note::
-
-            The size of the cached_phase[m] matrix depends on the mode. Only p11, p12, p21 and p22
-            elements are needed for the m = 0 mode, whereas an extended matrix with the p13, p23, p31, p32 and p33
-            elements are required for m > 0 modes (active only). The size of the cached phase matrix
-            will also vary with snow layer, as it depends on the number of streams simulated (length of mu).
-
-        """
-        # Raise exception if mu = 1 ever called for active: p13, p23, p31, p32 signs incorrect
-        if any(u == 1 for u in mu) and npol > 2:
-            raise SMRTError("Phase matrix signs for sine elements of mode m = 2 incorrect")
-
-        nsamples = 2**(m_max + 3) #* (m_max + 1)  # 2**4  # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
-        dphi_interval = 2. * np.pi / nsamples  # sampling interval. Period is 2pi
-        dphi = np.arange(0, 2. * np.pi, dphi_interval)  # evenly spaced from 0 to period (but not including period)
-
-        # Determine size of mode-dependent array
-        # 2 x 2 phase matrix for mode m=0, otherwise 3 x 3
-        pm_size = ([2] + [npol] * m_max)
-        self.cached_phase = [np.empty((pm_size[m] * len(mu), pm_size[m] * len(mu))) for m in range(m_max + 1)]
-        self.cached_mu = mu
-
+"""
         # cos and sin of scattering and incident angles in the main frame
-        cos_ti = np.array(mu)[np.newaxis, np.newaxis, :]
+        cos_ti = np.atleast_1d(mu_i)[np.newaxis, np.newaxis, :]
         sin_ti = np.sqrt(1. - cos_ti**2)
 
-        cos_t = np.array(mu)[np.newaxis, :, np.newaxis]
+        cos_t = np.atleast_1d(mu_s)[np.newaxis, :, np.newaxis]
         sin_t = np.sqrt(1. - cos_t**2)
 
         cos_pd = np.cos(dphi)[:, np.newaxis, np.newaxis]
@@ -349,57 +291,96 @@ class IBA(object):
         else:
             raise SMRTError("Fourier Transform of this microstructure model has not been defined, or there is a problem with its calculation")
 
+        p_second_term = 0.5 * sin2a * cosT * sin2ai
+        p11 = (cosa2 * cosT2 * cosai2 + sina2 * sinai2 - p_second_term)  #p11
+        p12 = (cosa2 * cosT2 * sinai2 + sina2 * cosai2 + p_second_term)  #p12
+        p21 = (sina2 * cosT2 * cosai2 + cosa2 * sinai2 + p_second_term)  #p21
+        p22 = (sina2 * cosT2 * sinai2 + cosa2 * cosai2 - p_second_term) #p22
 
-        second_term = 0.5 * sin2a * cosT * sin2ai
-        p = ft_corr_fn * np.array([ (cosa2 * cosT2 * cosai2 + sina2 * sinai2 - second_term),  #p11
-                                    (cosa2 * cosT2 * sinai2 + sina2 * cosai2 + second_term),  #p12
-                                    (sina2 * cosT2 * cosai2 + cosa2 * sinai2 + second_term),  #p21
-                                    (sina2 * cosT2 * sinai2 + cosa2 * cosai2 - second_term)]) #p22
 
-        # Carry out fast fourier transform to give fourier decomposition
-        decomposed_p = np.fft.fft(p, axis=1) * (self.iba_coeff / dphi.size )
+        if npol == 2:
+            p = np.array([[p11, p12], [p21, p22]])
 
-        # mode = 0 component requires 2x2 phase matrix and delta = 1
-        self.cached_phase[0][0::2, 0::2] = decomposed_p[0, 0].real
-        self.cached_phase[0][0::2, 1::2] = decomposed_p[1, 0].real
-        self.cached_phase[0][1::2, 0::2] = decomposed_p[2, 0].real
-        self.cached_phase[0][1::2, 1::2] = decomposed_p[3, 0].real
+        elif npol == 3: # 3-pol
+            p = np.array([[p11, p12, 0.5 * ( cosa2 * cosT2 * sin2ai - sina2 * sin2ai + sin2a * cosT * cos2ai)], # p13
+                          [p21, p22, 0.5 * ( sina2 * cosT2 * sin2ai - cosa2 * sin2ai - sin2a * cosT * cos2ai)], # p23
+                          [(-sin2a * cosT2 * cosai2 + sin2a * sinai2 - cos2a * cosT * sin2ai),      # p31
+                           (-sin2a * cosT2 * sinai2 + sin2a * cosai2 + cos2a * cosT * sin2ai),      # p32
+                           (-0.5 * sin2a * cosT2 * sin2ai - 0.5 * sin2a * sin2ai + cos2a * cosT * cos2ai)] # p33
+                         ])
+        else:
+            raise RuntimeError("invalid value of npol")
 
-        # Calculate extended matrix elements for active case
-        if npol == 3:
-            pp = ft_corr_fn * np.array([ 0.5 * ( cosa2 * cosT2 * sin2ai - sina2 * sin2ai + sin2a * cosT * cos2ai), # p13
-                                         0.5 * ( sina2 * cosT2 * sin2ai - cosa2 * sin2ai - sin2a * cosT * cos2ai), # p23
-                                               (-sin2a * cosT2 * cosai2 + sin2a * sinai2 - cos2a * cosT * sin2ai),      # p31
-                                               (-sin2a * cosT2 * sinai2 + sin2a * cosai2 + cos2a * cosT * sin2ai),      # p32
-                                         (-0.5 * sin2a * cosT2 * sin2ai - 0.5 * sin2a * sin2ai + cos2a * cosT * cos2ai)]) # p33
+        return (ft_corr_fn * self.iba_coeff * p).squeeze()
 
-            decomposed_pp = np.fft.fft(pp, axis=1) * (self.iba_coeff / dphi.size)
 
-            for m in range(1, m_max + 1):
-                delta = 2  # Delta is 1 for m=0 mode
-                self.cached_phase[m][0::npol, 0::npol] = decomposed_p[0, m].real * delta
-                self.cached_phase[m][0::npol, 1::npol] = decomposed_p[1, m].real * delta
-                self.cached_phase[m][1::npol, 0::npol] = decomposed_p[2, m].real * delta
-                self.cached_phase[m][1::npol, 1::npol] = decomposed_p[3, m].real * delta
-                # For the even matrix:
-                # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
-                self.cached_phase[m][0::npol, 2::npol] = - decomposed_pp[0, m].imag * delta
-                self.cached_phase[m][1::npol, 2::npol] = - decomposed_pp[1, m].imag * delta
-                self.cached_phase[m][2::npol, 0::npol] = decomposed_pp[2, m].imag * delta
-                self.cached_phase[m][2::npol, 1::npol] = decomposed_pp[3, m].imag * delta
-                self.cached_phase[m][2::npol, 2::npol] = decomposed_pp[4, m].real * delta
+    def precompute_ft_even_phase(self, mu, m_max, npol):
+        """ Calculation of the Fourier decomposed IBA phase function.
 
-    def phase(self, mu, phi):
-        """ IBA Phase function (not decomposed).
+        This method calculates the Improved Born Approximation phase matrix for all
+        Fourier decomposition modes and stores the output in a cache so the calculation
+        is not repeated for each mode. The radiative transfer solver then accesses the cache.
 
-        :raises SMRTError: This has not yet been implemented
+        The IBA phase function is given in Mätzler, C. (1998). Improved Born approximation for
+        scattering of radiation in a granular medium. *Journal of Applied Physics*, 83(11),
+        6111-6117. Here, calculation of the phase matrix is based on the phase matrix in
+        the 1-2 frame, which is then rotated according to the incident and scattering angles,
+        as described in e.g. *Thermal Microwave Radiation: Applications for Remote Sensing, Mätzler (2006)*.
+        Fourier decomposition is then performed to separate the azimuthal dependency from the incidence angle dependency.
 
-        .. todo::
+        :param mu: 1-D array of cosine of radiation stream angles (set by solver)
+        :param m_max: maximum Fourier decomposition mode needed
+        :param npol: number of polarizations considered (set from sensor characteristics)
 
-            Later implementation: it may be required by other solver modules
+        Calculates cached_phase: Stored phase matrix for each Fourier mode m
+
+        .. note::
+
+            The size of the cached_phase[m] matrix depends on the mode. Only p11, p12, p21 and p22
+            elements are needed for the m = 0 mode, whereas an extended matrix with the p13, p23, p31, p32 and p33
+            elements are required for m > 0 modes (active only). The size of the cached phase matrix
+            will also vary with snow layer, as it depends on the number of streams simulated (length of mu).
 
         """
-        raise SMRTError('Phase calculation not yet implemented. Inputs need to be handled in a different way')
+        # Raise exception if mu = 1 ever called for active: p13, p23, p31, p32 signs incorrect
+        if any(u == 1 for u in mu) and npol > 2:
+            raise SMRTError("Phase matrix signs for sine elements of mode m = 2 incorrect")
+
+        nsamples = 2**(m_max + 3) #* (m_max + 1)  # 2**4  # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
+        dphi_interval = 2. * np.pi / nsamples  # sampling interval. Period is 2pi
+        dphi = np.arange(0, 2. * np.pi, dphi_interval)  # evenly spaced from 0 to period (but not including period)
+
+        # Determine size of mode-dependent array
+        # 2 x 2 phase matrix for mode m=0, otherwise 3 x 3
+        pm_size = ([2] + [npol] * m_max)
+        self.cached_phase = [np.empty((pm_size[m] * len(mu), pm_size[m] * len(mu))) for m in range(m_max + 1)]
+        self.cached_mu = mu
+
+        p = self.phase(mu, mu, dphi, npol)
+        decomposed_p = np.fft.fft(p, axis=2)
+
+        delta = 1 / dphi.size  # Delta is 1 for m=0 mode
+        self.cached_phase[0][0::2, 0::2] = decomposed_p[0, 0, 0].real * delta
+        self.cached_phase[0][0::2, 1::2] = decomposed_p[0, 1, 0].real * delta
+        self.cached_phase[0][1::2, 0::2] = decomposed_p[1, 0, 0].real * delta
+        self.cached_phase[0][1::2, 1::2] = decomposed_p[1, 1, 0].real * delta
+
+        for m in range(1, m_max + 1):
+            delta = 2 / dphi.size  # Delta is 1 for m=0 mode
+            self.cached_phase[m][0::npol, 0::npol] = decomposed_p[0, 0, m].real * delta
+            self.cached_phase[m][0::npol, 1::npol] = decomposed_p[0, 1, m].real * delta
+            self.cached_phase[m][1::npol, 0::npol] = decomposed_p[1, 0, m].real * delta
+            self.cached_phase[m][1::npol, 1::npol] = decomposed_p[1, 1, m].real * delta
+
+            #print(self.cached_phase[m][0::npol, 0::npol])
+            if (m>0) and (npol>=3):
+                # For the even matrix:
+                # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
+                self.cached_phase[m][0::npol, 2::npol] = - decomposed_p[0, 2, m].imag * delta
+                self.cached_phase[m][1::npol, 2::npol] = - decomposed_p[1, 2, m].imag * delta
+                self.cached_phase[m][2::npol, 0::npol] = decomposed_p[2, 0, m].imag * delta
+                self.cached_phase[m][2::npol, 1::npol] = decomposed_p[2, 1, m].imag * delta
+                self.cached_phase[m][2::npol, 2::npol] = decomposed_p[2, 2, m].real * delta
 
     def compute_ka(self):
         """ IBA absorption coefficient calculated from the low-loss assumption of a general lossy medium.

@@ -325,31 +325,29 @@ class Rayleigh(object):
     def phase(self, mu_s, mu_i, phi, npol=2):
         # Tsang theory and application p271 Eq 7.2.16
 
-        mu_s = np.atleast_1d(mu_s)
-        mu_i = np.atleast_1d(mu_i)
+        mu_s = np.atleast_1d(mu_s)[np.newaxis, :, np.newaxis]
+        mu_i = np.atleast_1d(mu_i)[np.newaxis, np.newaxis, :]
 
-        sinphi = np.sin(phi)
-        cosphi = np.cos(phi)
+        sinphi = np.sin(phi)[:, np.newaxis, np.newaxis]
+        cosphi = np.cos(phi)[:, np.newaxis, np.newaxis]
 
-        fvv = np.outer(mu_s, mu_i) * cosphi + np.outer(np.sqrt(1 - mu_s**2), np.sqrt(1 - mu_i**2))
-        fhv = -mu_i[np.newaxis, :] * sinphi
+        fvv = cosphi * mu_s * mu_i + np.sqrt(1 - mu_s**2) * np.sqrt(1 - mu_i**2)
+        fhv = -sinphi * mu_i
         fhh = cosphi
-        fvh = mu_s[:, np.newaxis] * sinphi
+        fvh = sinphi * mu_s
 
-        P = np.empty((len(mu_s) * npol, len(mu_i) * npol))
-        P[0::npol, 0::npol] = fvv * fvv
-        P[0::npol, 1::npol] = fvh * fvh
-        P[1::npol, 0::npol] = fhv * fhv
-        P[1::npol, 1::npol] = fhh * fhh
+        if npol == 2:
+            p = [[fvv * fvv, fvh * fvh],
+                 [fhv * fhv, fhh * fhh]]
 
-        if npol == 3:
-            P[0::npol, 2::npol] = fvh * fvv
-            P[1::npol, 2::npol] = fhv * fhh
-            P[2::npol, 0::npol] = 2 * fvv * fhv
-            P[2::npol, 1::npol] = 2 * fvh * fhh
-            P[2::npol, 2::npol] = fvv * fhh + fvh * fhv
-
-        return 1.5 * self.ks * P
+        elif npol == 3:
+            p = [[fvv * fvv, fvh * fvh, fvh * fvv],
+                 [fhv * fhv, fhh * fhh, fhv * fhh],
+                 [2 * fvv * fhv, 2 * fvh * fhh, fvv * fhh + fvh * fhv]]
+        else:
+            raise RuntimeError("invalid number of polarisation")
+        print('ici=', np.array(p).shape, fvv.shape, fhv.shape, fhh.shape, fvh.shape)
+        return 1.5 * self.ks * np.array(p).squeeze()
 
     def ke(self, mu):
         """return the extinction coefficient"""
