@@ -104,7 +104,7 @@ class Layer(object):
             raise SMRTError("The permittivity value or model for the background and scatterers must be given when creating a layer")
 
         if callable(self.permittivity_model[i]):
-            return self.permittivity_model[i](frequency, self)
+            return self.permittivity_model[i](frequency, self.temperature)
             # another approach would be to give the layer object as argument, but this creates a strong dependency
             # between the permittivity and the layer. We prefer to avoid this.
             # Neverthelees, if the list of arguments should lengthen, it will be better to pass the object.
@@ -146,7 +146,7 @@ class Layer(object):
         """return the layer with inverted autocorrelation and inverted permittivities.
         """
 
-        obj = copy.copy(self)
+        obj = copy.deepcopy(self)
         if not hasattr(self.microstructure, "inverted_medium"):
             raise SMRTError("The microstructure model does not support model inversion")
 
