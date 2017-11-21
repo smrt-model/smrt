@@ -11,10 +11,9 @@ import math
 # local import
 # from ..core.error import SMRTError
 from ..core.globalconstants import FREEZING_POINT
-from ..core.layer import required_layer_properties
 
 #
-# for developers: see not in __init__.py
+# for developers: see note in __init__.py
 #
 
 
@@ -28,9 +27,6 @@ def ice_permittivity_matzler87(frequency, temperature):
 
     :param frequency: frequency in Hz
     :param temperature: temperature in K
-    :param liquid_water: liquid water content (must be zero for this model)
-    :param salinity: salinity (must be zero for this model)
-    :raises Exception: if liquid water > 0 or salinity > 0 (model unsuitable)
     :returns: Complex permittivity of pure ice
 
     **Usage example**::

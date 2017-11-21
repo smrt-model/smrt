@@ -79,6 +79,12 @@ class Layer(object):
         if microstructure_model is not None:
             self.microstructure = microstructure_model(params)  # do that now, but could be delayed (lazy evaluation)
 
+        # other params
+        for k in kwargs:
+            if k in params:
+                continue
+            setattr(self, k, kwargs[k])
+
         self._ssa = getattr(kwargs, 'ssa', None)  # save the ssa
 
     @property
@@ -104,12 +110,17 @@ class Layer(object):
             raise SMRTError("The permittivity value or model for the background and scatterers must be given when creating a layer")
 
         if callable(self.permittivity_model[i]):
-            return self.permittivity_model[i](frequency, self.temperature)
+            # return self.permittivity_model[i](frequency, self.temperature)
             # another approach would be to give the layer object as argument, but this creates a strong dependency
             # between the permittivity and the layer. We prefer to avoid this.
             # Neverthelees, if the list of arguments should lengthen, it will be better to pass the object.
             # A elegant/functional alternative would be to use function of the temperature only, and use "functools.partial"
             # when creating the layer to include the dependency to the layer properties.
+
+            # the chosen approach is based on the decorator required_layer_properties. See below. It allows the permittivity model to
+            # be called with the layer argument, but the initial permittivity_model function never heard about layers
+            return self.permittivity_model[i](frequency, self)
+
 
         else:  # assume it is independent of the frequency.
             return self.permittivity_model[i]
