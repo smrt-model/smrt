@@ -54,7 +54,7 @@ from .error import SMRTError
 from .result import concat_results
 from .plugin import import_class
 from .sensitivity_study import SensitivityStudy
-
+from .sensor import Sensor
 
 
 def make_model(emmodel, rtsolver, emmodel_kwargs=None, rtsolver_kwargs=None):
@@ -125,6 +125,9 @@ class Model(object):
             :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and the values are from 1 to the number of snowpacks.
             :returns: result of the calculation(s) as a :py:class:`Results` instance
         """
+
+        if not isinstance(sensor, Sensor):
+            raise SMRTError("the first argument of 'run' must be a sensor")
 
         # first determine which dimension we must iterate on in this routine
         for dim in ["frequency", "theta_inc", "polarization_inc", "theta", "phi", "polarization"]:
