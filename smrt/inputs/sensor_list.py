@@ -9,8 +9,12 @@ but functions for specific sensors are more convenient. See examples in the func
 .. autofunction:: active
 """
 
+import six
+from collections import Sequence
+
 from smrt.core.sensor import Sensor
 from smrt.core.error import SMRTError
+
 
 from smrt.core.sensor import passive, active  # import so they are available from this module
 
@@ -72,3 +76,80 @@ def amsre(channel=None, frequency=None, polarization=None, theta=55):
     sensor = Sensor(frequency, None, theta, None, None, polarization)
 
     return sensor
+
+
+def quickscat(channel=None, theta=None, polarization=None):
+    """ Configuration for quickscat sensor.
+
+     This function can be used to simulate the 4 QUICKSCAT channels i.e. incidence angles 46° and 54° and HH and VV polarizations.
+     Alternatively a subset of these channels can be specified with 4-character identifiers with polarization first .e.g. HH46, VV54
+
+     :param channel: single channel identifier
+     :type channel: 4-character string
+
+     :returns: :py:class:`Sensor` instance
+"""
+    if channel is None:
+        if theta is None:
+            theta = [46, 54]
+
+        if polarization is None:
+            polarization = polarization_inc = ['V', 'H']
+        else:
+            polarization_inc = polarization[1]
+            polarization = polarization[0]
+
+    else:
+
+        _, theta, polarization, polarization_inc = decompose_channel(channel, (0, 2, 2))
+
+    sensor = active(13.4e9, theta, polarization_inc=polarization_inc, polarization=polarization)
+
+    return sensor
+
+def ascat(theta=None):
+    """ Configuration for ASCAT on ENVISAT sensor.
+
+       This function return a sensor at 5.255 GHz (C-band) and VV polarization. The incidence angle can be chosen or is by defaut from 25° to 65° every 5°
+
+       :param theta: incidence angle (between 25 and 65° in principle)
+       :type theta: float or sequence
+
+       :returns: :py:class:`Sensor` instance
+  """
+    if theta is None:
+        theta = np.arange(25, 70, 5)
+
+    return active(5.255e9, theta, polarization_inc='V', polarization='V')
+
+
+
+
+def decompose_channel(channel, lengths):
+
+    if isinstance(channel, Sequence) and not isinstance(channel, six.string_types):
+
+        data = [decompose_channel(ch) for ch in channel]
+        frequency, theta, polarization, polarization_inc = tuple(map(list, zip(*data)))  # transpose
+
+    else:
+        if len(channel) !=  sum(lengths):
+            raise SMRTError("the channel has an incorrect length")
+        if lengths[0] > 0:
+            frequency = channel[0:lengths[0]]
+        else:
+            frequency = None
+
+        if lengths[1] > 0:
+            polarization = channel[lengths[0]]
+            if lengths[1] == 2:
+                polarization_inc = channel[lengths[0]+1]
+        else:
+            polarization_inc = polarization = None
+
+        if lengths[2] > 0:
+            theta = float(channel[-lengths[2]:])
+        else:
+            theta = None
+
+    return frequency, theta, polarization, polarization_inc
