@@ -11,6 +11,7 @@ import math
 # local import
 # from ..core.error import SMRTError
 from ..core.globalconstants import FREEZING_POINT
+from ..core.layer import required_layer_properties
 
 #
 # for developers: see note in __init__.py
