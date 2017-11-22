@@ -104,7 +104,11 @@ class Model(object):
         """create a new model. It is not recommanded to instantiate Model class directly. Instead use the :py:meth:`make_model` function.
         """
 
-        self.emmodel = emmodel  # can be a single value (class or string) or an array with the same size as snowpack layers array
+        # emmodel can be a single value (class or string) or an array with the same size as snowpack layers array
+        if isinstance(emmodel, collections.Sequence) and not isinstance(emmodel, six.string_types):
+            self.emmodel = [get_emmodel(em) for em in emmodel]
+        else:
+            self.emmodel = get_emmodel(emmodel)
 
         if isinstance(rtsolver, six.string_types):
             self.rtsolver = import_class(rtsolver, root='smrt.rtsolver')
@@ -177,7 +181,6 @@ class Model(object):
                     emmodel_kwargs = self.emmodel_kwargs[i]
                 else:
                     emmodel_kwargs = self.emmodel_kwargs
-                print("em:", emmodel, emmodel_kwargs)
                 emmodel_instances.append(make_emmodel(emmodel, sensor, layer, **emmodel_kwargs))
         else:  # the same model for all the layers
             for layer in snowpack.layers:
