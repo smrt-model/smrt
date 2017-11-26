@@ -183,7 +183,7 @@ class DORT(object):
                 intensity_up[1::npol] += intensity_up_m[1::npol] * np.cos(m*self.sensor.phi)  # TODO Ghi: deals with an array of phi
                 intensity_up[2::npol] += intensity_up_m[2::npol] * np.sin(m*self.sensor.phi)  # TODO Ghi: deals with an array of phi
 
-            # TODO: implement a convergence test if we want to avoid long computation when self.m_max is too high for the phase function.
+                # TODO: implement a convergence test if we want to avoid long computation when self.m_max is too high for the phase function.
 
         if self.atmosphere is not None:
             intensity_up = self.atmosphere.tbup(self.sensor.frequency, outmu, npol) + \
@@ -205,7 +205,10 @@ class DORT(object):
             for theta in self.sensor.theta_inc:
                 mu_inc = math.cos(theta)
                 i0 = np.searchsorted(-outmu, -mu_inc)
-                if i0 == 0:
+
+                if i0 == 0 or i0==len(outmu):
+                    if i0 == len(outmu):
+                        i0 -= 1
                     for ipol in [0, 1]:
                         intensity_0[2*i0 + ipol, j0] = 1.0 / (2 * math.pi * outweight[i0])
                         j0 += 1
@@ -365,7 +368,7 @@ class DORT(object):
                 Rbottom_l = self.interfaces[l].specular_reflection_matrix(self.sensor.frequency, self.permittivity[l], self.permittivity[l+1], mu[l, 0:nsl], npol, compute_coherent_only)  # snow-snow
             elif self.snowpack.substrate is not None:
                 Rbottom_l = self.snowpack.substrate.specular_reflection_matrix(self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], npol, compute_coherent_only)  # snow-sub
-                if not compute_coherent_only and hasattr(self.snowpack.substrate, "diffuse_reflection_matrix"):
+                if not compute_coherent_only and hasattr(self.snowpack.substrate, "ft_even_diffuse_reflection_matrix"):
                     full_weight_l = np.repeat(weight[l, :], npol)    # could be cached (per layer) because same for each mode
                     Rbottom_l += self.snowpack.substrate.ft_even_diffuse_reflection_matrix(m, self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], npol) * full_weight_l  # snow-sub
             else:
