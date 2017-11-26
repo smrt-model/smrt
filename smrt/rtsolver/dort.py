@@ -294,6 +294,7 @@ class DORT(object):
                 ft_even_phase_l = None
             else:
                 ft_even_phase_l = self.ft_even_phase[l]
+
             beta, Eu, Ed = solve_eigenvalue_problem(m, self.ke[l], ft_even_phase_l, mu[l, 0:nsl], weight[l, 0:nsl])
 
             # deduce the transmittance through the layers
@@ -537,13 +538,19 @@ def solve_eigenvalue_problem(m, ke, ft_even_phase, mu, weight):
                 beta, E = scipy.linalg.eig(A, overwrite_a=True)
             except scipy.linalg.LinAlgError:
                 diagonalization_failed = True
+                reason = "eig method"
             else:
                 diagonalization_failed = (not np.allclose(beta.imag, 0)) or (not np.allclose(E.imag, 0))
+                if diagonalization_failed:
+                    print(np.allclose(beta.imag, 0), np.allclose(E.imag, 0))
+                    print(np.max(np.abs(E.imag)))
+                reason = "not close"
 
             if diagonalization_failed:
-                raise SMRTError("The diagonalization failed in DORT which very likely cause by single scattering albedo larger than 1."
-                                " It is often due to grain size too large (or too low stickiness parameter) to respect the Rayleigh/low-frequency assumption required by some ememodel (DMRT ShortRange, IBA, ...)"
-                                ". It is recommended to reduce the size of the bigger grains.")
+
+                raise SMRTError("""The diagonalization failed in DORT which is possibly caused by single scattering albedo larger than 1.
+It is often due to grain size too large (or too low stickiness parameter) to respect the Rayleigh/low-frequency assumption required by some ememodel (DMRT ShortRange, IBA, ...)"
+It is recommended to reduce the size of the bigger grains.""")
 
             #np.testing.assert_allclose(beta.imag, 0, atol=np.linalg.norm(beta)*1e-5)
 
