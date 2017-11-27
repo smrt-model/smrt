@@ -31,6 +31,7 @@ def test_simple_isotropic_atmosphere():
     res1 = iba.run(rads, snowpack)
     res2 = iba.run(rads, snowpack, atmosphere=atmos)
 
-    print('TB 1: ', np.round(res1.TbV(),2), 'TB2: ', np.round(res2.TbV(),2))
+    print('TB 1: ', res1.TbV(), 'TB2: ', res2.TbV())
 
-    ok_(abs(res2.TbV() -  211.72) < 1e-2)
+    ok_(abs(res1.TbV() - 227.59158654174465) < 1e-2)
+    ok_(abs(res2.TbV() - 214.64368439876984) < 1e-2)

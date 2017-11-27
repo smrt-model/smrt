@@ -396,7 +396,11 @@ class IBA(object):
 
         """
 
-        return self.k0 * self.frac_volume *  self.eps.imag * abs(self.mean_sq_field_ratio(self.e0, self.eps))
+        # change the default equation for Matzler 1998 and 1999 to that used in MEMLS code
+        #return self.k0 * self.frac_volume *  self.eps.imag * abs(self.mean_sq_field_ratio(self.e0, self.eps))
+
+        return 2 * self.k0 * np.sqrt(self._effective_permittivity).imag
+
 
     def ke(self, mu):
         """ IBA extinction coefficient matrix
