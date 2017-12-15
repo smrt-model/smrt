@@ -1,4 +1,4 @@
-=============================================
+
 Snow Microwave Radiative Transfer model
 =============================================
 
@@ -15,7 +15,7 @@ License information
 See the file ``LICENSE.txt`` for terms & conditions for usage, and a DISCLAIMER OF ALL
 WARRANTIES.
 
-DISCLAIMER: This version of SMRT is an early release. As such, some components may not be fully implemented or may give rise to unexpected behaviour. Please use this software with caution, ask for assistance if needed, and let us know any feedback you may have.
+DISCLAIMER: This version of SMRT is under peer review. Please use this software with caution, ask for assistance if needed, and let us know any feedback you may have.
 
 Copyright (c) 2016 Ghislain Picard, Melody Sandells, Henning Löwe.
 
