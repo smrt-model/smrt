@@ -22,4 +22,4 @@ is automatic and creation of instance of the class :py:mod:`~smrt.microstructure
 :py:meth:`smrt.core.model.Model.run` method.
 
 
- """  # html documentation
+ """  
