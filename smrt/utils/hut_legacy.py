@@ -1,6 +1,6 @@
 # coding: utf-8
 
-"""Wrapper to original HUT matlab using SMRT framework. To use this module, extra installation are needed:
+""" Wrapper to original HUT matlab using SMRT framework. To use this module, extra installation are needed:
 
  * get HUT. Decompress the archive somewhere on your disk.
 

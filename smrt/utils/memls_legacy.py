@@ -1,6 +1,6 @@
 # coding: utf-8
 
-"""Wrapper to the original MEMLS matlab code using the SMRT framework. To use this module, extra installation are needed:
+""" Wrapper to the original MEMLS matlab code using the SMRT framework. To use this module, extra installation are needed:
 
  * download MEMLS from http://www.iapmw.unibe.ch/research/projects/snowtools/memls.html. Decompress the archive somewhere on your disk.
 
@@ -28,7 +28,7 @@ from smrt.core.sensitivity_study import SensitivityStudy
 
 # MEMLS model
 
-ABORN = 12  # we recommand to use ABORN.
+ABORN = 12  # we recommend to use ABORN.
 MEMLS_RECOMMENDED = 11
 
 # python-space path to memls
