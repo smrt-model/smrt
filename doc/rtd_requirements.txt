@@ -1,0 +1,8 @@
+# These packages are needed for proper readthedocs import of documentation
+Sphinx==1.5.3
+numpy
+six
+xarray
+pandas
+scipy
+oct2py

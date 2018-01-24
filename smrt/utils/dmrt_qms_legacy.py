@@ -1,6 +1,6 @@
 # coding: utf-8
 
-"""Wrapper to the original DMRT_QMS matlab code using the SMRT framework. To use this module, extra installation are needed:
+""" Wrapper to the original DMRT_QMS matlab code using the SMRT framework. To use this module, extra installation are needed:
 
  * get DMRT_QMS from http://web.eecs.umich.edu/~leutsang/Available%20Resources.html and extract the model somewhere
 
