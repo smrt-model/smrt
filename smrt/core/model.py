@@ -137,9 +137,11 @@ class Model(object):
         for dim in ["frequency", "theta_inc", "polarization_inc", "theta", "phi", "polarization"]:
             # do we need to iterate on this dimension ?
             values = getattr(sensor, dim)
-            if (isinstance(values, np.ndarray) or isinstance(values, collections.Sequence)) and \
-                (not hasattr(self.rtsolver, "_broadcast_capability") or dim not in self.rtsolver._broadcast_capability):
 
+            need_iteration = isinstance(values, np.ndarray) or \
+                             (isinstance(values, collections.Sequence) and not isinstance(values, six.string_types))
+            has_capability = hasattr(self.rtsolver, "_broadcast_capability") and dim in self.rtsolver._broadcast_capability
+            if need_iteration and not has_capability:
                 result_list = []
                 for x in values:  # iterate over the values
                     sensor_subset = copy.copy(sensor)  # shallow copy... hope sensor attributes are immutable!!

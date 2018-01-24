@@ -125,5 +125,6 @@ def make_snow_layer(layer_thickness, microstructure_model,
 
     lay.liquid_water = liquid_water
     lay.salinity = salinity
+    lay.density = density # just for information
 
     return lay
