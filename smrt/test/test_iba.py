@@ -41,5 +41,10 @@ def test_iba_oneconfig():
     res = m.run(radiometer, snowpack)
 
     print(res.TbV(), res.TbH())
-    ok_(abs(res.TbV() - 248.08807673119517) < 1e-4)
-    ok_(abs(res.TbH() - 237.3106696695165) < 1e-4)
+    #absorption with effective permittivity
+    #ok_(abs(res.TbV() - 248.08807673119517) < 1e-4)
+    #ok_(abs(res.TbH() - 237.3106696695165) < 1e-4)
+
+    #original absorption (Maetzler 1998)
+    ok_(abs(res.TbV() - 247.92402825320272 ) < 1e-4)
+    ok_(abs(res.TbH() - 237.08967658310334) < 1e-4)
