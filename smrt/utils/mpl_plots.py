@@ -21,7 +21,7 @@ def plot_snowpack(sp, show_vars=None, show_shade=False, ax=None):
     ax.plot((0, 100*xmax), (0, 0), '0.5')
     for lay, z in zip(sp.layers, -depth):
         if show_shade:
-            ax.fill_between((0, 100 * xmax), [z]*2, [z+lay.thickness]*2, color='#1588ff', alpha=lay.frac_volume)
+            ax.fill_between((0, 100 * xmax), [z]*2, [z+lay.thickness]*2, color='#55a9ff', alpha=lay.frac_volume)
         else:
             ax.plot((0, 100*xmax), (z, z), '0.5')
 
