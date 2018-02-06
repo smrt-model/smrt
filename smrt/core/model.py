@@ -55,6 +55,7 @@ from .result import concat_results
 from .plugin import import_class
 from .sensitivity_study import SensitivityStudy
 from .sensor import Sensor
+from .progressbar import Progress
 
 
 def make_model(emmodel, rtsolver, emmodel_kwargs=None, rtsolver_kwargs=None):
@@ -121,12 +122,13 @@ class Model(object):
         self.emmodel_kwargs = emmodel_kwargs if emmodel_kwargs is not None else dict()
         self.rtsolver_kwargs = rtsolver_kwargs if rtsolver_kwargs is not None else dict()
 
-    def run(self, sensor, snowpack, atmosphere=None, snowpack_dimension=None):
+    def run(self, sensor, snowpack, atmosphere=None, snowpack_dimension=None, progressbar=False):
         """ Run the model for the given sensor configuration and return the results
 
             :param sensor: sensor to use for the calculation
             :param snowpack: snowpack to use for the calculation. Can be a singel snowpack, a list or a SensitivityStudy object.
             :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and the values are from 1 to the number of snowpacks.
+            :param progressbar: if True, display a progress bar during multi-snowpacks computation
             :returns: result of the calculation(s) as a :py:class:`Results` instance
         """
 
@@ -164,9 +166,17 @@ class Model(object):
             if dimension_values is None:
                 dimension_values = range(len(snowpack))
 
-            result_list = [self.run(sensor, sp, atmosphere=atmosphere) for sp in snowpack]  # parallel computation would be better !
-            return concat_results(result_list, (dimension_name, dimension_values))
+            if progressbar:
+                pb = Progress(len(snowpack))
 
+            result_list = list()
+            for i, sp in enumerate(snowpack):  # parallel computation would be better !
+                res = self.run(sensor, sp, atmosphere=atmosphere)
+                result_list.append(res)
+                if progressbar:
+                    pb.animate(i + 1)
+
+            return concat_results(result_list, (dimension_name, dimension_values))
 
         # not need to iterate anymore, either because the solver deals with the dimension or sensor config has single values.
         # prepare to run
