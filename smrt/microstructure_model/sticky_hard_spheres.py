@@ -23,7 +23,7 @@ class StickyHardSpheres(Autocorrelation):
     """
     """
     args = ["frac_volume", "radius"]
-    optional_args = {"stickiness": np.inf}
+    optional_args = {"stickiness": 1000}
 
     def __init__(self, params):
 
