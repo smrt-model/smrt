@@ -101,7 +101,7 @@ def quickscat(channel=None, theta=None, polarization=None):
 
     else:
 
-        _, theta, polarization, polarization_inc = decompose_channel(channel, (0, 2, 2))
+        t, theta, polarization, polarization_inc = decompose_channel(channel, (0, 2, 2))
 
     sensor = active(13.4e9, theta, polarization_inc=polarization_inc, polarization=polarization)
 
