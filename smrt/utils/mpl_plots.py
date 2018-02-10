@@ -27,7 +27,7 @@ def plot_snowpack(sp, show_vars=None, show_shade=False, ax=None):
             ax.plot((0, 100*xmax), (z, z), '0.5')
 
         if show_vars:
-            plt.text(0.8*xmax, z+lay.thickness/2, format_vars(lay, show_vars))
+            ax.text(0.8*xmax, z+lay.thickness/2, format_vars(lay, show_vars))
 
     ax.set_frame_on(False)
     ax.get_xaxis().set_visible(False)
