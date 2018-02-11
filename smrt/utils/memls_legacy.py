@@ -24,6 +24,7 @@ import numpy as np
 from oct2py import octave
 
 from smrt.core.result import Result, concat_results
+from smrt import SMRTError
 from smrt.core.sensitivity_study import SensitivityStudy
 
 # MEMLS model
@@ -90,6 +91,8 @@ def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=N
         ground_reflV = itertools.repeat(0)
     else:
         print("Using MEMLS with substrate has not been tested. Provide feeback if it works (or not)")
+        if isinstance(sensor.frequency, collections.Sequence):
+            raise SMRTError("Sensor must be single frequency for runnning memls_legagcy")
         m = snowpack.substrate.reflection_matrix(sensor.frequency, snowpack.layer[-1].permittivity, np.cos(sensor.theta))
         ground_reflH = m.diagonal()[1::2]
         ground_reflV = m.diagonal()[0::2]
