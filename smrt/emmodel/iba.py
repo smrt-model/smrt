@@ -359,14 +359,14 @@ class IBA(object):
         p = self.phase(mu, mu, dphi, npol)
         decomposed_p = np.fft.fft(p, axis=2)
 
-        delta = 1 / dphi.size  # Delta is 1 for m=0 mode
+        delta = 1.0 / dphi.size  # Delta is 1 for m=0 mode
         self.cached_phase[0][0::2, 0::2] = decomposed_p[0, 0, 0].real * delta
         self.cached_phase[0][0::2, 1::2] = decomposed_p[0, 1, 0].real * delta
         self.cached_phase[0][1::2, 0::2] = decomposed_p[1, 0, 0].real * delta
         self.cached_phase[0][1::2, 1::2] = decomposed_p[1, 1, 0].real * delta
 
         for m in range(1, m_max + 1):
-            delta = 2 / dphi.size  # Delta is 1 for m=0 mode
+            delta = 2.0 / dphi.size  # Delta is 1 for m=0 mode
             self.cached_phase[m][0::npol, 0::npol] = decomposed_p[0, 0, m].real * delta
             self.cached_phase[m][0::npol, 1::npol] = decomposed_p[0, 1, m].real * delta
             self.cached_phase[m][1::npol, 0::npol] = decomposed_p[1, 0, m].real * delta
