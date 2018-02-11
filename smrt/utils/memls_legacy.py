@@ -72,7 +72,7 @@ def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=N
     if memls_path is not None:
         set_memls_path(memls_path)
 
-    if isinstance(sensor.frequency, collections.Sequence):
+    if isinstance(sensor.frequency, collections.Sequence) or isinstance(sensor.frequency, np.ndarray):
         raise SMRTError("Sensor must have a single frequency for running memls_legagcy")
 
     if isinstance(snowpack, SensitivityStudy):
