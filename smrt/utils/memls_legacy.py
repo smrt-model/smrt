@@ -72,6 +72,9 @@ def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=N
     if memls_path is not None:
         set_memls_path(memls_path)
 
+    if isinstance(sensor.frequency, collections.Sequence):
+        raise SMRTError("Sensor must have a single frequency for running memls_legagcy")
+
     if isinstance(snowpack, SensitivityStudy):
             snowpack_dimension = (snowpack.variable, snowpack.values)
             snowpack = snowpack.snowpacks.tolist()
@@ -91,8 +94,6 @@ def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=N
         ground_reflV = itertools.repeat(0)
     else:
         print("Using MEMLS with substrate has not been tested. Provide feeback if it works (or not)")
-        if isinstance(sensor.frequency, collections.Sequence):
-            raise SMRTError("Sensor must be single frequency for runnning memls_legagcy")
         eps_1 = snowpack.layers[-1].permittivity(1, sensor.frequency)
         print("Warning: the permittivity of the ice in the last layer is used instead of the effective permittivity to compute the reflection of the subtrate. This is an approximation that needs to be changed. Please contact developer for any serious simulations with soil...")
         m = snowpack.substrate.specular_reflection_matrix(sensor.frequency, eps_1, np.cos(sensor.theta), 2)
