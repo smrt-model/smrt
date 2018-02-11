@@ -93,7 +93,7 @@ def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=N
         print("Using MEMLS with substrate has not been tested. Provide feeback if it works (or not)")
         if isinstance(sensor.frequency, collections.Sequence):
             raise SMRTError("Sensor must be single frequency for runnning memls_legagcy")
-        m = snowpack.substrate.specular_reflection_matrix(sensor.frequency, snowpack.layers[-1].permittivity, np.cos(sensor.theta))
+        m = snowpack.substrate.specular_reflection_matrix(sensor.frequency, snowpack.layers[-1].permittivity, np.cos(sensor.theta), 2)
         ground_reflH = m.diagonal()[1::2]
         ground_reflV = m.diagonal()[0::2]
 
