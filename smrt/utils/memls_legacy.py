@@ -83,7 +83,7 @@ def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=N
             snowpack_dimension = 'snowpack', range(len(snowpack))
         return concat_results(result_list, snowpack_dimension)
 
-    Tsky = atmosphere.tbdown() if atmosphere is not None else 0
+    Tsky = atmosphere.tbdown(sensor.frequency, np.cos(sensor.theta), 1) if atmosphere is not None else 0
     Tgnd = snowpack.substrate.temperature if snowpack.substrate is not None else 273
 
     if snowpack.substrate is None:
