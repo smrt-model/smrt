@@ -107,14 +107,14 @@ class Sensor(object):
 
     """
 
-    def __init__(self, frequency, theta_inc, theta, phi, polarization_inc, polarization):
+    def __init__(self, frequency, theta_inc_deg, theta_deg, phi_deg, polarization_inc, polarization):
             """ Build a Sensor. Setting theta_inc to None means passive mode
 
     :param frequency: Microwave frequency in Hz
-    :param theta_inc: zenith angle of incident radiation emitted from the active sensor
+    :param theta_inc_deg: zenith angle in degrees of incident radiation emitted from the active sensor
     :param polarization_inc. List of single character (H or V) for the incident wave
-    :param theta: zenith angle at which the observation is made
-    :param theta: azimuth angle at which the observation is made
+    :param theta_deg: zenith angle in degrees at which the observation is made
+    :param phi_deg: azimuth angle at which the observation is made
     :param polarization. List of single character (H or V)
 
 """
@@ -128,19 +128,23 @@ class Sensor(object):
                 polarization_inc = list(polarization_inc)
             self.polarization_inc = polarization_inc
 
-            self.theta = np.atleast_1d(np.radians(theta)).flatten()
+            self.theta_deg = np.atleast_1d(theta_deg).flatten()
+            self.theta = np.radians(self.theta_deg)
             self.mu_s = np.cos(self.theta)
 
-            if phi is not None:
-                self.phi = np.atleast_1d(np.radians(phi)).flatten()
+            if phi_deg is not None:
+                self.phi_deg = np.atleast_1d(phi_deg).flatten()
+                self.phi = np.radians(self.phi_deg)
             else:
                 self.phi = 0.0
 
-            if theta_inc is None:
+            if theta_inc_deg is None:
+                self.theta_inc_deg = None
                 self.theta_inc = None
             else:
-                self.theta_inc = np.atleast_1d(np.radians(theta_inc)).flatten()
-                self.mu_i = np.cos(self.theta_inc)
+                self.theta_inc_deg = np.atleast_1d(theta_inc_deg).flatten()
+                self.theta_inc = np.radians(self.theta_inc_deg)
+                self.mu_s = np.cos(self.theta_inc)
 
     @property
     def mode(self):

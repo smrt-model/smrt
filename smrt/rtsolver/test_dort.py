@@ -10,14 +10,46 @@ from smrt.emmodel.nonescattering import NoneScattering
 from smrt.rtsolver.dort import DORT
 
 
+def setup_snowpack():
+    temp = 250
+    return make_snowpack([100], None, density=[300], temperature=[temp], interface=[Transparent])
+
+
 def test_noabsoprtion():
 
-    temp = 250
-    sp = make_snowpack([100], None, density=[300], temperature=[temp], interface=[Transparent])
+    sp = setup_snowpack()
 
     sensor = passive(37e9, theta=[30, 40])
+    m = Model(NoneScattering, DORT)
+    res = m.run(sensor, sp)
+
+    np.testing.assert_allclose(res.data, sp.layers[0].temperature)
+
+
+def test_returned_theta():
+
+    sp = setup_snowpack()
+
+    theta = [30, 40]
+    sensor = passive(37e9, theta)
 
     m = Model(NoneScattering, DORT)
     res = m.run(sensor, sp)
 
-    np.testing.assert_allclose(res.data, temp)
+    res_theta = res.coords['theta']
+    print(res_theta)
+    np.testing.assert_allclose(res_theta, theta)
+
+
+def test_selectby_theta():
+
+    sp = setup_snowpack()
+
+    theta = [30, 40]
+    sensor = passive(37e9, theta)
+
+    m = Model(NoneScattering, DORT)
+    res = m.run(sensor, sp)
+
+    print(res.data.coords)
+    res.TbV(theta=30)

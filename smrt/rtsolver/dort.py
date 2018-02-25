@@ -113,9 +113,9 @@ class DORT(object):
             # reshape the outer/first dimension in two dimensions (theta_inc, pola_inc)
             intensity = intensity.reshape(list(intensity.shape[:-1])+[intensity.shape[-1]//npol, npol])
         #  describe the results list of (dimension name, dimension array of value)
-        coords = [('theta', sensor.theta), ('polarization', pola)]
+        coords = [('theta', sensor.theta_deg), ('polarization', pola)]
         if sensor.mode == 'A':
-            coords = [('theta_inc', sensor.theta_inc), ('polarization_inc', pola)] + coords
+            coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola)] + coords
 
         return Result(intensity, coords)
 
