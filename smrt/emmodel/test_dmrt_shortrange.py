@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from smrt.emmodel.dmrt_shortrange import DMRT_ShortRange
+from smrt.emmodel.dmrt_qcacp_shortrange import DMRT_QCACP_ShortRange
 from smrt.core.error import SMRTError
 from smrt.inputs.sensor_list import amsre
 from smrt.inputs.make_medium import make_snow_layer
@@ -26,7 +26,7 @@ def setup_func_em(testpack=None):
     if testpack is None:
         testpack = setup_func_shs()
     sensor = amsre('37V')
-    emmodel = DMRT_ShortRange(sensor, testpack)
+    emmodel = DMRT_QCACP_ShortRange(sensor, testpack)
     return emmodel
 
 
