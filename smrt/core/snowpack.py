@@ -18,6 +18,7 @@ Example::
 
 """
 
+import copy
 import collections
 import numpy as np
 import pandas as pd
@@ -25,9 +26,7 @@ import six
 
 from .error import SMRTError
 from ..interface.flat import Flat
-
-
-
+from .layer import Layer
 
 
 class Snowpack(object):
@@ -57,7 +56,7 @@ class Snowpack(object):
         """return the depth of the bottom of each layer
 
 """
-        return np.cumsum(self.thicknesses)  # TODO Ghi: caching
+        return np.cumsum(self.layer_thicknesses)  # TODO Ghi: caching
 
     def append(self, layer, interface=None):
         """append a new layer at the bottom of the stack of layers. The interface is that at the top of the appended layer.
@@ -66,6 +65,9 @@ class Snowpack(object):
     :param interface: type of interface. By default, flat surface (:py:class:`~..interface.flat.Flat`) is considered meaning the coefficients are calculated with Fresnel coefficient
                       and using the effective permittivity of the surrounding layers
 """
+
+        if not isinstance(layer, Layer):
+            raise Warning("the layer to append in the snowpack is not an instance of the class Layer. This may be a mistake in your code.")
 
         self.layers.append(layer)
 
@@ -78,3 +80,28 @@ class Snowpack(object):
 
         if len(self.interfaces) != len(self.layers):
             raise SMRTError("The number of layers must equal the number of interfaces")
+
+    def check_addition_validity(self, other):
+
+        if not (hasattr(other, "layers") and hasattr(other, "interfaces") and hasattr(other, "substrate")):
+            raise SMRTError("Addition of snowpacks requires two instances of class Snowpack or equivalent compatible objects")
+
+        if self.substrate is not None:
+            raise SMRTError("While adding snowpacks, the first (topmost) snowpack can not have a substrate. Unset the substrate"
+                            " before adding the two snowpackes.")
+
+    def __add__(self, other):
+        """Return a new snowpack made of the first snowpack stacked on top of the second one."""
+
+        self.check_addition_validity(other)
+        return Snowpack(layers=self.layers + other.layers,
+                        interfaces=self.interfaces + other.interfaces,
+                        substrate=other.substrate)
+
+    def __iadd__(self, other): ## just for optimization
+        self.check_addition_validity(other)
+
+        self.layers += other.layers
+        self.interfaces += other.interfaces
+        self.substrate = other.substrate
+        return self
