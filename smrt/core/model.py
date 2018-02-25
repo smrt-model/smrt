@@ -58,7 +58,7 @@ from .sensor import Sensor
 from .progressbar import Progress
 
 
-def make_model(emmodel, rtsolver, emmodel_kwargs=None, rtsolver_kwargs=None):
+def make_model(emmodel, rtsolver, emmodel_options=None, rtsolver_options=None, emmodel_kwargs=None, rtsolver_kwargs=None):
     """create a new model with a given EM model and RT solver. The model is then ready to be run using the :py:meth:`Model.run` method. This function is the privileged way
     to create models compared to class instantiation. It supports automatic import of the emmodel and rtsolver modules.
 
@@ -66,15 +66,24 @@ def make_model(emmodel, rtsolver, emmodel_kwargs=None, rtsolver_kwargs=None):
     :type emmodel:  string or class or list of strings or classes. If a list is given, different models are used for the different layers of the snowpack. In this case, the size of the list must be the same as the number of layers in the snowpack.
     :param rtsolver: type of solver to use. Can be given by the name of a file/module in the rtsolver directeory (as a string) or a class.
     :type rtsolver: string or class
-    :param emmodel_kwargs: extra arguments to use to create emmodel instance. Valid arguments depend on the selected emmodel. It is documented in for each emmodel class.
-    :type emmodel_kwargs: dict or a list of dict. In the latter case, the size of the list must be the same as the number of layers in the snowpack.
-    :param rtsolver_kwargs: extra to use to create the rtsolver instance (see __init__ of the solver used).
-    :type rtsolver_args: dict
+    :param emmodel_options: extra arguments to use to create emmodel instance. Valid arguments depend on the selected emmodel. It is documented in for each emmodel class.
+    :type emmodel_options: dict or a list of dict. In the latter case, the size of the list must be the same as the number of layers in the snowpack.
+    :param rtsolver_options: extra to use to create the rtsolver instance (see __init__ of the solver used).
+    :type rtsolver_options: dict
 
     :returns: a model instance
     """
 
-    return Model(emmodel, rtsolver, emmodel_kwargs=emmodel_kwargs, rtsolver_kwargs=rtsolver_kwargs)
+    if emmodel_kwargs is not None:
+        raise DeprecationWarning("Use emmodel_options instead of emmodel_kwargs")
+        emmodel_options = emmodel_kwargs
+
+    if rtsolver_kwargs is not None:
+        raise DeprecationWarning("Use rtsolver_options instead of rtsolver_kwargs")
+        rtsolver_options = rtsolver_kwargs
+
+
+    return Model(emmodel, rtsolver, emmodel_options=emmodel_options, rtsolver_options=rtsolver_options)
 
 
 def get_emmodel(emmodel):
@@ -85,7 +94,7 @@ def get_emmodel(emmodel):
     return emmodel
 
 
-def make_emmodel(emmodel, sensor, layer, **emmodel_kwargs):
+def make_emmodel(emmodel, sensor, layer, **emmodel_options):
     """create a new emmodel instance based on the emmodel class or string
     :param emmodel: type of emmodel to use. Can be given by the name of a file/module in the emmodel directory (as a string) or a class.
     :type emmodel:  string or class or list of strings or classes. If a list is given, different models are used for the different layers of the snowpack. In this case, the size of the list must be the same as the number of layers in the snowpack.
@@ -95,13 +104,13 @@ def make_emmodel(emmodel, sensor, layer, **emmodel_kwargs):
 
     # instantiate
     emmodel = get_emmodel(emmodel)  # get the class
-    return emmodel(sensor, layer, **emmodel_kwargs)  # create a emmodele
+    return emmodel(sensor, layer, **emmodel_options)  # create a emmodele
 
 
 class Model(object):
     """ This class drives the whole calculation
     """
-    def __init__(self, emmodel, rtsolver, emmodel_kwargs=None, rtsolver_kwargs=None):
+    def __init__(self, emmodel, rtsolver, emmodel_options=None, rtsolver_options=None):
         """create a new model. It is not recommanded to instantiate Model class directly. Instead use the :py:meth:`make_model` function.
         """
 
@@ -119,8 +128,17 @@ class Model(object):
         # The implementation avoid metaclass by supplying an optional list of arguments to the emmodel and rtsolver
         # to alter the behavior the emmodel (or rtsolver)
         # this is not the most general case, but metaclass can still be used for advanced user
-        self.emmodel_kwargs = emmodel_kwargs if emmodel_kwargs is not None else dict()
-        self.rtsolver_kwargs = rtsolver_kwargs if rtsolver_kwargs is not None else dict()
+
+        self.emmodel_options = emmodel_options if emmodel_options is not None else dict()
+        self.rtsolver_options = rtsolver_options if rtsolver_options is not None else dict()
+
+    def set_rtsolver_options(self, options):
+        """set the option for the rtsolver"""
+        self.rtsolver_options = options
+
+    def set_emmodel_options(self, options):
+        """set the options for the emmodel"""
+        self.emmodel_options = options
 
     def run(self, sensor, snowpack, atmosphere=None, snowpack_dimension=None, progressbar=False):
         """ Run the model for the given sensor configuration and return the results
@@ -189,18 +207,18 @@ class Model(object):
             assert (len(self.emmodel) == snowpack.nlayer)
 
             for i, (emmodel, layer) in enumerate(zip(self.emmodel, snowpack.layers)):
-                if isinstance(self.emmodel_kwargs, collections.Sequence):
-                    emmodel_kwargs = self.emmodel_kwargs[i]
+                if isinstance(self.emmodel_options, collections.Sequence):
+                    emmodel_options = self.emmodel_options[i]
                 else:
-                    emmodel_kwargs = self.emmodel_kwargs
-                emmodel_instances.append(make_emmodel(emmodel, sensor, layer, **emmodel_kwargs))
+                    emmodel_options = self.emmodel_options
+                emmodel_instances.append(make_emmodel(emmodel, sensor, layer, **emmodel_options))
         else:  # the same model for all the layers
             for layer in snowpack.layers:
-                emmodel_instances.append(make_emmodel(self.emmodel, sensor, layer, **self.emmodel_kwargs))
+                emmodel_instances.append(make_emmodel(self.emmodel, sensor, layer, **self.emmodel_options))
 
         # need to create the rtsolver ?
         if inspect.isclass(self.rtsolver):
-            rtsolver = self.rtsolver(**self.rtsolver_kwargs)  # create with arguments
+            rtsolver = self.rtsolver(**self.rtsolver_options)  # create with arguments
         else:
             # no use the instance as it is (with possible memory of the last solve...)
             rtsolver = self.rtsolver
