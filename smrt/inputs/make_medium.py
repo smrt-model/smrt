@@ -27,7 +27,7 @@ import six
 from smrt.core.snowpack import Snowpack
 from smrt.core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE
 from smrt.core.layer import get_microstructure_model, Layer
-
+from smrt.core.error import SMRTError
 
 
 def make_snowpack(thickness, microstructure_model, density,
@@ -52,24 +52,32 @@ def make_snowpack(thickness, microstructure_model, density,
         sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
 
 """
-    def get(x, i):  # function to take the i-eme value in an array or dict of array. Can deal with scalar as well
+    def get(x, i, name=None):  # function to take the i-eme value in an array or dict of array. Can deal with scalar as well
 
         if isinstance(x, six.string_types):
             return x
         elif isinstance(x, pd.DataFrame) or isinstance(x, pd.Series):
+            if i >=len(x.values):
+                raise SMRTError("The array '%s' is too short compared to the thickness array" % name)
             return x.values[i]
         if isinstance(x, collections.Sequence) or isinstance(x, np.ndarray):
+            if i >=len(x):
+                raise SMRTError("The array '%s' is too short compared to the thickness array" % name)
             return x[i]
         elif isinstance(x, dict):
-            return {k: get(x[k], i) for k in x}
+            return {k: get(x[k], i, k) for k in x}
         else:
             return x
 
     sp = Snowpack(substrate=substrate)
 
+    if not isinstance(thickness, collections.Iterable):
+        raise SMRTError("The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame.")
+
+
     for i, dz in enumerate(thickness):
-        layer = make_snow_layer(dz, get(microstructure_model, i),
-                                density=get(density, i),
+        layer = make_snow_layer(dz, get(microstructure_model, i, "microstructure_model"),
+                                density=get(density, i, "density"),
                                 **get(kwargs, i))
 
         sp.append(layer, get(interface, i))
