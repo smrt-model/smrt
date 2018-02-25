@@ -128,7 +128,12 @@ class Sensor(object):
                 polarization_inc = list(polarization_inc)
             self.polarization_inc = polarization_inc
 
+
             self.theta_deg = np.atleast_1d(theta_deg).flatten()
+
+            if len(np.unique(self.theta_deg)) != len(self.theta_deg):
+                raise SMRTError("Zenith angle theta has duplicated values which is invalid.")
+
             self.theta = np.radians(self.theta_deg)
             self.mu_s = np.cos(self.theta)
 
@@ -143,6 +148,10 @@ class Sensor(object):
                 self.theta_inc = None
             else:
                 self.theta_inc_deg = np.atleast_1d(theta_inc_deg).flatten()
+
+                if len(np.unique(self.theta_inc_deg)) != len(self.theta_inc_deg):
+                    raise SMRTError("Zenith angle theta_inc has duplicated values which is invalid.")
+
                 self.theta_inc = np.radians(self.theta_inc_deg)
                 self.mu_s = np.cos(self.theta_inc)
 

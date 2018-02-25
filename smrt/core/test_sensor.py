@@ -22,6 +22,17 @@ def test_passive_wrong_frequency_units_warning():
     sensor.passive([1e9, 35], theta=55)
 
 
+
+@raises(SMRTError)
+def test_duplicate_theta():
+    sensor.passive([1e9, 35], theta=[55, 55])
+
+
+@raises(SMRTError)
+def test_duplicate_theta_active():
+    sensor.active([1e9, 35], [55, 55])
+
+
 def test_passive_mode():
     se = sensor.passive(35e9, 55, polarization="H")
     print(se.mode)
