@@ -41,13 +41,14 @@ class DORT(object):
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "phi", "polarization"}
 
-    def __init__(self, n_max_stream=32, m_max=2):
+    def __init__(self, n_max_stream=32, m_max=2, stream_mode="most_refringent"):
         # """
         # :param n_max_stream: number of stream in the most refringent layer
         # :param m_max: number of mode (azimuth)
 
         # """
         self.n_max_stream = n_max_stream
+        self.stream_mode = stream_mode
         self.m_max = m_max
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
@@ -135,7 +136,7 @@ class DORT(object):
         permittivity_substrate = self.snowpack.substrate.permittivity(self.sensor.frequency) if self.snowpack.substrate is not None else None
 
         n_stream, mu, weight, outmu, outweight, \
-        n_stream_substrate = compute_stream(self.n_max_stream, self.permittivity, permittivity_substrate)
+        n_stream_substrate = compute_stream(self.n_max_stream, self.permittivity, permittivity_substrate, mode=self.stream_mode)
 
         #
         # compute the incident intensity array depending on the sensor
@@ -588,7 +589,7 @@ It is recommended to reduce the size of the bigger grains.""")
     # !-----------------------------------------------------------------------------!
 
 
-def compute_stream(n_max_stream, permittivity, permittivity_substrate):
+def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="most_refringent"):
     #     """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent layer and
     # use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
 
@@ -600,8 +601,25 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate):
 
     #  ### search and proceed with the most refringent layer
     k_most_refringent = np.argmax(permittivity)
-    # calculate the gaussian weights and nodes for the most refringent layer
-    mu_most_refringent, weight_most_refringent = gaussquad(n_max_stream)
+    real_index_air = np.real(np.sqrt(permittivity[k_most_refringent] / 1.0))
+
+    if mode is None or mode == "most_refringent":
+        # calculate the gaussian weights and nodes for the most refringent layer
+        mu_most_refringent, weight_most_refringent = gaussquad(n_max_stream)
+
+    elif mode == "air":
+
+        raise Warning("This code has not been tested yet. Use with caution.")
+        def number_stream_in_air(n_stream_densest_layer):
+            mu_most_refringent, weight_most_refringent = gaussquad(int(n_stream_densest_layer))
+            relsin = real_index_air * np.sqrt(1 - mu_most_refringent ** 2)
+            return np.sum(relsin < 1) - n_max_stream
+
+        n_stream = scipy.optimize.brentq(n_max_stream, 2*n_max_stream)
+        mu_most_refringent, weight_most_refringent = gaussquad(n_stream)
+
+    else:
+        raise Runtime("Unknow mode to compute the number of stream")
 
     nlayer = len(permittivity)
     mu = np.zeros((nlayer, n_max_stream), dtype=np.float64)
@@ -644,8 +662,7 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate):
     # real_reflection = relsin < 1
     # outmu = np.sqrt(1 - relsin[real_reflection]**2)
 
-    real_index = np.real(np.sqrt(permittivity[k_most_refringent]/1.0))
-    relsin = real_index * np.sqrt(1 - mu_most_refringent[:]**2)
+    relsin = real_index_air * np.sqrt(1 - mu_most_refringent[:]**2)
 
     real_reflection = relsin < 1
     outmu = np.sqrt(1 - relsin[real_reflection]**2)
