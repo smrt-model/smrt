@@ -79,22 +79,22 @@ class Result(object):
     def sigmaVV(self, **kwargs):
         """any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
         theta = np.array(self.data.theta)
-        return 4*np.pi*np.cos(theta)*_strongsqueeze(self.data.sel(polarization_inc='V', polarization='V', **kwargs).sel_points(theta_inc=theta, theta=theta))
+        return 4*np.pi*np.cos(np.radians(theta))*_strongsqueeze(self.data.sel(polarization_inc='V', polarization='V', **kwargs).sel_points(theta_inc=theta, theta=theta))
 
     def sigmaHH(self, **kwargs):
         """any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
         theta = np.array(self.data.theta)
-        return 4*np.pi*np.cos(theta)*_strongsqueeze(self.data.sel(polarization_inc='H', polarization='H', **kwargs).sel_points(theta_inc=theta, theta=theta))
+        return 4*np.pi*np.cos(np.radians(theta))*_strongsqueeze(self.data.sel(polarization_inc='H', polarization='H', **kwargs).sel_points(theta_inc=theta, theta=theta))
 
     def sigmaHV(self, **kwargs):
         """any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
         theta = np.array(self.data.theta)
-        return 4*np.pi*np.cos(theta)*_strongsqueeze(self.data.sel(polarization_inc='H', polarization='V', **kwargs).sel_points(theta_inc=theta, theta=theta))
+        return 4*np.pi*np.cos(np.radians(theta))*_strongsqueeze(self.data.sel(polarization_inc='H', polarization='V', **kwargs).sel_points(theta_inc=theta, theta=theta))
 
     def sigmaVH(self, **kwargs):
         """any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
         theta = np.array(self.data.theta)
-        return 4*np.pi*np.cos(theta)*_strongsqueeze(self.data.sel(polarization_inc='V', polarization='H', **kwargs).sel_points(theta_inc=theta, theta=theta))
+        return 4*np.pi*np.cos(np.radians(theta))*_strongsqueeze(self.data.sel(polarization_inc='V', polarization='H', **kwargs).sel_points(theta_inc=theta, theta=theta))
 
 
     def save(self, filename):
