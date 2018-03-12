@@ -53,7 +53,7 @@ except KeyError:
     pass
 
 
-def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=None, memls_driver="memlsmain"):
+def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=None, memls_driver="memlsmain", snowpack_dimension=None):
     """ call MEMLS for the snowpack and sensor configuration given as argument. Any microstructure model that defines the "corr_length" parameter
         is valid, but it must be clear that MEMLS only considers exponential autocorrelation.
 
@@ -66,6 +66,8 @@ def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=N
         :param atmosphere: describe the atmosphere. Only tbdown is used for the Tsky argument of memlsmain.
         :param memls_path: directory path to the memls Matlab scripts
         :param memls_driver: matlab function to call to run memls. memlsmain.m is the default driver in the original MEMLS distribution.
+        :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and the values are from 1 to the number of snowpacks.
+
 
 """
 
