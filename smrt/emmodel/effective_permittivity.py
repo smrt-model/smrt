@@ -107,13 +107,14 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
 bruggeman = polder_van_santen
 
 
-def maxwell_garnett(frac_volume, e0, eps, depol_xyz=None):
+def maxwell_garnett(frac_volume, e0, eps, depol_xyz=None, *args):
     """ Calculates effective permittivity of snow by solution of Maxwell-Garnett equation.
 
     :param frac_volume: Fractional volume of snow
     :param e0: Permittivity of background (no default, must be provided)
     :param eps: Permittivity of scattering material (no default, must be provided)
     :param depol_xyz: [Optional] Depolarization factors, spherical isotropy is default
+    :added **kwargs to enable same structure of calling maxwell_garnett() and polder_van_santen() as effective_permittivity_model...
     :returns: random orientation effective permittivity
 
     **Usage example:**
