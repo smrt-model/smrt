@@ -54,22 +54,6 @@ def make_snowpack(thickness, microstructure_model, density,
         sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
 
 """
-    def get(x, i, name=None):  # function to take the i-eme value in an array or dict of array. Can deal with scalar as well
-
-        if isinstance(x, six.string_types):
-            return x
-        elif isinstance(x, pd.DataFrame) or isinstance(x, pd.Series):
-            if i >=len(x.values):
-                raise SMRTError("The array '%s' is too short compared to the thickness array" % name)
-            return x.values[i]
-        if isinstance(x, collections.Sequence) or isinstance(x, np.ndarray):
-            if i >=len(x):
-                raise SMRTError("The array '%s' is too short compared to the thickness array" % name)
-            return x[i]
-        elif isinstance(x, dict):
-            return {k: get(x[k], i, k) for k in x}
-        else:
-            return x
 
     sp = Snowpack(substrate=substrate)
 
@@ -142,42 +126,23 @@ def make_snow_layer(layer_thickness, microstructure_model,
 
 def make_ice_column(thickness, temperature, microstructure_model, inclusion_shape,
                     salinity=0.,
-                    add_water_substrate=True,
                     brine_volume_fraction=None,
+                    add_water_substrate=True,
                     interface=None,
                     substrate=None, **kwargs):
-    """
-    build a multi-layered ice column. Each parameter can be an array, list or a constant value.
+    """Build a multi-layered ice column. Each parameter can be an array, list or a constant value.
 
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf" for a semi-infinite layer.
     :param temperature: temperature of ice/water in K
-    :param inclusion_shape: assumption for shape of brine inclusions (so far, "spheres" or "random_needles" (i.e. elongated ellipsoidal inclusions) are implemented)
+    :param inclusion_shape: assumption for shape of brine inclusions. So far, "spheres" or "random_needles" (i.e. elongated ellipsoidal inclusions) are implemented.
     :param salinity: salinity of ice/water [no units]. Default is 0. If neither salinity nor brine_volume_fraction are given, the ice column is considered to consist of fresh water ice.
-    :param add_water_substrate: Adds an semi-infinite layer of water below the ice column. Possible arguments are True (default, looks for salinity or brine volume fraction input to determine if a saline or fresh water layer is added), False (no water layer is added), 'ocean' (adds saline water), 'fresh' (adds fresh water layer).
-    :param brine_volume_fraction: brine / liquid water fraction in sea ice, optional parameter, if not given brine volume fraction is calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction 
+    :param brine_volume_fraction: brine / liquid water fraction in sea ice, optional parameter, if not given brine volume fraction is calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
+    :param add_water_substrate: Adds a semi-infinite layer of water below the ice column. Possible arguments are True (default, looks for salinity or brine volume fraction input to determine if a saline or fresh water layer is added), False (no water layer is added), 'ocean' (adds saline water), 'fresh' (adds fresh water layer).
     :param interface: type of interface, flat/fresnel is the default
     All the other parameters (temperature, microstructure parameters, emmodel, etc, etc) are given as optional arguments (e.g. temperature=[270, 250]). Optional arguments are, for example, 'water_temperature', 'water_salinity' and 'water_depth' of the water layer added by 'add_water_substrate'.
     They are passed for each layer to the function :py:func:`~smrt.inputs.make_medium.make_ice_layer`. Thus, the documentation of this function is the reference. It describes precisely the available parameters.
 
-    TODO: include the documentation of make_snow_layer here once stabilized
-
-    e.g.::
-
-        sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
-
 """
-    def get(x, i):  # function to take the i-eme value in an array or dict of array. Can deal with scalar as well
-
-        if isinstance(x, six.string_types):
-            return x
-        elif isinstance(x, pd.DataFrame) or isinstance(x, pd.Series):
-            return x.values[i]
-        if isinstance(x, collections.Sequence) or isinstance(x, np.ndarray):
-            return x[i]
-        elif isinstance(x, dict):
-            return {k: get(x[k], i) for k in x}
-        else:
-            return x
 
     sp = Snowpack(substrate=substrate)
 
@@ -199,15 +164,17 @@ def make_ice_column(thickness, temperature, microstructure_model, inclusion_shap
 
     if add_water_substrate == "ocean":
         water_temperature = 273.15 - 1.8
-        water_salinity = 32. #somewhat arbitrary value, fresher than average ocean salinity, reflecting lower salinities in polar regions  
+        water_salinity = 32. #somewhat arbitrary value, fresher than average ocean salinity, reflecting lower salinities in polar regions
     elif add_water_substrate == "fresh":
         water_temperature = 273.15
         water_salinity = 0.
     elif add_water_substrate is not False:
-        print("'add_water_substrate' must be set to one of the following: True (default), False, 'ocean', 'fresh'. Additional optional arguments for function make_ice_column are 'water_temperature', 'water_salinity' and 'water_depth'.")
+        raise SMRTError("'add_water_substrate' must be set to one of the following: True (default), False, 'ocean', 'fresh'. Additional optional arguments for function make_ice_column are 'water_temperature', 'water_salinity' and 'water_depth'.")
 
     if add_water_substrate is not False:
         water_depth = 10.  # arbitrary value of 10m thickness for the water layer, microwave absorption in water is usually high, so this represents an infinitely thick water layer
+
+        # override the following variable if set
         water_temperature = kwargs.get('water_temperature', water_temperature)
         water_salinity = kwargs.get('water_salinity', water_salinity)
         water_depth = kwargs.get('water_depth', water_depth)
@@ -230,7 +197,7 @@ def make_ice_layer(layer_thickness, temperature, salinity, microstructure_model,
                    inclusion_permittivity_model=None,
                    background_permittivity_model=None,
                    **kwargs):
-    """Make a snow layer for a given microstructure_model (see also :py:func:`~smrt.inputs.make_medium.make_snowpack` to create many layers).
+    """Make an ice layer for a given microstructure_model (see also :py:func:`~smrt.inputs.make_medium.make_ice_column` to create many layers).
     The microstructural parameters depend on the microstructural model and should be given as additional arguments to this function. To know which parameters are required or optional,
     refer to the documentation of the specific microstructure model used.
 
@@ -288,3 +255,21 @@ def make_ice_layer(layer_thickness, temperature, salinity, microstructure_model,
     lay.inclusion_shape = inclusion_shape
 
     return lay
+
+
+def get(x, i, name=None):  # function to take the i-eme value in an array or dict of array. Can deal with scalar as well
+
+    if isinstance(x, six.string_types):
+        return x
+    elif isinstance(x, pd.DataFrame) or isinstance(x, pd.Series):
+        if i >=len(x.values):
+            raise SMRTError("The array '%s' is too short compared to the thickness array" % name)
+        return x.values[i]
+    if isinstance(x, collections.Sequence) or isinstance(x, np.ndarray):
+        if i >=len(x):
+            raise SMRTError("The array '%s' is too short compared to the thickness array" % name)
+        return x[i]
+    elif isinstance(x, dict):
+        return {k: get(x[k], i, k) for k in x}
+    else:
+        return x

@@ -8,6 +8,7 @@ developer to ensure these functions, if used, are appropriate and consistent wit
 
 # Import statements
 import numpy as np
+from smrt.core.error import  SMRTError
 
 def depolarization_factors(length_ratio=None):
     """ Calculates depolarization factors for use in effective permittivity models. These
@@ -79,12 +80,9 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
     if eps is None:
         eps = 3.185  # MEMLS default for PVS calculation
 
-    if inclusion_shape is None:
-        inclusion_shape = "spheres"
-
     # Polder Van Santen / de Loor / Böttcher / Bruggeman formula
     # Solution of quadratic equation arising from eqn 9.2. in Sihvola: Electromagnetic Mixing Formulas and Applications
-    if inclusion_shape == "spheres":
+    if (inclusion_shape is None) or (inclusion_shape == "spheres"):
         a_quad = 2.
         b_quad = eps - 2 * e0 - 3. * frac_volume * (eps - e0)
         c_quad = - eps * e0
@@ -97,7 +95,7 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
         c_quad = - eps * (e0 + 1. / 3. * frac_volume * (eps - e0))
 
     else:
-        print("For Polder van Santen formula, parameter 'inclusion_shape' must be one of the following:\
+        raise SMRTError("inclusion_shape must be one of the following:\
         'spheres' (default), 'random_needles'.")
    
     return (-b_quad + np.sqrt(b_quad**2 - 4. * a_quad * c_quad)) / (2. * a_quad)
@@ -107,7 +105,7 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
 bruggeman = polder_van_santen
 
 
-def maxwell_garnett(frac_volume, e0, eps, depol_xyz=None, *args):
+def maxwell_garnett(frac_volume, e0, eps, depol_xyz=None, inclusion_shape=None):
     """ Calculates effective permittivity of snow by solution of Maxwell-Garnett equation.
 
     :param frac_volume: Fractional volume of snow
@@ -132,6 +130,9 @@ def maxwell_garnett(frac_volume, e0, eps, depol_xyz=None, *args):
         from smrt.emmodel.commonfunc import maxwell_garnett
 
     """
+
+    if inclusion_shape is not None and inclusion_shape != "spheres":
+        raise SMRTError("inclusion_shape must be set to 'spheres'")
 
     if depol_xyz is None:
         depol_xyz = np.array([1. / 3.] * 3)
