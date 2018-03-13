@@ -45,5 +45,5 @@ class IBA_original(IBA):
 
         """
 
-        # equation from Matzler 1998 and 1999
+        # equation from Matzler 1998 (original IBA98 paper) and Matzler and Wiesmann 1999
         return self.k0 * self.frac_volume *  self.eps.imag * abs(self.mean_sq_field_ratio(self.e0, self.eps))

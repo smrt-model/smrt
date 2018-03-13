@@ -1,7 +1,9 @@
 # coding: utf-8
 
-"""Compute scattering from Improved Born Approximation theory. This model allows for different
-microstructural models provided that the Fourier transform of the correlation function
+"""Compute scattering from Improved Born Approximation theory as described in Mätzler 1998 and Mätzler and Wiesman 1999, except the
+absorption coefficient which is computed with Polden von Staten formulation instead of the Eq 24 in Mätzler 1998. See iba_original.py for
+a fully conforming IBA version.
+ This model allows for different microstructural models provided that the Fourier transform of the correlation function
 may be performed. All properties relate to a single layer.
 
 """
@@ -26,7 +28,7 @@ from .effective_permittivity import depolarization_factors, polder_van_santen
 
 
 def derived_IBA(effective_permittivity_model=polder_van_santen):  # , absorption_calculation=None):
-    """return a new IBA model with variant from the default IBA which conformed to the Matlzer 1998.
+    """return a new IBA model with variant from the default IBA.
 
     :param effective_permittivity_model: permittivity mixing formula. Must be a function of 4 parameters (frac_volume, e0, es, depol_xyz).
 
@@ -396,10 +398,13 @@ class IBA(object):
 
         """
 
-        # change the default equation for Matzler 1998 and 1999 to that used in MEMLS code
-        return self.k0 * self.frac_volume *  self.eps.imag * abs(self.mean_sq_field_ratio(self.e0, self.eps))
+        # after several go and back, the situation is now clear:
+        # MEMLS uses the formulation in IBA98 paper. In SMRT this formulation is available in iba_original.py
+        # here we use Polden von Staten which is known to be better and accommodate the full range of density/frac_volume
+        # PvS is also now recommended by Christian Matzler and has been implemented in MEMLS modified for sea-ice.
+        # This is therefore the default in SMRT. The fully MEMLS compatible IBA is in iba_original.py
 
-        #return 2 * self.k0 * np.sqrt(self._effective_permittivity).imag
+        return 2 * self.k0 * np.sqrt(self._effective_permittivity).imag
 
 
     def ke(self, mu):

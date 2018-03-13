@@ -6,7 +6,7 @@ from nose.tools import ok_
 import numpy as np
 import scipy.integrate
 
-from smrt.emmodel.iba import IBA, derived_IBA
+from smrt.emmodel.iba_original import IBA_original
 from smrt.emmodel.rayleigh import Rayleigh
 from smrt.core.error import SMRTError
 from smrt.core.sensor import active
@@ -20,7 +20,7 @@ from smrt.microstructure_model.independent_sphere import IndependentSphere
 from smrt.microstructure_model.sticky_hard_spheres import StickyHardSpheres
 
 tolerance = 1e-7
-tolerance_pc = 0.001  # 1% error is allowable for differences from MEMLS values. Tests pass at 2%. Some fail at 1%.
+tolerance_pc = 0.05  # 5% error is allowable for differences from MEMLS values. Tests pass at 2%. Some fail at 1%.
 
 
 def setup_func_sp():
@@ -52,7 +52,7 @@ def setup_func_em(testpack=None):
     if testpack is None:
         testpack = setup_func_sp()
     sensor = amsre('37V')
-    emmodel = IBA(sensor, testpack)
+    emmodel = IBA_original(sensor, testpack)
     return emmodel
 
 
@@ -60,14 +60,13 @@ def setup_func_active(testpack=None):
     if testpack is None:
         testpack = setup_func_sp()
     scatt = active(frequency=10e9, theta_inc=50)
-    emmodel = IBA(scatt, testpack)
+    emmodel = IBA_original(scatt, testpack)
     return emmodel
-
 
 def setup_func_rayleigh():
     testpack = setup_func_indep(radius=1e-4)
     sensor = amsre('10V')
-    emmodel_iba = IBA(sensor, testpack)
+    emmodel_iba = IBA_original(sensor, testpack)
     emmodel_ray = Rayleigh(sensor, testpack)
     return emmodel_iba, emmodel_ray
 
@@ -83,59 +82,53 @@ def setup_mu(stepsize, bypass_exception=None):
     return mu
 
 
+# Tests to compare with MEMLS IBA, graintype = 2 (small spheres) outputs
+
+
 
 def test_ks_pc_is_0p3_mm():
     testpack = setup_func_pc(0.3e-3)
     em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks =  4.14237510549
-    print(initial_ks, em.ks)
-    ok_(abs(em.ks - initial_ks) < tolerance_pc * em.ks)
-
+    # Allow 5% error
+    memls_ks = 4.13718676e+00
+    ok_(abs(em.ks - memls_ks) < tolerance_pc * em.ks)
 
 def test_ks_pc_is_0p25_mm():
     testpack = setup_func_pc(0.25e-3)
     em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks = 2.58473097058
-    print(initial_ks, em.ks)
-    ok_(abs(em.ks - initial_ks) < tolerance_pc * em.ks)
-
+    # Allow 5% error
+    memls_ks = 2.58158887e+00
+    # eq_(em.ks, memls_ks)
+    ok_(abs(em.ks - memls_ks) < tolerance_pc * em.ks)
 
 def test_ks_pc_is_0p2_mm():
     testpack = setup_func_pc(0.2e-3)
     em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks = 1.41304849e+00
-    print(initial_ks, em.ks)
-    ok_(abs(em.ks - initial_ks) < tolerance_pc * em.ks)
-
+    # Allow 5% error
+    memls_ks = 1.41304849e+00
+    ok_(abs(em.ks - memls_ks) < tolerance_pc * em.ks)
 
 def test_ks_pc_is_0p15_mm():
     testpack = setup_func_pc(0.15e-3)
     em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks =  0.630947615752
-    print(initial_ks, em.ks)
-    ok_(abs(em.ks - initial_ks) < tolerance_pc * em.ks)
-
+    # Allow 5% error
+    memls_ks = 6.30218291e-01
+    ok_(abs(em.ks - memls_ks) < tolerance_pc * em.ks)
 
 def test_ks_pc_is_0p1_mm():
     testpack = setup_func_pc(0.1e-3)
     em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks =  0.194948835313
-    print(initial_ks, em.ks)
-    ok_(abs(em.ks - initial_ks) < tolerance_pc * em.ks)
+    # Allow 5% error
+    memls_ks = 1.94727497e-01
+    ok_(abs(em.ks - memls_ks) < tolerance_pc * em.ks)
 
 
 def test_ks_pc_is_0p2_mm():
     testpack = setup_func_pc(0.05e-3)
     em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks = 0.0250132475909
-    print(initial_ks, em.ks)
-    ok_(abs(em.ks - initial_ks) < tolerance_pc * em.ks)
+    # Allow 5% error
+    memls_ks = 2.49851702e-02
+    ok_(abs(em.ks - memls_ks) < tolerance_pc * em.ks)
 
 
 def test_energy_conservation_exp():
@@ -213,14 +206,6 @@ def test_iba_vs_rayleigh_active_m2():
     em_iba, em_ray = setup_func_rayleigh()
     mu = setup_mu(1. / 64, bypass_exception=True)
     ok_((abs(em_iba.ft_even_phase(2, mu, npol=3) / em_iba.ks - em_ray.ft_even_phase(2, mu, npol=3) / em_ray.ks) < tolerance_pc).all())
-
-
-def test_permittivity_model():
-
-    new_iba = derived_IBA(effective_permittivity_model=effective_permittivity.maxwell_garnett)
-    layer = setup_func_pc(0.3e-3)
-    sensor = amsre('37V')
-    new_iba(sensor, layer)
 
 
 @raises(SMRTError)
