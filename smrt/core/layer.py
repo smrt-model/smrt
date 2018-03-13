@@ -41,7 +41,8 @@ class Layer(object):
     """
 
     def __init__(self, thickness, microstructure_model,
-                 frac_volume=None, temperature=FREEZING_POINT, permittivity_model=None, **kwargs):
+                 frac_volume=None, temperature=FREEZING_POINT, permittivity_model=None, inclusion_shape=None,
+                 **kwargs):
 
         """ Build a snow layer.
 
@@ -51,6 +52,7 @@ class Layer(object):
         :param temperature: temperature of layer in K
         :param permittivity_model: list or tuple of permittivity value or model for the background and materials (e.g. air and ice). The permittivity can be
         given as a complex (or real) value or a function that return a value (see :py:mod:`smrt.permittivity` modules)
+        :param inclusion_shape: assumption for shape of brine inclusions (so far, "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions) are implemented)
 
 """
 
@@ -60,6 +62,7 @@ class Layer(object):
         self.frac_volume = frac_volume
         self.temperature = temperature
         self.permittivity_model = permittivity_model
+        self.inclusion_shape = inclusion_shape
 
         # manage the microstructure parameters
         if microstructure_model is not None:
