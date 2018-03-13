@@ -50,13 +50,14 @@ def depolarization_factors(length_ratio=None):
     return np.array([anisotropy_q, anisotropy_q, (1. - 2. * anisotropy_q)])
 
 
-def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None):
+def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_shape=None):
     """ Calculates effective permittivity of snow by solution of quadratic Polder Van Santen equation for spherical inclusion.
 
     :param frac_volume: Fractional volume of snow
     :param e0: Permittivity of background (default is 1)
     :param eps: Permittivity of scattering material (default is 3.185 to compare with MEMLS)
     :param depol_xyz: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into account here.
+    :param inclusion_shape: assumption for shape of brine inclusions (so far, "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions) are implemented)
     :returns: Effective permittivity
 
     **Usage example:**
@@ -78,12 +79,27 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None):
     if eps is None:
         eps = 3.185  # MEMLS default for PVS calculation
 
+    if inclusion_shape is None:
+        inclusion_shape = "spheres"
+
     # Polder Van Santen / de Loor / Böttcher / Bruggeman formula
     # Solution of quadratic equation arising from eqn 9.2. in Sihvola: Electromagnetic Mixing Formulas and Applications
-    a_quad = 2.
-    b_quad = eps - 2 * e0 - 3. * frac_volume * (eps - e0)
-    c_quad = - eps * e0
+    if inclusion_shape == "spheres":
+        a_quad = 2.
+        b_quad = eps - 2 * e0 - 3. * frac_volume * (eps - e0)
+        c_quad = - eps * e0
 
+    # Polder and Van Santen model, modified by de Loor (according to Shokr (1998) simplified by Hoekstra and Capillino (1971))
+    # Solution of quadratic equation arising from eqn (18) in Shokr (1998): 'Field Observations and Model Calculations of Dielectric Properties of Arctic Sea Ice in the Microwave C-Band', IEEE.
+    elif inclusion_shape == "random_needles":
+        a_quad = 1.
+        b_quad = eps - e0 - 5. / 3. * frac_volume * (eps - e0)
+        c_quad = - eps * (e0 + 1. / 3. * frac_volume * (eps - e0))
+
+    else:
+        print("For Polder van Santen formula, parameter 'inclusion_shape' must be one of the following:\
+        'spheres' (default), 'random_needles'.")
+   
     return (-b_quad + np.sqrt(b_quad**2 - 4. * a_quad * c_quad)) / (2. * a_quad)
 
 
