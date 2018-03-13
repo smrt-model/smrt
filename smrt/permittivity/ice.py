@@ -64,6 +64,25 @@ def ice_permittivity_matzler87(frequency, temperature):
 
 
 @required_layer_properties("temperature")
+def ice_permittivity_matzler98(frequency, temperature):
+    """computes permittivity of ice (accounting for ionic impurities in ice?), equations from Hufford (1991) as given in Maetzler (1998): 'Microwave properties of ice and snow', in B. Schmitt et al. (eds.): 'Solar system ices', p. 241-257, Kluwer.
+    :param temperature: ice temperature in K
+    :param frequency: Frequency in Hz"""
+
+    f = frequency * 1e-9
+    epi = 3.1884 + 9.1e-4 * (temperature - 273.15)
+
+    # The Hufford model for the imaginary part:
+    theta = 300. / temperature - 1.
+    alpha = (0.00504 + 0.0062 * theta) * np.exp(-22.1 * theta)
+    beta = (0.502 - 0.131 * theta / (1 + theta)) * 1e-4 + \
+        (0.542e-6 * ((1 + theta) / (theta + 0.0073))**2)
+
+    epii = (alpha / f) + (beta * f)
+    return epi + epii * 1j
+
+
+@required_layer_properties("temperature")
 def _ice_permittivity_HUT(frequency, temperature):
     # This gives exact agreement with the HUT model version
     # Only use if invoking an exact HUT simulation.
