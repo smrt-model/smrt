@@ -89,6 +89,7 @@ class IBA(object):
         self.e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
         self.eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
         self.k0 = 2 * np.pi * sensor.frequency / C_SPEED  # Wavenumber in free space
+        self.inclusion_shape = layer.inclusion_shape # for assuming spherical or ellipsoidal inclusions
 
         # Calculate depolarization factors and iba_coefficient
         self.depol_xyz = depolarization_factors()
@@ -434,7 +435,9 @@ class IBA(object):
 
         """
 
-        eps = type(self).effective_permittivity_model(self.frac_volume, self.e0, self.eps, self.depol_xyz)
+        eps = type(self).effective_permittivity_model(
+            self.frac_volume, self.e0, self.eps, self.depol_xyz, self.inclusion_shape)
+        
         if eps.imag < 0:
             raise SMRTError("the imaginary part of the permittivity must be positive, by convention, in SMRT")
         return eps
