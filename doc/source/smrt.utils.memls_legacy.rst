@@ -1,5 +1,5 @@
-smrt.utils.memls_legacy module
-==============================
+smrt\.utils\.memls\_legacy module
+=================================
 
 .. automodule:: smrt.utils.memls_legacy
     :members:

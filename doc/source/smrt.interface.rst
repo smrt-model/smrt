@@ -1,5 +1,5 @@
-smrt.interface package
-======================
+smrt\.interface package
+=======================
 
 .. automodule:: smrt.interface
     :members:

@@ -1,5 +1,5 @@
-smrt.emmodel.nonescattering module
-==================================
+smrt\.emmodel\.nonescattering module
+====================================
 
 .. automodule:: smrt.emmodel.nonescattering
     :members:

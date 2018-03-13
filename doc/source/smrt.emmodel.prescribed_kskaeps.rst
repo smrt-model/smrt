@@ -1,5 +1,5 @@
-smrt.emmodel.prescribed_kskaeps module
-======================================
+smrt\.emmodel\.prescribed\_kskaeps module
+=========================================
 
 .. automodule:: smrt.emmodel.prescribed_kskaeps
     :members:

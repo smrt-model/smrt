@@ -1,5 +1,5 @@
-smrt.utils package
-==================
+smrt\.utils package
+===================
 
 .. automodule:: smrt.utils
     :members:
@@ -14,5 +14,6 @@ Submodules
    smrt.utils.dmrt_qms_legacy
    smrt.utils.hut_legacy
    smrt.utils.memls_legacy
+   smrt.utils.mpl_plots
    smrt.utils.repo_tools
 

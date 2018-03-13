@@ -1,5 +1,5 @@
-smrt.emmodel.commontest module
-==============================
+smrt\.emmodel\.commontest module
+================================
 
 .. automodule:: smrt.emmodel.commontest
     :members:

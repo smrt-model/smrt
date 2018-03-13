@@ -1,5 +1,5 @@
-smrt.substrate package
-======================
+smrt\.substrate package
+=======================
 
 .. automodule:: smrt.substrate
     :members:

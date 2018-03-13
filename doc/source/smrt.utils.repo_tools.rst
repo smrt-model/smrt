@@ -1,5 +1,5 @@
-smrt.utils.repo_tools module
-============================
+smrt\.utils\.repo\_tools module
+===============================
 
 .. automodule:: smrt.utils.repo_tools
     :members:

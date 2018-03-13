@@ -1,5 +1,5 @@
-smrt.microstructure_model.independent_sphere module
-===================================================
+smrt\.microstructure\_model\.independent\_sphere module
+=======================================================
 
 .. automodule:: smrt.microstructure_model.independent_sphere
     :members:

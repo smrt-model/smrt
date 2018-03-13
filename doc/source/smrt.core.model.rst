@@ -1,5 +1,5 @@
-smrt.core.model module
-======================
+smrt\.core\.model module
+========================
 
 .. automodule:: smrt.core.model
     :members:

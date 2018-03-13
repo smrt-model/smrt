@@ -1,5 +1,5 @@
-smrt.interface.transparent module
-=================================
+smrt\.interface\.transparent module
+===================================
 
 .. automodule:: smrt.interface.transparent
     :members:

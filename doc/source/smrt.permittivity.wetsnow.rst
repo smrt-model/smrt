@@ -1,5 +1,5 @@
-smrt.permittivity.wetsnow module
-================================
+smrt\.permittivity\.wetsnow module
+==================================
 
 .. automodule:: smrt.permittivity.wetsnow
     :members:

@@ -1,5 +1,5 @@
-smrt.core.test_globalconstants module
-=====================================
+smrt\.core\.test\_globalconstants module
+========================================
 
 .. automodule:: smrt.core.test_globalconstants
     :members:

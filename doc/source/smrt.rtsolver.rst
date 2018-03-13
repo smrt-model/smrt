@@ -1,5 +1,5 @@
-smrt.rtsolver package
-=====================
+smrt\.rtsolver package
+======================
 
 .. automodule:: smrt.rtsolver
     :members:

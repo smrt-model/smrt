@@ -1,5 +1,5 @@
-smrt.permittivity package
-=========================
+smrt\.permittivity package
+==========================
 
 .. automodule:: smrt.permittivity
     :members:

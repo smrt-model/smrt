@@ -1,5 +1,5 @@
-smrt.core.plugin module
-=======================
+smrt\.core\.plugin module
+=========================
 
 .. automodule:: smrt.core.plugin
     :members:

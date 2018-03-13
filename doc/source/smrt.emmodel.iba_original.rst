@@ -1,5 +1,5 @@
-smrt.emmodel.iba_original module
-================================
+smrt\.emmodel\.iba\_original module
+===================================
 
 .. automodule:: smrt.emmodel.iba_original
     :members:
