@@ -19,7 +19,7 @@ salinity = np.linspace(2., 10., l+1) #salinity profile ranging from salinity=2 a
 salinity=salinity[:-1]
 
 # create an ice column with assumption of spherical brine inclusions (inclusion_shape="spheres"):
-ice_column1 = make_ice_column(thickness=thickness,
+ice_column = make_ice_column(thickness=thickness,
                             temperature=temperature,
                             microstructure_model="exponential",
                             inclusion_shape="spheres", #inclusion_shape can be "spheres" or "random_needles" 
@@ -28,15 +28,20 @@ ice_column1 = make_ice_column(thickness=thickness,
                             add_water_substrate="ocean" #see comment below
                             )
 
-#add_water_substrate: adds an semi-infinite layer of water below the ice column. Possible arguments are True (default, looks for salinity or brine volume fraction input to determine if a saline or fresh water layer is added), False (no water layer is added), 'ocean' (adds saline water), 'fresh' (adds fresh water layer).
+#add_water_substrate: adds an semi-infinite layer of water below the ice column. Possible arguments are True (default, looks for salinity or
+#brine volume fraction input to determine if a saline or fresh water layer is added), False (no water layer is added), 'ocean' (adds saline
+#water), 'fresh' (adds fresh water layer).
+
+#Optional arguments for function make_ice_column() are 'water_temperature' (default = -1.8degC),
+#'water_salinity' (default = 32.) and 'water_depth' (default = 10m, i.e. infinitely thick for microwave radiation) of the water layer.
 
 # create the sensor
 sensor = sensor_list.passive(1.4e9, 40.)
 
-m1 = make_model("iba", "dort")
+m = make_model("iba", "dort")
 
 # run the model
-res1 = m1.run(sensor, ice_column1)
+res = m.run(sensor, ice_column)
 
 # print TBs at horizontal and vertical polarization:
-print(res1.TbH(), res1.TbV())
+print(res.TbH(), res.TbV())
