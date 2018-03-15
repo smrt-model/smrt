@@ -23,7 +23,7 @@ def ice_permittivity_maetzler06(frequency, temperature):
     """ Calculates the complex ice dielectric constant depending on the frequency and temperature
 
     Based on Mätzler, C. (2006). Thermal Microwave Radiation: Applications for Remote Sensing p456-461
-    This is the default model used in smrt.core.layer.make_snow_layer().
+    This is the default model used in smrt.inputs.make_medium.make_snow_layer().
 
     :param frequency: frequency in Hz
     :param temperature: temperature in K
@@ -31,14 +31,14 @@ def ice_permittivity_maetzler06(frequency, temperature):
 
     **Usage example**::
 
-        from smrt.permittivity.ice import ice_permittivity_matzler87
-        eps_ice = ice_permittivity_matzler87(frequency=18e9, temperature=270, liquid_water=0, salinity=0)
+        from smrt.permittivity.ice import ice_permittivity_maetzler06
+        eps_ice = ice_permittivity_maetzler06(frequency=18e9, temperature=270)
 
     .. note::
 
-        Ice permittivity is automatically calculated in smrt.core.layer.make_snow_layer() and
+        Ice permittivity is automatically calculated in smrt.inputs.make_medium.make_snow_layer() and
         is not set by the electromagnetic model module. An alternative
-        to ice_permittivity_matzler87 may be specified as an argument to the make_snow_layer 
+        to ice_permittivity_maetzler06 may be specified as an argument to the make_snow_layer 
         function. The usage example is provided for external reference or testing purposes.
 
 """
@@ -79,6 +79,51 @@ def ice_permittivity_matzler98(frequency, temperature):
 
     epii = (alpha / f) + (beta * f)
     return epi + epii * 1j
+
+
+@required_layer_properties("temperature")
+def ice_permittivity_maetzler87(frequency, temperature):
+    """ Calculates the complex ice dielectric constant depending on the frequency and temperature
+
+    Based on Mätzler, C. and Wegmüller (1987). Dielectric properties of fresh-water ice at microwave frequencies.
+    J. Phys. D: Appl. Phys. 20 (1987) 1623-1630.
+    :param frequency: frequency in Hz
+    :param temperature: temperature in K
+    :returns: Complex permittivity of pure ice
+
+    **Usage example**::
+
+        from smrt.permittivity.ice import ice_permittivity_maetzler87
+        eps_ice = ice_permittivity_maetzler87(frequency=18e9, temperature=270)
+
+    .. note::
+
+        This is only suitable for testing at -5 deg C and -15 deg C. If used at other temperatures
+        a warning will be displayed.
+
+"""
+
+    import warnings
+    
+    freqGHz = frequency / 1e9
+    # Equation 10
+    Ereal = 3.1884 + 9.1e-4 * (temperature - FREEZING_POINT)
+
+    if (temperature - FREEZING_POINT) < -10:
+        A = 3.5e-4
+        B = 3.6e-5
+        C = 1.2
+    else:
+        A = 6e-4
+        B = 6.5e-5
+        C = 1.07
+    # Equation 13
+    Eimag = A / freqGHz + B * freqGHz**C
+    # Issue warning if temperature different from values in paper
+    if temperature not in [FREEZING_POINT-5, FREEZING_POINT-15]:
+        warnings.warn("Strictly, this permittivity formulation was proposed for -5 and -15 deg C. It is recommended to use another formulation if this is not for testing purpose")
+
+    return Ereal + Eimag * 1j
 
 
 @required_layer_properties("temperature")

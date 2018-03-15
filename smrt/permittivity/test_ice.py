@@ -1,10 +1,11 @@
 
 from nose.tools import raises
 from nose.tools import eq_
-# import warnings
+import warnings
 import numpy as np
 
 from smrt.permittivity.ice import ice_permittivity_maetzler06
+from smrt.permittivity.ice import ice_permittivity_maetzler87
 from smrt.permittivity.ice import _ice_permittivity_HUT
 from smrt.permittivity.ice import _ice_permittivity_DMRTML
 from smrt.permittivity.ice import _ice_permittivity_MEMLS
@@ -28,10 +29,10 @@ from smrt.core.error import SMRTError
 #     assert 'Warning: temperature is below 240K. Ice permittivity is out of range of applicability' in str(w[-1].message)
 
 # Test output of this module against output from MEMLS code
+# Not exact as MEMLS references to 273, not 273.15
 def test_real_ice_permittivity_output_matzler_temp_270():
     eps = ice_permittivity_maetzler06(10e9, 270)
-    np.testing.assert_allclose(eps.real, 3.1857, atol=1e-4)
-
+    np.testing.assert_allclose(eps.real, 3.18567, atol=1e-3)
 
 # Test output of this module against output from MEMLS code
 # Weaker tolerance for 250K as MEMLS calculation is based on freezing point temperature of 273K not 273.15K
@@ -80,6 +81,25 @@ def test_imaginary_ice_permittivity_output_matzler_temp_250_freq_40GHz():
     np.testing.assert_allclose(eps.imag, 0.0023952, atol=1e-4)
 
 
+# Test output of this maetzler 87 against output maetzler 06
+def test_real_ice_permittivity_output_maetzler87_temp_268():
+    eps87 = ice_permittivity_maetzler87(10e9, 268.15)
+    eps06 = ice_permittivity_maetzler06(10e9, 268.15)
+    eq_(eps87.real, eps06.real)
+
+
+# Test output of this maetzler 87 against manually calculated value
+def test_imag_ice_permittivity_output_maetzler87_temp_minus5():
+    eps = ice_permittivity_maetzler87(10e9, 268.15)
+    np.testing.assert_allclose(eps.imag, 8.2368e-4, atol=1e-8)
+
+
+# Test output of this maetzler 87 against manually calculated value
+def test_imag_ice_permittivity_output_maetzler87_temp_minus15():
+    eps = ice_permittivity_maetzler87(10e9, 258.15)
+    np.testing.assert_allclose(eps.imag, 6.0556e-4, atol=1e-8)
+
+
 # Test output of HUT version
 def test_real_ice_permittivity_output_HUT():
     eps = _ice_permittivity_HUT(10e9, 270)
@@ -105,7 +125,8 @@ def test_imaginary_ice_permittivity_output_DMRTML():
 
 
 # Test output MEMLS version
-def test_real_ice_permittivity_output_matzler_temp_270():
+# Should be exact
+def test_real_ice_permittivity_output_matzler_temp_270_MEMLS():
     eps = _ice_permittivity_MEMLS(10e9, 270, 0)
     eq_(eps.real, 3.18567)
 
