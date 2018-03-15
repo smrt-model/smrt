@@ -19,11 +19,10 @@ from ..core.layer import required_layer_properties
 
 
 @required_layer_properties("temperature")
-def ice_permittivity_matzler87(frequency, temperature):
+def ice_permittivity_maetzler06(frequency, temperature):
     """ Calculates the complex ice dielectric constant depending on the frequency and temperature
 
-    Based on Mätzler, C., & Wegmuller, U. (1987). Dielectric properties of freshwater 
-    ice at microwave frequencies. *Journal of Physics D: Applied Physics*, 20(12), 1623-1630.
+    Based on Mätzler, C. (2006). Thermal Microwave Radiation: Applications for Remote Sensing p456-461
     This is the default model used in smrt.core.layer.make_snow_layer().
 
     :param frequency: frequency in Hz

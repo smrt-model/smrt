@@ -8,7 +8,7 @@ from smrt.core.error import SMRTError
 from smrt.inputs.sensor_list import amsre
 from smrt.inputs.make_medium import make_snow_layer
 from smrt.emmodel import commontest
-from smrt.permittivity.ice import ice_permittivity_matzler87  # default ice permittivity model
+from smrt.permittivity.ice import ice_permittivity_maetzler06  # default ice permittivity model
 
 
 # import the microstructure
@@ -51,7 +51,7 @@ def setup_func_dense_shs(density, inverse=False):
     if inverse:
         density = 917 - density
         eps_scatterers = 1
-        eps_background = ice_permittivity_matzler87
+        eps_background = ice_permittivity_maetzler06
 
         shs_lay = make_snow_layer(layer_thickness=0.2, microstructure_model=StickyHardSpheres,
                                 density=density, temperature=265, radius=0.2e-3, stickiness=0.2,

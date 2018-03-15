@@ -100,8 +100,8 @@ def make_snow_layer(layer_thickness, microstructure_model,
 
     if ice_permittivity_model is None:
         # must import this here instead of the top of the file because of cross-dependencies
-        from ..permittivity.ice import ice_permittivity_matzler87  # default ice permittivity model
-        ice_permittivity_model = ice_permittivity_matzler87
+        from ..permittivity.ice import ice_permittivity_maetzler06  # default ice permittivity model
+        ice_permittivity_model = ice_permittivity_maetzler06
 
     # ice in air background. Note that the emmodel might inverse the medium or use other technique for mid-range densities.
     # This is the case of DMRT_Shortrange for instance.
@@ -191,8 +191,8 @@ def make_ice_layer(layer_thickness, temperature, salinity, microstructure_model,
         inclusion_permittivity_model = brine_permittivity_stogryn85 # default brine permittivity model
     if background_permittivity_model is None:
         # 'must import this here instead of the top of the file because of cross-dependencies' is what it says above, so I did the same...
-        from ..permittivity.ice import ice_permittivity_matzler87  # default ice permittivity model
-        background_permittivity_model = ice_permittivity_matzler87
+        from ..permittivity.ice import ice_permittivity_maetzler06  # default ice permittivity model
+        background_permittivity_model = ice_permittivity_maetzler06
 
     eps_1 = background_permittivity_model
     eps_2 = inclusion_permittivity_model

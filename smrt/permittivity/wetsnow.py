@@ -1,7 +1,7 @@
 # coding: utf-8
 
 from ..core.layer import required_layer_properties
-from .ice import ice_permittivity_matzler87
+from .ice import ice_permittivity_maetzler06
 from .water import water_permittivity
 
 
@@ -18,7 +18,7 @@ def wetsnow_permittivity(frequency, temperature, liquid_water):
     # from http://books.google.com/books?id=Y_-113zIvgkC&pg=PA142&lpg=PA142&dq=effective+dielectric+constant+sphere+coated+small&source=bl&ots=ZVfwvkA0K1&sig=P7fHb0Jff8C-7-GrlEnWRZkkxY8&hl=en&ei=RHfDTrmjJYXj8AO3v7ScCw&sa=X&oi=book_result&ct=result&resnum=3&ved=0CDYQ6AEwAg#v=onepage&q=effective%20dielectric%20constant%20sphere%20coated%20small&f=false
     # see also: K L CHOPRA and G B REDDY, Praman.a- Optically selective coatings, J. Phys., Vol. 27, Nos 1 & 2, July & August 1986, pp. 193-217.
 
-    epsice = ice_permittivity_matzler87(frequency,temperature)
+    epsice = ice_permittivity_maetzler06(frequency,temperature)
 
     if liquid_water <= 0.0:
         return epsice

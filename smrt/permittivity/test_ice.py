@@ -4,7 +4,7 @@ from nose.tools import eq_
 # import warnings
 import numpy as np
 
-from smrt.permittivity.ice import ice_permittivity_matzler87
+from smrt.permittivity.ice import ice_permittivity_maetzler06
 from smrt.permittivity.ice import _ice_permittivity_HUT
 from smrt.permittivity.ice import _ice_permittivity_DMRTML
 from smrt.permittivity.ice import _ice_permittivity_MEMLS
@@ -14,7 +14,7 @@ from smrt.core.error import SMRTError
 
 # @raises(SMRTError)
 # def test_zero_temperature_exception_raised():
-#    ice_permittivity_matzler87(10e9, np.array([0]), 0, 0)
+#    ice_permittivity_maetzler06(10e9, np.array([0]), 0, 0)
 
 
 # This tests a warning is raised
@@ -29,54 +29,54 @@ from smrt.core.error import SMRTError
 
 # Test output of this module against output from MEMLS code
 def test_real_ice_permittivity_output_matzler_temp_270():
-    eps = ice_permittivity_matzler87(10e9, 270)
+    eps = ice_permittivity_maetzler06(10e9, 270)
     np.testing.assert_allclose(eps.real, 3.1857, atol=1e-4)
 
 
 # Test output of this module against output from MEMLS code
 # Weaker tolerance for 250K as MEMLS calculation is based on freezing point temperature of 273K not 273.15K
 def test_real_ice_permittivity_output_matzler_temp_250():
-    eps = ice_permittivity_matzler87(10e9, 250)
+    eps = ice_permittivity_maetzler06(10e9, 250)
     np.testing.assert_allclose(eps.real, 3.1675, atol=1e-3)
 
 
 def test_imaginary_ice_permittivity_output_matzler_temp_270_freq_10GHz():
-    eps = ice_permittivity_matzler87(10e9, 270)
+    eps = ice_permittivity_maetzler06(10e9, 270)
     np.testing.assert_allclose(eps.imag, 9.093e-04, atol=1e-4)
 
 
 def test_imaginary_ice_permittivity_output_matzler_temp_250_freq_10GHz():
-    eps = ice_permittivity_matzler87(10e9, 250)
+    eps = ice_permittivity_maetzler06(10e9, 250)
     np.testing.assert_allclose(eps.imag, 6.0571e-4, atol=1e-4)
 
 
 def test_imaginary_ice_permittivity_output_matzler_temp_270_freq_20GHz():
-    eps = ice_permittivity_matzler87(20e9, 270)
+    eps = ice_permittivity_maetzler06(20e9, 270)
     np.testing.assert_allclose(eps.imag, 0.0017449, atol=1e-4)
 
 
 def test_imaginary_ice_permittivity_output_matzler_temp_250_freq_20GHz():
-    eps = ice_permittivity_matzler87(20e9, 250)
+    eps = ice_permittivity_maetzler06(20e9, 250)
     np.testing.assert_allclose(eps.imag, 0.0012002, atol=1e-4)
 
 
 def test_imaginary_ice_permittivity_output_matzler_temp_270_freq_30GHz():
-    eps = ice_permittivity_matzler87(30e9, 270)
+    eps = ice_permittivity_maetzler06(30e9, 270)
     np.testing.assert_allclose(eps.imag, 0.0025971, atol=1e-4)
 
 
 def test_imaginary_ice_permittivity_output_matzler_temp_250_freq_30GHz():
-    eps = ice_permittivity_matzler87(30e9, 250)
+    eps = ice_permittivity_maetzler06(30e9, 250)
     np.testing.assert_allclose(eps.imag, 0.0017973, atol=1e-4)
 
 
 def test_imaginary_ice_permittivity_output_matzler_temp_270_freq_40GHz():
-    eps = ice_permittivity_matzler87(40e9, 270)
+    eps = ice_permittivity_maetzler06(40e9, 270)
     np.testing.assert_allclose(eps.imag, 0.0034535, atol=1e-4)
 
 
 def test_imaginary_ice_permittivity_output_matzler_temp_250_freq_40GHz():
-    eps = ice_permittivity_matzler87(40e9, 250)
+    eps = ice_permittivity_maetzler06(40e9, 250)
     np.testing.assert_allclose(eps.imag, 0.0023952, atol=1e-4)
 
 
