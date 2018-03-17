@@ -40,7 +40,7 @@ class Layer(object):
 
     """
 
-    def __init__(self, thickness, microstructure_model,
+    def __init__(self, thickness, microstructure_model=None,
                  frac_volume=None, temperature=FREEZING_POINT, permittivity_model=None, inclusion_shape=None,
                  **kwargs):
 

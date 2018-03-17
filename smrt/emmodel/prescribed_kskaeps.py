@@ -26,8 +26,8 @@ class Prescribed_KsKaEps(Rayleigh):
     """
     def __init__(self, sensor, layer):
 
-        e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
-        eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
+        #e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
+        #eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
 
         self._effective_permittivity = layer.effective_permittivity
 
