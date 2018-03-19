@@ -271,6 +271,67 @@ def add_semi_infinite_water_layer(add_water_substrate, salinity, brine_volume_fr
         return lay
 
 
+def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permittivity=1,
+                       interface=None,
+                       substrate=None):
+
+    """
+    build a multi-layered medium with prescribed scattering and absorption coefficients and effective permittivity. Must be used with presribed_kskaeps emmodel.
+
+    :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf" for a semi-infinite layer.
+    :param temperature: temperature of layers in K
+    :param ks: scattering coefficient of layers in m^-1
+    :param ka: absorption coefficient of layers in m^-1
+    :param interface: type of interface, flat/fresnel is the default
+
+"""
+# TODO: Add an example
+#    e.g.::
+#
+#        sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
+#
+#"""
+
+    sp = Snowpack(substrate=substrate)
+
+    if not isinstance(thickness, collections.Iterable):
+        raise SMRTError("The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame.")
+
+
+    for i, dz in enumerate(thickness):
+        layer = make_generic_layer(dz,
+                                   ks=get(ks, i, "ks"),
+                                   ka=get(ka, i, "ka"),
+                                   effective_permittivity=get(effective_permittivity, i, "effective_permittivity"),
+                                   temperature=get(temperature, i, "temperature")
+                                  )
+
+        sp.append(layer, get(interface, i))
+
+    return sp
+
+
+def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, temperature=273):
+    """Make a generic layer with prescribed scattering and absorption coefficients and effective permittivity. Must be used with presribed_kskaeps emmodel.
+
+    :param layer_thickness: thickness of ice layer in m
+    :param temperature: temperature of layer in K
+    :param ks: scattering coefficient of layers in m^-1
+    :param ka: absorption coefficient of layers in m^-1
+
+    :returns: :py:class:`Layer` instance
+"""
+
+    lay = Layer(layer_thickness, frac_volume=1, temperature=temperature)
+
+    lay.temperature = temperature
+    lay.effective_permittivity = effective_permittivity
+    lay.ks = ks
+    lay.ka = ka
+
+    return lay
+
+
 def get(x, i, name=None):  # function to take the i-eme value in an array or dict of array. Can deal with scalar as well
 
     if isinstance(x, six.string_types):

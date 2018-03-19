@@ -1,12 +1,13 @@
 import numpy as np
 import scipy as sc
 from ..core.layer import required_layer_properties
+from smrt.core.globalconstants import FREEZING_POINT
 
-
-def brine_conductivity(T):
+def brine_conductivity(temperature):
     """computes ionic conductivity of dissolved salts, Stogryn and Desargant, 1985 
-    :param T: thermometric temperature [in deg C]"""
+    :param temperature: thermometric temperature [K]"""
 
+    T = temperature - FREEZING_POINT  # temperature in deg Celsius
     if T >= -22.9:
         sigma = -T * np.exp(0.5193 + 0.08755 * T)
     if T < -22.9:
@@ -14,19 +15,21 @@ def brine_conductivity(T):
     return sigma
 
 
-def relaxation_time(T):
+def relaxation_time(temperature):
     """computes relaxation time of brine, Stogryn and Desargant, 1985
-    :param T: thermometric temperature [in deg C]"""
+    :param temperature: thermometric temperature [K]"""
 
+    T = temperature - FREEZING_POINT  # temperature in deg Celsius
     tau = (0.10990 + (0.13603E-2) * T + (0.20894E-3)
            * (T**2) + (0.28167E-5) * (T**3)) * 10**(-9)  # = 2 * pi * tau (Eq. (12) in Stogryn and Desargant given in nanoseconds)
     return tau
 
 
-def static_brine_permittivity(T):
+def static_brine_permittivity(temperature):
     """computes  static dielectric constant of brine, Stogryn and Desargant, 1985 
-    :param T: thermometric temperature [in deg C]"""
+    :param temperature: thermometric temperature [K]"""
 
+    T = temperature - FREEZING_POINT  # temperature in deg Celsius
     eps_static = (939.66 - 19.068 * T) / (10.737 - T)
     return eps_static
 
@@ -37,11 +40,11 @@ def brine_permittivity_stogryn85(frequency, temperature):
     :param frequency: em frequency [Hz]
     :param temperature: ice temperature in K"""
 
-    T = temperature - 273.15  # temperature in deg Celsius
-    eps_static = static_brine_permittivity(T)  # limiting static permittivity
-    tau = relaxation_time(T)  # relaxation time
-    sigma = brine_conductivity(T)  # ionic conductivity of dissolved salts
+    eps_static = static_brine_permittivity(temperature)  # limiting static permittivity
+    tau = relaxation_time(temperature)  # relaxation time
+    sigma = brine_conductivity(temperature)  # ionic conductivity of dissolved salts
 
+    T = temperature - FREEZING_POINT  # temperature in deg Celsius
     eps_inf = (82.79 + 8.19 * T**2) / (15.68 + T**2)  # limiting high frequency value
     e0 = 8.854e-12  # permittivity of free space
 
@@ -53,10 +56,10 @@ def brine_permittivity_stogryn85(frequency, temperature):
 def brine_volume(temperature, salinity):
     """computes brine volume fraction using coefficients from Cox and Weeks (1983): 'Equations for determining the gas and brine volumes in sea-ice samples', J. of Glac. if ice temperature is below -2 deg C or coefficients determined by Lepparanta and Manninen (1988): 'The brine and gas content of sea ice with attention to low salinities and high temperatures' for warmer temperatures.
     :param temperature: ice temperature in K
-    :param salinity: salinity of ice [no units]
+    :param salinity: salinity of ice in PSU (parts per thousand or g/kg)
     """
 
-    T = temperature - 273.15  # ice temperature in deg Celsius
+    T = temperature - FREEZING_POINT  # ice temperature in deg Celsius
 
     rho_ice = 0.917 - 1.403e-4 * T  # density of pure ice from Pounder, 1965
 
