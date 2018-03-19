@@ -58,7 +58,7 @@ def brine_permittivity_stogryn85(frequency, temperature):
 def brine_volume(temperature, salinity):
     """computes brine volume fraction using coefficients from Cox and Weeks (1983): 'Equations for determining the gas and brine volumes in sea-ice samples', J. of Glac. if ice temperature is below -2 deg C or coefficients determined by Lepparanta and Manninen (1988): 'The brine and gas content of sea ice with attention to low salinities and high temperatures' for warmer temperatures.
     :param temperature: ice temperature in K
-    :param salinity: salinity of ice in PSU (parts per thousand or g/kg)
+    :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
     """
 
     T = temperature - FREEZING_POINT  # ice temperature in deg Celsius
@@ -99,8 +99,8 @@ def brine_volume(temperature, salinity):
 
     F1 = np.polyval([a3, a2, a1, a0], T)
     F2 = np.polyval([b3, b2, b1, b0], T)
-    rho_bulk = rho_ice * F1 / (F1 - rho_ice * salinity * F2)  # bulk density of sea ice (Cox and Weeks, 1983)
-    Vb = salinity * rho_bulk / F1  # brine volume fraction (Cox and Weeks, 1983)
+    rho_bulk = rho_ice * F1 / (F1 - rho_ice * salinity * 1e3 * F2)  # bulk density of sea ice (Cox and Weeks, 1983)
+    Vb = salinity * 1e3 * rho_bulk / F1  # brine volume fraction (Cox and Weeks, 1983)
 
     # Polynoms can give values >1 or <0 for high temperatures approaching (or exceeding) 0 deg C -->
     if Vb > 1.:
@@ -117,7 +117,7 @@ def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
 
         Model developed for salinity around 0.013 PSU, so it is not recommended for sea ice
         :param temperature: ice temperature in K
-        :param salinity: salinity of ice in PSU (parts per thousand or g/kg)
+        :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
 
     **Usage example**::
 
@@ -127,8 +127,8 @@ def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
     """
 
     # Issue warning if salinity > 0.013 PSU
-    if salinity > 0.013:
-        warnings.warn("This permittity model was developed for saline impurities of around 0.013 PSU")
+    if salinity > 0.013e-3:
+        warnings.warn("This permittity model was developed for saline impurities of around 0.013 10^-3 kg/kg (or 0.013 PSU)")
 
     # Modify imaginary component calculated for pure ice 
     pure_ice_permittivity = ice_permittivity_maetzler06(frequency, temperature)
@@ -140,6 +140,6 @@ def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
     delta_Eimag = 1. / (g0 + g1 * (FREEZING_POINT - temperature))
     # Equation 5.38
     S0 = 0.013 # CURRENT UNITS ARE PSU
-    print (pure_ice_permittivity, delta_Eimag * salinity / S0)
-    print (pure_ice_permittivity + 1j * delta_Eimag * salinity / S0)
-    return pure_ice_permittivity + 1j * delta_Eimag * salinity / S0
+    #print (pure_ice_permittivity, delta_Eimag * salinity * 1e3 / S0)
+    #print (pure_ice_permittivity + 1j * delta_Eimag * salinity * 1e3 / S0)
+    return pure_ice_permittivity + 1j * delta_Eimag * salinity * 1e3 / S0

@@ -23,3 +23,6 @@ DENSITY_OF_ICE = 917.0
 FREEZING_POINT = 273.15
 PERMITTIVITY_OF_AIR = 1.
 C_SPEED = 299792458.0
+
+GHz = 1e9    # G in fact
+PSU = 1e-3   # g/kg -> kg/kg

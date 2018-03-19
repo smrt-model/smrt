@@ -4,7 +4,7 @@ import numpy as np
 from nose.tools import ok_
 
 # local import
-from smrt import make_model, sensor_list
+from smrt import make_model, sensor_list, PSU
 from smrt.inputs.make_medium import make_ice_column
 
 #test if this configuration gives values as originally produced by examples/iba_sea_ice.py
@@ -30,7 +30,7 @@ def test_iba_sea_ice_oneconfig():
                                   temperature=temperature,
                                   microstructure_model="exponential",
                                   inclusion_shape="spheres", #inclusion_shape can be "spheres" or "random_needles"
-                                  salinity=salinity, #either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water ice
+                                  salinity=salinity*PSU, #either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water ice
                                   corr_length=p_ex,
                                   add_water_substrate="ocean"
                                   )
