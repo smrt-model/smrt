@@ -132,7 +132,7 @@ def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
 
     # Modify imaginary component calculated for pure ice 
     pure_ice_permittivity = ice_permittivity_maetzler06(frequency, temperature)
-    freqGHz = frequency * 10e-9
+    freqGHz = frequency * 1e-9
     # Equation 5.37 from Maetzler 2006: Thermal Microwave Radiation: Applications for Remote Sensing
     g0 = 1866 * np.exp(-0.317 * freqGHz)
     g1 = 72.2 + 6.02 * freqGHz
