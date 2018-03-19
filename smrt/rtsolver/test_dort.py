@@ -2,7 +2,7 @@
 import numpy as np
 
 from smrt import make_snowpack
-from smrt.core.sensor import passive
+from smrt.core.sensor import passive, active
 from smrt.core.model import Model
 
 from smrt.interface.transparent import Transparent
@@ -13,6 +13,14 @@ from smrt.rtsolver.dort import DORT
 def setup_snowpack():
     temp = 250
     return make_snowpack([100], None, density=[300], temperature=[temp], interface=[Transparent])
+
+
+def setup_snowpack_with_DH():
+    return make_snowpack(2*[0.5], [None]*2, density=[300, 250], temperature=2*[250], interface=2*[Transparent])
+
+
+def setup_2layer_snowpack():
+    return make_snowpack(2*[0.5], [None]*2, density=[250, 300], temperature=2*[250], interface=2*[Transparent])
 
 
 def test_noabsoprtion():
@@ -53,3 +61,19 @@ def test_selectby_theta():
 
     print(res.data.coords)
     res.TbV(theta=30)
+
+
+def test_depth_hoar_stream_numbers():
+    # Will throw error if doesn't run
+    sp = setup_snowpack_with_DH()
+    sensor = active(13e9, 45)
+    m = Model(NoneScattering, DORT)
+    m.run(sensor, sp).sigmaVV()
+
+
+def test_2layer_pack():
+    # Will throw error if doesn't run
+    sp = setup_2layer_snowpack()
+    sensor = active(13e9, 45)
+    m = Model(NoneScattering, DORT)
+    m.run(sensor, sp).sigmaVV()

@@ -1,11 +1,11 @@
 # coding: utf-8
 
 import numpy as np
-from nose.tools import ok_
+from nose.tools import ok_, eq_
 
 # local import
 from smrt import make_snowpack, make_model, make_snow_layer
-from smrt.inputs.sensor_list import amsre
+from smrt.inputs.sensor_list import amsre, active
 
 #
 # Ghi: rapid hack, should be splitted in different functions
@@ -44,3 +44,21 @@ def test_dmrt_oneconfig():
     print(res.TbV(), res.TbH())
     ok_((res.TbV() - 202.34939425929616) < 1e-4)
     ok_((res.TbH() - 187.05199255031036) < 1e-4)
+
+
+def test_less_refringent_bottom_layer_VV():
+    # Regression test 19-03-2018: value may change if other bugs found
+    snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density = [290, 250], radius = 1e-4, stickiness=0.2)
+    m = make_model("dmrt_qcacp_shortrange", "dort")
+    scat = active(10e9, 45)
+    res = m.run(scat, snowpack)
+    ok_((res.sigmaVV() - 7.54253344e-05) < 1e-7)
+
+
+def test_less_refringent_bottom_layer_HH():
+    # Regression test 19-03-2018: value may change if other bugs found
+    snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density = [290, 250], radius = 1e-4, stickiness=0.2)
+    m = make_model("dmrt_qcacp_shortrange", "dort")
+    scat = active(10e9, 45)
+    res = m.run(scat, snowpack)
+    ok_((res.sigmaHH() - 7.09606407e-05) < 1e-7)

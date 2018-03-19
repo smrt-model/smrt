@@ -370,7 +370,7 @@ class DORT(object):
             elif self.snowpack.substrate is not None:
                 Rbottom_l = self.snowpack.substrate.specular_reflection_matrix(self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], npol, compute_coherent_only)  # snow-sub
                 if not compute_coherent_only and hasattr(self.snowpack.substrate, "ft_even_diffuse_reflection_matrix"):
-                    full_weight_l = np.repeat(weight[l, :], npol)    # could be cached (per layer) because same for each mode
+                    full_weight_l = np.repeat(weight[l, 0:nsl], npol)    # could be cached (per layer) because same for each mode
                     Rbottom_l += self.snowpack.substrate.ft_even_diffuse_reflection_matrix(m, self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], npol) * full_weight_l  # snow-sub
             else:
                 Rbottom_l = 0  # fully absorbant substrate
