@@ -1,5 +1,5 @@
-smrt\.core\.substrate module
-============================
+smrt.core.substrate module
+==========================
 
 .. automodule:: smrt.core.substrate
     :members:

@@ -1,5 +1,5 @@
-smrt\.emmodel\.dmrt\_qca\_shortrange module
-===========================================
+smrt.emmodel.dmrt_qca_shortrange module
+=======================================
 
 .. automodule:: smrt.emmodel.dmrt_qca_shortrange
     :members:

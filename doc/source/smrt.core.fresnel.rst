@@ -1,5 +1,5 @@
-smrt\.core\.fresnel module
-==========================
+smrt.core.fresnel module
+========================
 
 .. automodule:: smrt.core.fresnel
     :members:

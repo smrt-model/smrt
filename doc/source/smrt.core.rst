@@ -1,5 +1,5 @@
-smrt\.core package
-==================
+smrt.core package
+=================
 
 .. automodule:: smrt.core
     :members:
@@ -21,6 +21,8 @@ Submodules
    smrt.core.result
    smrt.core.sensitivity_study
    smrt.core.sensor
+   smrt.core.sensor_broken
+   smrt.core.sensor_working
    smrt.core.snowpack
    smrt.core.substrate
    smrt.core.test_globalconstants

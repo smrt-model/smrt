@@ -1,5 +1,5 @@
-smrt\.permittivity\.water module
-================================
+smrt.permittivity.water module
+==============================
 
 .. automodule:: smrt.permittivity.water
     :members:

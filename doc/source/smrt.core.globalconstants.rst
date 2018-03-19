@@ -1,5 +1,5 @@
-smrt\.core\.globalconstants module
-==================================
+smrt.core.globalconstants module
+================================
 
 .. automodule:: smrt.core.globalconstants
     :members:

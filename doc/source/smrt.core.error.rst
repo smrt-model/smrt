@@ -1,5 +1,5 @@
-smrt\.core\.error module
-========================
+smrt.core.error module
+======================
 
 .. automodule:: smrt.core.error
     :members:

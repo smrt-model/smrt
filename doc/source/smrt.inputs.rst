@@ -1,5 +1,5 @@
-smrt\.inputs package
-====================
+smrt.inputs package
+===================
 
 .. automodule:: smrt.inputs
     :members:

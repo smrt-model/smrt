@@ -1,5 +1,5 @@
-smrt\.emmodel package
-=====================
+smrt.emmodel package
+====================
 
 .. automodule:: smrt.emmodel
     :members:
@@ -15,6 +15,7 @@ Submodules
    smrt.emmodel.dmrt_qca_shortrange
    smrt.emmodel.dmrt_qcacp_shortrange
    smrt.emmodel.dmrt_shortrange
+   smrt.emmodel.dmrt_test
    smrt.emmodel.effective_permittivity
    smrt.emmodel.iba
    smrt.emmodel.iba_original

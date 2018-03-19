@@ -1,5 +1,5 @@
-smrt\.core\.snowpack module
-===========================
+smrt.core.snowpack module
+=========================
 
 .. automodule:: smrt.core.snowpack
     :members:

@@ -1,5 +1,5 @@
-smrt\.utils package
-===================
+smrt.utils package
+==================
 
 .. automodule:: smrt.utils
     :members:

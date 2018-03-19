@@ -1,5 +1,5 @@
-smrt\.interface\.flat module
-============================
+smrt.interface.flat module
+==========================
 
 .. automodule:: smrt.interface.flat
     :members:

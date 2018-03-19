@@ -1,5 +1,5 @@
-smrt\.rtsolver package
-======================
+smrt.rtsolver package
+=====================
 
 .. automodule:: smrt.rtsolver
     :members:
@@ -12,5 +12,6 @@ Submodules
 .. toctree::
 
    smrt.rtsolver.dort
+   smrt.rtsolver.dort_debug
    smrt.rtsolver.test_dort
 

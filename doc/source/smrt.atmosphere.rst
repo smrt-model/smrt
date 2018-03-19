@@ -1,5 +1,5 @@
-smrt\.atmosphere package
-========================
+smrt.atmosphere package
+=======================
 
 .. automodule:: smrt.atmosphere
     :members:

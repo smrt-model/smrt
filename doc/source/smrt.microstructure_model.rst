@@ -1,5 +1,5 @@
-smrt\.microstructure\_model package
-===================================
+smrt.microstructure_model package
+=================================
 
 .. automodule:: smrt.microstructure_model
     :members:

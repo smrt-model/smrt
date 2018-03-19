@@ -1,5 +1,5 @@
-smrt\.substrate\.soil\_wegmuller module
-=======================================
+smrt.substrate.soil_wegmuller module
+====================================
 
 .. automodule:: smrt.substrate.soil_wegmuller
     :members:

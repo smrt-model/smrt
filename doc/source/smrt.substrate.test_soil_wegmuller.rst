@@ -1,5 +1,5 @@
-smrt\.substrate\.test\_soil\_wegmuller module
-=============================================
+smrt.substrate.test_soil_wegmuller module
+=========================================
 
 .. automodule:: smrt.substrate.test_soil_wegmuller
     :members:

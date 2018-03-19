@@ -1,5 +1,5 @@
-smrt\.inputs\.make\_soil module
-===============================
+smrt.inputs.make_soil module
+============================
 
 .. automodule:: smrt.inputs.make_soil
     :members:

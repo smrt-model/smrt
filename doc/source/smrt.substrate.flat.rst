@@ -1,5 +1,5 @@
-smrt\.substrate\.flat module
-============================
+smrt.substrate.flat module
+==========================
 
 .. automodule:: smrt.substrate.flat
     :members:

@@ -1,5 +1,5 @@
-smrt\.utils\.hut\_legacy module
-===============================
+smrt.utils.hut_legacy module
+============================
 
 .. automodule:: smrt.utils.hut_legacy
     :members:

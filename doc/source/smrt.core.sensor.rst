@@ -1,5 +1,5 @@
-smrt\.core\.sensor module
-=========================
+smrt.core.sensor module
+=======================
 
 .. automodule:: smrt.core.sensor
     :members:

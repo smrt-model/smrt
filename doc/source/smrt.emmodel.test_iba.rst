@@ -1,5 +1,5 @@
-smrt\.emmodel\.test\_iba module
-===============================
+smrt.emmodel.test_iba module
+============================
 
 .. automodule:: smrt.emmodel.test_iba
     :members:

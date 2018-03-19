@@ -1,5 +1,5 @@
-smrt\.core\.layer module
-========================
+smrt.core.layer module
+======================
 
 .. automodule:: smrt.core.layer
     :members:

@@ -1,5 +1,5 @@
-smrt\.substrate\.reflector module
-=================================
+smrt.substrate.reflector module
+===============================
 
 .. automodule:: smrt.substrate.reflector
     :members:

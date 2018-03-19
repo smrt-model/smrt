@@ -1,5 +1,5 @@
-smrt\.core\.test\_sensor module
-===============================
+smrt.core.test_sensor module
+============================
 
 .. automodule:: smrt.core.test_sensor
     :members:

@@ -1,7 +1,9 @@
 import numpy as np
 import scipy as sc
+import warnings
 from ..core.layer import required_layer_properties
 from smrt.core.globalconstants import FREEZING_POINT
+from smrt.permittivity.ice import ice_permittivity_maetzler06
 
 def brine_conductivity(temperature):
     """computes ionic conductivity of dissolved salts, Stogryn and Desargant, 1985 
@@ -107,3 +109,37 @@ def brine_volume(temperature, salinity):
         Vb = 0.  # brine volume fraction cannot be lower than 0
 
     return Vb
+
+
+@required_layer_properties("temperature", "salinity")
+def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
+    """ Computes permittivity of impure ice from Maetzler 2006 - Thermal Microwave Radiation: Applications for Remote Sensing
+
+        Model developed for salinity around 0.013 PSU, so it is not recommended for sea ice
+        :param temperature: ice temperature in K
+        :param salinity: salinity of ice in PSU (parts per thousand or g/kg)
+
+    **Usage example**::
+
+        from smrt.permittivity.saline_ice import impure_ice_permittivity_maetzler06
+        eps_ice = impure_ice_permittivity_maetzler06(frequency=18e9, temperature=270, salinity=0.013)
+
+    """
+
+    # Issue warning if salinity > 0.013 PSU
+    if salinity > 0.013:
+        warnings.warn("This permittity model was developed for saline impurities of around 0.013 PSU")
+
+    # Modify imaginary component calculated for pure ice 
+    pure_ice_permittivity = ice_permittivity_maetzler06(frequency, temperature)
+    freqGHz = frequency * 10e-9
+    # Equation 5.37 from Maetzler 2006: Thermal Microwave Radiation: Applications for Remote Sensing
+    g0 = 1866 * np.exp(-0.317 * freqGHz)
+    g1 = 72.2 + 6.02 * freqGHz
+    # Equation 5.36
+    delta_Eimag = 1. / (g0 + g1 * (FREEZING_POINT - temperature))
+    # Equation 5.38
+    S0 = 0.013 # CURRENT UNITS ARE PSU
+    print (pure_ice_permittivity, delta_Eimag * salinity / S0)
+    print (pure_ice_permittivity + 1j * delta_Eimag * salinity / S0)
+    return pure_ice_permittivity + 1j * delta_Eimag * salinity / S0

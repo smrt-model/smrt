@@ -1,5 +1,5 @@
-smrt\.emmodel\.rayleigh module
-==============================
+smrt.emmodel.rayleigh module
+============================
 
 .. automodule:: smrt.emmodel.rayleigh
     :members:

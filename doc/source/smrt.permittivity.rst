@@ -1,5 +1,5 @@
-smrt\.permittivity package
-==========================
+smrt.permittivity package
+=========================
 
 .. automodule:: smrt.permittivity
     :members:
@@ -12,7 +12,10 @@ Submodules
 .. toctree::
 
    smrt.permittivity.ice
+   smrt.permittivity.saline_ice
+   smrt.permittivity.saline_water
    smrt.permittivity.test_ice
+   smrt.permittivity.test_saline_ice
    smrt.permittivity.water
    smrt.permittivity.wetsnow
 

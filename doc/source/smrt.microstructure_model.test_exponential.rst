@@ -1,5 +1,5 @@
-smrt\.microstructure\_model\.test\_exponential module
-=====================================================
+smrt.microstructure_model.test_exponential module
+=================================================
 
 .. automodule:: smrt.microstructure_model.test_exponential
     :members:

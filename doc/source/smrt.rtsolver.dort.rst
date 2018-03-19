@@ -1,5 +1,5 @@
-smrt\.rtsolver\.dort module
-===========================
+smrt.rtsolver.dort module
+=========================
 
 .. automodule:: smrt.rtsolver.dort
     :members:
