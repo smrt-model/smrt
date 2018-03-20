@@ -9,38 +9,32 @@ def seawater_permittivity_klein76(frequency, temperature, salinity):
        by Klein and Swift (1976).
        :param frequency: frequency in Hz
        :param temperature: water temperature in K
-       :param salinity: water salinity [no units]
+       :param salinity: water salinity in kg/kg (see PSU constant in smrt module)
        Returns complex water permittivity for a frequency f."""
 
     T = temperature - 273.15
-    S = salinity
+    S = salinity*1e3
     f = frequency
 
     omega = 2 * sc.pi * f
-    eps_0 = 8.854 * 10**(-12)  # permittivity of free space
+    eps_0 = 8.854e-12  # permittivity of free space
     eps_inf = 4.9  # limiting high frequency value
 
     # calculate eps_s = static dielectric constant of saline water:
-    eps_s_T = 87.134 - 1.949 * \
-        10**(-1) * T - 1.276 * 10**(-2) * T**2 + 2.491 * 10**(-4) * T**3
-    a_ST = 1. + 1.613 * 10**(-5) * S * T - 3.656 * 10**(-3) * \
-        S + 3.210 * 10**(-5) * S**2 - 4.232 * 10**(-7) * S**3
+    eps_s_T = 87.134 - 1.949e-1 * T - 1.276e-2 * T**2 + 2.491e-4 * T**3
+    a_ST = 1. + 1.613e-5 * S * T - 3.656e-3 * S + 3.210e-5 * S**2 - 4.232e-7 * S**3
     eps_s = eps_s_T * a_ST
 
     # calculate tau = relaxation time of saline water:
-    tau_T0 = 1.768 * 10**(-11) - 6.086 * 10**(-13) * T + \
-        1.104 * 10**(-14) * T**2 - 8.111 * 10**(-17) * T**3
-    b_ST = 1. + 2.282 * 10**(-5) * S * T - 7.638 * 10**(-4) * \
-        S - 7.760 * 10**(-6) * S**2 + 1.105 * 10**(-8) * S**3
+    tau_T0 = 1.768e-11 - 6.086e-13 * T + 1.104e-14 * T**2 - 8.111e-17 * T**3
+    b_ST = 1. + 2.282e-5 * S * T - 7.638e-4 * S - 7.760e-6 * S**2 + 1.105e-8 * S**3
     tau = tau_T0 * b_ST
 
     # calculate sigma = ionic conductivity of dissolved salts:
     delta = 25 - T
-    beta = 2.0333 * 10**(-2) + 1.266 * 10**(-4) * delta + 2.464 * 10**(-6) * delta**2 - \
-        S * (1.849 * 10**(-5) - 2.551 * 10**(-7)
-             * delta + 2.551 * 10**(-8) * delta**2)
-    sigma_25S = S * (0.182521 - 1.46192 * 10**(-3) * S +
-                     2.09324 * 10**(-5) * S**2 - 1.28205 * 10**(-7) * S**3)
+    beta = 2.0333e-2 + 1.266e-4 * delta + 2.464e-6 * delta**2 - S * \
+      (1.849e-5 - 2.551e-7 * delta + 2.551e-8 * delta**2)
+    sigma_25S = S * (0.182521 - 1.46192e-3 * S + 2.09324e-5 * S**2 - 1.28205e-7 * S**3)
     sigma = sigma_25S * sc.exp(-delta * beta)
 
     # Debye type relaxation equation:
