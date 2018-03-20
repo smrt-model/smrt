@@ -4,8 +4,9 @@ import numpy as np
 import sys
 
 # local import
-from smrt import make_model, sensor_list
-from smrt.inputs.make_medium import make_ice_column
+from smrt import make_ice_column, make_model, sensor_list
+from smrt import PSU
+#from smrt.inputs.make_medium import make_ice_column
 
 # prepare inputs
 l = 9 #9 ice layers
@@ -13,10 +14,8 @@ n_max_stream = 64
 
 thickness = np.array([1.5/l] * l) #ice is 1.5m thick
 p_ex = np.array([5.e-4] * (l)) #correlation length
-temperature = np.linspace(273.15-20., 273.15 - 1.8, l+1) #temperature gradient in the ice from -20 deg C at top to freezing temperature of water at bottom (-1.8 deg C)
-temperature=temperature[:-1]
-salinity = np.linspace(2., 10., l+1) #salinity profile ranging from salinity=2 at the top to salinity=10 at the bottom of the ice
-salinity=salinity[:-1]
+temperature = np.linspace(273.15-20., 273.15 - 1.8, l) #temperature gradient in the ice from -20 deg C at top to freezing temperature of water at bottom (-1.8 deg C)
+salinity = np.linspace(2., 10., l)*PSU #salinity profile ranging from salinity=2 at the top to salinity=10 at the bottom of the ice
 
 # create an ice column with assumption of spherical brine inclusions (inclusion_shape="spheres"):
 ice_column = make_ice_column(thickness=thickness,
