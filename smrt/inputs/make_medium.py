@@ -89,7 +89,7 @@ def make_snow_layer(layer_thickness, microstructure_model,
     :param temperature: temperature of layer in K
     :param permittivity_model: permittivity formulation (default is ice_permittivity_matzler87)
     :param liquid_water: fractional volume of liquid water (default=0)
-    :param salinity: salinity in PSU (parts per thousand or g/kg) (default=0)
+    :param salinity: salinity in kg/kg, for using PSU as unit see PSU constant in smrt module (default = 0)
     :param kwargs: other microstructure parameters are given as optional arguments (in Python words) but may be required (in SMRT words).
     See the documentation of the microstructure model.
 
@@ -136,7 +136,7 @@ def make_ice_column(thickness, temperature, microstructure_model, inclusion_shap
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf" for a semi-infinite layer.
     :param temperature: temperature of ice/water in K
     :param inclusion_shape: assumption for shape of brine inclusions. So far, "spheres" or "random_needles" (i.e. elongated ellipsoidal inclusions) are implemented.
-    :param salinity: salinity of ice/water [no units]. Default is 0. If neither salinity nor brine_volume_fraction are given, the ice column is considered to consist of fresh water ice.
+    :param salinity: salinity of ice/water in kg/kg (see PSU constant in smrt module). Default is 0. If neither salinity nor brine_volume_fraction are given, the ice column is considered to consist of fresh water ice.
     :param brine_volume_fraction: brine / liquid water fraction in sea ice, optional parameter, if not given brine volume fraction is calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
     :param add_water_substrate: Adds a semi-infinite layer of water below the ice column. Possible arguments are True (default, looks for salinity or brine volume fraction input to determine if a saline or fresh water layer is added), False (no water layer is added), 'ocean' (adds saline water), 'fresh' (adds fresh water layer).
     :param interface: type of interface, flat/fresnel is the default
@@ -177,7 +177,7 @@ def make_ice_layer(layer_thickness, temperature, salinity, microstructure_model,
 
     :param layer_thickness: thickness of ice layer in m
     :param temperature: temperature of layer in K
-    :param salinity: salinity in PSU (parts per thousand or g/kg)
+    :param salinity: salinity in kg/kg (see PSU constant in smrt module)
     :param inclusion_shape: assumption for shape of brine inclusions (so far, "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions) are implemented)
     :param brine_volume_fraction: brine / liquid water fraction in sea ice, optional parameter, if not given brine volume fraction is calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction 
     :param permittivity_model: permittivity formulation (default is ice_permittivity_matzler87)
@@ -239,7 +239,7 @@ def add_semi_infinite_water_layer(add_water_substrate, salinity, brine_volume_fr
 
     if add_water_substrate == "ocean":
         water_temperature = FREEZING_POINT - 1.8
-        water_salinity = 32. #somewhat arbitrary value, fresher than average ocean salinity, reflecting lower salinities in polar regions
+        water_salinity = 0.032 # = 0.032kg/kg = 32PSU; somewhat arbitrary value, fresher than average ocean salinity, reflecting lower salinities in polar regions
     elif add_water_substrate == "fresh":
         water_temperature = FREEZING_POINT
         water_salinity = 0.
