@@ -1,6 +1,7 @@
 import numpy as np
 import scipy as sc
 import warnings
+from smrt.core.error import SMRTError
 from ..core.layer import required_layer_properties
 from smrt.core.globalconstants import FREEZING_POINT
 from smrt.permittivity.ice import ice_permittivity_maetzler06
@@ -63,6 +64,12 @@ def brine_volume(temperature, salinity):
 
     T = temperature - FREEZING_POINT  # ice temperature in deg Celsius
 
+    if T < -30.:
+        warnings.warn("Temperature is below -30 deg C. Equation for calculating brine volume fraction is stated to be valid for temperatures from -30 to -2 deg C!")
+        
+    if T < -38.:
+        raise SMRTError("(Polynomial) equations by Cox and Weeks (1983) were developed for temperatures between -30 and -2 deg C and show unphysical behaviour for temperatures lower than -38 deg C!")  
+
     rho_ice = 0.917 - 1.403e-4 * T  # density of pure ice from Pounder, 1965
 
     if T < -2.:  # coefficients from Cox and Weeks, 1983
@@ -86,8 +93,7 @@ def brine_volume(temperature, salinity):
             b3 = 5.819e-4
             
     elif T >= -2.:  # coefficients from Lepparanta and Manninen, 1988 for warm, low-salinity sea ice (e.g. Baltic sea ice)
-        if T > 0:
-            print("Warning! Ice temperature is above O deg C!")
+
         a0 = -4.1221e-2
         a1 = -1.8407e1
         a2 = 5.8402e-1
@@ -102,11 +108,9 @@ def brine_volume(temperature, salinity):
     rho_bulk = rho_ice * F1 / (F1 - rho_ice * salinity * 1e3 * F2)  # bulk density of sea ice (Cox and Weeks, 1983)
     Vb = salinity * 1e3 * rho_bulk / F1  # brine volume fraction (Cox and Weeks, 1983)
 
-    # Polynoms can give values >1 or <0 for high temperatures approaching (or exceeding) 0 deg C -->
-    if Vb > 1.:
-        Vb = 1.  # brine volume fraction cannot be higher than 1
-    elif Vb < 0:
-        Vb = 0.  # brine volume fraction cannot be lower than 0
+    if T > -2.15 and ( Vb > 1. or Vb < 0.): #limitations for physical behaviour of polynomial equations (see warning below):
+        Vb = 1
+        warnings.warn("(Polynomial) equations for calculating brine volume fraction from temperature and salinity show unphysical behaviour for high temperatures approaching (or exceeding) 0 deg C. If temperature reaches values > freezing temperature (which is a function of salinity), the ice melts and only liquid water = brine is left. This happened here and brine volume fraction was set to 1 manually.")
 
     return Vb
 
