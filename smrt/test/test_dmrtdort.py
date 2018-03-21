@@ -52,7 +52,8 @@ def test_less_refringent_bottom_layer_VV():
     m = make_model("dmrt_qcacp_shortrange", "dort")
     scat = active(10e9, 45)
     res = m.run(scat, snowpack)
-    ok_((res.sigmaVV() - 7.54253344e-05) < 1e-7)
+    print(res.sigmaVV())
+    ok_(abs(res.sigmaVV() - 7.54253344e-05) < 1e-7)
 
 
 def test_less_refringent_bottom_layer_HH():
@@ -61,4 +62,5 @@ def test_less_refringent_bottom_layer_HH():
     m = make_model("dmrt_qcacp_shortrange", "dort")
     scat = active(10e9, 45)
     res = m.run(scat, snowpack)
-    ok_((res.sigmaHH() - 7.09606407e-05) < 1e-7)
+    print(res.sigmaHH())
+    ok_(abs(res.sigmaHH() - 7.09606407e-05) < 1e-7)
