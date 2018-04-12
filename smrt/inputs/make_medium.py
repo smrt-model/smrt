@@ -158,8 +158,9 @@ def make_ice_column(thickness, temperature, microstructure_model, inclusion_shap
         sp.append(layer, get(interface, i))
 
     #add semi-infinite water layer underneath the ice (if wanted):
-    water_layer = add_semi_infinite_water_layer(add_water_substrate, salinity, brine_volume_fraction, **kwargs)
-    sp.append(water_layer, get(interface, i + 1))
+    if add_water_substrate is not False:
+        water_layer = add_semi_infinite_water_layer(add_water_substrate, salinity, brine_volume_fraction, **kwargs)
+        sp.append(water_layer, get(interface, i + 1))
     
     return sp
 
@@ -243,32 +244,31 @@ def add_semi_infinite_water_layer(add_water_substrate, salinity, brine_volume_fr
     elif add_water_substrate == "fresh":
         water_temperature = FREEZING_POINT
         water_salinity = 0.
-    elif add_water_substrate is not False:
+    else:
         raise SMRTError("'add_water_substrate' must be set to one of the following: True (default), False, 'ocean', 'fresh'. Additional optional arguments for function make_ice_column are 'water_temperature', 'water_salinity' and 'water_depth'.")
 
-    if add_water_substrate is not False:
-        water_depth = 10.  # arbitrary value of 10m thickness for the water layer, microwave absorption in water is usually high, so this represents an infinitely thick water layer
+    water_depth = 10.  # arbitrary value of 10m thickness for the water layer, microwave absorption in water is usually high, so this represents an infinitely thick water layer
 
-        # override the following variable if set
-        water_temperature = kwargs.get('water_temperature', water_temperature)
-        water_salinity = kwargs.get('water_salinity', water_salinity)
-        water_depth = kwargs.get('water_depth', water_depth)
+    # override the following variable if set
+    water_temperature = kwargs.get('water_temperature', water_temperature)
+    water_salinity = kwargs.get('water_salinity', water_salinity)
+    water_depth = kwargs.get('water_depth', water_depth)
 
-        inclusion_permittivity_model = seawater_permittivity_klein76 # default sea water permittivity model
+    inclusion_permittivity_model = seawater_permittivity_klein76 # default sea water permittivity model
 
-        eps_1 = inclusion_permittivity_model
-        eps_2 = inclusion_permittivity_model
-        
-        lay = Layer(water_depth,
-                    microstructure_model=get_microstructure_model("exponential"),
-                    frac_volume=1.0, # water is considered a uniform medium
-                    temperature=water_temperature,
-                    permittivity_model=(eps_1, eps_2),
-                    salinity=water_salinity,
-                    corr_length=0.
-                    )
+    eps_1 = inclusion_permittivity_model
+    eps_2 = inclusion_permittivity_model
 
-        return lay
+    lay = Layer(water_depth,
+                microstructure_model=get_microstructure_model("exponential"),
+                frac_volume=1.0, # water is considered a uniform medium
+                temperature=water_temperature,
+                permittivity_model=(eps_1, eps_2),
+                salinity=water_salinity,
+                corr_length=0.
+                )
+
+    return lay
 
 
 def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permittivity=1,
