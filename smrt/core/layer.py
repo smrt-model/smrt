@@ -41,14 +41,13 @@ class Layer(object):
     """
 
     def __init__(self, thickness, microstructure_model=None,
-                 frac_volume=None, temperature=FREEZING_POINT, permittivity_model=None, inclusion_shape=None,
+                 temperature=FREEZING_POINT, permittivity_model=None, inclusion_shape=None,
                  **kwargs):
 
         """ Build a snow layer.
 
         :param thickness: thickness of snow layer in m
         :param microstructure_model: module name of microstructure model to be used
-        :param frac_volume: fractional volume
         :param temperature: temperature of layer in K
         :param permittivity_model: list or tuple of permittivity value or model for the background and materials (e.g. air and ice). The permittivity can be
         given as a complex (or real) value or a function that return a value (see :py:mod:`smrt.permittivity` modules)
@@ -59,7 +58,6 @@ class Layer(object):
         self.thickness = thickness
         self.microstructure_model = microstructure_model
 
-        self.frac_volume = frac_volume
         self.temperature = temperature
         self.permittivity_model = permittivity_model
         self.inclusion_shape = inclusion_shape
@@ -68,11 +66,9 @@ class Layer(object):
         if microstructure_model is not None:
             valid_args = microstructure_model.valid_arguments()
             params = {k: kwargs[k] for k in kwargs if k in valid_args}  # filter valid args
+
         else:
             params = {}
-
-        # frac_volume is useful for the microstructural parameter, but Layer has the responsability to compute it
-        params['frac_volume'] = frac_volume
 
         # TODO Ghi: send a warning for non valid_args
         if thickness == 0:
@@ -81,6 +77,7 @@ class Layer(object):
         # make an instance of the micro-structure model
         if microstructure_model is not None:
             self.microstructure = microstructure_model(params)  # do that now, but could be delayed (lazy evaluation)
+            self.frac_volume = self.microstructure.frac_volume  # get the frac_volume back from the microstructure for _convenience_
 
         # other params
         for k in kwargs:
