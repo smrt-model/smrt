@@ -14,19 +14,26 @@ import numpy as np
 from ..core.globalconstants import C_SPEED
 
 
-class NoneScattering(object):
+class NonScattering(object):
     """
     """
     def __init__(self, sensor, layer):
 
         self.frac_volume = layer.frac_volume
-        self.e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
-        self.eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
+
+        if layer.frac_volume < 1:  # avoid useless call
+            self.e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
+        else:
+            self.e0 = 0
+        if layer.frac_volume > 0: # avoid useless call
+            self.eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
+        else:
+            self.eps = 0
+
         # Wavenumber in free space
         self.k0 = 2 * np.pi * sensor.frequency / C_SPEED
 
-        # General lossy medium under assumption of low-loss medium.
-        self.ka = self.k0 * self.eps.imag / np.sqrt(self.eps.real)
+        self.ka = 2 * self.k0 * np.sqrt(self.effective_permittivity()).imag
         # no scattering
         self.ks = 0
 
@@ -63,4 +70,5 @@ class NoneScattering(object):
         return np.full(len(mu), self.ka)
 
     def effective_permittivity(self):
-        return self.eps
+        # very basic mixing formula. It is recommended to use either with frac_volume=0 or 1 a better mixings when available.
+        return self.e0 * (1 - self.frac_volume) + self.eps * self.frac_volume
