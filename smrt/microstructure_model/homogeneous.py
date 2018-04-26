@@ -32,10 +32,10 @@ class Homogeneous(Autocorrelation):
 
     def autocorrelation_function(self, r):
         """compute the real space autocorrelation function"""
-        f_real = 1
+        f_real = 0
         return f_real
 
     def ft_autocorrelation_function(self, k):
         """compute the fourier transform of the autocorrelation function analytically"""
-        ft = 8 * np.pi * (k == 0)
+        ft = 0
         return ft
