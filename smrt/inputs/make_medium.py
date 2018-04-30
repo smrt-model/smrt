@@ -20,6 +20,8 @@ to functions added by the user. These functions must be imported with the full p
 
 
 import collections
+from functools import partial
+
 import numpy as np
 import pandas as pd
 import six
@@ -28,6 +30,7 @@ from smrt.core.snowpack import Snowpack
 from smrt.core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE
 from smrt.core.layer import get_microstructure_model, Layer
 from smrt.core.error import SMRTError
+from ..substrate.flat import Flat
 from ..permittivity.saline_ice import brine_permittivity_stogryn85, brine_volume
 from ..permittivity.saline_water import seawater_permittivity_klein76
 
@@ -130,7 +133,6 @@ def make_ice_column(thickness, temperature, microstructure_model, inclusion_shap
                     add_water_substrate=True,
                     interface=None,
                     substrate=None, **kwargs):
-    
     """Build a multi-layered ice column. Each parameter can be an array, list or a constant value.
 
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf" for a semi-infinite layer.
@@ -138,14 +140,25 @@ def make_ice_column(thickness, temperature, microstructure_model, inclusion_shap
     :param inclusion_shape: assumption for shape of brine inclusions. So far, "spheres" or "random_needles" (i.e. elongated ellipsoidal inclusions) are implemented.
     :param salinity: salinity of ice/water in kg/kg (see PSU constant in smrt module). Default is 0. If neither salinity nor brine_volume_fraction are given, the ice column is considered to consist of fresh water ice.
     :param brine_volume_fraction: brine / liquid water fraction in sea ice, optional parameter, if not given brine volume fraction is calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
-    :param add_water_substrate: Adds a semi-infinite layer of water below the ice column. Possible arguments are True (default, looks for salinity or brine volume fraction input to determine if a saline or fresh water layer is added), False (no water layer is added), 'ocean' (adds saline water), 'fresh' (adds fresh water layer).
+    :param add_water_substrate: Adds a substrate made of water below the ice column. Possible arguments are True (default, looks for salinity or brine volume fraction input to determine if a saline or fresh water layer is added), False (no water layer is added), 'ocean' (adds saline water), 'fresh' (adds fresh water layer).
     :param interface: type of interface, flat/fresnel is the default
     All the other parameters (temperature, microstructure parameters, emmodel, etc, etc) are given as optional arguments (e.g. temperature=[270, 250]). Optional arguments are, for example, 'water_temperature', 'water_salinity' and 'water_depth' of the water layer added by 'add_water_substrate'.
     They are passed for each layer to the function :py:func:`~smrt.inputs.make_medium.make_ice_layer`. Thus, the documentation of this function is the reference. It describes precisely the available parameters.
 
 """
 
+    # add a substrate underneath the ice (if wanted):
+    if add_water_substrate:
+        wp = guess_water_parameters(add_water_substrate, salinity, brine_volume_fraction, **kwargs)
+
+        # create a permittivity_function that depends only on frequency and temperature by setting other arguments
+        permittivity_model = lambda f, t: wp.water_permittivity_model(f, t, wp.water_salinity)
+        substrate = Flat(wp.water_temperature, permittivity_model)
+    else:
+        substrate = None
+
     sp = Snowpack(substrate=substrate)
+
 
     for i, dz in enumerate(thickness):
         layer = make_ice_layer(dz, temperature=get(temperature, i),
@@ -157,11 +170,6 @@ def make_ice_column(thickness, temperature, microstructure_model, inclusion_shap
 
         sp.append(layer, get(interface, i))
 
-    #add semi-infinite water layer underneath the ice (if wanted):
-    if add_water_substrate is not False:
-        water_layer = add_semi_infinite_water_layer(add_water_substrate, salinity, brine_volume_fraction, **kwargs)
-        sp.append(water_layer, get(interface, i + 1))
-    
     return sp
 
 
@@ -223,52 +231,40 @@ def make_ice_layer(layer_thickness, temperature, salinity, microstructure_model,
     return lay
 
 
-def add_semi_infinite_water_layer(add_water_substrate, salinity, brine_volume_fraction, **kwargs):
-    
+def guess_water_parameters(medium, salinity, brine_volume_fraction, **kwargs):
     """Make a semi-infinite water layer.
-    :param add_water_substrate: Possible arguments are True (default, looks for salinity or brine volume fraction input to determine if a saline or fresh water layer is added), False (no water layer is added), 'ocean' (adds saline water), 'fresh' (adds fresh water layer).
-    :param salinity: salinity in PSU (parts per thousand or g/kg)
+    :param option: Possible arguments are True or 'auto' (default, looks for salinity or brine volume fraction input to determine if a saline or fresh water layer is added), 'ocean' (adds saline water), 'fresh' (adds fresh water layer).
+    :param salinity: salinity in kg/kg
     :param brine_volume_fraction: brine / liquid water fraction in sea ice, optional parameter, if not given brine volume fraction is calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
     Optional arguments are 'water_temperature', 'water_salinity' and 'water_depth' of the water layer.
     """
-    
-    if add_water_substrate is True:
-        if salinity is None and brine_volume_fraction is None:
-            add_water_substrate = "fresh"
-        else:
-            add_water_substrate = "ocean"
 
-    if add_water_substrate == "ocean":
+    if (medium is True) or (medium == "auto"):
+        if salinity is None and brine_volume_fraction is None:
+            medium = "fresh"
+        else:
+            medium = "ocean"
+
+    if medium == "ocean":
         water_temperature = FREEZING_POINT - 1.8
-        water_salinity = 0.032 # = 0.032kg/kg = 32PSU; somewhat arbitrary value, fresher than average ocean salinity, reflecting lower salinities in polar regions
-    elif add_water_substrate == "fresh":
+        water_salinity = 0.032  # = 0.032kg/kg = 32PSU; somewhat arbitrary value, fresher than average ocean salinity, reflecting lower salinities in polar regions
+    elif medium == "fresh":
         water_temperature = FREEZING_POINT
         water_salinity = 0.
     else:
-        raise SMRTError("'add_water_substrate' must be set to one of the following: True (default), False, 'ocean', 'fresh'. Additional optional arguments for function make_ice_column are 'water_temperature', 'water_salinity' and 'water_depth'.")
+        raise SMRTError("'medium' must be set to one of the following: True (default), 'ocean', 'fresh'. Additional optional arguments for function make_ice_column are 'water_temperature', 'water_salinity' and 'water_depth'.")
 
     water_depth = 10.  # arbitrary value of 10m thickness for the water layer, microwave absorption in water is usually high, so this represents an infinitely thick water layer
 
     # override the following variable if set
-    water_temperature = kwargs.get('water_temperature', water_temperature)
-    water_salinity = kwargs.get('water_salinity', water_salinity)
-    water_depth = kwargs.get('water_depth', water_depth)
+    WaterParameter = collections.namedtuple("WaterParameter", ('medium', 'water_temperature', 'water_salinity', 'water_depth', 'water_permittivity_model'))
 
-    inclusion_permittivity_model = seawater_permittivity_klein76 # default sea water permittivity model
-
-    eps_1 = inclusion_permittivity_model
-    eps_2 = inclusion_permittivity_model
-
-    lay = Layer(water_depth,
-                microstructure_model=get_microstructure_model("exponential"),
-                frac_volume=1.0, # water is considered a uniform medium
-                temperature=water_temperature,
-                permittivity_model=(eps_1, eps_2),
-                salinity=water_salinity,
-                corr_length=0.
-                )
-
-    return lay
+    wp = WaterParameter(medium=medium,
+                        water_temperature=kwargs.get('water_temperature', water_temperature),
+                        water_salinity=kwargs.get('water_salinity', water_salinity),
+                        water_depth=kwargs.get('water_depth', water_depth),
+                        water_permittivity_model=seawater_permittivity_klein76)
+    return wp
 
 
 def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permittivity=1,
