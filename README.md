@@ -23,3 +23,4 @@ Other contributions
 --------------------
 
  - Nina Maass
+ - Ludovic Brucker

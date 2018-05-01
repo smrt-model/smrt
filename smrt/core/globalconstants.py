@@ -19,10 +19,13 @@
             from smrt.core.globalconstants import DENSITY_OF_ICE
 """
 
+import numpy as np
+
 DENSITY_OF_ICE = 917.0
 FREEZING_POINT = 273.15
 PERMITTIVITY_OF_AIR = 1.
 C_SPEED = 299792458.0
+PERMITTIVITY_OF_FREE_SPACE = 1 / (4e-7 * np.pi * C_SPEED ** 2)
 
 GHz = 1e9    # G in fact
 PSU = 1e-3   # g/kg -> kg/kg

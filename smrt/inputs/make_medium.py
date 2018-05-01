@@ -31,8 +31,8 @@ from smrt.core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE
 from smrt.core.layer import get_microstructure_model, Layer
 from smrt.core.error import SMRTError
 from ..substrate.flat import Flat
-from ..permittivity.saline_ice import brine_permittivity_stogryn85, brine_volume
-from ..permittivity.saline_water import seawater_permittivity_klein76
+from ..permittivity.brine import brine_volume
+from ..permittivity.saline_water import seawater_permittivity_klein76, brine_permittivity_stogryn85
 
 
 def make_snowpack(thickness, microstructure_model, density,
