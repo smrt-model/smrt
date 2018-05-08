@@ -132,13 +132,23 @@ class Model(object):
         self.emmodel_options = emmodel_options if emmodel_options is not None else dict()
         self.rtsolver_options = rtsolver_options if rtsolver_options is not None else dict()
 
-    def set_rtsolver_options(self, options):
+    def set_rtsolver_options(self, options=None, **kwargs):
         """set the option for the rtsolver"""
-        self.rtsolver_options = options
+        if options is not None:
+            if not isinstance(options, dict):
+                raise SMRTError("options must be a dict")
+            self.rtsolver_options = options  # overload the options
 
-    def set_emmodel_options(self, options):
+        self.rtsolver_options.update(kwargs) # update the options
+
+    def set_emmodel_options(self, options=None, **kwargs):
         """set the options for the emmodel"""
-        self.emmodel_options = options
+        if options is not None:
+            if not isinstance(options, dict):
+                raise SMRTError("options must be a dict")
+            self.emmodel_options = options  # overload the options
+
+        self.emmodel_options.update(kwargs) # update the options
 
     def run(self, sensor, snowpack, atmosphere=None, snowpack_dimension=None, progressbar=False):
         """ Run the model for the given sensor configuration and return the results
