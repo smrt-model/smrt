@@ -80,11 +80,11 @@ def _do_test_kirchoff_law(pc, thickness_1):
     reflectivity_V = (sresult_1.TbV() - sresult_0.TbV())
 
     print(emissivity_V, 1 - reflectivity_V)
-    np.testing.assert_allclose(emissivity_V, 1 - reflectivity_V, atol=0.01)
+    np.testing.assert_allclose(emissivity_V, 1 - reflectivity_V, atol=0.002)
 
     # H-pol
     emissivity_H = (sresult_0.TbH() + sresult_1.TbH())/2/T
     reflectivity_H = (sresult_1.TbH() - sresult_0.TbH())
 
     print(emissivity_H, 1 - reflectivity_H)
-    np.testing.assert_allclose(emissivity_H, 1 - reflectivity_H, atol=0.01)
+    np.testing.assert_allclose(emissivity_H, 1 - reflectivity_H, atol=0.002)
