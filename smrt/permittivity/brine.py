@@ -141,7 +141,7 @@ def brine_volume(temperature, salinity):
             raise SMRTError(
                     "(Polynomial) equations for calculating brine volume fraction from temperature and salinity show unphysical behaviour! \
         Calculated value for brine volume fraction is below 0 or above 1!")
-
+    print calculate_freezing_temperature(salinity)
     return Vb
 
 
@@ -149,7 +149,7 @@ def brine_volume(temperature, salinity):
 def calculate_freezing_temperature(salinity):
     """calculates temperature at which saline water freezes using polynomial fits
     of the Gibbs function given in TEOS-10: The international thermodynamic equation
-    of seawater – 2010 (http://www.teos-10.org/pubs/TEOS-10_Manual.pdf).
+    of seawater - 2010 ('http://www.teos-10.org/pubs/TEOS-10_Manual.pdf).
     The error of this fit ranges between -5e-4 K and 6e-4 K when compared with the
     temperature calculated from the exact in-situ freezing temperature, which is found
     by a Newton-Raphson iteration of the equality of the chemical potentials of water
@@ -183,7 +183,7 @@ def calculate_freezing_temperature(salinity):
 
     p = 10.1325 #pressure at sea level in dbar
     s_r	= salinity * 1e1 
-    x = np.sqrt(sal)
+    x = np.sqrt(s_r)
     p_r	= p * 1e-4
 
     #freezing temperature in deg Celsius:
