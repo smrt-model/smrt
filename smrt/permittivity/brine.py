@@ -141,7 +141,6 @@ def brine_volume(temperature, salinity):
             raise SMRTError(
                     "(Polynomial) equations for calculating brine volume fraction from temperature and salinity show unphysical behaviour! \
         Calculated value for brine volume fraction is below 0 or above 1!")
-    print calculate_freezing_temperature(salinity)
     return Vb
 
 
