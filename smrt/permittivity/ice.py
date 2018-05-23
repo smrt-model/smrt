@@ -10,7 +10,7 @@ import math
 
 # local import
 # from ..core.error import SMRTError
-from ..core.globalconstants import FREEZING_POINT
+from ..core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE
 from ..core.layer import required_layer_properties
 
 #
@@ -124,6 +124,39 @@ def ice_permittivity_maetzler87(frequency, temperature):
         warnings.warn("Strictly, this permittivity formulation was proposed for -5 and -15 deg C. It is recommended to use another formulation if this is not for testing purpose")
 
     return Ereal + Eimag * 1j
+
+
+@required_layer_properties("temperature")
+def ice_permittivity_tiuri84(frequency, temperature):
+    """ Calculates the complex ice dielectric constant depending on the frequency and temperature
+
+    Based on Tiuri et al. (1984). The Complex Dielectric Constant of Snow at Microwave Frequencies.
+    IEEE Journal of Oceanic Engineering, vol. 9, no. 5., pp. 377-382
+
+    :param frequency: frequency in Hz
+    :param temperature: temperature in K
+    :returns: Complex permittivity of pure ice
+
+    **Usage example**::
+
+        from smrt.permittivity.ice import ice_permittivity_tiuri84
+        eps_ice = ice_permittivity_tiuri84(frequency=1.9e9, temperature=250)
+
+"""
+
+    # Units conversion
+    density_gm3 = DENSITY_OF_ICE * 1e-3
+    temp_degC = temperature - 273.15
+
+    # Eq (1) - Real part
+    Ereal = 1 + 1.7*density_gm3 + 0.7*density_gm3**2
+
+    # Eq (6) - Imaginary part
+    Eimag = 1.59e6 * \
+            (0.52 * density_gm3 + 0.62*density_gm3**2) * \
+            (frequency**-1 + 1.23e-14 * frequency**.5) * math.exp(0.036 * temp_degC)
+
+    return Ereal + 1j * Eimag
 
 
 @required_layer_properties("temperature")

@@ -4,11 +4,13 @@ from nose.tools import eq_
 import warnings
 import numpy as np
 
-from smrt.permittivity.ice import ice_permittivity_maetzler06
-from smrt.permittivity.ice import ice_permittivity_maetzler87
-from smrt.permittivity.ice import _ice_permittivity_HUT
-from smrt.permittivity.ice import _ice_permittivity_DMRTML
-from smrt.permittivity.ice import _ice_permittivity_MEMLS
+from smrt.permittivity.ice import ice_permittivity_maetzler06, \
+                                    ice_permittivity_maetzler87,\
+                                    ice_permittivity_tiuri84,\
+                                    _ice_permittivity_HUT,\
+                                    _ice_permittivity_DMRTML,\
+                                    _ice_permittivity_MEMLS
+
 from smrt.core.error import SMRTError
 
 # Input temperature array functionality removed. If ever needed, use numpy instead of math in ice.py, but slower.
@@ -30,26 +32,19 @@ from smrt.core.error import SMRTError
 
 # Test output of this module against output from MEMLS code
 # Not exact as MEMLS references to 273, not 273.15
-def test_real_ice_permittivity_output_matzler_temp_270():
+def test_ice_permittivity_output_matzler_temp_270():
     eps = ice_permittivity_maetzler06(10e9, 270)
+    print(eps)
     np.testing.assert_allclose(eps.real, 3.18567, atol=1e-3)
+    np.testing.assert_allclose(eps.imag, 9.093e-04, atol=1e-4)
 
 # Test output of this module against output from MEMLS code
 # Weaker tolerance for 250K as MEMLS calculation is based on freezing point temperature of 273K not 273.15K
-def test_real_ice_permittivity_output_matzler_temp_250():
+def test_ice_permittivity_output_matzler_temp_250():
     eps = ice_permittivity_maetzler06(10e9, 250)
+    print(eps)
     np.testing.assert_allclose(eps.real, 3.1675, atol=1e-3)
-
-
-def test_imaginary_ice_permittivity_output_matzler_temp_270_freq_10GHz():
-    eps = ice_permittivity_maetzler06(10e9, 270)
-    np.testing.assert_allclose(eps.imag, 9.093e-04, atol=1e-4)
-
-
-def test_imaginary_ice_permittivity_output_matzler_temp_250_freq_10GHz():
-    eps = ice_permittivity_maetzler06(10e9, 250)
     np.testing.assert_allclose(eps.imag, 6.0571e-4, atol=1e-4)
-
 
 def test_imaginary_ice_permittivity_output_matzler_temp_270_freq_20GHz():
     eps = ice_permittivity_maetzler06(20e9, 270)
@@ -99,6 +94,37 @@ def test_imag_ice_permittivity_output_maetzler87_temp_minus15():
     eps = ice_permittivity_maetzler87(10e9, 258.15)
     np.testing.assert_allclose(eps.imag, 6.0556e-4, atol=1e-8)
 
+
+# Test output of tuiri84 against manually calculated value
+def test_ice_permittivity_output_tuiri84_temp_minus10_freq_10GHz():
+    eps = ice_permittivity_tiuri84(10e9, 263.15)
+    print(eps)
+    np.testing.assert_allclose(eps.real, 3.1475223, atol=1e-8)
+    np.testing.assert_allclose(eps.imag, 0.0014727074368968355, atol=1e-8)
+
+
+# Test output of tuiri84 against manually calculated value
+def test_ice_permittivity_output_tuiri84_temp_minus10_freq_40GHz():
+    eps = ice_permittivity_tiuri84(40e9, 263.15)
+    print(eps)
+    np.testing.assert_allclose(eps.real, 3.1475223, atol=1e-8)
+    np.testing.assert_allclose(eps.imag, 0.00275163757946514, atol=1e-8)
+
+
+# Test output of tuiri84 against manually calculated value
+def test_ice_permittivity_output_tuiri84_temp_250K_freq_10GHz():
+    eps = ice_permittivity_tiuri84(10e9, 250.15)
+    print(eps)
+    np.testing.assert_allclose(eps.real, 3.1475223, atol=1e-8)
+    np.testing.assert_allclose(eps.imag, 0.000922288221673332, atol=1e-8)
+
+
+# Test output of tuiri84 against manually calculated value
+def test_ice_permittivity_output_tuiri84_temp_250K_freq_40GHz():
+    eps = ice_permittivity_tiuri84(40e9, 263)
+    print(eps)
+    np.testing.assert_allclose(eps.real, 3.1475223, atol=1e-8)
+    np.testing.assert_allclose(eps.imag, 0.002736818783295346, atol=1e-8)
 
 # Test output of HUT version
 def test_real_ice_permittivity_output_HUT():
