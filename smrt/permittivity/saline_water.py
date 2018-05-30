@@ -5,10 +5,10 @@ import numpy as np
 from smrt.core.globalconstants import FREEZING_POINT, GHz, PERMITTIVITY_OF_FREE_SPACE, PSU
 from .brine import brine_conductivity, brine_relaxation_time, permittivity_high_frequency_limit, \
     static_brine_permittivity
-from ..core.layer import required_layer_properties
+from ..core.layer import layer_properties
 
 
-@required_layer_properties("temperature", "salinity")
+@layer_properties("temperature", "salinity")
 def seawater_permittivity_klein76(frequency, temperature, salinity):
     """Calculates permittivity (dielectric constant) of water using an empirical relationship described
        by Klein and Swift (1976).
@@ -47,7 +47,7 @@ def seawater_permittivity_klein76(frequency, temperature, salinity):
     return eps_water
 
 
-@required_layer_properties("temperature")
+@layer_properties("temperature")
 def seawater_permittivity_stogryn71(frequency, temperature):
     """Computes dielectric constant of brine, complex_b (Stogryn, 1971 approach)
 
@@ -83,7 +83,7 @@ def seawater_permittivity_stogryn71(frequency, temperature):
     return real_brine + 1j * imag_brine
 
 
-@required_layer_properties("temperature")
+@layer_properties("temperature")
 def brine_permittivity_stogryn85(frequency, temperature):
     """computes permittivity and loss of brine using equations given in Stogryn and Desargant (1985): 'The Dielectric Properties of Brine in Sea Ice at Microwave Frequencies', IEEE.
     :param frequency: em frequency [Hz]
@@ -99,7 +99,7 @@ def brine_permittivity_stogryn85(frequency, temperature):
     return brine_permittivity
 
 
-@required_layer_properties("temperature", "salinity")
+@layer_properties("temperature", "salinity")
 def seawater_permittivity_stogryn95(frequency, temperature, salinity):
     """Computes seawater dielectric constant using Stogryn 1995.
 

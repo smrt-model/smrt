@@ -11,14 +11,14 @@ import math
 # local import
 # from ..core.error import SMRTError
 from ..core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE
-from ..core.layer import required_layer_properties
+from ..core.layer import layer_properties
 
 #
 # for developers: see note in __init__.py
 #
 
 
-@required_layer_properties("temperature")
+@layer_properties("temperature")
 def ice_permittivity_maetzler06(frequency, temperature):
     """ Calculates the complex ice dielectric constant depending on the frequency and temperature
 
@@ -62,7 +62,7 @@ def ice_permittivity_maetzler06(frequency, temperature):
     return Ereal + 1j * Eimag
 
 
-@required_layer_properties("temperature")
+@layer_properties("temperature")
 def ice_permittivity_maetzler98(frequency, temperature):
     """computes permittivity of ice (accounting for ionic impurities in ice?), equations from Hufford (1991) as given in Maetzler (1998): 'Microwave properties of ice and snow', in B. Schmitt et al. (eds.): 'Solar system ices', p. 241-257, Kluwer.
     :param temperature: ice temperature in K
@@ -81,7 +81,7 @@ def ice_permittivity_maetzler98(frequency, temperature):
     return epi + epii * 1j
 
 
-@required_layer_properties("temperature")
+@layer_properties("temperature")
 def ice_permittivity_maetzler87(frequency, temperature):
     """ Calculates the complex ice dielectric constant depending on the frequency and temperature
 
@@ -126,7 +126,7 @@ def ice_permittivity_maetzler87(frequency, temperature):
     return Ereal + Eimag * 1j
 
 
-@required_layer_properties("temperature")
+@layer_properties("temperature")
 def ice_permittivity_tiuri84(frequency, temperature):
     """ Calculates the complex ice dielectric constant depending on the frequency and temperature
 
@@ -159,7 +159,7 @@ def ice_permittivity_tiuri84(frequency, temperature):
     return Ereal + 1j * Eimag
 
 
-@required_layer_properties("temperature")
+@layer_properties("temperature")
 def _ice_permittivity_HUT(frequency, temperature):
     # This gives exact agreement with the HUT model version
     # Only use if invoking an exact HUT simulation.
@@ -188,7 +188,7 @@ def _ice_permittivity_HUT(frequency, temperature):
     return real_permittivity_ice + 1j * imag_permittivity_ice
 
 
-@required_layer_properties("temperature")
+@layer_properties("temperature")
 def _ice_permittivity_DMRTML(frequency, temperature):
     # This gives exact agreement with the DMRT-ML model version
     # Only use if invoking an exact DMRT-ML simulation.
@@ -217,7 +217,7 @@ def _ice_permittivity_DMRTML(frequency, temperature):
     return real_permittivity_ice + 1j * imag_permittivity_ice
 
 
-@required_layer_properties("temperature", "salinity")
+@layer_properties("temperature", "salinity")
 def _ice_permittivity_MEMLS(frequency, temperature, salinity):
     # This gives exact agreement with the MEMLS model version
     # Only use if invoking an exact MEMLS simulation.

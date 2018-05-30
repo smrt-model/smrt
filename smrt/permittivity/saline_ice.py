@@ -4,10 +4,10 @@ import numpy as np
 
 from smrt.core.globalconstants import FREEZING_POINT, GHz
 from smrt.permittivity.ice import ice_permittivity_maetzler06
-from ..core.layer import required_layer_properties
+from ..core.layer import layer_properties
 
 
-@required_layer_properties("temperature", "salinity")
+@layer_properties("temperature", "salinity")
 def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
     """ Computes permittivity of impure ice from Maetzler 2006 - Thermal Microwave Radiation: Applications for Remote Sensing
 

@@ -7,10 +7,10 @@ from .brine import brine_conductivity, brine_relaxation_time, calculate_brine_sa
     permittivity_high_frequency_limit, static_brine_permittivity
 from .saline_water import seawater_permittivity_stogryn71, seawater_permittivity_stogryn95
 from ..core.error import SMRTError
-from ..core.layer import required_layer_properties
+from ..core.layer import layer_properties
 
 
-@required_layer_properties("density", "temperature", "salinity")
+@layer_properties("density", "temperature", "salinity")
 def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salinity):
     """ Computes permittivity of saline snow using the frequency dispersion model published by Geldsetzer et al., 2009 (CRST). DOI: 10.1016/j.coldregions.2009.03.009.
     In-situ measurements collected had salinity concentration between 0.1e-3 and 12e3 kg/kg, temperatures ranging between 257 and 273 K, and a mean snow density of 352 kg/m3.
@@ -63,7 +63,7 @@ def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salin
     return real_mix + 1j * loss_mix
 
 
-@required_layer_properties("density", "temperature", "salinity")
+@layer_properties("density", "temperature", "salinity")
 def saline_snow_permittivity_scharien_with_stogryn71(frequency, density, temperature, salinity):
     """Computes permittivity of saline snow. See `saline_snow_permittivity_scharien` documentation"""
 
@@ -71,7 +71,7 @@ def saline_snow_permittivity_scharien_with_stogryn71(frequency, density, tempera
                                              seawater_permittivity_stogryn71(frequency, temperature))
 
 
-@required_layer_properties("density", "temperature", "salinity")
+@layer_properties("density", "temperature", "salinity")
 def saline_snow_permittivity_scharien_with_stogryn95(frequency, density, temperature, salinity):
     """Computes permittivity of saline snow. See `saline_snow_permittivity_scharien` documentation"""
 

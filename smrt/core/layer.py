@@ -18,6 +18,7 @@ to create a snowpack using :py:func:`~smrt.inputs.make_medium.make_snowpack`.
 
 """
 
+from warnings import warn
 from functools import wraps
 import copy
 import six
@@ -208,23 +209,31 @@ To import the StickyHardSpheres class with spheres radius of 1mm, stickiness of 
 
 
 
-def required_layer_properties(*required_arguments):
+def layer_properties(*required_arguments, optional_arguments=None):
     """This decorator is used for the permittivity functions. It declares the layer properties needed to call
-the function. This allows permittivity functions to use any properties of the layer, as long as it is defined. """
+the function and the optiona once. This allows permittivity functions to use any properties of the layer, as long as it is defined. """
 
     def wrapper(f):
         @wraps(f)
-        def newf(frequency, *args):
+        def newf(frequency, *args, **kwargs):
             if len(args) == 1 and isinstance(args[0], Layer):
                 layer = args[0]
                 newargs = []
+                if kwargs:
+                    warm("calling this function with a Layer object and optional arguments is not supported. Optional arguments are discarded")
+                kwargs = {}
                 for ra in required_arguments:
                     if hasattr(layer, ra):
                         newargs.append(getattr(layer, ra))
                     else:
-                        raise Exception("The layer must have the '%s' attribute" % ra)
-                return f(frequency, *newargs)
+                        raise Exception("The layer must have the '%s' attribute to call the function %s " % (ra, str(f)))
+                if optional_arguments:
+                    for ra in optional_arguments:
+                        if hasattr(layer, ra):
+                            kwargs[ra] = getattr(layer, ra)
+
+                return f(frequency, *newargs, **kwargs)
             else:
-                return f(frequency, *args)
+                return f(frequency, *args, **kwargs)
         return newf
     return wrapper

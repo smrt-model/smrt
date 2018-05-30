@@ -4,10 +4,10 @@ import numpy as np
 
 from smrt.core.error import SMRTError
 from smrt.core.globalconstants import DENSITY_OF_ICE, FREEZING_POINT
-from ..core.layer import required_layer_properties
+from ..core.layer import layer_properties
 
 
-@required_layer_properties("temperature")
+@layer_properties("temperature")
 def brine_conductivity(temperature):
     """computes ionic conductivity of dissolved salts, Stogryn and Desargant, 1985
     :param temperature: thermometric temperature [K]"""
@@ -20,7 +20,7 @@ def brine_conductivity(temperature):
     return sigma
 
 
-@required_layer_properties("temperature")
+@layer_properties("temperature")
 def brine_relaxation_time(temperature):
     """computes relaxation time of brine, Stogryn and Desargant, 1985
     :param temperature: thermometric temperature [K]"""
@@ -32,7 +32,7 @@ def brine_relaxation_time(temperature):
     return tau_brine
 
 
-@required_layer_properties("temperature")
+@layer_properties("temperature")
 def static_brine_permittivity(temperature):
     """computes  static dielectric constant of brine, Stogryn and Desargant, 1985
     :param temperature: thermometric temperature [K]"""
@@ -42,7 +42,7 @@ def static_brine_permittivity(temperature):
     return eps_static
 
 
-@required_layer_properties("temperature")
+@layer_properties("temperature")
 def calculate_brine_salinity(temperature):
     """ Computes the salinity of brine (in ppt) for a given temperature (Cox and Weeks, 1975)
         :param temperature: snow temperature in K
@@ -60,7 +60,7 @@ def calculate_brine_salinity(temperature):
     return salinity_brine
 
 
-@required_layer_properties("temperature")
+@layer_properties("temperature")
 def permittivity_high_frequency_limit(temperature):
     """computes permittivity .
         :param temperature: ice or snow temperature in K"""
@@ -70,7 +70,7 @@ def permittivity_high_frequency_limit(temperature):
     return eps_inf
 
 
-@required_layer_properties("temperature", "salinity")
+@layer_properties("temperature", "salinity")
 def brine_volume(temperature, salinity):
     """computes brine volume fraction using coefficients from Cox and Weeks (1983): 'Equations for determining the gas and brine volumes in sea-ice samples', J. of Glac. if ice temperature is below -2 deg C or coefficients determined by Lepparanta and Manninen (1988): 'The brine and gas content of sea ice with attention to low salinities and high temperatures' for warmer temperatures.
     :param temperature: ice temperature in K
@@ -144,7 +144,7 @@ def brine_volume(temperature, salinity):
     return Vb
 
 
-@required_layer_properties("salinity")
+@layer_properties("salinity")
 def calculate_freezing_temperature(salinity):
     """calculates temperature at which saline water freezes using polynomial fits
     of the Gibbs function given in TEOS-10: The international thermodynamic equation

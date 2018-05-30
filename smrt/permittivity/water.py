@@ -1,8 +1,8 @@
 # coding: utf-8
 
-from ..core.layer import required_layer_properties
+from ..core.layer import layer_properties
 
-@required_layer_properties("temperature")
+@layer_properties("temperature")
 def water_permittivity(frequency, temperature):
     """ Calculates the complex water dielectric constant depending on the frequency and temperature
      Based on Mätzler, C., & Wegmuller, U. (1987). Dielectric properties of freshwater
