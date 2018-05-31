@@ -26,7 +26,7 @@ class SoilQNH(Substrate):
     args = ['H']
     optional_args = {'Q': 0., 'N': 0., 'Nv': np.nan, 'Nh': np.nan}
 
-    def adjust(self, rh, rv, frequency, eps_1, mu1):
+    def adjust(self, rh, rv, mu1):
         # in place modification of rh and rv for the rough soil QNH reflectivity model
 
         if np.isnan(self.Nv):
@@ -47,7 +47,7 @@ class SoilQNH(Substrate):
 
         reflection_coefficients = fresnel_reflection_matrix(eps_1, eps_2, mu1, npol,return_as_diagonal=True)
 
-        self.adjust(reflection_coefficients[1::npol], reflection_coefficients[0::npol], frequency, eps_1, mu1)
+        self.adjust(reflection_coefficients[1::npol], reflection_coefficients[0::npol], mu1)
 
         if npol >= 3:
             # don't modify the third compoment... this is an approximation, as the third component should be affected by the roughness...
@@ -65,12 +65,12 @@ class SoilQNH(Substrate):
 
         eps_2 = self.permittivity(frequency)
 
-        transmission_coefficients = fresnel_transmission_matrix(npol, eps_1, eps_2, mu1, return_as_diagonal=True)
+        transmission_coefficients = fresnel_transmission_matrix(eps_1, eps_2, mu1, npol, return_as_diagonal=True)
 
         rh = 1 - transmission_coefficients[1::npol]
         rv = 1 - transmission_coefficients[0::npol]
 
-        self.adjust(rh, rv, frequency, eps_1, mu1)
+        self.adjust(rh, rv, mu1)
 
         transmission_coefficients[1::npol] = 1 - rh  # back to transmission coefficients
         transmission_coefficients[0::npol] = 1 - rv
