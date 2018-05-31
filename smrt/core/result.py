@@ -64,6 +64,14 @@ class Result(object):
     def coords(self):
         return self.data.coords
 
+    def Tb(self, **kwargs):
+        """Return brightness temperature. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V'). See xarray slicing with sel method (to document)"""
+        return _strongsqueeze(self.data.sel(**kwargs))
+
+    def Tb_as_dataframe(self, **kwargs):
+        """Return brightness temperature. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V'). See xarray slicing with sel method (to document)"""
+        return self.Tb(**kwargs).to_dataframe(name='Tb')
+
     def TbV(self, **kwargs):
         """Return V polarization. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
         return _strongsqueeze(self.data.sel(polarization='V', **kwargs))
@@ -76,26 +84,34 @@ class Result(object):
         """Return polarization ratio. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
         return _strongsqueeze(self.data.sel(polarization=ratio[0], **kwargs) / self.data.sel(polarization=ratio[-1], **kwargs))
 
+    def sigma(self, **kwargs):
+        """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V'). See xarray slicing with sel method (to document)"""
+        theta = np.array(self.data.theta)
+        return 4*np.pi*np.cos(np.radians(theta))*_strongsqueeze(self.data.sel(**kwargs).sel_points(theta_inc=theta, theta=theta))
+
+    def sigma_as_dataframe(self, **kwargs):
+        """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V'). See xarray slicing with sel method (to document)"""
+        return self.sigma(**kwargs).to_dataframe(name='sigma')
+
     def sigmaVV(self, **kwargs):
-        """any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return VV backscattering coefficient. any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
         theta = np.array(self.data.theta)
         return 4*np.pi*np.cos(np.radians(theta))*_strongsqueeze(self.data.sel(polarization_inc='V', polarization='V', **kwargs).sel_points(theta_inc=theta, theta=theta))
 
     def sigmaHH(self, **kwargs):
-        """any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return HH backscattering coefficient. any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
         theta = np.array(self.data.theta)
         return 4*np.pi*np.cos(np.radians(theta))*_strongsqueeze(self.data.sel(polarization_inc='H', polarization='H', **kwargs).sel_points(theta_inc=theta, theta=theta))
 
     def sigmaHV(self, **kwargs):
-        """any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return HV backscattering coefficient. any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
         theta = np.array(self.data.theta)
         return 4*np.pi*np.cos(np.radians(theta))*_strongsqueeze(self.data.sel(polarization_inc='H', polarization='V', **kwargs).sel_points(theta_inc=theta, theta=theta))
 
     def sigmaVH(self, **kwargs):
-        """any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return VH backscattering coefficient. any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
         theta = np.array(self.data.theta)
         return 4*np.pi*np.cos(np.radians(theta))*_strongsqueeze(self.data.sel(polarization_inc='V', polarization='H', **kwargs).sel_points(theta_inc=theta, theta=theta))
-
 
     def save(self, filename):
         """save a result to disk. Under the hood, this is a netCDF file produced by xarray (http://xarray.pydata.org/en/stable/io.html)."""
