@@ -25,7 +25,7 @@ from oct2py import octave, Struct
 
 from smrt.core.result import Result, concat_results
 from smrt.core.sensitivity_study import SensitivityStudy
-
+from smrt.core.globalconstants import DENSITY_OF_ICE
 
 
 # python-space path to dmrt_qms.
@@ -98,7 +98,7 @@ def run(sensor, snowpack, dmrt_qms_path=None, snowpack_dimension=None, full_outp
 
 
     diameter = np.float64([lay.microstructure.radius*200 for lay in snowpack.layers])
-    density = np.float64([lay.frac_volume*0.917 for lay in snowpack.layers])
+    density = np.float64([lay.frac_volume*DENSITY_OF_ICE/1000 for lay in snowpack.layers])
     thickness = np.float64([lay.thickness*100.0 for lay in snowpack.layers])
     stickiness = np.float64([min(lay.microstructure.stickiness, 1000.0) for lay in snowpack.layers])
     temperature = np.float64([lay.temperature for lay in snowpack.layers])
@@ -141,7 +141,7 @@ def dmrt_qms_active(sensor, snowpack):
     epsr_ground = 5.0 + 0.5j
 
     diameter = np.float64([lay.microstructure.radius*200 for lay in snowpack.layers])
-    density = np.float64([lay.frac_volume*0.917 for lay in snowpack.layers])
+    density = np.float64([lay.frac_volume*DENSITY_OF_ICE/1000 for lay in snowpack.layers])
     thickness = np.float64([lay.thickness*100 for lay in snowpack.layers])
     stickiness = np.float64([min(lay.microstructure.stickiness, 1000) for lay in snowpack.layers])
     temperature = np.float64([lay.temperature for lay in snowpack.layers])

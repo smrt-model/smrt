@@ -42,8 +42,8 @@ def test_dmrt_oneconfig():
     res = m.run(radiometer, snowpack)
 
     print(res.TbV(), res.TbH())
-    ok_((res.TbV() - 202.34939425929616) < 1e-4)
-    ok_((res.TbH() - 187.05199255031036) < 1e-4)
+    ok_((res.TbV() - 202.381059705594 ) < 1e-4)
+    ok_((res.TbH() - 187.07930133881544) < 1e-4)
 
 
 def test_less_refringent_bottom_layer_VV():

@@ -43,5 +43,5 @@ def test_iba_oneconfig():
     print(res.TbV(), res.TbH())
 
     #original absorption (Maetzler 1998)
-    ok_(abs(res.TbV() - 247.92402825320272 ) < 1e-4)
-    ok_(abs(res.TbH() - 237.08967658310334) < 1e-4)
+    ok_(abs(res.TbV() - 247.9239598860865) < 1e-4)
+    ok_(abs(res.TbH() - 237.08471336386063) < 1e-4)

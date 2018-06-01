@@ -34,8 +34,8 @@ def test_simple_isotropic_atmosphere():
     print('TB 1: ', res1.TbV(), 'TB2: ', res2.TbV())
 
     #absorption with effective permittivity
-    ok_(abs(res1.TbV() - 227.59158654174465) < 1e-2)
-    ok_(abs(res2.TbV() - 214.64368439876984) < 1e-2)
+    ok_(abs(res1.TbV() - 227.61318467710458) < 1e-2)
+    ok_(abs(res2.TbV() - 214.66092232541834) < 1e-2)
 
     #original absorption (Maetzler 1998)
     #ok_(abs(res1.TbV() - 223.925496277253) < 1e-2)

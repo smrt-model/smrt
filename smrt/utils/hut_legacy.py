@@ -24,10 +24,7 @@ import numpy as np
 from oct2py import octave
 
 from smrt.core.result import Result, concat_results
-
-
-
-
+from smrt.core.globalconstants import DENSITY_OF_ICE, FREEZING_POINT
 
 # python-space path to memls
 _hut_path = None
@@ -72,7 +69,7 @@ def run(sensor, snowpack, ke_option=0, grainsize_option=1, hut_path=None):
         roughness_rms = getattr(snowpack.substrate, "roughness_rms", 0)
         soil_eps = snowpack.substrate.permittivity(sensor.frequency, Tg)
     else:
-        Tg = 273.0
+        Tg = FREEZING_POINT
         roughness_rms = 0
         soil_eps = 1
 
@@ -80,14 +77,14 @@ def run(sensor, snowpack, ke_option=0, grainsize_option=1, hut_path=None):
     enough_warning = False
 
     for lay in snowpack.layers:
-        density = lay.frac_volume * 917.0
-        snow.append((lay.temperature-273.15, lay.thickness*density, 2000*lay.microstructure.radius, density/1000,
+        density = lay.frac_volume * DENSITY_OF_ICE
+        snow.append((lay.temperature - FREEZING_POINT, lay.thickness * density, 2000 * lay.microstructure.radius, density / 1000,
                      lay.liquid_water, lay.salinity, 0, 0))
         if lay.salinity and enough_warning:
             print("Warning: salinity in HUT is ppm")
             enough_warning = True
     # ground
-    snow.append((Tg-273.15, 0, 0, 0, 0, 0, roughness_rms, soil_eps))
+    snow.append((Tg-FREEZING_POINT, 0, 0, 0, 0, 0, roughness_rms, soil_eps))
 
     thetad = np.degrees(sensor.theta)
     TbV = [octave.snowemis_nlayer(otulo, snow,  sensor.frequency/1e9, 0, ke_option, grainsize_option) for otulo in thetad]

@@ -41,4 +41,5 @@ def test_depol_approach_to_isotropy_below():
 
 def test_pvs_real():
     effective_permittivity = polder_van_santen(frac_volume=(300. / DENSITY_OF_ICE))
-    ok_(abs(effective_permittivity.real - 1.52441173e+00) < high_tolerance)
+    print(effective_permittivity.real)
+    ok_(abs(effective_permittivity.real - 1.52461995825) < high_tolerance)

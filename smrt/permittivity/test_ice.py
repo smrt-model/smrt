@@ -99,32 +99,32 @@ def test_imag_ice_permittivity_output_maetzler87_temp_minus15():
 def test_ice_permittivity_output_tuiri84_temp_minus10_freq_10GHz():
     eps = ice_permittivity_tiuri84(10e9, 263.15)
     print(eps)
-    np.testing.assert_allclose(eps.real, 3.1475223, atol=1e-8)
-    np.testing.assert_allclose(eps.imag, 0.0014727074368968355, atol=1e-8)
+    np.testing.assert_allclose(eps.real, 3.1466272230000003, atol=1e-8)
+    np.testing.assert_allclose(eps.imag, 0.0014719740743411925, atol=1e-8)
 
 
 # Test output of tuiri84 against manually calculated value
 def test_ice_permittivity_output_tuiri84_temp_minus10_freq_40GHz():
     eps = ice_permittivity_tiuri84(40e9, 263.15)
     print(eps)
-    np.testing.assert_allclose(eps.real, 3.1475223, atol=1e-8)
-    np.testing.assert_allclose(eps.imag, 0.00275163757946514, atol=1e-8)
+    np.testing.assert_allclose(eps.real, 3.1466272230000003, atol=1e-8)
+    np.testing.assert_allclose(eps.imag, 0.0027502673494269655, atol=1e-8)
 
 
 # Test output of tuiri84 against manually calculated value
 def test_ice_permittivity_output_tuiri84_temp_250K_freq_10GHz():
     eps = ice_permittivity_tiuri84(10e9, 250.15)
     print(eps)
-    np.testing.assert_allclose(eps.real, 3.1475223, atol=1e-8)
-    np.testing.assert_allclose(eps.imag, 0.000922288221673332, atol=1e-8)
+    np.testing.assert_allclose(eps.real, 3.1466272230000003, atol=1e-8)
+    np.testing.assert_allclose(eps.imag, 0.0009218289507887421, atol=1e-8)
 
 
 # Test output of tuiri84 against manually calculated value
 def test_ice_permittivity_output_tuiri84_temp_250K_freq_40GHz():
     eps = ice_permittivity_tiuri84(40e9, 263)
     print(eps)
-    np.testing.assert_allclose(eps.real, 3.1475223, atol=1e-8)
-    np.testing.assert_allclose(eps.imag, 0.002736818783295346, atol=1e-8)
+    np.testing.assert_allclose(eps.real, 3.1466272230000003, atol=1e-8)
+    np.testing.assert_allclose(eps.imag, 0.0027354559325573355, atol=1e-8)
 
 # Test output of HUT version
 def test_real_ice_permittivity_output_HUT():

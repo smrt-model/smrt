@@ -45,8 +45,8 @@ def test_iba_sea_ice_oneconfig():
 
     print(res.TbV(), res.TbH())
     #absorption with effective permittivity
-    ok_(abs(res.TbV() - 245.3722090467312) < 1e-4)
-    ok_(abs(res.TbH() - 219.21443585105038) < 1e-4)
+    ok_(abs(res.TbV() - 245.36044436424572) < 1e-4)
+    ok_(abs(res.TbH() - 219.2042855456296) < 1e-4)
 
 
 

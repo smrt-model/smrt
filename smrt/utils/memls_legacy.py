@@ -26,6 +26,7 @@ from oct2py import octave
 from smrt.core.result import Result, concat_results
 from smrt import SMRTError
 from smrt.core.sensitivity_study import SensitivityStudy
+from smrt.core.globalconstants import DENSITY_OF_ICE
 
 # MEMLS model
 
@@ -108,7 +109,7 @@ def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=N
         # thickness [cm], Salinity (0 - 0.1) [ppt], expon.corr.length [mm]
 
         for ilay, lay in enumerate(reversed(snowpack.layers)):
-            f.write("%i, %g, %g, %g, %g, %g, %g\n" % (ilay+1, lay.temperature, lay.liquid_water, lay.frac_volume*917.0, lay.thickness*100.0,
+            f.write("%i, %g, %g, %g, %g, %g, %g\n" % (ilay+1, lay.temperature, lay.liquid_water, lay.frac_volume*DENSITY_OF_ICE, lay.thickness*100.0,
                                                       lay.salinity, lay.microstructure.corr_length*1000.))
 
     # uncomment these lines if you need to check the input file content.
@@ -135,7 +136,7 @@ def memls_emmodel(sensor, layer, scattering_choice=ABORN, graintype=2):
         :param sensor: describe the sensor configuration.
         :param scattering_choice: MEMLS proposes several formulation to compute scattering_function. scattering_choice=ABORN (equals 12) is the defaut here and is recommended choice to compare with IBA."""
 
-    res = octave.memlsscatt(sensor.frequency/1e9, float(layer.temperature), float(layer.liquid_water), layer.frac_volume*917.0,
+    res = octave.memlsscatt(sensor.frequency/1e9, float(layer.temperature), float(layer.liquid_water), layer.frac_volume*DENSITY_OF_ICE,
                             float(layer.salinity), layer.microstructure.corr_length*1000.0, scattering_choice, graintype)
 
     nt = collections.namedtuple("memls_emmodel", "ks ka")

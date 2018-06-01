@@ -5,6 +5,7 @@ import numpy as np
 
 from smrt.emmodel.dmrt_qcacp_shortrange import DMRT_QCACP_ShortRange
 from smrt.core.error import SMRTError
+from smrt.core.globalconstants import  DENSITY_OF_ICE
 from smrt.inputs.sensor_list import amsre
 from smrt.inputs.make_medium import make_snow_layer
 from smrt.emmodel import commontest
@@ -49,7 +50,7 @@ def setup_func_dense_shs(density, inverse=False):
     # ### Make a snow layer
 
     if inverse:
-        density = 917 - density
+        density = DENSITY_OF_ICE - density
         eps_scatterers = 1
         eps_background = ice_permittivity_maetzler06
 
