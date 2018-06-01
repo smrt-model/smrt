@@ -58,7 +58,8 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
     :param e0: Permittivity of background (default is 1)
     :param eps: Permittivity of scattering material (default is 3.185 to compare with MEMLS)
     :param depol_xyz: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into account here.
-    :param inclusion_shape: assumption for shape of brine inclusions (so far, "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions) are implemented)
+    :param inclusion_shape: assumption for shape of brine inclusions. So far, we have: "spheres", "random_needles" (i.e. elongated ellipsoidal inclusions) are implemented
+            and "mix_spheres_needles" which a 50-50 mix of spheres and random_needles
     :returns: Effective permittivity
 
     **Usage example:**
@@ -73,6 +74,10 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
         Extend Polder Van Santen model to account for ellipsoidal inclusions
 
     """
+
+    if inclusion_shape == "mix_spheres_needles":
+        return 0.5 * (polder_van_santen(frac_volume, e0=e0, eps=eps, depol_xyz=depol_xyz, inclusion_shape="spheres")
+                      + polder_van_santen(frac_volume, e0=e0, eps=eps, depol_xyz=depol_xyz, inclusion_shape="random_needles"))
 
     if e0 is None:
         e0 = 1.

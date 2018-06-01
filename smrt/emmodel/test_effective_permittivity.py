@@ -39,7 +39,17 @@ def test_depol_approach_to_isotropy_below():
     ok_(abs(depol[0] - (1. / 3.)) < low_tolerance)
 
 
-def test_pvs_real():
+def test_pvsl_spheres():
     effective_permittivity = polder_van_santen(frac_volume=(300. / DENSITY_OF_ICE))
-    print(effective_permittivity.real)
-    ok_(abs(effective_permittivity.real - 1.52461995825) < high_tolerance)
+    print(effective_permittivity)
+    ok_(abs(effective_permittivity - 1.52461995825) < high_tolerance)
+
+def test_pvsl_needles():
+    effective_permittivity = polder_van_santen(frac_volume=(300. / DENSITY_OF_ICE), inclusion_shape="random_needles")
+    print(effective_permittivity)
+    ok_(abs(effective_permittivity - 1.55052802036) < high_tolerance)
+
+def test_pvsl_mix_spheres_needles():
+    effective_permittivity = polder_van_santen(frac_volume=(300. / DENSITY_OF_ICE), inclusion_shape="mix_spheres_needles")
+    print(effective_permittivity)
+    ok_(abs(effective_permittivity - 1.53757398931) < high_tolerance)
