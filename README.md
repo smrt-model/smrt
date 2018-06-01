@@ -25,3 +25,4 @@ Other contributions
  - Nina Maass
  - Ludovic Brucker
  - Marion Leduc-Leballeur
+ - Mai Winstrup

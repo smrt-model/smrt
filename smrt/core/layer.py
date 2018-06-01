@@ -209,9 +209,11 @@ To import the StickyHardSpheres class with spheres radius of 1mm, stickiness of 
 
 
 
-def layer_properties(*required_arguments, optional_arguments=None):
+def layer_properties(*required_arguments, **kwargs):   #### requires pyhton 3: , optional_arguments=None):
     """This decorator is used for the permittivity functions. It declares the layer properties needed to call
 the function and the optiona once. This allows permittivity functions to use any properties of the layer, as long as it is defined. """
+
+    optional_arguments = kwargs.get('optional_arguments', None)
 
     def wrapper(f):
         @wraps(f)

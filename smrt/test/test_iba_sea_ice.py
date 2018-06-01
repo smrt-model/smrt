@@ -26,10 +26,11 @@ def test_iba_sea_ice_oneconfig():
     salinity=salinity[:-1]
 
     # create an ice column with assumption of spherical brine inclusions (inclusion_shape="spheres"):
-    ice_column = make_ice_column(thickness=thickness,
+    ice_column = make_ice_column("firstyear",
+                                 thickness=thickness,
                                   temperature=temperature,
                                   microstructure_model="exponential",
-                                  inclusion_shape="spheres", #inclusion_shape can be "spheres" or "random_needles"
+                                  brine_inclusion_shape="spheres", #inclusion_shape can be "spheres" or "random_needles"
                                   salinity=salinity*PSU, #either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water ice
                                   corr_length=p_ex,
                                   add_water_substrate="ocean"
