@@ -252,12 +252,12 @@ class IBA(object):
         cos_i2 = cos_ti * sin_t - cos_t * sin_ti * cos_pd
 
         # Apply non-zero scattering denominator
-        nonnullsinT = abs(sinT > 1e-6)
+        nonnullsinT = np.abs(sinT) >= 1e-6
         cos_i1[nonnullsinT] /= sinT[nonnullsinT]
         cos_i2[nonnullsinT] /= sinT[nonnullsinT]
 
         # Special condition if theta and theta_i = 0 to preserve azimuth dependency
-        dege_dphi = np.broadcast_to( (abs(sin_t) < 1e-6) & (abs(sin_ti) < 1e-6), cos_i1.shape)
+        dege_dphi = np.broadcast_to( (np.abs(sin_t) < 1e-6) & (np.abs(sin_ti) < 1e-6), cos_i1.shape)
         cos_i1[dege_dphi] = 1.
         cos_i2[dege_dphi] = np.broadcast_to(cos_pd, cos_i2.shape)[dege_dphi]
 
