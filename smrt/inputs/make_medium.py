@@ -25,7 +25,7 @@ import pandas as pd
 import six
 
 from smrt.core.snowpack import Snowpack
-from smrt.core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE, PERMITTIVITY_OF_AIR
+from smrt.core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE, PERMITTIVITY_OF_AIR, PSU
 from smrt.core.layer import get_microstructure_model, Layer
 from smrt.core.error import SMRTError
 from smrt.permittivity.ice import ice_permittivity_maetzler06  # default pure ice permittivity model
@@ -241,7 +241,7 @@ def make_ice_layer(ice_type,
     if density is None:
         density = bulk_ice_density(temperature, salinity, porosity)
     elif porosity == 0:
-        porosity = 1. - density / bulk_ice_density(temperature, salinity, porosity=0)
+        porosity = np.clip(1. - density / bulk_ice_density(temperature, salinity, porosity=0), 0., 1.)
     else:
         raise SMRTError("Setting density and porosity is invalid")
 
@@ -359,14 +359,11 @@ def bulk_ice_density(temperature, salinity, porosity):
     """
     Computes bulk density of sea ice (in kg m :sup:`-3`), when considering the influence from  brine, solid salts, and air bubbles in the ice.
     Formulation from Cox & Weeks (1983): Equations for determining the gas and brine volumes in sea ice samples, J Glac. Developed for temperatures between -2--30oC.
-
     For higher temperatures (>2oC) is used the formulation from Lepparanta & Manninen (1988): The brine and gas content of sea ice with attention to low salinities and high temperatures.
-
     :param temperature: Temperature in K
-    :param salinity: salinity in ppt
-    :param porosity: Fractional volume of air inclusions
-    :returns: Density of ice mixture
-
+    :param salinity: salinity in kg/kg (see PSU constant in smrt module)
+    :param porosity: Fractional volume of air inclusions (0..1)
+    :returns: Density of ice mixture in kg m :sup:`-3`
     """
 
     Tc = temperature - FREEZING_POINT
@@ -375,7 +372,7 @@ def bulk_ice_density(temperature, salinity, porosity):
         alpha = np.array([-4.1221e-2, -18.407, 5.8402e-1, 2.1454e-1])
         beta = np.array([9.0312e-2, -1.6111e-2, 1.2291e-4, 1.3603e-4])
 
-    elif Tc <= -22.9:
+    elif Tc >= -22.9:
         alpha = np.array([-4.732, -22.45, -6.397e-1, -1.074e-2])
         beta = np.array([8.903e-2, -1.763e-2, -5.33e-4, -8.801e-6])
 
@@ -383,14 +380,14 @@ def bulk_ice_density(temperature, salinity, porosity):
         alpha = np.array([9.899e3, 1.309e3, 55.27, 7.160e-1])
         beta = np.array([8.547, 1.089, 4.518e-2, 5.819e-4])
 
-    F1 = alpha[0] + alpha[1] * Tc + alpha[2] * Tc ** 2 + alpha[3] * Tc ** 3
-    F2 = beta[0] + beta[1] * Tc + beta[2] * Tc ** 2 + beta[3] * Tc ** 3
+    F1 = np.polyval(alpha[::-1], Tc)
+    F2 = np.polyval(beta[::-1], Tc)
 
     # Density of pure ice, C&W p. 311:
     rho_ice = 0.917 - 1.403e-4 * Tc  # in g/cm^3
 
     # Density of mixture:
-    rho = (1. - porosity) * (rho_ice * F1 / (F1 - rho_ice * salinity * F2)) * 1e3  # in kg/m3 (eq. 15, C&W, 1983)
+    rho = (1. - porosity) * (rho_ice * F1 / (F1 - rho_ice * salinity * PSU**-1 * F2)) * 1e3  # in kg/m3 (eq. 15, C&W, 1983)
     return rho
 
 

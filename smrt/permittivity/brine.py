@@ -3,11 +3,10 @@ import warnings
 import numpy as np
 
 from smrt.core.error import SMRTError
-from smrt.core.globalconstants import DENSITY_OF_ICE, FREEZING_POINT
+from smrt.core.globalconstants import DENSITY_OF_ICE, FREEZING_POINT, PSU
 from ..core.layer import layer_properties
 
 
-@layer_properties("temperature")
 def brine_conductivity(temperature):
     """computes ionic conductivity of dissolved salts, Stogryn and Desargant, 1985
     :param temperature: thermometric temperature [K]"""
@@ -20,7 +19,6 @@ def brine_conductivity(temperature):
     return sigma
 
 
-@layer_properties("temperature")
 def brine_relaxation_time(temperature):
     """computes relaxation time of brine, Stogryn and Desargant, 1985
     :param temperature: thermometric temperature [K]"""
@@ -42,7 +40,6 @@ def static_brine_permittivity(temperature):
     return eps_static
 
 
-@layer_properties("temperature")
 def calculate_brine_salinity(temperature):
     """ Computes the salinity of brine (in ppt) for a given temperature (Cox and Weeks, 1975)
         :param temperature: snow temperature in K
@@ -70,77 +67,86 @@ def permittivity_high_frequency_limit(temperature):
     return eps_inf
 
 
-@layer_properties("temperature", "salinity")
-def brine_volume(temperature, salinity):
-    """computes brine volume fraction using coefficients from Cox and Weeks (1983): 'Equations for determining the gas and brine volumes in sea-ice samples', J. of Glac. if ice temperature is below -2 deg C or coefficients determined by Lepparanta and Manninen (1988): 'The brine and gas content of sea ice with attention to low salinities and high temperatures' for warmer temperatures.
+def brine_volume(temperature, salinity, porosity=0, bulk_density=None):
+    """computes brine volume fraction using coefficients from Cox and Weeks (1983): 'Equations for determining the gas and brine volumes in sea-ice samples',
+    J. of Glac. if ice temperature is below -2 deg C or coefficients determined by Lepparanta and Manninen (1988):
+    'The brine and gas content of sea ice with attention to low salinities and high temperatures' for warmer temperatures.
     :param temperature: ice temperature in K
-    :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)"""
+    :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
+    :param porosity: fractional air volume in ice (0..1). Default is 0.
+    :param bulk_density: density of bulk ice in kg m :sup:`-3`
+    """
 
-    if temperature > calculate_freezing_temperature(salinity): Vb = 1. #if temperature of ice is above freezing temperature, which
-        #is determined by salinity of the ice, brine volume fraction is set to 1, meaning that the saline ice is liquid (= saline water)
-        
-    else:
-        T = temperature - FREEZING_POINT  # ice temperature in deg Celsius
+    if temperature > calculate_freezing_temperature(salinity):
+        return 1.  # if temperature of ice is above freezing temperature, which
+    # is determined by salinity of the ice, brine volume fraction is set to 1, meaning that the saline ice is liquid (= saline water)
 
-        if T < -30.:
-            warnings.warn(
-                    "Temperature is below -30 deg C. Equation for calculating brine volume fraction is stated to be valid for temperatures from -30 to -2 deg C!")
+    T = temperature - FREEZING_POINT  # ice temperature in deg Celsius
 
-        if T < -38.:
-            raise SMRTError(
-                    "(Polynomial) equations by Cox and Weeks (1983) were developed for temperatures between -30 and -2 deg C and show unphysical behaviour for temperatures lower than -38 deg C!")
+    if T < -30.:
+        warnings.warn("Temperature is below -30 deg C. Equation for calculating brine volume fraction is stated to be valid for temperatures from -30 to -2 deg C!")
 
-        rho_ice = DENSITY_OF_ICE / 1e3 - 1.403e-4 * T  # density of pure ice from Pounder, 1965
+    if T < -38.:
+        raise SMRTError("(Polynomial) equations by Cox and Weeks (1983) were developed for temperatures between -30 and -2 deg C and show unphysical behaviour for temperatures lower than -38 deg C!")
 
-        if T < -2.:  # coefficients from Cox and Weeks, 1983
-            
-            if T >= -22.9:
-                
-                a0 = -4.732
-                a1 = -2.245e1
-                a2 = -6.397e-1
-                a3 = -1.074e-2
-                b0 = 8.903e-2
-                b1 = -1.763e-2
-                b2 = -5.33e-4
-                b3 = -8.801e-6
-                
-            else:
-                
-                a0 = 9.899e3
-                a1 = 1.309e3
-                a2 = 5.527e1
-                a3 = 7.160e-1
-                b0 = 8.547
-                b1 = 1.089
-                b2 = 4.518e-2
-                b3 = 5.819e-4
+    rho_ice = DENSITY_OF_ICE / 1e3 - 1.403e-4 * T  # density of pure ice from Pounder, 1965
 
-        elif T >= -2.:  # coefficients from Lepparanta and Manninen, 1988 for warm, low-salinity sea ice (e.g. Baltic sea ice)
+    if T < -2.:  # coefficients from Cox and Weeks, 1983
 
-            a0 = -4.1221e-2
-            a1 = -1.8407e1
-            a2 = 5.8402e-1
-            a3 = 2.1454e-1
-            b0 = 9.0312e-2
-            b1 = -1.6111e-2
-            b2 = 1.2291e-4
-            b3 = 1.3603e-4
+        if T >= -22.9:
 
-        F1 = np.polyval([a3, a2, a1, a0], T)
-        F2 = np.polyval([b3, b2, b1, b0], T)
-        rho_bulk = rho_ice * F1 / (F1 - rho_ice * salinity * 1e3 * F2)  # bulk density of sea ice (Cox and Weeks, 1983)
-        Vb = salinity * 1e3 * rho_bulk / F1  # brine volume fraction (Cox and Weeks, 1983)
+            a0 = -4.732
+            a1 = -2.245e1
+            a2 = -6.397e-1
+            a3 = -1.074e-2
+            b0 = 8.903e-2
+            b1 = -1.763e-2
+            b2 = -5.33e-4
+            b3 = -8.801e-6
 
-        if Vb > 1. and abs(temperature-calculate_freezing_temperature(salinity)) < 0.1: Vb = 1. #the polynomial equations for
-        #calculating brine volume fraction reach and exceed values of 1 slightly for temperatures slightly lower than the
-        #calculated freezing temperature. If we are close to the freezing point (difference < 0.1K), we just set brine volume
-        #fraction manually to 1. 
+        else:
 
-        if Vb > 1 or Vb < 0: # unphysical behaviour of polynomial equations (see error below):
-            raise SMRTError(
-                    "(Polynomial) equations for calculating brine volume fraction from temperature and salinity show unphysical behaviour! \
-        Calculated value for brine volume fraction is below 0 or above 1!")
+            a0 = 9.899e3
+            a1 = 1.309e3
+            a2 = 5.527e1
+            a3 = 7.160e-1
+            b0 = 8.547
+            b1 = 1.089
+            b2 = 4.518e-2
+            b3 = 5.819e-4
+
+    elif T >= -2.:  # coefficients from Lepparanta and Manninen, 1988 for warm, low-salinity sea ice (e.g. Baltic sea ice)
+
+        a0 = -4.1221e-2
+        a1 = -1.8407e1
+        a2 = 5.8402e-1
+        a3 = 2.1454e-1
+        b0 = 9.0312e-2
+        b1 = -1.6111e-2
+        b2 = 1.2291e-4
+        b3 = 1.3603e-4
+
+    F1 = np.polyval([a3, a2, a1, a0], T)
+    F2 = np.polyval([b3, b2, b1, b0], T)
+
+    if bulk_density is None:
+        bulk_density = (1 - porosity) * rho_ice * F1 / (
+                    F1 - rho_ice * salinity * PSU ** -1 * F2) * 1e3  # bulk density of sea ice in kg/m3 (Cox and Weeks, 1983)
+    elif porosity > 0:
+        raise SMRTError("Calling brine_volume with both arguments bulk_density and porosity is ambigous. One is deduced from the other one.")
+
+    Vb = salinity * PSU ** -1 * bulk_density * 1e-3 / F1  # brine volume fraction (Cox and Weeks, 1983)
+
+    if Vb > 1. and abs(temperature - calculate_freezing_temperature(salinity)) < 0.1:
+        Vb = 1.  # the polynomial equations for
+        # calculating brine volume fraction reach and exceed values of 1 slightly for temperatures slightly lower than the
+        # calculated freezing temperature. If we are close to the freezing point (difference < 0.1K), we just set brine volume
+        # fraction manually to 1.
+
+    if Vb < 0 or Vb > 1:  # unphysical behaviour of polynomial equations (see error below):
+        raise SMRTError("(Polynomial) equations for calculating brine volume fraction from temperature and salinity show \
+        unphysical behaviour! Calculated value for brine volume fraction is below 0 or above 1!")
+
     return Vb
 
 
