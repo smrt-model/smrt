@@ -78,7 +78,7 @@ def make_snow_layer(layer_thickness, microstructure_model,
                     density,
                     temperature=FREEZING_POINT,
                     ice_permittivity_model=None,
-                    background_permittivity_model=1,
+                    background_permittivity_model=PERMITTIVITY_OF_AIR,
                     liquid_water=0, salinity=0,
                     **kwargs):
 
@@ -90,7 +90,7 @@ def make_snow_layer(layer_thickness, microstructure_model,
     :param microstructure_model: module name of microstructure model to be used
     :param density: density of snow layer in kg m :sup:`-3`
     :param temperature: temperature of layer in K
-    :param permittivity_model: permittivity formulation (default is ice_permittivity_matzler87)
+    :param ice_permittivity_model: permittivity formulation (default is ice_permittivity_matzler87)
     :param liquid_water: fractional volume of liquid water (default=0)
     :param salinity: salinity in kg/kg, for using PSU as unit see PSU constant in smrt module (default = 0)
     :param kwargs: other microstructure parameters are given as optional arguments (in Python words) but may be required (in SMRT words).
@@ -142,22 +142,28 @@ def make_ice_column(ice_type,
                     substrate=None, **kwargs):
     """Build a multi-layered ice column. Each parameter can be an array, list or a constant value.
 
-   ice_type variable determines the type of ice, which has a big impact on how the medium is modelled and the parameters:
+    ice_type variable determines the type of ice, which has a big impact on how the medium is modelled and the parameters:
     - First year is modelled as scattering brines embedded in a pure ice background
     - Multi year is modelled as scattering air bubbles in a saline ice background (but brines are non-scattering in this case).
     - Lake is modelled as scattering air bubbles in a pure ice background (but brines are non-scattering in this case).
 
-    First year and mutli year are equivalent only if scattering and porosity are nulls. It is important to understand that in multi-year ice
+    First-year and multi-year ice is equivalent only if scattering and porosity are nulls. It is important to understand that in multi-year ice
     scattering by brine pockets is neglected because scattering is due to air bubbles and the emmodel implemented up to now are not able to deal with
     three-phase media.
 
     :param ice_type: Ice type. Options are "firstyear", "multiyear", "lake"
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf" for a semi-infinite layer.
+    :param temperature: temperature of ice/water in K
+    :param brine_inclusion_shape: assumption for shape of brine inclusions. So far, "spheres" or "random_needles" (i.e. elongated ellipsoidal inclusions), and "mix" (a mix of the two) are implemented, 
+    :param salinity: salinity of ice/water in kg/kg (see PSU constant in smrt module). Default is 0. If neither salinity nor brine_volume_fraction are given, the ice column is considered to consist of fresh water ice.
+    :param brine_volume_fraction: brine / liquid water fraction in sea ice, optional parameter, if not given brine volume fraction is calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
+    :param density: density of ice layer in kg m :sup:`-3`
+    :param porosity: porosity of ice layer (in %). Default is 0. 
     :param add_water_substrate: Adds a substrate made of water below the ice column.
     Possible arguments are True (default) or False. If True looks for ice_type to determine if a saline or fresh water layer is added and/or uses the
     optional arguments 'water_temperature', 'water_salinity' of the water substrate.
-    :param substrate: if add_water_substrate is False, the substrate can be presribed with this argument.
     :param interface: type of interface, flat/fresnel is the default
+    :param substrate: if add_water_substrate is False, the substrate can be prescribed with this argument.
 
     All the other optional arguments are passed for each layer to the function :py:func:`~smrt.inputs.make_medium.make_ice_layer`.
     The documentation of this function describes in detail the parameters used/required depending on ice_type.
@@ -176,10 +182,8 @@ def make_ice_column(ice_type,
 
     sp = Snowpack(substrate=substrate)
 
-
     for i, dz in enumerate(thickness):
-
-        layer = make_ice_layer(ice_type,
+        layer = make_ice_layer(ice_type, 
                                dz, temperature=get(temperature, i),
                                salinity=get(salinity, i),
                                microstructure_model=get(microstructure_model, i),
@@ -214,12 +218,13 @@ def make_ice_layer(ice_type,
     The microstructural parameters depend on the microstructural model and should be given as additional arguments to this function. To know which parameters are required or optional,
     refer to the documentation of the specific microstructure model used.
 
+    :param ice_type: Assumed ice type 
     :param layer_thickness: thickness of ice layer in m
     :param temperature: temperature of layer in K
     :param salinity: (firstyear and multiyear) salinity in kg/kg (see PSU constant in smrt module)
-    :param brine_inclusion_shape: (firstyear and multiyear) assumption for shape of brine inclusions (so far, "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions) are implemented)
+    :param brine_inclusion_shape: (firstyear and multiyear) assumption for shape of brine inclusions (so far, "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions), and "mix_spheres_needles" are implemented)
     :param brine_volume_fraction: (firstyear and multiyear) brine / liquid water fraction in sea ice, optional parameter, if not given brine volume fraction is calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
-    :param density: (multiyear) density of ice layer in kg m :sup:`-3`
+    :param density: (multiyear) density of ice layer in kg m :sup:`-3`. If not given, density is calculated from temperature, salinity and ice porosity. 
     :param porosity: (mutliyear and fresh) air porosity of ice layer (0..1). Default is 0.
     :param ice_permittivity_model: (all) pure ice permittivity formulation (default is ice_permittivity_matzler06)
     :param brine_permittivity_model: (firstyear and multiyear) brine permittivity formulation (default is brine_permittivity_stogryn85)
@@ -259,7 +264,7 @@ def make_ice_layer(ice_type,
 
         # fractional volume of brine
         frac_volume = brine_volume_fraction
-
+        
         # shape of brine
         inclusion_shape = brine_inclusion_shape
 
@@ -267,7 +272,6 @@ def make_ice_layer(ice_type,
             raise SMRTError("Setting saline_ice_permittivity_model is invalid for firstyear seaice")
 
     elif ice_type == "multiyear":
-
         # scatterers permittivity
         eps_2 = PERMITTIVITY_OF_AIR
 

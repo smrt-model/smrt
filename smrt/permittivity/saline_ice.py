@@ -4,7 +4,9 @@ import numpy as np
 
 from smrt.core.globalconstants import FREEZING_POINT, GHz
 from smrt.permittivity.ice import ice_permittivity_maetzler06
-from ..core.layer import layer_properties
+from smrt.permittivity.saline_water import brine_permittivity_stogryn85
+from smrt.emmodel.effective_permittivity import polder_van_santen
+from smrt.core.layer import layer_properties
 
 
 @layer_properties("temperature", "salinity")
@@ -72,5 +74,3 @@ def saline_ice_permittivity_pvs_mixing(frequency, temperature, brine_volume_frac
                             e0=pure_ice_permittivity,
                             eps=brine_permittivity,
                             inclusion_shape=brine_inclusion_shape)
-
-

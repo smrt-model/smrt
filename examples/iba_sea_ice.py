@@ -15,12 +15,16 @@ p_ex = np.array([5.e-4] * (l)) #correlation length
 temperature = np.linspace(273.15-20., 273.15 - 1.8, l) #temperature gradient in the ice from -20 deg C at top to freezing temperature of water at bottom (-1.8 deg C)
 salinity = np.linspace(2., 10., l)*PSU #salinity profile ranging from salinity=2 at the top to salinity=10 at the bottom of the ice
 
-# create an ice column with assumption of spherical brine inclusions (inclusion_shape="spheres"):
-ice_column = make_ice_column(thickness=thickness,
+# create a multi-year sea ice column with assumption of spherical brine inclusions (brine_inclusion_shape="spheres"), and 10% porosity:
+ice_type = 'multiyear' # first-year (FY) or multi-year (MY) sea ice
+porosity = 0.1 # ice porosity in fractions, [0..1]
+
+ice_column = make_ice_column(ice_type=ice_type,thickness=thickness,
                             temperature=temperature,
                             microstructure_model="exponential",
-                            inclusion_shape="spheres", #inclusion_shape can be "spheres" or "random_needles" 
+                            brine_inclusion_shape="spheres", #brine_inclusion_shape can be "spheres", "random_needles" or "mix_spheres_needles"
                             salinity=salinity, #either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water ice 
+                            porosity = porosity, # either density or 'porosity' should be set for sea ice. If porosity is given, density is calculated in the model. If none is given, ice is treated as having a porosity of 0% (no air inclusions)
                             corr_length=p_ex,
                             add_water_substrate="ocean" #see comment below
                             )

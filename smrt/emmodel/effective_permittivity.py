@@ -54,7 +54,7 @@ def depolarization_factors(length_ratio=None):
 def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_shape=None):
     """ Calculates effective permittivity of snow by solution of quadratic Polder Van Santen equation for spherical inclusion.
 
-    :param frac_volume: Fractional volume of snow
+    :param frac_volume: Fractional volume of inclusions
     :param e0: Permittivity of background (default is 1)
     :param eps: Permittivity of scattering material (default is 3.185 to compare with MEMLS)
     :param depol_xyz: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into account here.
@@ -101,7 +101,7 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
 
     else:
         raise SMRTError("inclusion_shape must be one of the following:\
-        'spheres' (default), 'random_needles'.")
+        'spheres' (default), 'random_needles', 'mix_spheres_needles'.")
    
     return (-b_quad + np.sqrt(b_quad**2 - 4. * a_quad * c_quad)) / (2. * a_quad)
 
