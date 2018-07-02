@@ -30,10 +30,6 @@ from .plugin import import_class
 from .globalconstants import DENSITY_OF_ICE, FREEZING_POINT
 
 
-
-
-
-
 class Layer(object):
     """ Contains the properties for a single snow layer including the microstructure attribute which holds the microstructure properties.
 
@@ -52,7 +48,7 @@ class Layer(object):
         :param temperature: temperature of layer in K
         :param permittivity_model: list or tuple of permittivity value or model for the background and materials (e.g. air and ice). The permittivity can be
         given as a complex (or real) value or a function that return a value (see :py:mod:`smrt.permittivity` modules)
-        :param inclusion_shape: assumption for shape of brine inclusions (so far, "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions) are implemented)
+        :param inclusion_shape: assumption for shape of air/brine inclusions (so far, "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions) and "mix_spheres_needles" are implemented)
 
 """
 
@@ -111,7 +107,7 @@ class Layer(object):
             raise SMRTError("The permittivity value or model for the background and scatterers must be given when creating a layer")
 
         if callable(self.permittivity_model[i]):
-            # return self.permittivity_model[i](frequency, self.temperature)
+            # return self.permittivity_model[i](frequency, self.temperature)
             # another approach would be to give the layer object as argument, but this creates a strong dependency
             # between the permittivity and the layer. We prefer to avoid this.
             # Neverthelees, if the list of arguments should lengthen, it will be better to pass the object.

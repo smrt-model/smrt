@@ -154,7 +154,7 @@ class Model(object):
         """ Run the model for the given sensor configuration and return the results
 
             :param sensor: sensor to use for the calculation
-            :param snowpack: snowpack to use for the calculation. Can be a singel snowpack, a list or a SensitivityStudy object.
+            :param snowpack: snowpack to use for the calculation. Can be a single snowpack, a list or a SensitivityStudy object.
             :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and the values are from 1 to the number of snowpacks.
             :param progressbar: if True, display a progress bar during multi-snowpacks computation
             :returns: result of the calculation(s) as a :py:class:`Results` instance
