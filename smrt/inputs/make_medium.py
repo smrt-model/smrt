@@ -135,7 +135,7 @@ def make_ice_column(ice_type,
                     brine_permittivity_model=None,
                     ice_permittivity_model=None,
                     saline_ice_permittivity_model=None,
-                    porosity=0.,
+                    porosity=0,
                     density=None,
                     add_water_substrate=True,
                     interface=None,
@@ -275,15 +275,16 @@ def make_ice_layer(ice_type,
         # scatterers permittivity
         eps_2 = PERMITTIVITY_OF_AIR
 
+        # background permittivity
         if saline_ice_permittivity_model is None:
-            eps_1 = ice_permittivity_maetzler06
-        else:
             eps_1 = saline_ice_permittivity_pvs_mixing
+        else:
+            eps_1 = saline_ice_permittivity_model
 
         # fractional volume of air
         frac_volume = porosity
 
-        # shape of bubbles
+        # shape of air bubbles
         inclusion_shape = 'spheres'
 
     elif ice_type == "fresh":
