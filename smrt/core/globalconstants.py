@@ -6,7 +6,7 @@
     =====================   ===============================   =================================================
     Parameter               Description                       Value
     =====================   ===============================   =================================================
-    DENSITY_OF_ICE          Density of pure ice at 273.15K    917.0 kg m :sup:`-3`
+    DENSITY_OF_ICE          Density of pure ice at 273.15K    916.7 kg m :sup:`-3`
     FREEZING_POINT          Freezing point of pure water      273.15 K
     C_SPEED                 Speed of light in a vacuum        2.99792458 x 10 :sup:`8` ms :sup:`-1`
     PERMITTIVITY_OF_AIR     Relative permittivity of air      1

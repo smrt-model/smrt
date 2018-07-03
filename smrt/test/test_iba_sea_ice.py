@@ -33,16 +33,16 @@ def test_oneconfig_for_firstyear_sea_ice():
 
     l, n_max_stream, thickness, p_ex, temperature, salinity = setup_seaice()
 
-    # create an ice column with assumption of spherical brine inclusions (inclusion_shape="spheres"):
+    # create an ice column with assumption of spherical brine inclusions (brine_inclusion_shape="spheres"):
     ice_column = make_ice_column("firstyear",
                                  thickness=thickness,
-                                  temperature=temperature,
-                                  microstructure_model="exponential",
-                                  brine_inclusion_shape="spheres", #inclusion_shape can be "spheres" or "random_needles"
-                                  salinity=salinity, #either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water ice
-                                  corr_length=p_ex,
-                                  add_water_substrate="ocean"
-                                  )
+                                 temperature=temperature,
+                                 microstructure_model="exponential",
+                                 brine_inclusion_shape="spheres", #inclusion_shape can be "spheres" or "random_needles", or "mix_spheres_needles"
+                                 salinity=salinity, #either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water ice
+                                 corr_length=p_ex,
+                                 add_water_substrate="ocean"
+                                 )
 
     # create the sensor
     sensor = sensor_list.passive(1.4e9, 40.)
@@ -72,7 +72,7 @@ def test_oneconfig_for_multiyear_sea_ice():
                                  temperature=temperature,
                                  microstructure_model="exponential",
                                  brine_inclusion_shape="spheres",
-                                 salinity=salinity * PSU,
+                                 salinity=salinity,
                                  porosity=porosity,
                                  corr_length=p_ex,
                                  add_water_substrate="ocean"
@@ -92,9 +92,6 @@ def test_oneconfig_for_multiyear_sea_ice():
     ok_(abs(res.TbH() - 124.54838130267804) < 1e-4)
 
     # CAREFULL, THIS TEST IS NOT REALISTIC FOR SEA ICE !!!!!!!!!!!!!!!!!
-
-
-
 
 
 def test_equivalence_porosity_density():
