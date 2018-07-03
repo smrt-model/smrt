@@ -12,6 +12,7 @@ from ..core.layer import layer_properties
 def seawater_permittivity_klein76(frequency, temperature, salinity):
     """Calculates permittivity (dielectric constant) of water using an empirical relationship described
        by Klein and Swift (1976).
+
        :param frequency: frequency in Hz
        :param temperature: water temperature in K
        :param salinity: water salinity in kg/kg (see PSU constant in smrt module)
@@ -86,6 +87,7 @@ def seawater_permittivity_stogryn71(frequency, temperature):
 @layer_properties("temperature")
 def brine_permittivity_stogryn85(frequency, temperature):
     """computes permittivity and loss of brine using equations given in Stogryn and Desargant (1985): 'The Dielectric Properties of Brine in Sea Ice at Microwave Frequencies', IEEE.
+
     :param frequency: em frequency [Hz]
     :param temperature: ice temperature in K"""
 

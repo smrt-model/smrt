@@ -11,9 +11,9 @@ from smrt.core.layer import layer_properties
 
 @layer_properties("temperature", "salinity")
 def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
-    """ Computes permittivity of impure ice from Maetzler 2006 - Thermal Microwave Radiation: Applications for Remote Sensing
+    """ Computes permittivity of impure ice from Maetzler 2006 - Thermal Microwave Radiation: Applications for Remote Sensing.
+     Model developed for salinity around 0.013 PSU, so it is not recommended for sea ice
 
-        Model developed for salinity around 0.013 PSU, so it is not recommended for sea ice
         :param temperature: ice temperature in K
         :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
 
@@ -53,6 +53,7 @@ def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
 def saline_ice_permittivity_pvs_mixing(frequency, temperature, brine_volume_fraction, brine_inclusion_shape='spheres',
                                        ice_permittivity_model=None, brine_permittivity_model=None):
     """Computes effective permittivity of saline ice using the Polder Van Santen mixing formulaes.
+
         :param frequency: frequency in Hz
         :param temperature: ice temperature in K
         :param brine_volume_fraction: brine / liquid water fraction in sea ice

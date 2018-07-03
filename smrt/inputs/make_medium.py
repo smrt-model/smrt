@@ -335,6 +335,7 @@ def make_ice_layer(ice_type,
 
 def water_parameters(ice_type, **kwargs):
     """Make a semi-infinite water layer.
+
     :param ice_type: ice_type is used to determine if a saline or fresh water layer is added
     Optional arguments are 'water_temperature', 'water_salinity' and 'water_depth' of the water layer.
     """
@@ -364,6 +365,7 @@ def bulk_ice_density(temperature, salinity, porosity):
     Computes bulk density of sea ice (in kg m :sup:`-3`), when considering the influence from  brine, solid salts, and air bubbles in the ice.
     Formulation from Cox & Weeks (1983): Equations for determining the gas and brine volumes in sea ice samples, J Glac. Developed for temperatures between -2--30oC.
     For higher temperatures (>2oC) is used the formulation from Lepparanta & Manninen (1988): The brine and gas content of sea ice with attention to low salinities and high temperatures.
+
     :param temperature: Temperature in K
     :param salinity: salinity in kg/kg (see PSU constant in smrt module)
     :param porosity: Fractional volume of air inclusions (0..1)
