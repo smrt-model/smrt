@@ -1,5 +1,5 @@
 
-from nose.tools import eq_
+from nose.tools import ok_
 import numpy as np
 
 from smrt.permittivity.ice import ice_permittivity_maetzler06
@@ -12,7 +12,8 @@ from smrt import PSU
 def test_impure_permittivity_same_as_pure_for_zero_salinty():
     pure = ice_permittivity_maetzler06(18e9, 265)
     impure = impure_ice_permittivity_maetzler06(18e9, 265, 0)
-    eq_(pure, impure)
+    ok_(abs(pure.real - impure.real)  < 1e-4)
+    ok_(abs(pure.imag- impure.imag) < 1e-7)
 
 
 # Test of impure ice at freezing point temperature, 0.013PSU salinity, 10GHz
@@ -26,4 +27,5 @@ def test_impure_ice_freezing_point_0p013psu_10GHz():
 def test_saline_permittivity_same_as_pure_for_zero_salinity():
     pure = ice_permittivity_maetzler06(18e9, 265)
     impure = saline_ice_permittivity_pvs_mixing(18e9,265,0)
-    eq_(pure, impure)    
+    ok_(abs(pure.real - impure.real)  < 1e-4)
+    ok_(abs(pure.imag- impure.imag) < 1e-7)
