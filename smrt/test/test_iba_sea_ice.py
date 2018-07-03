@@ -17,8 +17,8 @@ def setup_seaice():
     n_max_stream = 64
 
     thickness = np.array([1.5 / l] * l)  # ice is 1.5m thick
-    temperature = np.linspace(273.15 - 20., 273.15 - 1.8, l + 1)  # temperature gradient in the ice from -20 deg C at top to freezing temperature of water at bottom (-1.8 deg C)
-    salinity = np.linspace(2., 10., l + 1) * PSU  # salinity profile ranging from salinity=2 at the top to salinity=10 at the bottom of the ice
+    temperature = np.linspace(273.15 - 20., 273.15 - 1.8, l)  # temperature gradient in the ice from -20 deg C at top to freezing temperature of water at bottom (-1.8 deg C)
+    salinity = np.linspace(2., 10., l) * PSU  # salinity profile ranging from salinity=2 at the top to salinity=10 at the bottom of the ice
 
     return l, n_max_stream, thickness, temperature, salinity
 
@@ -43,16 +43,16 @@ def test_oneconfig_for_firstyear_sea_ice():
 
     # create the sensor
     sensor = sensor_list.passive(1.4e9, 40.)
-    
-    m = make_model("iba", "dort")
+    n_max_stream= 128
+    m = make_model("iba", "dort", rtsolver_options ={"n_max_stream": n_max_stream})
 
     # run the model
     res = m.run(sensor, ice_column)
 
     print(res.TbV(), res.TbH())
     #absorption with effective permittivity
-    ok_(abs(res.TbV() - 245.36044436424572) < 1e-4)
-    ok_(abs(res.TbH() - 219.2042855456296) < 1e-4)
+    ok_(abs(res.TbV() - 256.0117690314184) < 1e-4)
+    ok_(abs(res.TbH() - 228.4745849369685) < 1e-4)
 
 
 def test_oneconfig_for_multiyear_sea_ice():
@@ -76,15 +76,16 @@ def test_oneconfig_for_multiyear_sea_ice():
     # create the sensor
     sensor = sensor_list.passive(1.4e9, 40.)
 
-    m = make_model("iba", "dort")
+    n_max_stream= 128
+    m = make_model("iba", "dort", rtsolver_options ={"n_max_stream": n_max_stream})
 
     # run the model
     res = m.run(sensor, ice_column)
 
     print(res.TbV(), res.TbH())
     # absorption with effective permittivity
-    ok_(abs(res.TbV() - 244.47185967080017) < 1e-4)
-    ok_(abs(res.TbH() - 220.4787860352205) < 1e-4)
+    ok_(abs(res.TbV() - 257.5689162188296) < 1e-4)
+    ok_(abs(res.TbH() - 232.03924683304172) < 1e-4)
 
 
 def test_equivalence_porosity_density():
