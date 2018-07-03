@@ -11,13 +11,13 @@ from smrt import PSU
 # prepare inputs
 l = 9 #9 ice layers
 thickness = np.array([1.5/l] * l) #ice is 1.5m thick
-p_ex = np.array([5.e-4] * (l)) #correlation length
+p_ex = np.array([1.0e-3] * (l)) #correlation length
 temperature = np.linspace(273.15-20., 273.15 - 1.8, l) #temperature gradient in the ice from -20 deg C at top to freezing temperature of water at bottom (-1.8 deg C)
 salinity = np.linspace(2., 10., l)*PSU #salinity profile ranging from salinity=2 at the top to salinity=10 at the bottom of the ice
 
 # create a multi-year sea ice column with assumption of spherical brine inclusions (brine_inclusion_shape="spheres"), and 10% porosity:
-ice_type = 'multiyear' # first-year (FY) or multi-year (MY) sea ice
-porosity = 0.1 # ice porosity in fractions, [0..1]
+ice_type = 'multiyear' # first-year or multi-year sea ice
+porosity = 0.08 # ice porosity in fractions, [0..1]
 
 ice_column = make_ice_column(ice_type=ice_type,thickness=thickness,
                             temperature=temperature,

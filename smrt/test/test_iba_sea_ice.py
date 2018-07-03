@@ -17,21 +17,18 @@ def setup_seaice():
     n_max_stream = 64
 
     thickness = np.array([1.5 / l] * l)  # ice is 1.5m thick
-    p_ex = np.array([500e-6] * (l))  # correlation length
-    temperature = np.linspace(273.15 - 20., 273.15 - 1.8,
-                              l + 1)  # temperature gradient in the ice from -20 deg C at top to freezing temperature of water at bottom (-1.8 deg C)
-    temperature = temperature[:-1]
+    temperature = np.linspace(273.15 - 20., 273.15 - 1.8, l + 1)  # temperature gradient in the ice from -20 deg C at top to freezing temperature of water at bottom (-1.8 deg C)
     salinity = np.linspace(2., 10., l + 1) * PSU  # salinity profile ranging from salinity=2 at the top to salinity=10 at the bottom of the ice
-    salinity = salinity[:-1]
 
-    return l, n_max_stream, thickness, p_ex, temperature, salinity
+    return l, n_max_stream, thickness, temperature, salinity
 
 
 def test_oneconfig_for_firstyear_sea_ice():
 
     # prepare inputs
 
-    l, n_max_stream, thickness, p_ex, temperature, salinity = setup_seaice()
+    l, n_max_stream, thickness, temperature, salinity = setup_seaice()
+    p_ex = np.array([500e-6] * (l))  # correlation length
 
     # create an ice column with assumption of spherical brine inclusions (brine_inclusion_shape="spheres"):
     ice_column = make_ice_column("firstyear",
@@ -59,11 +56,9 @@ def test_oneconfig_for_firstyear_sea_ice():
 
 
 def test_oneconfig_for_multiyear_sea_ice():
-    # CAREFULL, THIS TEST IS NOT REALISTIC FOR SEA ICE !!!!!!!!!!!!!!!!!
-
     # prepare inputs
-    l, n_max_stream, thickness, p_ex, temperature, salinity = setup_seaice()
-
+    l, n_max_stream, thickness, temperature, salinity = setup_seaice()
+    p_ex = np.array([1.0e-3] * (l))  # correlation length
     porosity = 0.08  # ice porosity, in fraction
 
     # create an ice column with assumption of spherical brine inclusions (inclusion_shape="spheres"):
@@ -88,16 +83,14 @@ def test_oneconfig_for_multiyear_sea_ice():
 
     print(res.TbV(), res.TbH())
     # absorption with effective permittivity
-    ok_(abs(res.TbV() - 144.58043633826188) < 1e-4)
-    ok_(abs(res.TbH() - 124.54838130267804) < 1e-4)
-
-    # CAREFULL, THIS TEST IS NOT REALISTIC FOR SEA ICE !!!!!!!!!!!!!!!!!
+    ok_(abs(res.TbV() - 244.47185967080017) < 1e-4)
+    ok_(abs(res.TbH() - 220.4787860352205) < 1e-4)
 
 
 def test_equivalence_porosity_density():
 
-    l, n_max_stream, thickness, p_ex, temperature, salinity = setup_seaice()
-
+    l, n_max_stream, thickness, temperature, salinity = setup_seaice()
+    p_ex = np.array([1.0e-3] * (l))  # correlation length
     ice_type = 'multiyear'  # first-year (FY) or multi-year (MY) sea ice
     porosity = 0.08  # ice porosity, in fraction
 
