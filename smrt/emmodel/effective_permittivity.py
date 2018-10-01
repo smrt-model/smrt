@@ -51,15 +51,15 @@ def depolarization_factors(length_ratio=None):
     return np.array([anisotropy_q, anisotropy_q, (1. - 2. * anisotropy_q)])
 
 
-def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_shape=None):
+def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_shape=None, mixing_ratio=0.5):
     """ Calculates effective permittivity of snow by solution of quadratic Polder Van Santen equation for spherical inclusion.
 
     :param frac_volume: Fractional volume of inclusions
     :param e0: Permittivity of background (default is 1)
     :param eps: Permittivity of scattering material (default is 3.185 to compare with MEMLS)
     :param depol_xyz: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into account here.
-    :param inclusion_shape: assumption for shape of brine inclusions. So far, we have: "spheres", "random_needles" (i.e. elongated ellipsoidal inclusions) are implemented
-            and "mix_spheres_needles" which a 50-50 mix of spheres and random_needles
+    :param inclusion_shape: Assumption for shape of brine inclusions. So far, we have: "spheres", "random_needles" (i.e. randomly-oriented elongated ellipsoidal inclusions), and "mix_spheres_needles". For the latter, the default is a 50-50 mix of spheres and random_needles.
+    :param mixing_ratio: The mixing ratio of spheres and random_needles for the shape of inclusions. Default is 0.5 (i.e. a 50-50 mix); 1 is pure spheres; 0 is pure random needles. Only used for inclusion_shape = "mix_spheres_needles". 
     :returns: Effective permittivity
 
     **Usage example:**
@@ -76,8 +76,8 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
     """
 
     if inclusion_shape == "mix_spheres_needles":
-        return 0.5 * (polder_van_santen(frac_volume, e0=e0, eps=eps, depol_xyz=depol_xyz, inclusion_shape="spheres")
-                      + polder_van_santen(frac_volume, e0=e0, eps=eps, depol_xyz=depol_xyz, inclusion_shape="random_needles"))
+        return mixing_ratio * (polder_van_santen(frac_volume, e0=e0, eps=eps, depol_xyz=depol_xyz, inclusion_shape="spheres")
+                      + (1-mixing_ratio)*polder_van_santen(frac_volume, e0=e0, eps=eps, depol_xyz=depol_xyz, inclusion_shape="random_needles"))
 
     if e0 is None:
         e0 = 1.

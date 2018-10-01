@@ -51,13 +51,14 @@ def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
                    optional=("brine_inclusion_shape", "ice_permittivity_model", "brine_permittivity_model"))
 
 def saline_ice_permittivity_pvs_mixing(frequency, temperature, brine_volume_fraction, brine_inclusion_shape='spheres',
-                                       ice_permittivity_model=None, brine_permittivity_model=None):
+                                       mixing_ratio=0.5, ice_permittivity_model=None, brine_permittivity_model=None):
     """Computes effective permittivity of saline ice using the Polder Van Santen mixing formulaes.
 
         :param frequency: frequency in Hz
         :param temperature: ice temperature in K
         :param brine_volume_fraction: brine / liquid water fraction in sea ice
-        :param brine_inclusion_shape: assumption for shape of brine inclusions (so far, "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions), and "mix" (a mix of the two) are implemented)
+        :param brine_inclusion_shape: assumption for shape of brine inclusions (so far, "spheres" and "random_needles" (i.e. randomly-orientated elongated ellipsoidal inclusions), and "mix" (a mix of the two) are implemented. 
+        :param mixing_ratio: The mixing ratio of spheres and random_needles for the shape of inclusions. Default is 0.5 (i.e. a 50-50 mix); 1 is pure spheres; 0 is pure random needles. Only used for inclusion_shape = "mix_spheres_needles". 
         :param ice_permittivity_model: pure ice permittivity formulation (default is ice_permittivity_matzler87)
         :param brine_permittivity_model: brine permittivity formulation (default is brine_permittivity_stogryn85)
     """
@@ -74,4 +75,4 @@ def saline_ice_permittivity_pvs_mixing(frequency, temperature, brine_volume_frac
     return polder_van_santen(brine_volume_fraction,
                             e0=pure_ice_permittivity,
                             eps=brine_permittivity,
-                            inclusion_shape=brine_inclusion_shape)
+                            inclusion_shape=brine_inclusion_shape,mixing_ratio=mixing_ratio)
