@@ -34,7 +34,14 @@ class DORT(object):
 
         :param n_max_stream: number of stream in the most refringent layer
         :param m_max: number of mode (azimuth)
-
+        :param phase_normalization: the integral of the phase matrix should in principe be equal to the scattering coefficient. However, some emmodels do not 
+        respect this strictly. In general a small difference is due to numerical rounding and is acceptable, but a large difference rather indicates either a bug in the emmodel or input parameters that breaks the 
+        assumption of the emmodel. The most typical case is when the grain size is too big compared to wavelength for emmodels that rely on Rayleigh assumption. 
+        If this argument is to True (the default), the phase matrix is normalized to be coherent with the scattering coefficient, but only when the difference is moderate (0.7 to 1.3). 
+        If set to "force" the normalization is always performed. This option is dangerous because it may hide bugs or unappropriate input parameters (typically too big grains).
+        If set to False, no normalization is performed.
+        :param error_handling: If set to "exception" (the default), raise an exception in cause of error, stopping the code. If set to "nan", return a nan, so the calculation can continue, 
+        but the result is of course unusuable and the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
@@ -590,8 +597,9 @@ class EigenValueSolver(object):
             if diagonalization_failed:
 
                 raise SMRTError("""The diagonalization failed in DORT which is possibly caused by single scattering albedo larger than 1.
-It is often due to grain size too large (or too low stickiness parameter) to respect the Rayleigh/low-frequency assumption required by some ememodel (DMRT ShortRange, IBA, ...)"
-It is recommended to reduce the size of the bigger grains.""")
+It is often due to grain size too large (or too low stickiness parameter) to respect the Rayleigh/low-frequency assumption required by some emmodel (DMRT ShortRange, IBA, ...)"
+It is recommended to reduce the size of the bigger grains. It is possible to disable this error raise and return NaN instead by adding the argument rtsolver_options=dict(error_handling='nan') to make_model).
+""")
 
             #np.testing.assert_allclose(beta.imag, 0, atol=np.linalg.norm(beta)*1e-5)
 
@@ -637,7 +645,8 @@ It is recommended to reduce the size of the bigger grains.""")
                 raise SMRTError("""The re-normalization of the phase function exceeds the predefined threshold of 30%.
                     This is likely because of a too large grain size or a bug in the phase function.
                     It is recommended to check the grain size.
-                    You can also deactivate this check using normalization="forced" as an options of the dort solver.""")
+                    You can also deactivate this check using normalization="forced" as an options of the dort solver. 
+                    It is at last possible to disable this error raise and return NaN instead by adding the argument rtsolver_options=dict(error_handling='nan') to make_model).""")
         else:
             if self.norm_m is None:
                 if self.norm_0 is None:
