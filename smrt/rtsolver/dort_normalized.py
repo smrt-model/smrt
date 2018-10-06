@@ -582,9 +582,9 @@ class EigenValueSolver(object):
                 reason = "eig method"
             else:
                 diagonalization_failed = (not np.allclose(beta.imag, 0)) or (not np.allclose(E.imag, 0))
-                if diagonalization_failed:
-                    print(np.allclose(beta.imag, 0), np.allclose(E.imag, 0))
-                    print(np.max(np.abs(E.imag)))
+                #if diagonalization_failed:
+                #    print(np.allclose(beta.imag, 0), np.allclose(E.imag, 0))
+                #    print(np.max(np.abs(E.imag)))
                 reason = "not close"
 
             if diagonalization_failed:
@@ -633,7 +633,7 @@ It is recommended to reduce the size of the bigger grains.""")
             norm = self.norm_0
 
             if self.normalization != "forced" and np.any(np.abs(self.norm_0 - 1.0) > 0.3):
-                print(self.norm_0)
+                #print(self.norm_0)
                 raise SMRTError("""The re-normalization of the phase function exceeds the predefined threshold of 30%.
                     This is likely because of a too large grain size or a bug in the phase function.
                     It is recommended to check the grain size.
