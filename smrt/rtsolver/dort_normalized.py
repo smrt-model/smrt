@@ -41,7 +41,7 @@ class DORT(object):
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "phi", "polarization"}
 
-    def __init__(self, n_max_stream=32, m_max=2, stream_mode="most_refringent", phase_normalization=True):
+    def __init__(self, n_max_stream=32, m_max=2, stream_mode="most_refringent", phase_normalization=True, error_handling="exception"):
         # """
         # :param n_max_stream: number of stream in the most refringent layer
         # :param m_max: number of mode (azimuth)
@@ -51,6 +51,7 @@ class DORT(object):
         self.stream_mode = stream_mode
         self.m_max = m_max
         self.phase_normalization = phase_normalization
+        self.error_handling = error_handling
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
         """solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
@@ -163,7 +164,6 @@ class DORT(object):
                                               mu[l, 0:n_stream[l]],
                                               weight[l, 0:n_stream[l]],
                                               self.phase_normalization) for l in range(self.nlayer)]
-
         #
         # compute the modes
 
@@ -308,7 +308,16 @@ class DORT(object):
             # solve the eigenvalue problem for layer l
             # TODO: deal with the case phase=0
 
-            beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
+            # TODO: the following duplicates the eignevalue_solver call line. A better way should be implemented, either with a variable holding the exception type (
+            # and use of a never raised exception or see contextlib module if useful)
+            if self.error_handling == 'nan':
+                try:
+                    # run in a try to catch the exception
+                    beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
+                except SMRTError:
+                    return np.full(len(outmu) * npol, np.nan)
+            else:
+                beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
 
             # deduce the transmittance through the layers
             transt = scipy.sparse.diags(np.exp(-np.maximum(beta, 0) * self.thickness[l]), 0)  # positive beta, reference at the bottom
