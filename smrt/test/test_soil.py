@@ -34,7 +34,7 @@ def test_dmrt_with_soil():
                         substrate=substrate)
 
     # create the EM Model
-    m = make_model("dmrt_shortrange", "dort")
+    m = make_model("dmrt_qcacp_shortrange", "dort")
 
     # create the sensor
     radiometer = sensor.passive(37e9, 40)  # test at 40° to avoid the Brewster angle

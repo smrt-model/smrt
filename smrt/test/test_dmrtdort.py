@@ -33,7 +33,7 @@ def test_dmrt_oneconfig():
                              stickiness=stickiness)
 
     # create the EM Model
-    m = make_model("dmrt_shortrange", "dort")
+    m = make_model("dmrt_qcacp_shortrange", "dort")
 
     # create the sensor
     radiometer = amsre('37V')

@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from smrt.emmodel.dmrt_shortrange import DMRT_ShortRange
+from smrt.emmodel.dmrt_qcacp_shortrange import DMRT_QCACP_ShortRange
 from smrt.rtsolver.dort import DORT
 from smrt.inputs.make_medium import make_snowpack
 from smrt.core.model import Model
@@ -20,7 +20,7 @@ def setup_snowpack():
 
 def test_multifrequency():
 
-    m = Model(DMRT_ShortRange, DORT)
+    m = Model(DMRT_QCACP_ShortRange, DORT)
 
     sensor = amsre()
     testpack = setup_snowpack()
