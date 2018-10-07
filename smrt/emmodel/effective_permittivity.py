@@ -76,8 +76,8 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
     """
 
     if inclusion_shape == "mix_spheres_needles":
-        return mixing_ratio * (polder_van_santen(frac_volume, e0=e0, eps=eps, depol_xyz=depol_xyz, inclusion_shape="spheres")
-                      + (1-mixing_ratio)*polder_van_santen(frac_volume, e0=e0, eps=eps, depol_xyz=depol_xyz, inclusion_shape="random_needles"))
+        return mixing_ratio * polder_van_santen(frac_volume, e0=e0, eps=eps, depol_xyz=depol_xyz, inclusion_shape="spheres") + \
+                (1 - mixing_ratio) * polder_van_santen(frac_volume, e0=e0, eps=eps, depol_xyz=depol_xyz, inclusion_shape="random_needles")
 
     if e0 is None:
         e0 = 1.
