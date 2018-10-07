@@ -3,7 +3,6 @@
 """ This code is depreciated, please use dmrt_qcacp_shortrange or dmrt_qca_shortrange
 """
 
-print("This code is depreciated, please use dmrt_qcacp_shortrange or dmrt_qca_shortrange")
 
 # Stdlib import
 import math
@@ -17,6 +16,8 @@ import numpy as np
 from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
 from .rayleigh import Rayleigh
+
+raise SMRTError("This code is depreciated, please use dmrt_qcacp_shortrange or dmrt_qca_shortrange")
 
 #
 # DMRT short range derives from Rayleigh because it has the same phase matrix
