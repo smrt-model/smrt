@@ -7,6 +7,7 @@ developer to ensure these functions, if used, are appropriate and consistent wit
 """
 
 # Import statements
+import itertools
 import numpy as np
 from smrt.core.error import  SMRTError
 
@@ -51,15 +52,16 @@ def depolarization_factors(length_ratio=None):
     return np.array([anisotropy_q, anisotropy_q, (1. - 2. * anisotropy_q)])
 
 
-def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_shape=None, mixing_ratio=0.5):
+def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_shape=None, mixing_ratio=1):
     """ Calculates effective permittivity of snow by solution of quadratic Polder Van Santen equation for spherical inclusion.
 
     :param frac_volume: Fractional volume of inclusions
     :param e0: Permittivity of background (default is 1)
     :param eps: Permittivity of scattering material (default is 3.185 to compare with MEMLS)
     :param depol_xyz: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into account here.
-    :param inclusion_shape: Assumption for shape of brine inclusions. So far, we have: "spheres", "random_needles" (i.e. randomly-oriented elongated ellipsoidal inclusions), and "mix_spheres_needles". For the latter, the default is a 50-50 mix of spheres and random_needles.
-    :param mixing_ratio: The mixing ratio of spheres and random_needles for the shape of inclusions. Default is 0.5 (i.e. a 50-50 mix); 1 is pure spheres; 0 is pure random needles. Only used for inclusion_shape = "mix_spheres_needles". 
+    :param inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape, or a list/tuple/dict of strings for mixture of shapes. So far, we have the following shapes: "spheres" and "random_needles" (i.e. randomly-oriented elongated ellipsoidal inclusions). 
+            If the argument is a dict, the keys are the shapes and the values are the mixing ratio. If it is a list, the mixing_ratio argument is required.
+    :param mixing_ratio: The mixing ratio of the shapes. This is only relevant when inclusion_shape is a list/tuple. Mixing ratio must be a sequence with length len(inclusion_shape)-1. The mixing ratio of the last shapes is deduced as the sum of the ratios must equal to 1.
     :returns: Effective permittivity
 
     **Usage example:**
@@ -69,15 +71,39 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
         from .commonfunc import polder_van_santen
         effective_permittivity = polder_van_santen(frac_volume, e0, eps)
 
+        # for a mixture of 30% spheres and 70% needles
+        effective_permittivity = polder_van_santen(frac_volume, e0, eps, inclusion_shape={"spheres": 0.3, "random_needles": 0.7})
+        # or
+        effective_permittivity = polder_van_santen(frac_volume, e0, eps, inclusion_shape=("spheres", "random_needles"), mixing_ratio=0.3)
+
     .. todo::
 
         Extend Polder Van Santen model to account for ellipsoidal inclusions
 
     """
 
-    if inclusion_shape == "mix_spheres_needles":
-        return mixing_ratio * polder_van_santen(frac_volume, e0=e0, eps=eps, depol_xyz=depol_xyz, inclusion_shape="spheres") + \
-                (1 - mixing_ratio) * polder_van_santen(frac_volume, e0=e0, eps=eps, depol_xyz=depol_xyz, inclusion_shape="random_needles")
+    if inclusion_shape is not None and not isinstance(inclusion_shape, str):
+        # then it is a sequence or dict
+        if  isinstance(inclusion_shape, dict):
+
+            mixing_ratio = inclusion_shape.values()
+            inclusion_shape = inclusion_shape.keys()
+
+        else:
+            # we've a sequence let's iterate over it
+
+            try:
+                len(mixing_ratio)
+            except:
+                # here -> we must have a number, let's make a tuple with length 1
+                mixing_ratio = (float(mixing_ratio),)
+
+            if len(mixing_ratio) == len(inclusion_shape) - 1:
+                mixing_ratio = list(mixing_ratio) + [1 - np.sum(mixing_ratio)]
+            elif len(mixing_ratio) != len(inclusion_shape):
+                raise SMRTError("The length of inclusion_shape and mixing_ratio are incompatible. See the documentation.")
+
+        return sum((mixing * polder_van_santen(frac_volume, e0=e0, eps=eps, depol_xyz=depol_xyz, inclusion_shape=shape) for shape, mixing in zip(inclusion_shape, mixing_ratio)))
 
     if e0 is None:
         e0 = 1.
@@ -100,8 +126,7 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
         c_quad = - eps * (e0 + 1. / 3. * frac_volume * (eps - e0))
 
     else:
-        raise SMRTError("inclusion_shape must be one of the following:\
-        'spheres' (default), 'random_needles', 'mix_spheres_needles'.")
+        raise SMRTError("inclusion_shape must be one of (or a list of) the following: 'spheres' (default) or 'random_needles'.")
    
     return (-b_quad + np.sqrt(b_quad**2 - 4. * a_quad * c_quad)) / (2. * a_quad)
 

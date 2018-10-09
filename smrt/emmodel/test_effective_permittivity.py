@@ -50,6 +50,6 @@ def test_pvsl_needles():
     ok_(abs(effective_permittivity - 1.55052802036) < high_tolerance)
 
 def test_pvsl_mix_spheres_needles():
-    effective_permittivity = polder_van_santen(frac_volume=(300. / DENSITY_OF_ICE), inclusion_shape="mix_spheres_needles")
+    effective_permittivity = polder_van_santen(frac_volume=(300. / DENSITY_OF_ICE), inclusion_shape={"spheres": 0.5, "random_needles": 0.5})
     print(effective_permittivity)
     ok_(abs(effective_permittivity - 1.53757398931) < high_tolerance)

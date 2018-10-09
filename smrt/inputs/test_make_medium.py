@@ -27,3 +27,4 @@ def test_make_snowpack_array_size():
 
     # should raise an exception because density is len 1 whereas thickness is len 2
     sp = make_snowpack(thickness=[1, 2], microstructure_model="exponential", density=[300], corr_length=200e-6)
+

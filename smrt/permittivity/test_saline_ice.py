@@ -29,3 +29,15 @@ def test_saline_permittivity_same_as_pure_for_zero_salinity():
     impure = saline_ice_permittivity_pvs_mixing(18e9,265,0)
     ok_(abs(pure.real - impure.real)  < 1e-4)
     ok_(abs(pure.imag- impure.imag) < 1e-7)
+
+# Test saline_ice permittivity for mixtures
+def test_saline_permittivity_with_mixtures():
+    
+    eps_spheres = saline_ice_permittivity_pvs_mixing(18e9,265,0)
+    eps_needles = saline_ice_permittivity_pvs_mixing(18e9,265,0, brine_inclusion_shape="random_needles")
+
+    eps_mix = saline_ice_permittivity_pvs_mixing(18e9,265,0, brine_inclusion_shape={"spheres": 0.3, "random_needles": 0.7})
+    ok_(abs(eps_mix - (0.3 * eps_spheres + 0.7 * eps_needles)) < 1e-7)
+
+    eps_mix = saline_ice_permittivity_pvs_mixing(18e9,265,0, brine_inclusion_shape=("spheres", "random_needles"), brine_mixing_ratio=0.3)
+    ok_(abs(eps_mix - (0.3 * eps_spheres + 0.7 * eps_needles)) < 1e-7)
