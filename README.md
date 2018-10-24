@@ -7,6 +7,8 @@ Snow Microwave Radiative Transfer model
 Getting started is easy, follow the [instructions](https://www.smrt-model.science/getstarted.html) and explore the other repositories
 with examples in the ['smrt-model' github organization](https://github.com/smrt-model).
 
+If you want to try without installing anything on your computer, use free mybinder.org notenooks: [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/smrt-model/smrt/master?filepath=examples/iba_onelayer.ipynb)
+
 
 License information
 --------------------
