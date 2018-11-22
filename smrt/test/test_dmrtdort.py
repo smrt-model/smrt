@@ -12,6 +12,40 @@ from smrt.inputs.sensor_list import amsre, active
 #
 
 
+def test_dmrt_nonormalization_oneconfig():
+    # prepare inputs
+    l = 2
+
+    nl = l//2  # // Forces integer division
+    thickness = np.array([0.1, 0.1]*nl)
+    thickness[-1] = 100  # last one is semi-infinit
+    radius = np.array([2e-4]*l)
+    temperature = np.array([250.0, 250.0]*nl)
+    density = [200, 400]*nl
+    stickiness = [0.1, 0.1]*nl
+
+    # create the snowpack
+    snowpack = make_snowpack(thickness,
+                             "sticky_hard_spheres",
+                             density=density,
+                             temperature=temperature,
+                             radius=radius,
+                             stickiness=stickiness)
+
+    # create the EM Model
+    m = make_model("dmrt_qcacp_shortrange", "dort_nonormalization")
+
+    # create the sensor
+    radiometer = amsre('37V')
+
+    # run the model
+    res = m.run(radiometer, snowpack)
+
+    print(res.TbV(), res.TbH())
+    ok_((res.TbV() - 202.381059705594 ) < 1e-4)
+    ok_((res.TbH() - 187.07930133881544) < 1e-4)
+
+
 def test_dmrt_oneconfig():
     # prepare inputs
     l = 2
@@ -42,8 +76,8 @@ def test_dmrt_oneconfig():
     res = m.run(radiometer, snowpack)
 
     print(res.TbV(), res.TbH())
-    ok_((res.TbV() - 202.381059705594 ) < 1e-4)
-    ok_((res.TbH() - 187.07930133881544) < 1e-4)
+    ok_((res.TbV() - 202.1726891947754) < 1e-4)
+    ok_((res.TbH() - 187.45835882462404) < 1e-4)
 
 
 def test_less_refringent_bottom_layer_VV():
@@ -63,8 +97,7 @@ def test_less_refringent_bottom_layer_HH():
     scat = active(10e9, 45)
     res = m.run(scat, snowpack)
     print(res.sigmaHH())
-    ok_(abs(res.sigmaHH() - 8.86490556e-06) < 1e-9)
-
+    ok_(abs(res.sigmaHH() - 8.85784528e-06) < 1e-9)
 
 # The following test fails
 # def test_less_refringent_bottom_layer_VV():

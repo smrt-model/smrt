@@ -34,21 +34,14 @@ class DORT(object):
 
         :param n_max_stream: number of stream in the most refringent layer
         :param m_max: number of mode (azimuth)
-        :param phase_normalization: the integral of the phase matrix should in principe be equal to the scattering coefficient. However, some emmodels do not 
-        respect this strictly. In general a small difference is due to numerical rounding and is acceptable, but a large difference rather indicates either a bug in the emmodel or input parameters that breaks the 
-        assumption of the emmodel. The most typical case is when the grain size is too big compared to wavelength for emmodels that rely on Rayleigh assumption. 
-        If this argument is to True (the default), the phase matrix is normalized to be coherent with the scattering coefficient, but only when the difference is moderate (0.7 to 1.3). 
-        If set to "force" the normalization is always performed. This option is dangerous because it may hide bugs or unappropriate input parameters (typically too big grains).
-        If set to False, no normalization is performed.
-        :param error_handling: If set to "exception" (the default), raise an exception in cause of error, stopping the code. If set to "nan", return a nan, so the calculation can continue, 
-        but the result is of course unusuable and the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
+
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "phi", "polarization"}
 
-    def __init__(self, n_max_stream=32, m_max=2, stream_mode="most_refringent", phase_normalization=True, error_handling="exception"):
+    def __init__(self, n_max_stream=32, m_max=2, stream_mode="most_refringent"):
         # """
         # :param n_max_stream: number of stream in the most refringent layer
         # :param m_max: number of mode (azimuth)
@@ -57,8 +50,6 @@ class DORT(object):
         self.n_max_stream = n_max_stream
         self.stream_mode = stream_mode
         self.m_max = m_max
-        self.phase_normalization = phase_normalization
-        self.error_handling = error_handling
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
         """solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
@@ -83,6 +74,8 @@ class DORT(object):
         self.thickness = self.snowpack.layer_thicknesses
         self.interfaces = self.snowpack.interfaces
 
+        self.ke = [emmodel.ke for emmodel in emmodels]
+        self.ft_even_phase = [emmodel.ft_even_phase for emmodel in emmodels]
         self.permittivity = np.array([emmodel.effective_permittivity() for emmodel in emmodels])
 
         if self.sensor.mode == 'P':
@@ -142,10 +135,8 @@ class DORT(object):
 
         permittivity_substrate = self.snowpack.substrate.permittivity(self.sensor.frequency) if self.snowpack.substrate is not None else None
 
-        n_stream, mu, weight, outmu, outweight, n_stream_substrate = compute_stream(self.n_max_stream,
-                                                                                    self.permittivity,
-                                                                                    permittivity_substrate,
-                                                                                    mode=self.stream_mode)
+        n_stream, mu, weight, outmu, outweight, \
+        n_stream_substrate = compute_stream(self.n_max_stream, self.permittivity, permittivity_substrate, mode=self.stream_mode)
 
         #
         # compute the incident intensity array depending on the sensor
@@ -158,19 +149,11 @@ class DORT(object):
         compute_coherent_only = self.sensor.mode == 'A'
 
         # inform the EM model how many modes will be needed. This is only used for optimization purpose.
-        # a niced alternative but more memory hundry would to compute all needed m
+        # alternative would be to start computing by m_max
         for emmodel in self.emmodels:
             if hasattr(emmodel, "set_max_mode"):
                 emmodel.set_max_mode(m_max)
 
-        # create eigenvalue solvers
-
-        eigenvalue_solver = [EigenValueSolver(self.emmodels[l].ke,
-                                              self.emmodels[l].ks,
-                                              self.emmodels[l].ft_even_phase,
-                                              mu[l, 0:n_stream[l]],
-                                              weight[l, 0:n_stream[l]],
-                                              self.phase_normalization) for l in range(self.nlayer)]
         #
         # compute the modes
 
@@ -183,31 +166,29 @@ class DORT(object):
                 intensity_down_m = intensity_higher
 
             # compute the upwelling intensity for mode m
-            intensity_up_m = self.dort_modem_banded(m, n_stream, eigenvalue_solver, mu, weight, outmu, n_stream_substrate,
-                                                    intensity_down_m, special_return=special_return)
+            intensity_up_m = self.dort_modem_banded(m, n_stream, mu, weight, outmu, n_stream_substrate, intensity_down_m, special_return=special_return)
 
             if special_return:  # debugage
                 return intensity_up_m
 
             if compute_coherent_only:
                 # substrate the coherent contribution
-                intensity_up_m -= self.dort_modem_banded(m, n_stream, eigenvalue_solver, mu, weight, outmu,
-                                                         n_stream_substrate, intensity_down_m, compute_coherent_only=True)
+                intensity_up_m -= self.dort_modem_banded(m, n_stream, mu, weight, outmu, n_stream_substrate, intensity_down_m, compute_coherent_only=True)
 
             # if self.sensor.mode == 'A': print("res mod=", m, intensity_up_m[0:3, 0:3])
             # reconstruct the intensity
             if m == 0:
                 intensity_up = extend_2pol_npol(intensity_up_m, npol)
             else:
-                intensity_up[0::npol] += intensity_up_m[0::npol] * np.cos(m * self.sensor.phi)  # TODO Ghi: deals with an array of phi
-                intensity_up[1::npol] += intensity_up_m[1::npol] * np.cos(m * self.sensor.phi)  # TODO Ghi: deals with an array of phi
-                intensity_up[2::npol] += intensity_up_m[2::npol] * np.sin(m * self.sensor.phi)  # TODO Ghi: deals with an array of phi
+                intensity_up[0::npol] += intensity_up_m[0::npol] * np.cos(m*self.sensor.phi)  # TODO Ghi: deals with an array of phi
+                intensity_up[1::npol] += intensity_up_m[1::npol] * np.cos(m*self.sensor.phi)  # TODO Ghi: deals with an array of phi
+                intensity_up[2::npol] += intensity_up_m[2::npol] * np.sin(m*self.sensor.phi)  # TODO Ghi: deals with an array of phi
 
                 # TODO: implement a convergence test if we want to avoid long computation when self.m_max is too high for the phase function.
 
         if self.atmosphere is not None:
             intensity_up = self.atmosphere.tbup(self.sensor.frequency, outmu, npol) + \
-                self.atmosphere.trans(self.sensor.frequency, outmu, npol) * intensity_up
+                        self.atmosphere.trans(self.sensor.frequency, outmu, npol) * intensity_up
 
         return outmu, intensity_up
 
@@ -268,8 +249,7 @@ class DORT(object):
 
         return intensity_0, intensity_higher
 
-    def dort_modem_banded(self, m, n_stream, eigenvalue_solver, mu, weight, outmu,
-                          n_stream_substrate, intensity_down_m, compute_coherent_only=False, special_return=False):
+    def dort_modem_banded(self, m, n_stream, mu, weight, outmu, n_stream_substrate, intensity_down_m, compute_coherent_only=False, special_return=False):
 
         n_stream0 = len(outmu)  # number of streams in the air
 
@@ -314,17 +294,12 @@ class DORT(object):
 
             # solve the eigenvalue problem for layer l
             # TODO: deal with the case phase=0
-
-            # TODO: the following duplicates the eignevalue_solver call line. A better way should be implemented, either with a variable holding the exception type (
-            # and use of a never raised exception or see contextlib module if useful)
-            if self.error_handling == 'nan':
-                try:
-                    # run in a try to catch the exception
-                    beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
-                except SMRTError:
-                    return np.full(len(outmu) * npol, np.nan)
+            if self.ft_even_phase is None or compute_coherent_only:
+                ft_even_phase_l = None
             else:
-                beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
+                ft_even_phase_l = self.ft_even_phase[l]
+
+            beta, Eu, Ed = solve_eigenvalue_problem(m, self.ke[l], ft_even_phase_l, mu[l, 0:nsl], weight[l, 0:nsl])
 
             # deduce the transmittance through the layers
             transt = scipy.sparse.diags(np.exp(-np.maximum(beta, 0) * self.thickness[l]), 0)  # positive beta, reference at the bottom
@@ -517,68 +492,49 @@ def extend_2pol_npol(x, npol):
     return y
 
 
-class EigenValueSolver(object):
+def solve_eigenvalue_problem(m, ke, ft_even_phase, mu, weight):
+    # """solve the homogeneous equation for a single layer and return eigne value and eigen vector
 
-    def __init__(self, ke, ks, ft_even_phase, mu, weight, normalization):
-        # :param Ke: extinction coefficient of the layer for mode m
-        # :param ft_even_phase: ft_even_phase function of the layer for mode m
-        # :param mu: cosines
-        # :param weight: weights
+    # :param m: mode
+    # :param Ke: extinction coefficient of the layer for mode m
+    # :param ft_even_phase: ft_even_phase function of the layer for mode m
+    # :param mu: cosines
+    # :param weight: weights
 
-        self.ke = ke
-        self.ks = ks
-        self.ft_even_phase = ft_even_phase
-        self.mu = mu
-        self.weight = weight
-        self.normalization = normalization
-        self.norm_0 = None
-        self.norm_m = None
+    # :returns: alpha, E, Q
+    #"""
+    nsk = len(mu)
 
-    def solve(self, m, compute_coherent_only):
-        # solve the homogeneous equation for a single layer and return eigne value and eigen vector
-        # :param m: mode
-        # :param compute_coherent_only
-        # :returns: beta, E, Q
-        #
+    npol = 2 if m == 0 else 3
 
-        nsk = len(self.mu)
+    n = npol*nsk
 
-        npol = 2 if m == 0 else 3
+    # this coefficient comme from the 1/4pi normalization of the RT equation
+    coef = 0.5 if m == 0 else 0.25
 
-        n = npol * nsk
+    # compute invmu
+    invmu = 1.0 / mu
+    invmu = np.repeat(invmu, npol)
+    invmu = np.concatenate((invmu, -invmu))
+    mu = np.concatenate((mu, -mu))
 
-        # this coefficient comme from the 1/4pi normalization of the RT equation
-        coef = 0.5 if m == 0 else 0.25
+    if ft_even_phase is None:
+        # special case (important for the coherency)
+        beta = invmu * np.repeat(ke(mu), npol)
+        E = np.eye(2*n, 2*n)  # TODO: test with a sparse matrix if more performant
+    else:
+        # calculate the A matrix. Eq (12)
 
-        # compute invmu
-        invmu = 1.0 / self.mu
-        invmu = np.repeat(invmu, npol)
-        invmu = np.concatenate((invmu, -invmu))
-        mu = np.concatenate((self.mu, -self.mu))
-
-        if self.ft_even_phase is None or compute_coherent_only:
-            # special case (important for the coherency)
-            A = 0
-        else:
-            # calculate the A matrix. Eq (12)
-            A = self.ft_even_phase(m, mu)
+        A = ft_even_phase(m, mu)
 
         if A is 0:
-            # the solution is trivial
-            beta = invmu * np.repeat(self.ke(mu), npol)
-            E = np.eye(2 * n, 2 * n)
+            beta = invmu * np.repeat(ke(mu), npol)
+            E = np.eye(2*n, 2*n)  # TODO: test with a sparse matrix if more performant
         else:
             # solve the eigen value problem
-            coef_weight = np.tile(np.repeat(-coef * self.weight, npol), 2)    # could be cached (per layer) because same for each mode
-
-            A *= coef_weight[np.newaxis, :]
-
-            # normalize
-            if self.normalization and self.ks > 0:
-                A = self.normalize(m, A)
-            # normalization is done
-
-            A[np.diag_indices(2 * n)] += np.repeat(self.ke(mu), npol)
+            weight = np.tile(np.repeat(-coef * weight, npol), 2)    # could be cached (per layer) because same for each mode
+            A *= weight[np.newaxis, :]
+            A[np.diag_indices(2*n)] += np.repeat(ke(mu), npol)
             A = invmu[:, np.newaxis] * A
 
             # diagonalise the matrix. Eq (13)
@@ -589,79 +545,49 @@ class EigenValueSolver(object):
                 reason = "eig method"
             else:
                 diagonalization_failed = (not np.allclose(beta.imag, 0)) or (not np.allclose(E.imag, 0))
-                #if diagonalization_failed:
-                #    print(np.allclose(beta.imag, 0), np.allclose(E.imag, 0))
-                #    print(np.max(np.abs(E.imag)))
+                if diagonalization_failed:
+                    print(np.allclose(beta.imag, 0), np.allclose(E.imag, 0))
+                    print(np.max(np.abs(E.imag)))
                 reason = "not close"
 
             if diagonalization_failed:
 
                 raise SMRTError("""The diagonalization failed in DORT which is possibly caused by single scattering albedo larger than 1.
-It is often due to grain size too large (or too low stickiness parameter) to respect the Rayleigh/low-frequency assumption required by some emmodel (DMRT ShortRange, IBA, ...)"
-It is recommended to reduce the size of the bigger grains. It is possible to disable this error raise and return NaN instead by adding the argument rtsolver_options=dict(error_handling='nan') to make_model).
-""")
+It is often due to grain size too large (or too low stickiness parameter) to respect the Rayleigh/low-frequency assumption required by some ememodel (DMRT ShortRange, IBA, ...)"
+It is recommended to reduce the size of the bigger grains.""")
 
             #np.testing.assert_allclose(beta.imag, 0, atol=np.linalg.norm(beta)*1e-5)
 
             if np.iscomplexobj(E):
-                mask = abs(E.imag) > np.linalg.norm(E) * 1e-5
+                mask = abs(E.imag)>np.linalg.norm(E)*1e-5
                 if np.any(mask):
                     print(np.any(mask, axis=1))
                     print(beta[np.any(mask, axis=1)])
                     print(beta)
 
+            #np.testing.assert_allclose(E.imag, 0, atol=np.linalg.norm(E)*1e-5)
+
             beta = beta.real
+            #E = E.real
 
             # get the positive and negative beta
             # this should be improve a the mathematical level because there is no need to solve
             # the eigenvalue for + and - well according to inverse optical path equivalent,
             # the + and - should be equal
 
-            # debug only
-            if False:
+            # debub only
+            if True:
                 idx2 = np.argsort(beta)
                 idx2[0:n] = idx2[0:n][::-1]
                 beta = beta[idx2]
                 E = E[:, idx2]
 
-        Eu = E[0:n, :]  # upwelling
-        Ed = E[n:, :]  # downwelling
+    Eu = E[0:n, :]  # upwelling
+    Ed = E[n:, :]  # downwelling
 
-        return beta, Eu, Ed
-        # !-----------------------------------------------------------------------------!
+    return beta, Eu, Ed
+    # !-----------------------------------------------------------------------------!
 
-    def normalize(self, m, A):
-        # normalize A to conserve energy, assuming isotrope scattering coefficient
-        # ks should be a function of mu if non-isotropic medium and to be consistent with ke which is a function of mu
-
-        npol = 2 if m == 0 else 3
-
-        if m == 0:
-            self.norm_0 = -self.ks / np.sum(A, axis=1)
-            norm = self.norm_0
-
-            if self.normalization != "forced" and np.any(np.abs(self.norm_0 - 1.0) > 0.3):
-                #print(self.norm_0)
-                raise SMRTError("""The re-normalization of the phase function exceeds the predefined threshold of 30%.
-                    This is likely because of a too large grain size or a bug in the phase function.
-                    It is recommended to check the grain size.
-                    You can also deactivate this check using normalization="forced" as an options of the dort solver. 
-                    It is at last possible to disable this error raise and return NaN instead by adding the argument rtsolver_options=dict(error_handling='nan') to make_model).""")
-        else:
-            if self.norm_m is None:
-                if self.norm_0 is None:
-                    raise Exception("For the normalization, it is necessary to call this function for the mode m=0 first.")
-                # transform the norm_0 for npol
-                self.norm_m = np.empty(len(self.norm_0)//2*npol)
-                self.norm_m[0::npol] = self.norm_0[0::2]
-                self.norm_m[1::npol] = self.norm_0[1::2]
-                for ipol in range(2, npol):
-                    # this approach is empirical
-                    self.norm_m[ipol::npol] = np.sqrt(self.norm_0[0::2] * self.norm_0[1::2])
-            norm = self.norm_m
-
-        A *= norm[:, np.newaxis]
-        return A
 
 def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="most_refringent"):
     #     """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent layer and

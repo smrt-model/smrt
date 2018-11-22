@@ -43,7 +43,9 @@ def test_dmrt_with_soil():
     res = m.run(radiometer, snowpack)
 
     print(res.TbV(), res.TbH())
-    ok_((res.TbV() - 262.6214674671272) < 1e-4)
-    ok_((res.TbH() - 255.88791903746) < 1e-4)
+    #ok_((res.TbV() - 262.6214674671272) < 1e-4)
+    ok_((res.TbV() - 262.62154074526325) < 1e-4)
+    #ok_((res.TbH() - 255.88791903746) < 1e-4)
+    ok_((res.TbH() - 255.88831382514428) < 1e-4)
     # note value from DMRTML Fortran running in the same conditions:
     # H=255.88187817295605 V=262.60345275739024

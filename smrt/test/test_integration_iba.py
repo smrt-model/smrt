@@ -42,6 +42,9 @@ def test_iba_oneconfig():
 
     print(res.TbV(), res.TbH())
     #absorption with effective permittivity
-    ok_(abs(res.TbV() - 248.08794944809972) < 1e-4)
-    ok_(abs(res.TbH() - 237.3056263719142) < 1e-4)
+    # ok_(abs(res.TbV() - 248.08794944809972) < 1e-4)
+    # ok_(abs(res.TbH() - 237.3056263719142) < 1e-4)
+
+    ok_(abs(res.TbV() - 248.08744066791073) < 1e-4)
+    ok_(abs(res.TbH() - 237.30720491883298) < 1e-4)
 
