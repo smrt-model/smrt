@@ -44,6 +44,7 @@ The `res` variable has now a coordinate `time` and res.TbV() returns a timeserie
 """
 
 import collections
+import itertools
 import inspect
 import copy
 import six
@@ -58,14 +59,14 @@ from .sensor import Sensor
 from .progressbar import Progress
 
 
-def make_model(emmodel, rtsolver, emmodel_options=None, rtsolver_options=None, emmodel_kwargs=None, rtsolver_kwargs=None):
+def make_model(emmodel, rtsolver=None, emmodel_options=None, rtsolver_options=None, emmodel_kwargs=None, rtsolver_kwargs=None):
     """create a new model with a given EM model and RT solver. The model is then ready to be run using the :py:meth:`Model.run` method. This function is the privileged way
     to create models compared to class instantiation. It supports automatic import of the emmodel and rtsolver modules.
 
     :param emmodel: type of emmodel to use. Can be given by the name of a file/module in the emmodel directory (as a string) or a class.
     :type emmodel:  string or class or list of strings or classes. If a list is given, different models are used for the different layers of the snowpack. In this case, the size of the list must be the same as the number of layers in the snowpack.
     :param rtsolver: type of solver to use. Can be given by the name of a file/module in the rtsolver directeory (as a string) or a class.
-    :type rtsolver: string or class
+    :type rtsolver: string or class.  Can be None when only computation of the layer electromagnetic properties is needed.
     :param emmodel_options: extra arguments to use to create emmodel instance. Valid arguments depend on the selected emmodel. It is documented in for each emmodel class.
     :type emmodel_options: dict or a list of dict. In the latter case, the size of the list must be the same as the number of layers in the snowpack.
     :param rtsolver_options: extra to use to create the rtsolver instance (see __init__ of the solver used).
@@ -104,6 +105,8 @@ def make_emmodel(emmodel, sensor, layer, **emmodel_options):
 
     # instantiate
     emmodel = get_emmodel(emmodel)  # get the class
+    if not isinstance(sensor, Sensor):
+        raise SMRTError("the first argument of 'run' must be a sensor")
     return emmodel(sensor, layer, **emmodel_options)  # create a emmodele
 
 
@@ -181,7 +184,7 @@ class Model(object):
 
                 return concat_results(result_list, (dim, values))
 
-        # second determine if we have several snowpack
+        # second determine if we have several snowpacks
         if isinstance(snowpack, SensitivityStudy):
             snowpack_dimension = (snowpack.variable, snowpack.values)
             snowpack = snowpack.snowpacks.tolist()
@@ -215,25 +218,29 @@ class Model(object):
         if isinstance(self.emmodel, collections.Sequence) and not isinstance(self.emmodel, six.string_types):
             # check we have the same number as layer in the snowpack
             assert (len(self.emmodel) == snowpack.nlayer)
-
-            for i, (emmodel, layer) in enumerate(zip(self.emmodel, snowpack.layers)):
-                if isinstance(self.emmodel_options, collections.Sequence):
-                    emmodel_options = self.emmodel_options[i]
-                else:
-                    emmodel_options = self.emmodel_options
-                emmodel_instances.append(make_emmodel(emmodel, sensor, layer, **emmodel_options))
-        else:  # the same model for all the layers
-            for layer in snowpack.layers:
-                emmodel_instances.append(make_emmodel(self.emmodel, sensor, layer, **self.emmodel_options))
-
-        # need to create the rtsolver ?
-        if inspect.isclass(self.rtsolver):
-            rtsolver = self.rtsolver(**self.rtsolver_options)  # create with arguments
+            # one different model per layer
+            emmodel_list = self.emmodel
         else:
-            # no use the instance as it is (with possible memory of the last solve...)
-            rtsolver = self.rtsolver
+            # the same model for all layers
+            emmodel_list = itertools.cycle([self.emmodel])
 
-        # run the rtsolver
-        result = rtsolver.solve(snowpack, emmodel_instances, sensor, atmosphere)
+        for i, (emmodel, layer) in enumerate(zip(emmodel_list, snowpack.layers)):
+            if isinstance(self.emmodel_options, collections.Sequence):
+                emmodel_options = self.emmodel_options[i]
+            else:
+                emmodel_options = self.emmodel_options
+            em = make_emmodel(emmodel, sensor, layer, **emmodel_options)
+            emmodel_instances.append(em)
 
-        return result
+        if self.rtsolver is not None:
+            # need to create the rtsolver ?
+            if inspect.isclass(self.rtsolver):
+                rtsolver = self.rtsolver(**self.rtsolver_options)  # create with arguments
+            else:
+                # no use the instance as it is (with possible memory of the last solve...)
+                rtsolver = self.rtsolver
+
+            # run the rtsolver
+            result = rtsolver.solve(snowpack, emmodel_instances, sensor, atmosphere)
+
+            return result
