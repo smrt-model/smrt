@@ -58,6 +58,15 @@ class Snowpack(object):
 """
         return np.cumsum(self.layer_thicknesses)  # TODO Ghi: caching
 
+    @property
+    def z(self):
+        """return the depth of each interface, that is, 0 and the depth of the bottom of each layer
+
+"""
+        return np.insert(self.layer_depths, 0, 0)
+
+
+
     def append(self, layer, interface=None):
         """append a new layer at the bottom of the stack of layers. The interface is that at the top of the appended layer.
 
