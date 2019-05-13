@@ -114,7 +114,7 @@ class Model(object):
     """ This class drives the whole calculation
     """
     def __init__(self, emmodel, rtsolver, emmodel_options=None, rtsolver_options=None):
-        """create a new model. It is not recommanded to instantiate Model class directly. Instead use the :py:meth:`make_model` function.
+        """create a new model. It is not recommended to instantiate Model class directly. Instead use the :py:meth:`make_model` function.
         """
 
         # emmodel can be a single value (class or string) or an array with the same size as snowpack layers array
@@ -237,7 +237,11 @@ class Model(object):
             if inspect.isclass(self.rtsolver):
                 rtsolver = self.rtsolver(**self.rtsolver_options)  # create with arguments
             else:
-                # no use the instance as it is (with possible memory of the last solve...)
+                if not getattr(self.rtsolver, "_reentrant", False):
+                    raise SMRTError("This solver can not be used in instance mode without")
+                # no use the instance as it is.
+                # this instances has possible memory of the last solve... and this is INCOMPATIBLE with // computation for most solver)
+                # In the future this feature should be either removed or at least restricted when the // computation will be activate.
                 rtsolver = self.rtsolver
 
             # run the rtsolver
