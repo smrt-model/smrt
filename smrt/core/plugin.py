@@ -28,8 +28,8 @@ def import_class(modulename, classname=None, root=None):
         raise SMRTError("Unable to find the module '%s' to import the class '%s'. The error is \"%s\"" % (modulename, classname, str(e)))
 
     if classname is None:  # search for the first class defined in the module
-        for name, obj in inspect.getmembers(module):
-            if inspect.isclass(obj) and obj.__module__ == modulename:  # the second condition check if the class was defined in this module
+        for name, obj in inspect.getmembers(module, inspect.isclass):
+            if obj.__module__ == modulename:  # the second condition check if the class was defined in this module
                 classname = name
                 break
 

@@ -258,7 +258,7 @@ class Rayleigh(object):
 
             PSuvp = 0
             PSuhp = 0
-            PCuup = 0  # this on is not null !!! set to zero here for simplificity but is 2*outer(mu, mu)
+            PCuup = 0  # this one is not null !!! set to zero here for simplificity but is 2*outer(mu, mu)
 
         elif m == 1:
             sint = np.sqrt(1. - mu2)
@@ -273,7 +273,7 @@ class Rayleigh(object):
             PShup = 0
 
             PSuvp = 2*PSvup.T  # does not work
-            PSuvp = -PSuvp      # This line is need, I don't understand why!!!!!!!!!!!!!!!!!!!
+            PSuvp = -PSuvp      # This line is needed, I don't understand why!!!!!!!!!!!!!!!!!!!
 
             PSuhp = 0
             PCuup = np.outer(sint, sint)
@@ -331,8 +331,9 @@ class Rayleigh(object):
         sinphi = np.sin(phi)[:, np.newaxis, np.newaxis]
         cosphi = np.cos(phi)[:, np.newaxis, np.newaxis]
 
+        # Tsang theory and application p127 Eq 3.2.47
         fvv = cosphi * mu_s * mu_i + np.sqrt(1 - mu_s**2) * np.sqrt(1 - mu_i**2)
-        fhv = -sinphi * mu_i
+        fhv = - sinphi * mu_i   # there is an error in Tsang book. By symmetry of the equation fvh has sin(phi_s-phi_i) and fhv has sin(phi_i-phi_s)
         fhh = cosphi
         fvh = sinphi * mu_s
 
@@ -346,7 +347,7 @@ class Rayleigh(object):
                  [2 * fvv * fhv, 2 * fvh * fhh, fvv * fhh + fvh * fhv]]
         else:
             raise RuntimeError("invalid number of polarisation")
-        print('ici=', np.array(p).shape, fvv.shape, fhv.shape, fhh.shape, fvh.shape)
+
         return 1.5 * self.ks * np.array(p).squeeze()
 
     def ke(self, mu):

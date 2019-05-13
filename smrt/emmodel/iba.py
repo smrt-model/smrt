@@ -239,6 +239,7 @@ class IBA(object):
         cos_t = np.atleast_1d(mu_s)[np.newaxis, :, np.newaxis]
         sin_t = np.sqrt(1. - cos_t**2)
 
+        dphi = np.atleast_1d(dphi)
         cos_pd = np.cos(dphi)[:, np.newaxis, np.newaxis]
 
         # Scattering angle in the 1-2 frame

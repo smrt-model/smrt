@@ -91,7 +91,7 @@ def make_snow_layer(layer_thickness, microstructure_model,
     :param density: density of snow layer in kg m :sup:`-3`
     :param temperature: temperature of layer in K
     :param ice_permittivity_model: permittivity formulation (default is ice_permittivity_matzler87)
-    :param liquid_water: fractional volume of liquid water (default=0)
+    :param liquid_water: volume of liquid water with respect to ice volume (default=0)
     :param salinity: salinity in kg/kg, for using PSU as unit see PSU constant in smrt module (default = 0)
     :param kwargs: other microstructure parameters are given as optional arguments (in Python words) but may be required (in SMRT words).
     See the documentation of the microstructure model.
