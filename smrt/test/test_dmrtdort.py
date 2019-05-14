@@ -12,8 +12,8 @@ from smrt.inputs.sensor_list import amsre, active
 #
 
 
-def test_dmrt_nonormalization_oneconfig():
-    # prepare inputs
+def setup_snowpack():
+        # prepare inputs
     l = 2
 
     nl = l//2  # // Forces integer division
@@ -31,6 +31,12 @@ def test_dmrt_nonormalization_oneconfig():
                              temperature=temperature,
                              radius=radius,
                              stickiness=stickiness)
+    return snowpack
+
+
+def test_dmrt_nonormalization_oneconfig():
+    
+    snowpack = setup_snowpack()
 
     # create the EM Model
     m = make_model("dmrt_qcacp_shortrange", "dort_nonormalization")
@@ -47,30 +53,14 @@ def test_dmrt_nonormalization_oneconfig():
 
 
 def test_dmrt_oneconfig():
-    # prepare inputs
-    l = 2
 
-    nl = l//2  # // Forces integer division
-    thickness = np.array([0.1, 0.1]*nl)
-    thickness[-1] = 100  # last one is semi-infinit
-    radius = np.array([2e-4]*l)
-    temperature = np.array([250.0, 250.0]*nl)
-    density = [200, 400]*nl
-    stickiness = [0.1, 0.1]*nl
-
-    # create the snowpack
-    snowpack = make_snowpack(thickness,
-                             "sticky_hard_spheres",
-                             density=density,
-                             temperature=temperature,
-                             radius=radius,
-                             stickiness=stickiness)
+    snowpack = setup_snowpack()
 
     # create the EM Model
     m = make_model("dmrt_qcacp_shortrange", "dort")
 
     # create the sensor
-    radiometer = amsre('37V')
+    radiometer = amsre("37V")
 
     # run the model
     res = m.run(radiometer, snowpack)
@@ -78,6 +68,29 @@ def test_dmrt_oneconfig():
     print(res.TbV(), res.TbH())
     ok_((res.TbV() - 202.1726891947754) < 1e-4)
     ok_((res.TbH() - 187.45835882462404) < 1e-4)
+
+
+def test_dmrt_twoconfig():
+
+    snowpack = setup_snowpack()
+
+    # create the EM Model
+    m = make_model("dmrt_qcacp_shortrange", "dort")
+
+    # create the sensor
+    radiometer = amsre(["19", "37"])
+
+    print(radiometer.configurations)
+
+    # run the model
+    res = m.run(radiometer, snowpack)
+
+    print(res.TbV(), res.TbH())
+    ok_((res.TbV(channel="37") - 202.1726891947754) < 1e-4)
+    ok_((res.TbH(channel="37") - 187.45835882462404) < 1e-4)
+
+    ok_((res.TbV(channel="19") - 242.550043) < 1e-4)
+    ok_((res.TbH(channel="19") - 230.118448) < 1e-4)
 
 
 def test_less_refringent_bottom_layer_VV():

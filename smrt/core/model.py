@@ -54,8 +54,8 @@ import numpy as np
 from .error import SMRTError
 from .result import concat_results
 from .plugin import import_class
+from .sensor import SensorBase
 from .sensitivity_study import SensitivityStudy
-from .sensor import Sensor
 from .progressbar import Progress
 
 
@@ -105,7 +105,7 @@ def make_emmodel(emmodel, sensor, layer, **emmodel_options):
 
     # instantiate
     emmodel = get_emmodel(emmodel)  # get the class
-    if not isinstance(sensor, Sensor):
+    if not isinstance(sensor, SensorBase):
         raise SMRTError("the first argument of 'run' must be a sensor")
     return emmodel(sensor, layer, **emmodel_options)  # create a emmodele
 
@@ -163,20 +163,18 @@ class Model(object):
             :returns: result of the calculation(s) as a :py:class:`Results` instance
         """
 
-        if not isinstance(sensor, Sensor):
+        if not isinstance(sensor, SensorBase):
             raise SMRTError("the first argument of 'run' must be a sensor")
 
         # first determine which dimension we must iterate on in this routine
-        for dim in ["frequency", "theta_inc", "polarization_inc", "theta", "phi", "polarization"]:
-            if dim not in getattr(self.rtsolver, "_broadcast_capability", []):
-                values = sensor.configurations(dim)
-                if len(values) > 1:  # do we need to iterate on this dimension ?
-                    result_list = []
-                    for sensor_subset in sensor.iterate(dim):  # iterate over the values  # TODO: parallel computation
-                        res = self.run(sensor_subset, snowpack, atmosphere=atmosphere, snowpack_dimension=snowpack_dimension)  # recursive call
-                        result_list.append(res)
+        for axis, values in sensor.configurations():
+            if axis not in getattr(self.rtsolver, "_broadcast_capability", []):
+                result_list = []
+                for sensor_subset in sensor.iterate(axis):  # iterate over the values  # TODO: parallel computation
+                    res = self.run(sensor_subset, snowpack, atmosphere=atmosphere, snowpack_dimension=snowpack_dimension)  # recursive call
+                    result_list.append(res)
 
-                    return concat_results(result_list, (dim, values))
+                return concat_results(result_list, (axis, values))
 
         # second determine if we have several snowpacks
         if isinstance(snowpack, SensitivityStudy):

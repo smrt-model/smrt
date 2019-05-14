@@ -12,7 +12,7 @@ but functions for specific sensors are more convenient. See examples in the func
 import six
 from collections import Sequence
 
-from smrt.core.sensor import Sensor
+from smrt.core.sensor import Sensor, SensorList
 from smrt.core.error import SMRTError
 
 
@@ -25,6 +25,8 @@ def amsre(channel=None, frequency=None, polarization=None, theta=55):
     This function can be used to simulate all 12 AMSR-E channels i.e. frequencies of 6.925, 10.65, 18.7, 23.8, 36.5 and 89 GHz
     at both polarizations H and V. Alternatively single channels can be specified with 3-character identifiers. 18 and 19 GHz can
     be used interchangably to represent 18.7 GHz, similarly either 36 and 37 can be used to represent the 36.5 GHz channel.
+    Note that if you need both H and V polarization (at 37 GHz for instance), use channel="37" instead of channel=["37V", "37H"] 
+    as this will result in a more efficient simulation, because most rtsolvers anyway compute both polarizations in one shot.
 
     :param channel: single channel identifier
     :type channel: 3-character string
@@ -41,6 +43,11 @@ def amsre(channel=None, frequency=None, polarization=None, theta=55):
         radiometer = sensor.amsre('06H')  # 6.925 GHz channel
 
     """
+    if isinstance(channel, Sequence) and not isinstance(channel, six.string_types):
+        if frequency is not None:
+            raise SMRTError("Either channel or frequency should be given. Mixing both arguments is not understood.")
+        return SensorList([amsre(c, frequency=None, polarization=polarization, theta=theta) for c in channel])
+
 
     amsre_frequency_dict = {
         '06': 6.925e9,
@@ -73,7 +80,7 @@ def amsre(channel=None, frequency=None, polarization=None, theta=55):
         frequency = sorted(amsre_frequency_dict.values())
         polarization = ['H', 'V']
 
-    sensor = Sensor(frequency, None, theta, None, None, polarization)
+    sensor = Sensor(frequency, None, theta, None, None, polarization, channel)
 
     return sensor
 

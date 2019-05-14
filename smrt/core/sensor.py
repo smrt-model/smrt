@@ -8,6 +8,7 @@ Otherwise, we recommend to add these functions in your own files (outside of smr
 
 """
 
+import copy
 import numpy as np
 import six
 
@@ -15,7 +16,7 @@ import six
 from .error import SMRTError
 
 
-def passive(frequency, theta, polarization=None):
+def passive(frequency, theta, polarization=None, channel=None):
     """ Generic configuration for passive microwave sensor.
 
     Return a :py:class:`Sensor` for a microwave radiometer with given frequency, incidence angle and polarization
@@ -41,14 +42,14 @@ def passive(frequency, theta, polarization=None):
     if polarization is None:
         polarization = ['V', 'H']
 
-    sensor = Sensor(frequency, None, theta, None, None, polarization)
+    sensor = Sensor(frequency, None, theta, None, None, polarization, channel=channel)
 
     sensor.basic_checks()
 
     return sensor
 
 
-def active(frequency, theta_inc, theta=None, phi=None, polarization_inc=None, polarization=None):
+def active(frequency, theta_inc, theta=None, phi=None, polarization_inc=None, polarization=None, channel=None):
     """ Configuration for active microwave sensor.
 
     Return a :py:class:`Sensor` for a radar with given frequency, incidence and viewing angles and polarization
@@ -93,22 +94,26 @@ def active(frequency, theta_inc, theta=None, phi=None, polarization_inc=None, po
     if polarization_inc is None:
         polarization_inc = ['V', 'H']
 
-    sensor = Sensor(frequency, theta_inc, theta, phi, polarization_inc, polarization)
+    sensor = Sensor(frequency, theta_inc, theta, phi, polarization_inc, polarization, channel=channel)
 
     sensor.basic_checks()
 
     return sensor
 
 
-class Sensor(object):
+class SensorBase(object):
+    pass
+
+
+class Sensor(SensorBase):
     """ Configuration for sensor.
         Use of the functions :py:func:`passive`, :py:func:`active`, or the sensor specific functions
         e.g. :py:func:`amsre` are recommended to access this class.
 
     """
 
-    def __init__(self, frequency, theta_inc_deg, theta_deg, phi_deg, polarization_inc, polarization):
-            """ Build a Sensor. Setting theta_inc to None means passive mode
+    def __init__(self, frequency=None, theta_inc_deg=None, theta_deg=None, phi_deg=None, polarization_inc=None, polarization=None, channel=None):
+        """ Build a Sensor. Setting theta_inc to None means passive mode
 
     :param frequency: Microwave frequency in Hz
     :param theta_inc_deg: zenith angle in degrees of incident radiation emitted from the active sensor
@@ -118,42 +123,45 @@ class Sensor(object):
     :param polarization. List of single character (H or V)
 
 """
-            self.frequency = frequency
+        super().__init__()
 
-            if isinstance(polarization, six.string_types):
-                polarization = list(polarization)
-            self.polarization = polarization
+        self.frequency = frequency
+        self.channel = channel
 
-            if isinstance(polarization_inc, six.string_types):
-                polarization_inc = list(polarization_inc)
-            self.polarization_inc = polarization_inc
+        if isinstance(polarization, six.string_types):
+            polarization = list(polarization)
+        self.polarization = polarization
+
+        if isinstance(polarization_inc, six.string_types):
+            polarization_inc = list(polarization_inc)
+        self.polarization_inc = polarization_inc
 
 
-            self.theta_deg = np.atleast_1d(theta_deg).flatten()
+        self.theta_deg = np.atleast_1d(theta_deg).flatten()
 
-            if len(np.unique(self.theta_deg)) != len(self.theta_deg):
-                raise SMRTError("Zenith angle theta has duplicated values which is invalid.")
+        if len(np.unique(self.theta_deg)) != len(self.theta_deg):
+            raise SMRTError("Zenith angle theta has duplicated values which is invalid.")
 
-            self.theta = np.radians(self.theta_deg)
-            self.mu_s = np.cos(self.theta)
+        self.theta = np.radians(self.theta_deg)
+        self.mu_s = np.cos(self.theta)
 
-            if phi_deg is not None:
-                self.phi_deg = np.atleast_1d(phi_deg).flatten()
-                self.phi = np.radians(self.phi_deg)
-            else:
-                self.phi = 0.0
+        if phi_deg is not None:
+            self.phi_deg = np.atleast_1d(phi_deg).flatten()
+            self.phi = np.radians(self.phi_deg)
+        else:
+            self.phi = 0.0
 
-            if theta_inc_deg is None:
-                self.theta_inc_deg = None
-                self.theta_inc = None
-            else:
-                self.theta_inc_deg = np.atleast_1d(theta_inc_deg).flatten()
+        if theta_inc_deg is None:
+            self.theta_inc_deg = None
+            self.theta_inc = None
+        else:
+            self.theta_inc_deg = np.atleast_1d(theta_inc_deg).flatten()
 
-                if len(np.unique(self.theta_inc_deg)) != len(self.theta_inc_deg):
-                    raise SMRTError("Zenith angle theta_inc has duplicated values which is invalid.")
+            if len(np.unique(self.theta_inc_deg)) != len(self.theta_inc_deg):
+                raise SMRTError("Zenith angle theta_inc has duplicated values which is invalid.")
 
-                self.theta_inc = np.radians(self.theta_inc_deg)
-                self.mu_s = np.cos(self.theta_inc)
+            self.theta_inc = np.radians(self.theta_inc_deg)
+            self.mu_s = np.cos(self.theta_inc)
 
     @property
     def mode(self):
@@ -178,12 +186,12 @@ class Sensor(object):
             raise SMRTError('Frequency not in microwave range: check units are Hz')
 
 
-    def configurations(self, axis):
-        """Return the configurations as an numpy array along the given axis
+    def configurations(self):
 
-        :param axis: one of the attribute of the sensor (frequency, ...) to iterate along
-"""
-        return np.atleast_1d(getattr(self, axis))
+        for axis in ["frequency", "theta_inc", "polarization_inc", "theta", "phi", "polarization"]:
+            values = np.atleast_1d(getattr(self, axis))
+            if len(values) > 1:
+                yield axis, values
 
 
     def iterate(self, axis):
@@ -199,4 +207,31 @@ class Sensor(object):
             setattr(sensor_subset, axis, v)  # change the sensor values
             yield sensor_subset
 
+
+class SensorList(SensorBase):
+
+    def __init__(self, sensor_list, axis="channel"):
+        self.sensor_list = sensor_list
+        self.axis = axis
+
+        # check uniqueness of axis
+        l = [getattr(s, axis) for s in self.sensor_list]
+
+        if None in l:
+            raise SMRTError("It is required to set '%s' value for each sensor" % axis)
+        if len(set(l)) != len(l):
+            raise SMRTError("It is required to set different '%s' values for each sensor" % axis)
+
+    @property
+    def channel(self):
+        return [s.channel for s in self.sensor_list]
+
+    def configurations(self):
+        yield self.axis, np.array([getattr(s, self.axis) for s in self.sensor_list])
+
+    def iterate(self, axis=None):
+
+        if axis is not None and axis != self.axis:
+            raise SMRTError("SensorList is unable to iterate over a different axis than its axis")
+        yield from self.sensor_list
 

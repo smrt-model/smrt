@@ -2,6 +2,8 @@
 from nose.tools import raises
 from nose.tools import eq_
 
+import numpy as np
+
 from smrt.core import sensor
 from smrt.core.error import SMRTError
 
@@ -15,6 +17,19 @@ from smrt.core.error import SMRTError
 
 
 # passive test
+
+
+def test_sensor_list():
+    s = sensor.SensorList([sensor.active(f, 55, channel="%i" % (f/1e9)) for f in [1e9, 2e9, 3e9]])
+    assert len(list(s.iterate())) == 3
+
+def test_iterate():
+    freqs = [1e9, 2e9, 3e9]
+    s = sensor.active(freqs, 55)
+    
+    freqs_bis = [sub_s.frequency for sub_s in s. iterate("frequency")]
+
+    np.testing.assert_equal(freqs, freqs_bis)
 
 
 @raises(SMRTError)
