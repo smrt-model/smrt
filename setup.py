@@ -12,7 +12,6 @@ setup(
     keywords = ["radiative transfer","model","snow","microwave"],
     classifiers = [
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
         "Development Status :: 5 - Production/Stable",
         "Environment :: Other Environment",
@@ -24,6 +23,6 @@ setup(
     long_description = """\
 The Snow Microwave Radiative Transfer (SMRT) model is a highly modular model to compute the thermal emission of snowpacks and other cryospheric bodies in the microwave domain.
 
-SMRT is compatible with Python 2.7 and 3.4+
+SMRT is compatible with Python 3.5+
 """
 )
