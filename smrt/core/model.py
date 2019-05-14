@@ -168,21 +168,15 @@ class Model(object):
 
         # first determine which dimension we must iterate on in this routine
         for dim in ["frequency", "theta_inc", "polarization_inc", "theta", "phi", "polarization"]:
-            # do we need to iterate on this dimension ?
-            values = getattr(sensor, dim)
+            if dim not in getattr(self.rtsolver, "_broadcast_capability", []):
+                values = sensor.configurations(dim)
+                if len(values) > 1:  # do we need to iterate on this dimension ?
+                    result_list = []
+                    for sensor_subset in sensor.iterate(dim):  # iterate over the values  # TODO: parallel computation
+                        res = self.run(sensor_subset, snowpack, atmosphere=atmosphere, snowpack_dimension=snowpack_dimension)  # recursive call
+                        result_list.append(res)
 
-            need_iteration = isinstance(values, np.ndarray) or \
-                             (isinstance(values, collections.Sequence) and not isinstance(values, six.string_types))
-            has_capability = hasattr(self.rtsolver, "_broadcast_capability") and dim in self.rtsolver._broadcast_capability
-            if need_iteration and not has_capability:
-                result_list = []
-                for x in values:  # iterate over the values
-                    sensor_subset = copy.copy(sensor)  # shallow copy... hope sensor attributes are immutable!!
-                    setattr(sensor_subset, dim, x)  # change the sensor
-                    res = self.run(sensor_subset, snowpack, atmosphere=atmosphere, snowpack_dimension=snowpack_dimension)  # recursive call
-                    result_list.append(res)
-
-                return concat_results(result_list, (dim, values))
+                    return concat_results(result_list, (dim, values))
 
         # second determine if we have several snowpacks
         if isinstance(snowpack, SensitivityStudy):
@@ -201,7 +195,7 @@ class Model(object):
                 pb = Progress(len(snowpack))
 
             result_list = list()
-            for i, sp in enumerate(snowpack):  # parallel computation would be better !
+            for i, sp in enumerate(snowpack):    # TODO: parallel computation
                 res = self.run(sensor, sp, atmosphere=atmosphere)
                 result_list.append(res)
                 if progressbar:

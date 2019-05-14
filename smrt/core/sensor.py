@@ -171,12 +171,32 @@ class Sensor(object):
         # Check frequency range. Below 300 MHz is an indication the units may be wrong
         # Not documented as it will not be called by the user.
 
-        try:
-            # Tests whether frequency is an array
-            frequency_min = min(self.frequency)
-        except TypeError:
-            # Then a single frequency has been specified
-            frequency_min = self.frequency
+        frequency_min = min(np.atleast_1d(self.frequency))
+
         if frequency_min < 300e6:
             # Checks frequency is above 300 MHz
             raise SMRTError('Frequency not in microwave range: check units are Hz')
+
+
+    def configurations(self, axis):
+        """Return the configurations as an numpy array along the given axis
+
+        :param axis: one of the attribute of the sensor (frequency, ...) to iterate along
+"""
+        return np.atleast_1d(getattr(self, axis))
+
+
+    def iterate(self, axis):
+        """Iterate over the configuration for the given axis.
+
+        :param axis: one of the attribute of the sensor (frequency, ...) to iterate along
+
+"""
+        values = getattr(self, axis)
+
+        for v in values:
+            sensor_subset = copy.copy(self)
+            setattr(sensor_subset, axis, v)  # change the sensor values
+            yield sensor_subset
+
+
