@@ -23,6 +23,7 @@ def test_sensor_list():
     s = sensor.SensorList([sensor.active(f, 55, channel="%i" % (f/1e9)) for f in [1e9, 2e9, 3e9]])
     assert len(list(s.iterate())) == 3
 
+
 def test_iterate():
     freqs = [1e9, 2e9, 3e9]
     s = sensor.active(freqs, 55)
@@ -32,10 +33,20 @@ def test_iterate():
     np.testing.assert_equal(freqs, freqs_bis)
 
 
+def test_wavelength():
+    s = sensor.Sensor(wavelength=0.21, theta_deg=0)
+    assert s.wavelength==0.21
+    assert np.allclose(s.frequency, 1427583133)
+
+
+@raises(SMRTError)
+def test_no_theta():
+    sensor.passive(1e9, theta=None)
+
+
 @raises(SMRTError)
 def test_passive_wrong_frequency_units_warning():
     sensor.passive([1e9, 35], theta=55)
-
 
 
 @raises(SMRTError)

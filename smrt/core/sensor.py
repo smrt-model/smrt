@@ -11,6 +11,8 @@ Otherwise, we recommend to add these functions in your own files (outside of smr
 import copy
 import numpy as np
 import six
+from ..core.globalconstants import C_SPEED
+
 
 # local import
 from .error import SMRTError
@@ -112,7 +114,8 @@ class Sensor(SensorBase):
 
     """
 
-    def __init__(self, frequency=None, theta_inc_deg=None, theta_deg=None, phi_deg=None, polarization_inc=None, polarization=None, channel=None):
+    def __init__(self, frequency=None, theta_inc_deg=None, theta_deg=None, phi_deg=None,
+                    polarization_inc=None, polarization=None, channel=None, wavelength=None):
         """ Build a Sensor. Setting theta_inc to None means passive mode
 
     :param frequency: Microwave frequency in Hz
@@ -120,12 +123,20 @@ class Sensor(SensorBase):
     :param polarization_inc. List of single character (H or V) for the incident wave
     :param theta_deg: zenith angle in degrees at which the observation is made
     :param phi_deg: azimuth angle at which the observation is made
-    :param polarization. List of single character (H or V)
+    :param polarization: List of single character (H or V)
+    :param channel: name of the channel (string)
+    :param wavelength
 
 """
         super().__init__()
 
-        self.frequency = frequency
+        if frequency is not None and wavelength is not None:
+            raise SMRTError("Sensor requires either frequency or wavelength argument, not both")
+        if wavelength is not None:
+            self.wavelength = wavelength
+        else:
+            self.frequency = frequency
+
         self.channel = channel
 
         if isinstance(polarization, six.string_types):
@@ -136,7 +147,8 @@ class Sensor(SensorBase):
             polarization_inc = list(polarization_inc)
         self.polarization_inc = polarization_inc
 
-
+        if theta_deg is None:
+            raise SMRTError("Sensor requires the argument 'theta_deg' to be set")
         self.theta_deg = np.atleast_1d(theta_deg).flatten()
 
         if len(np.unique(self.theta_deg)) != len(self.theta_deg):
@@ -162,6 +174,18 @@ class Sensor(SensorBase):
 
             self.theta_inc = np.radians(self.theta_inc_deg)
             self.mu_s = np.cos(self.theta_inc)
+
+    @property
+    def wavelength(self):
+        if hasattr(self, "_wls"):
+            return self._wls  # avoid calculation and numerical rounding error when wavelength has been explicitely set
+        else:
+            return C_SPEED / self.frequency
+
+    @wavelength.setter
+    def wavelength(self, wls):
+        self._wls = wls
+        self.frequency = C_SPEED / wls
 
     @property
     def mode(self):
