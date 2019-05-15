@@ -322,14 +322,15 @@ class Rayleigh(object):
     ft_even_phase = ft_even_phase_baseonUlaby
 
 
-    def phase(self, mu_s, mu_i, phi, npol=2):
+    def phase(self, mu_s, mu_i, dphi, npol=2):
         # Tsang theory and application p271 Eq 7.2.16
 
         mu_s = np.atleast_1d(mu_s)[np.newaxis, :, np.newaxis]
         mu_i = np.atleast_1d(mu_i)[np.newaxis, np.newaxis, :]
 
-        sinphi = np.sin(phi)[:, np.newaxis, np.newaxis]
-        cosphi = np.cos(phi)[:, np.newaxis, np.newaxis]
+        dphi = np.atleast_1d(dphi)
+        sinphi = np.sin(dphi)[:, np.newaxis, np.newaxis]
+        cosphi = np.cos(dphi)[:, np.newaxis, np.newaxis]
 
         # Tsang theory and application p127 Eq 3.2.47
         fvv = cosphi * mu_s * mu_i + np.sqrt(1 - mu_s**2) * np.sqrt(1 - mu_i**2)
