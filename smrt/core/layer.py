@@ -173,7 +173,7 @@ def get_microstructure_model(modulename, classname=None):
     """
 
     # import the module
-    return import_class(modulename, root="smrt.microstructure_model")
+    return import_class("microstructure_model", modulename)
 
 
 def make_microstructure_model(modelname_or_class, **kwargs):

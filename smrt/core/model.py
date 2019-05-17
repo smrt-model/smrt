@@ -90,7 +90,7 @@ def make_model(emmodel, rtsolver=None, emmodel_options=None, rtsolver_options=No
 def get_emmodel(emmodel):
     """get a new emmodel class from the file name"""
     if isinstance(emmodel, six.string_types):
-        emmodel = import_class(emmodel, root='smrt.emmodel')
+        emmodel = import_class("emmodel", emmodel)
     assert inspect.isclass(emmodel)
     return emmodel
 
@@ -124,7 +124,7 @@ class Model(object):
             self.emmodel = get_emmodel(emmodel)
 
         if isinstance(rtsolver, six.string_types):
-            self.rtsolver = import_class(rtsolver, root='smrt.rtsolver')
+            self.rtsolver = import_class('rtsolver', rtsolver)
         else:
             self.rtsolver = rtsolver
 

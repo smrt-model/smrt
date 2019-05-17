@@ -27,7 +27,7 @@ import scipy.sparse
 # local import
 from ..core.error import SMRTError
 from ..core.result import Result
-
+from ..core import lib
 
 class DORT(object):
     """Discrete Ordinate and Eigenvalue Solver
@@ -327,8 +327,8 @@ class DORT(object):
             else:
                 epslm1 = self.permittivity[l-1]
 
-            Rtop_l = self.interfaces[l].specular_reflection_matrix(self.sensor.frequency, self.permittivity[l], epslm1,
-                                                                 mu[l, 0:nsl], npol, compute_coherent_only)  # snow-snow
+            Rtop_l = fix_matrix(self.interfaces[l].specular_reflection_matrix(self.sensor.frequency, self.permittivity[l], epslm1,
+                                                                 mu[l, 0:nsl], npol, compute_coherent_only))  # snow-snow
 
             # fill the matrix
             todiag(bBC, (il_topl, j), (Ed - Rtop_l * Eu) * transt)  # this line perform matrix multiplication between Rtop_l and Eu. Make sure that reflection_matrix return matrix!
@@ -338,8 +338,8 @@ class DORT(object):
 
             if l < self.nlayer - 1:
                 ns_ = min(nslnpol, nslp1npol)
-                Tbottom_lp1 = self.interfaces[l].coherent_transmission_matrix(self.sensor.frequency, self.permittivity[l], self.permittivity[l+1],
-                                                                              mu[l, 0:(ns_//npol)], npol, compute_coherent_only)  # snow-snow
+                Tbottom_lp1 = fix_matrix(self.interfaces[l].coherent_transmission_matrix(self.sensor.frequency, self.permittivity[l], self.permittivity[l+1],
+                                                                              mu[l, 0:(ns_//npol)], npol, compute_coherent_only))  # snow-snow
                 todiag(bBC, (il_top[l+1], j), - Tbottom_lp1 * Ed[0:ns_, :] * transb)
                 if debug_compute_BC:
                     BC[il_top[l+1]:il_top[l+1]+ns_, j:j+nsl2npol] = - Tbottom_lp1 * Ed[0:ns_, :] * transb  # a mettre en (l+1,l)
@@ -356,8 +356,8 @@ class DORT(object):
                     b[il_top[l+1]:il_top[l+1]+ns_, :] += (muleye(Tbottom_lp1) * self.temperature[l])[:, np.newaxis]     # a mettre en (l+1)
 
             if l == 0:  # Air-snow interface
-                Tbottom_air_down = self.interfaces[l].coherent_transmission_matrix(self.sensor.frequency, 1, self.permittivity[l],
-                                                                                   outmu, npol, compute_coherent_only)
+                Tbottom_air_down = fix_matrix(self.interfaces[l].coherent_transmission_matrix(self.sensor.frequency, 1, self.permittivity[l],
+                                                                                   outmu, npol, compute_coherent_only))
 
                 b[il_topl:il_topl+n_stream0*npol, :] += Tbottom_air_down * intensity_down_m
 
@@ -366,12 +366,12 @@ class DORT(object):
 
             # compute reflection coefficient between l and l-1
             if l < self.nlayer-1:
-                Rbottom_l = self.interfaces[l].specular_reflection_matrix(self.sensor.frequency, self.permittivity[l], self.permittivity[l+1], mu[l, 0:nsl], npol, compute_coherent_only)  # snow-snow
+                Rbottom_l = fix_matrix(self.interfaces[l].specular_reflection_matrix(self.sensor.frequency, self.permittivity[l], self.permittivity[l+1], mu[l, 0:nsl], npol, compute_coherent_only))  # snow-snow
             elif self.snowpack.substrate is not None:
-                Rbottom_l = self.snowpack.substrate.specular_reflection_matrix(self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], npol, compute_coherent_only)  # snow-sub
+                Rbottom_l = fix_matrix(self.snowpack.substrate.specular_reflection_matrix(self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], npol, compute_coherent_only))  # snow-sub
                 if not compute_coherent_only and hasattr(self.snowpack.substrate, "ft_even_diffuse_reflection_matrix"):
                     full_weight_l = np.repeat(weight[l, 0:nsl], npol)    # could be cached (per layer) because same for each mode
-                    Rbottom_l += self.snowpack.substrate.ft_even_diffuse_reflection_matrix(m, self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], npol) * full_weight_l  # snow-sub
+                    Rbottom_l += fix_matrix(self.snowpack.substrate.ft_even_diffuse_reflection_matrix(m, self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], npol)) * full_weight_l  # snow-sub
             else:
                 Rbottom_l = 0  # fully absorbant substrate
 
@@ -382,7 +382,7 @@ class DORT(object):
 
             if l > 0:
                 ns_ = min(nslnpol, nslm1npol)
-                Ttop_lm1 = self.interfaces[l].coherent_transmission_matrix(self.sensor.frequency, self.permittivity[l], self.permittivity[l-1], mu[l, 0:(ns_//npol)], npol, compute_coherent_only)  # snow-snow
+                Ttop_lm1 = fix_matrix(self.interfaces[l].coherent_transmission_matrix(self.sensor.frequency, self.permittivity[l], self.permittivity[l-1], mu[l, 0:(ns_//npol)], npol, compute_coherent_only))  # snow-snow
                 todiag(bBC, (il_bottom[l-1], j), -Ttop_lm1 * Eu[0:ns_, :] * transt)
                 if debug_compute_BC:
                     BC[il_bottom[l-1]:il_bottom[l-1]+ns_, j:j+nsl2npol] = -Ttop_lm1 * Eu[0:ns_, :] * transt  # a mettre en (l-1)
@@ -401,7 +401,7 @@ class DORT(object):
                 ####Rtop_sub = self.interfaces[l].specular_reflection_matrix(npol, sensor.frequency, substrate.permittivity, permittivity[l], mu[l, 0:nsl], compute_coherent_only)  # sub-snow
                 ###raise Exception("finish the implementation here")
                 ###Rtop_sub = self.snowpack.substrate.emission_matrix(self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], compute_coherent_only)  # sub-snow
-                Ttop_sub = self.snowpack.substrate.absorption_matrix(self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], npol, compute_coherent_only)  # sub-snow
+                Ttop_sub = fix_matrix(self.snowpack.substrate.absorption_matrix(self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], npol, compute_coherent_only))  # sub-snow
                 b[il_bottoml:il_bottoml+nslnpol, :] += (muleye(Ttop_sub) * self.snowpack.substrate.temperature)[:, np.newaxis]
 
         #   solve the boundary system BCx=b
@@ -432,14 +432,22 @@ class DORT(object):
         if m == 0 and self.temperature is not None and self.temperature[0] > 0:
             I1up_m += self.temperature[0]  # just under the interface
 
-        Rbottom_air_down = self.interfaces[0].specular_reflection_matrix(self.sensor.frequency, 1, self.permittivity[0],
-                                                                         outmu, npol, compute_coherent_only)
-        Ttop_0 = self.interfaces[0].coherent_transmission_matrix(self.sensor.frequency, self.permittivity[0],
-                                                                 1, mu[0, 0:n_stream[0]], npol, compute_coherent_only)  # snow-air
+        Rbottom_air_down = fix_matrix(self.interfaces[0].specular_reflection_matrix(self.sensor.frequency, 1, self.permittivity[0],
+                                                                         outmu, npol, compute_coherent_only))
+        Ttop_0 = fix_matrix(self.interfaces[0].coherent_transmission_matrix(self.sensor.frequency, self.permittivity[0],
+                                                                 1, mu[0, 0:n_stream[0]], npol, compute_coherent_only))  # snow-air
 
         I0up_m = Rbottom_air_down * np.matrix(intensity_down_m) + (Ttop_0 * I1up_m)[:npol*n_stream0]
 
         return np.array(I0up_m).squeeze()
+
+
+def fix_matrix(x):
+    #"""fix the change of diagonal object"""
+    if isinstance(x, lib.diag):
+        return x.as_dia_matrix()
+    else:
+        return x
 
 
 def muleye(x):
@@ -525,7 +533,7 @@ def solve_eigenvalue_problem(m, ke, ft_even_phase, mu, weight):
     else:
         # calculate the A matrix. Eq (12)
 
-        A = ft_even_phase(m, mu)
+        A = ft_even_phase(m, mu, mu)
 
         if A is 0:
             beta = invmu * np.repeat(ke(mu), npol)

@@ -1,31 +1,68 @@
 # coding: utf-8
 
-
+import sys
+import os
 import importlib
 import inspect
+from functools import lru_cache
 
 from smrt.core.error import SMRTError
 
 
-def import_class(modulename, classname=None, root=None):
-    """import the modulename and return either the class name classname or the first class defined in the module
+user_plugin_package  = []
+
+def register_package(pkg):
+    global user_plugin_package
+
+    # check that the package can be imported. It must have an __init__.py
+    try:
+        module = importlib.import_module(pkg)
+    except ImportError as e:
+        raise SMRTError("The package must be in the the sys.path list and must contain a __init__.py file (even empty). The import error is %s" % str(e))
+
+    user_plugin_package.insert(0, pkg)
+
+
+@lru_cache(maxsize=128)
+def import_class(scope, modulename, classname=None):
+    """Import the modulename and return either the class named "classname" or the first class defined in the module if classname is None.
+
+    :param scope: scope where to search for the module.
+    :param modulename: name of the module to load.
+    :param classname: name of the class to read from the module.
 """
 
-    if root is not None:
-        if "." in modulename:
-            raise SMRTError("modulename error. Composed module name is not allowed when root argument is used")
-        modulename = root + "." + modulename
-
-    # remove attempt of relative import
     if (".." in modulename) or (modulename[0] == '.'):
         raise SMRTError("modulename error. Relative import is not allowed")
 
-    # import the module
+    modulename = scope + "." + modulename
+
+    # add user_directories       
+    for pkg in user_plugin_package:
+        #print(pkg + "." + modulename)
+        try:
+            res = do_import_class(pkg + "." + modulename, classname)
+        except ImportError:
+            continue
+        return res
+
+    # the last case, search in the smrt package
     try:
-        module = importlib.import_module(modulename)
+        res = do_import_class("smrt." + modulename, classname)
     except ImportError as e:
-        # TODO: try to import all the modules. Do we want this ??
-        raise SMRTError("Unable to find the module '%s' to import the class '%s'. The error is \"%s\"" % (modulename, classname, str(e)))
+        if classname is None:
+            msg = "Unable to find the module '%s'. The error is \"%s\"" % (modulename, str(e))
+        else:
+            msg = "Unable to find the module '%s' to import the class '%s'. The error is \"%s\"" % (modulename, classname, str(e))
+        raise SMRTError(msg)
+
+    return res
+
+
+def do_import_class(modulename, classname):
+
+    # import the module
+    module = importlib.import_module(modulename)
 
     if classname is None:  # search for the first class defined in the module
         for name, obj in inspect.getmembers(module, inspect.isclass):
@@ -38,3 +75,5 @@ def import_class(modulename, classname=None, root=None):
 
     # get the class
     return getattr(module, classname)
+    
+    

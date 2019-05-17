@@ -195,7 +195,7 @@ class IBA(object):
 
         return ks_int.real
 
-    def ft_even_phase(self, m, mu, npol=None):
+    def ft_even_phase(self, m, mu_s, mu_i, npol=None):
         """IBA phase matrix.
 
         These are the Fourier decomposed phase matrices for modes m = 0, 1, 2.... This method
@@ -224,6 +224,9 @@ class IBA(object):
         if npol is None:
             npol = self.npol  # npol is set from sensor mode except in call to energy conservation test
 
+        assert mu_s is mu_i   # temporary
+        mu = mu_i
+        
         if (not hasattr(self, "cached_mu")) or (not np.array_equal(self.cached_mu, mu)) or (len(self.cached_phase) < m):
             self.precompute_ft_even_phase(mu, max(m, self.m_max), npol)
         return self.cached_phase[m]

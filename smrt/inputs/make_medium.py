@@ -24,7 +24,7 @@ import numpy as np
 import pandas as pd
 import six
 
-from smrt.core.snowpack import Snowpack
+from smrt.core.snowpack import Snowpack, get_interface
 from smrt.core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE, PERMITTIVITY_OF_AIR, PSU
 from smrt.core.layer import get_microstructure_model, Layer
 from smrt.core.error import SMRTError
@@ -69,7 +69,7 @@ def make_snowpack(thickness, microstructure_model, density,
                                 density=get(density, i, "density"),
                                 **get(kwargs, i))
 
-        sp.append(layer, get(interface, i))
+        sp.append(layer, interface=get_interface(get(interface, i)))
 
     return sp
 
@@ -195,7 +195,7 @@ def make_ice_column(ice_type,
                                ice_permittivity_model=get(ice_permittivity_model, i),
                                saline_ice_permittivity_model=get(saline_ice_permittivity_model, i),
                                **get(kwargs, i))
-        sp.append(layer, get(interface, i))
+        sp.append(layer, interface=get_interface(get(interface, i)))
 
     return sp
 

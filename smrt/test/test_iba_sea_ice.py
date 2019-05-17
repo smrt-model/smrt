@@ -26,12 +26,11 @@ def setup_seaice():
 def test_oneconfig_for_firstyear_sea_ice():
 
     # prepare inputs
-
     l, n_max_stream, thickness, temperature, salinity = setup_seaice()
-    p_ex = np.array([500e-6] * (l))  # correlation length
+    p_ex = np.array([500e-6] * l)  # correlation length
 
     # create an ice column with assumption of spherical brine inclusions (brine_inclusion_shape="spheres"):
-    ice_column = make_ice_column("firstyear",
+    ice_column = make_ice_column(ice_type="firstyear",
                                  thickness=thickness,
                                  temperature=temperature,
                                  microstructure_model="exponential",
@@ -58,11 +57,11 @@ def test_oneconfig_for_firstyear_sea_ice():
 def test_oneconfig_for_multiyear_sea_ice():
     # prepare inputs
     l, n_max_stream, thickness, temperature, salinity = setup_seaice()
-    p_ex = np.array([1.0e-3] * (l))  # correlation length
+    p_ex = np.array([1000e-6] * l)  # correlation length
     porosity = 0.08  # ice porosity, in fraction
 
     # create an ice column with assumption of spherical brine inclusions (inclusion_shape="spheres"):
-    ice_column = make_ice_column("multiyear",
+    ice_column = make_ice_column(ice_type="multiyear",
                                  thickness=thickness,
                                  temperature=temperature,
                                  microstructure_model="exponential",

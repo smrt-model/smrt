@@ -17,7 +17,7 @@ def fresnel_coefficients(eps_1, eps_2, mu1):
     :returns: rv, rh and mu2 the cosine of the angle in medium 2
 """
     n = np.sqrt(eps_2/eps_1)
-    b = 1.0 - (1.0 - mu1**2) / n**2
+    b = 1.0-(1.0-mu1**2)/(n**2)
     mask = b > 0
 
     mu2 = np.sqrt(b[mask]).real
@@ -40,8 +40,7 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol, return_as_diagonal=False)
     :returns: a matrix or the diagional depending on `return_as_diagonal`
 """
 
-    mu1 = np.atleast_1d(mu1)
-    #assert len(mu1.shape) == 1  # 1D array
+    assert len(mu1.shape) == 1  # 1D array
 
     reflection_coefficients = np.ones(npol*len(mu1))
 
@@ -75,9 +74,8 @@ def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol, return_as_diagonal=Fals
     :returns: a matrix or the diagional depending on `return_as_diagonal`
 """
 
-    #assert len(mu1.shape) == 1  # 1D array
+    assert len(mu1.shape) == 1  # 1D array
 
-    mu1 = np.atleast_1d(mu1)
     transmission_coefficients = np.zeros(npol*len(mu1))
 
     rv, rh, mu2 = fresnel_coefficients(eps_1, eps_2, mu1)

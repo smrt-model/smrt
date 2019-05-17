@@ -50,5 +50,5 @@ It provides argument handling and calculation of the permittivity constant for s
 def get_substrate_model(substrate_model):
     """return the class corresponding to the substrate model called name. This function imports the correct module if possible and returns the class"""
 
-    return import_class(substrate_model, root="smrt.substrate")
+    return import_class("substrate", substrate_model)
 
