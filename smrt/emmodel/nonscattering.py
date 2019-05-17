@@ -46,25 +46,25 @@ class NonScattering(object):
         """
         self.m_max = m_max
 
-    def ft_even_phase(self, m, mu):
+    def ft_even_phase(self, m, mu_s, mu_i, npol=None):
         """ Non-scattering phase matrix.
 
             Returns : null phase matrix
 
         """
+        if npol is None:
+            npol = 2 if m == 0 else 3
 
-        npol = 2 if m == 0 else 3
+        return np.zeros((npol * len(mu_s), npol * len(mu_i)))
 
-        return np.zeros((npol * len(mu), npol * len(mu)))
-
-    def phase(self, mu, phi):
+    def phase(self, mu_s, mu_i, dphi, npol=2):
         """Non-scattering phase matrix.
 
             Returns : null phase matrix
 
         """
-        npol = 2
-        return np.zeroes((npol * len(mu), npol * len(mu)))
+        
+        return np.zeroes((npol * len(mu_s), npol * len(mu_i)))
 
     def ke(self, mu):
         return np.full(len(mu), self.ka)

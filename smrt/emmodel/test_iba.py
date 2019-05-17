@@ -191,14 +191,14 @@ def test_energy_conservation_shs_active():
 def test_iba_vs_rayleigh_passive_m0():
     em_iba, em_ray = setup_func_rayleigh()
     mu = setup_mu(1. / 64)
-    ok_((abs(em_iba.ft_even_phase(0, mu, npol=2) / em_iba.ks - em_ray.ft_even_phase(0, mu, npol=2) / em_ray.ks) < tolerance_pc).all())
+    ok_((abs(em_iba.ft_even_phase(0, mu, mu, npol=2) / em_iba.ks - em_ray.ft_even_phase(0, mu, mu, npol=2) / em_ray.ks) < tolerance_pc).all())
 
 
 def test_iba_vs_rayleigh_active_m0():
     # Have to set npol = 2 for m=0 mode in active otherwise rayleigh will produce 3x3 matrix
     em_iba, em_ray = setup_func_rayleigh()
     mu = setup_mu(1. / 64, bypass_exception=True)
-    ok_((abs(em_iba.ft_even_phase(0, mu, npol=2) / em_iba.ks - em_ray.ft_even_phase(0, mu, npol=2) / em_ray.ks) < tolerance_pc).all())
+    ok_((abs(em_iba.ft_even_phase(0, mu, mu, npol=2) / em_iba.ks - em_ray.ft_even_phase(0, mu, mu, npol=2) / em_ray.ks) < tolerance_pc).all())
 
 
 def test_iba_vs_rayleigh_active_m1():
@@ -206,13 +206,13 @@ def test_iba_vs_rayleigh_active_m1():
     mu = setup_mu(1. / 64, bypass_exception=True)
     # Clear cache
     em_iba.cached_mu = None
-    ok_((abs(em_iba.ft_even_phase(1, mu, npol=3) / em_iba.ks - em_ray.ft_even_phase(1, mu, npol=3) / em_ray.ks) < tolerance_pc).all())
+    ok_((abs(em_iba.ft_even_phase(1, mu, mu, npol=3) / em_iba.ks - em_ray.ft_even_phase(1, mu, mu, npol=3) / em_ray.ks) < tolerance_pc).all())
 
 
 def test_iba_vs_rayleigh_active_m2():
     em_iba, em_ray = setup_func_rayleigh()
     mu = setup_mu(1. / 64, bypass_exception=True)
-    ok_((abs(em_iba.ft_even_phase(2, mu, npol=3) / em_iba.ks - em_ray.ft_even_phase(2, mu, npol=3) / em_ray.ks) < tolerance_pc).all())
+    ok_((abs(em_iba.ft_even_phase(2, mu, mu, npol=3) / em_iba.ks - em_ray.ft_even_phase(2, mu, mu, npol=3) / em_ray.ks) < tolerance_pc).all())
 
 
 def test_permittivity_model():
@@ -228,4 +228,4 @@ def test_iba_raise_exception_mu_is_1():
     shs_pack = setup_func_shs()
     em = setup_func_active(testpack=shs_pack)
     bad_mu = np.array([0.2, 1])
-    em.ft_even_phase(2, bad_mu, npol=3)
+    em.ft_even_phase(2, bad_mu, bad_mu, npol=3)

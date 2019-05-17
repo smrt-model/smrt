@@ -48,13 +48,16 @@ class Rayleigh(object):
         if not hasattr(self.layer.microstructure, "radius"):
             raise SMRTError("Only microstructure_model which defined a `radius` can be used with Rayleigh scattering")
 
-    def ft_even_phase_baseonUlaby(self, m, mu, npol=None):
+    def ft_even_phase_baseonUlaby(self, m, mu_s, mu_i, npol=None):
         """#
         # Equations are from pg 1188-1189 Ulaby, Moore, Fung. Microwave Remote Sensing Vol III.
         # See also pg 157 of Tsang, Kong and Shin: Theory of Microwave Remote Sensing (1985) - can be used to derive
         # the Ulaby equations.
 
         """
+
+        assert mu_s is mu_i  # temporary hack, to be propagated
+        mu = mu_i
 
         if npol is None:
             npol = 2 if m == 0 else 3
@@ -127,7 +130,7 @@ class Rayleigh(object):
 
         return P
 
-    def ft_even_phase_basedonJin(self, m, mu, npol=None):
+    def ft_even_phase_basedonJin(self, m, mu_s, mu_i, npol=None):
         """Rayleigh phase matrix.
 
         These are the Fourier decomposed phase matrices for modes m = 0, 1, 2.
@@ -146,6 +149,8 @@ class Rayleigh(object):
         Returns P: phase matrix
 
         """
+        assert mu_s is mu_i  # temporary hack, to be propagated
+        mu = mu_i
 
         if npol is None:
             npol = 2 if m == 0 else 3
@@ -221,7 +226,7 @@ class Rayleigh(object):
         return P
 
 
-    def ft_even_phase_tsang(self, m, mu, npol=None):
+    def ft_even_phase_tsang(self, m, mu_s, mu_i, npol=None):
         """Rayleigh phase matrix.
 
         These are the Fourier decomposed phase matrices for modes m = 0, 1, 2.
@@ -241,6 +246,9 @@ class Rayleigh(object):
         Returns P: phase matrix
 
         """
+
+        assert mu_s is mu_i  # temporary hack, to be propagated
+        mu = mu_i
 
         if npol is None:
             npol = 2 if m == 0 else 3

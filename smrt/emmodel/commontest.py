@@ -13,7 +13,7 @@ def phase_fn_int(phi, inc_pol, em, mu, npol):
 
     def phase_fn(mu):
 
-        return em.ft_even_phase(0, mu, npol=npol)
+        return em.ft_even_phase(0, mu, mu, npol=npol)
 
     p11_12 = phase_fn(mu)[0::2, inc_pol] + phase_fn(mu)[1::2, inc_pol]
 
