@@ -35,13 +35,13 @@ def test_soil_qnh_reflection():
     np.testing.assert_allclose(refl[139], 0.747605452207, atol=1e-6)
 
 
-def test_soil_qnh_absorption():
+def test_soil_qnh_emissivity():
 
     s, frequency, mu1 = soil_setup()
 
     npol = 2
 
-    abso = s.absorption_matrix(frequency, 1, mu1, npol, False)
+    abso = s.emissivity_matrix(frequency, 1, mu1, npol)
     abso = abso.diagonal()
     print(abso)
     np.testing.assert_allclose(abso[0],  0.66963155, atol=1e-6)

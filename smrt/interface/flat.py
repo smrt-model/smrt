@@ -14,9 +14,7 @@ class Flat(object):
 
 """
 
-    @classmethod  # we use a classmethod here because Flat does not have parameter, no need to create instances.
-    # Most if not all the other interface classes should be instance as they contain parameters (e.g. roughness)
-    def specular_reflection_matrix(cls, frequency, eps_1, eps_2, mu1, npol, compute_coherent_only):
+    def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """compute the reflection coefficients for the azimuthal mode m
            and for an array of incidence angles (given by their cosine)
            in medium 1. Medium 2 is where the beam is transmitted.
@@ -32,9 +30,7 @@ class Flat(object):
         return fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
 
 
-    @classmethod  # we use a classmethod here because Flat does not have parameter, no need to create instances.
-    # Most if not all the other interface classes should be instance as they contain parameters (e.g. roughness)
-    def coherent_transmission_matrix(cls, frequency, eps_1, eps_2, mu1, npol, compute_coherent_only):
+    def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """compute the transmission coefficients for the azimuthal mode m
            and for an array of incidence angles (given by their cosine)
            in medium 1. Medium 2 is where the beam is transmitted.

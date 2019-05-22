@@ -6,6 +6,7 @@ from nose.tools import ok_
 # local import
 from smrt import make_model, sensor_list, PSU
 from smrt.inputs.make_medium import make_ice_column, bulk_ice_density
+from smrt.core.interface import Interface
 
 #test if this configuration gives values as originally produced by examples/iba_sea_ice.py
 #same structure as test_integration_iba.py
@@ -133,6 +134,7 @@ def test_equivalence_porosity_density():
     m = make_model("iba", "dort", rtsolver_options={"n_max_stream": n_max_stream})
 
     # run the model for sea ice with porosity / density
+
     res1 = m.run(sensor, ice_column1)
     res2 = m.run(sensor, ice_column2)
     print(res1.TbV(), res1.TbH())

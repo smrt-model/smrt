@@ -1,7 +1,41 @@
 
 
+import collections
+import six
 import numpy as np
+import pandas as pd
 import scipy.sparse
+
+from .error import SMRTError
+
+
+
+def get(x, i, name=None):  # function to take the i-eme value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the value.
+
+    if isinstance(x, six.string_types):
+        return x
+    elif isinstance(x, pd.DataFrame) or isinstance(x, pd.Series):
+        if i >=len(x.values):
+            raise SMRTError("The array '%s' is too short compared to the thickness array" % name)
+        return x.values[i]
+    if isinstance(x, collections.Sequence) or isinstance(x, np.ndarray):
+        if i >=len(x):
+            raise SMRTError("The array '%s' is too short compared to the thickness array.")
+        return x[i]
+    elif isinstance(x, dict):
+        return {k: get(x[k], i, k) for k in x}
+    else:
+        return x
+
+
+def is_sequence(x):
+    # maybe not the smartest way...
+    return (
+            isinstance(x, collections.Sequence) or \
+            isinstance(x, np.ndarray) or \
+            isinstance(x, pd.DataFrame) or \
+            isinstance(x, pd.Series)
+            ) and not isinstance(x, six.string_types)
 
 
 class diag(object):

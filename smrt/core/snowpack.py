@@ -26,28 +26,9 @@ import six
 import inspect
 
 from .error import SMRTError
-from ..interface.flat import Flat
+from ..interface.flat import Flat  # core should not depend on something defined in interface...
 from .layer import Layer
 from .plugin import import_class
-
-
-def get_interface(class_or_modulename, classname=None):
-    """return the class corresponding to the interface model.
-
-    This function import the correct module if necessary and if possible and return the class. It is used internally and should not be needed for normal usage.
-
-    :param class_or_modulename: a class or name of the python module in smrt/interface
-    """
-
-    # import the module
-    if class_or_modulename is None:
-        return None
-    elif isinstance(class_or_modulename, str):
-        return import_class("interface", class_or_modulename)
-    elif inspect.isclass(class_or_modulename):
-        return class_or_modulename
-    else:
-        raise SMRTError("The interface must be either the name of a module in the smrt.interface directory, or a class that implements the interface behavior.")
 
 
 class Snowpack(object):
@@ -103,7 +84,7 @@ class Snowpack(object):
 
         # interface can be a class or an instance. Both must work equaly.
         if interface is None:
-            interface = Flat
+            interface = Flat()
         self.interfaces.append(interface)
 
     def basic_check(self):

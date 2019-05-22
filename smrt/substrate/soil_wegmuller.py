@@ -8,12 +8,11 @@ parameters: roughness_rms
 """
 
 import numpy as np
-import scipy.sparse
 
 # local import
-from smrt.core.substrate import Substrate
+from smrt.core.interface import Substrate
 from smrt.core.fresnel import fresnel_reflection_matrix, fresnel_transmission_matrix
-
+from smrt.core import lib
 
 class SoilWegmuller(Substrate):
 
@@ -38,7 +37,7 @@ class SoilWegmuller(Substrate):
         rv[~mask] = rh[~mask] * mu1[~mask]**0.655   #  <-- * ou ** ??
         rv[mask] = rh[mask] * (0.635-0.0014*(np.arccos(mu1[mask])*180/np.pi-60))
 
-    def specular_reflection_matrix(self, frequency, eps_1, mu1, npol, compute_coherent_only=False):
+    def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
 
         eps_2 = self.permittivity(frequency)
 
@@ -53,9 +52,9 @@ class SoilWegmuller(Substrate):
         if npol == 4:
             raise NotImplementedError("to be implemented, the matrix is not diagonal anymore")
 
-        return scipy.sparse.diags(reflection_coefficients, 0)
+        return lib.diag(reflection_coefficients)
 
-    def absorption_matrix(self, frequency, eps_1, mu1, npol, compute_coherent_only):
+    def emissivity_matrix(self, frequency, eps_1, mu1, npol):
 
         # this function is a bit complex because we have to change first and second component but not the third one.
         # this is an approximation, as the third component should be affected by the roughness...
@@ -78,4 +77,4 @@ class SoilWegmuller(Substrate):
         if npol == 4:
             raise NotImplementedError("to be implemented, the matrix is not diagonal anymore")
 
-        return scipy.sparse.diags(transmission_coefficients, 0)
+        return lib.diag(transmission_coefficients)

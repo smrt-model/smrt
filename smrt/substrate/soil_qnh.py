@@ -14,12 +14,11 @@ Examples:
 """
 
 import numpy as np
-import scipy.sparse
 
 # local import
-from smrt.core.substrate import Substrate
+from smrt.core.interface import Substrate
 from smrt.core.fresnel import fresnel_reflection_matrix, fresnel_transmission_matrix
-
+from smrt.core import lib
 
 class SoilQNH(Substrate):
 
@@ -41,7 +40,7 @@ class SoilQNH(Substrate):
         rh[:] = ((1-self.Q) * rh + self.Q * rv)*coef_h
         rv[:] = trv  # copy back to the view.
 
-    def specular_reflection_matrix(self, frequency, eps_1, mu1, npol, compute_coherent_only=False):
+    def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
 
         eps_2 = self.permittivity(frequency)
 
@@ -56,9 +55,9 @@ class SoilQNH(Substrate):
         if npol == 4:
             raise NotImplementedError("to be implemented, the matrix is not diagonal anymore")
 
-        return scipy.sparse.diags(reflection_coefficients, 0)
+        return lib.diag(reflection_coefficients)
 
-    def absorption_matrix(self, frequency, eps_1, mu1, npol, compute_coherent_only):
+    def emissivity_matrix(self, frequency, eps_1, mu1, npol):
 
         # this function is a bit complex because we have to change first and second component but not the third one.
         # this is an approximation, as the third component should be affected by the roughness...
@@ -81,4 +80,4 @@ class SoilQNH(Substrate):
         if npol == 4:
             raise Exception("to be implemented, the matrix is not diagonal anymore")
 
-        return scipy.sparse.diags(transmission_coefficients, 0)
+        return lib.diag(transmission_coefficients)

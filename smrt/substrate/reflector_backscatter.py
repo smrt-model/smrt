@@ -30,11 +30,11 @@ Examples::
 """
 
 import numpy as np
-import scipy.sparse
 
 # local import
-from smrt.core.substrate import Substrate
+from smrt.core.interface import Substrate
 from smrt import SMRTError
+from smrt.core import lib
 
 
 def make_reflector(temperature=None, specular_reflection=None, backscattering_coefficient=None):
@@ -52,7 +52,7 @@ class Reflector(Substrate):
     args = []
     optional_args = {'specular_reflection': None, 'backscattering_coefficient': None}
 
-    def specular_reflection_matrix(self, frequency, eps_1, mu1, npol, compute_coherent_only):
+    def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
 
         if npol > 2 and not hasattr(self, "stop_pol2_warning"):
             print("active model is not yet fully implemented, need modification for the third component")  # !!!
@@ -68,7 +68,7 @@ class Reflector(Substrate):
         else:  # we have a scalar, both polarization are the same
             spec_refl_coeff = np.repeat(self._get_refl(self.specular_reflection, mu1), npol)
 
-        return scipy.sparse.diags(spec_refl_coeff, 0)
+        return lib.diag(spec_refl_coeff)
 
     def ft_even_diffuse_reflection_matrix(self, m, frequency, eps_1, mu1, npol):
 
@@ -97,9 +97,9 @@ class Reflector(Substrate):
         else:
             return 0
 
-        return scipy.sparse.diags(diffuse_refl_coeff, 0)
+        return lib.diag(diffuse_refl_coeff)
 
-    def absorption_matrix(self, frequency, eps_1, mu1, npol, compute_coherent_only):
+    def emissivity_matrix(self, frequency, eps_1, mu1, npol):
 
         if self.specular_reflection is None and self.backscattering_coefficient is None:
             self.specular_reflection = 1
@@ -109,13 +109,13 @@ class Reflector(Substrate):
             self.stop_pol2_warning = True
 
         if isinstance(self.specular_reflection, dict):  # we have a dictionary with polarization
-            abs_coeff = np.empty(npol*len(mu1))
-            abs_coeff[0::npol] = 1 - self._get_refl(self.specular_reflection['V'], mu1)
-            abs_coeff[1::npol] = 1 - self._get_refl(self.specular_reflection['H'], mu1)
+            emissivity = np.empty(npol*len(mu1))
+            emissivity[0::npol] = 1 - self._get_refl(self.specular_reflection['V'], mu1)
+            emissivity[1::npol] = 1 - self._get_refl(self.specular_reflection['H'], mu1)
         else:  # we have a scalar, both polarization are the same
-            abs_coeff = 1 - np.repeat(self._get_refl(self.specular_reflection, mu1), npol)
+            emissivity = 1 - np.repeat(self._get_refl(self.specular_reflection, mu1), npol)
 
-        return scipy.sparse.diags(abs_coeff, 0)
+        return lib.diag(emissivity)
 
     def _get_refl(self, specular_reflection, mu1):
         if callable(specular_reflection):  # we have a function, call it and see what we get

@@ -23,7 +23,7 @@ import numpy as np
 import six
 # local import
 from smrt.core.error import SMRTError
-from smrt.core.substrate import get_substrate_model
+from smrt.core.interface import get_substrate_model
 
 
 def make_soil(substrate_model, permittivity_model, temperature, moisture=None,

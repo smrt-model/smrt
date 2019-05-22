@@ -57,6 +57,7 @@ from .plugin import import_class
 from .sensor import SensorBase
 from .sensitivity_study import SensitivityStudy
 from .progressbar import Progress
+from smrt.core import lib
 
 
 def make_model(emmodel, rtsolver=None, emmodel_options=None, rtsolver_options=None, emmodel_kwargs=None, rtsolver_kwargs=None):
@@ -118,7 +119,7 @@ class Model(object):
         """
 
         # emmodel can be a single value (class or string) or an array with the same size as snowpack layers array
-        if isinstance(emmodel, collections.Sequence) and not isinstance(emmodel, six.string_types):
+        if lib.is_sequence(emmodel):
             self.emmodel = [get_emmodel(em) for em in emmodel]
         else:
             self.emmodel = get_emmodel(emmodel)
@@ -207,7 +208,7 @@ class Model(object):
         # create a list of emmodel instances (ready to run)
         emmodel_instances = list()
 
-        if isinstance(self.emmodel, collections.Sequence) and not isinstance(self.emmodel, six.string_types):
+        if lib.is_sequence(self.emmodel):
             # check we have the same number as layer in the snowpack
             assert (len(self.emmodel) == snowpack.nlayer)
             # one different model per layer

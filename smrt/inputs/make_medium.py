@@ -16,18 +16,19 @@ Note that `make_snowpack` is directly imported from `smrt` instead of `smrt.inpu
 
 """
 
-
+import inspect
 import collections
 from functools import partial
 
 import numpy as np
-import pandas as pd
 import six
 
-from smrt.core.snowpack import Snowpack, get_interface
+from smrt.core.snowpack import Snowpack
+from smrt.core.interface import make_interface
 from smrt.core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE, PERMITTIVITY_OF_AIR, PSU
 from smrt.core.layer import get_microstructure_model, Layer
 from smrt.core.error import SMRTError
+from smrt.core import lib
 from smrt.permittivity.ice import ice_permittivity_maetzler06  # default pure ice permittivity model
 from smrt.permittivity.brine import brine_volume
 from smrt.permittivity.saline_water import seawater_permittivity_klein76, brine_permittivity_stogryn85
@@ -65,11 +66,12 @@ def make_snowpack(thickness, microstructure_model, density,
 
 
     for i, dz in enumerate(thickness):
-        layer = make_snow_layer(dz, get(microstructure_model, i, "microstructure_model"),
-                                density=get(density, i, "density"),
-                                **get(kwargs, i))
+        layer = make_snow_layer(dz, lib.get(microstructure_model, i, "microstructure_model"),
+                                density=lib.get(density, i, "density"),
+                                **lib.get(kwargs, i))
 
-        sp.append(layer, interface=get_interface(get(interface, i)))
+        # add the interface
+        sp.append(layer, interface=make_interface(lib.get(interface, i, "interface")))
 
     return sp
 
@@ -176,7 +178,7 @@ def make_ice_column(ice_type,
 
         # create a permittivity_function that depends only on frequency and temperature by setting other arguments
         permittivity_model = lambda f, t: wp.water_permittivity_model(f, t, wp.water_salinity)
-        substrate = Flat(wp.water_temperature, permittivity_model)
+        substrate = Flat(temperature=wp.water_temperature, permittivity_model=permittivity_model)
     else:
         substrate = substrate
 
@@ -184,18 +186,18 @@ def make_ice_column(ice_type,
 
     for i, dz in enumerate(thickness):
         layer = make_ice_layer(ice_type, 
-                               dz, temperature=get(temperature, i),
-                               salinity=get(salinity, i),
-                               microstructure_model=get(microstructure_model, i),
-                               brine_inclusion_shape=get(brine_inclusion_shape, i),
-                               brine_volume_fraction=get(brine_volume_fraction, i),
-                               porosity=get(porosity, i),
-                               density=get(density, i),
-                               brine_permittivity_model=get(brine_permittivity_model, i),
-                               ice_permittivity_model=get(ice_permittivity_model, i),
-                               saline_ice_permittivity_model=get(saline_ice_permittivity_model, i),
-                               **get(kwargs, i))
-        sp.append(layer, interface=get_interface(get(interface, i)))
+                               dz, temperature=lib.get(temperature, i),
+                               salinity=lib.get(salinity, i),
+                               microstructure_model=lib.get(microstructure_model, i),
+                               brine_inclusion_shape=lib.get(brine_inclusion_shape, i),
+                               brine_volume_fraction=lib.get(brine_volume_fraction, i),
+                               porosity=lib.get(porosity, i),
+                               density=lib.get(density, i),
+                               brine_permittivity_model=lib.get(brine_permittivity_model, i),
+                               ice_permittivity_model=lib.get(ice_permittivity_model, i),
+                               saline_ice_permittivity_model=lib.get(saline_ice_permittivity_model, i),
+                               **lib.get(kwargs, i))
+        sp.append(layer, interface=make_interface(lib.get(interface, i)))
 
     return sp
 
@@ -427,10 +429,10 @@ def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permitt
 
     for i, dz in enumerate(thickness):
         layer = make_generic_layer(dz,
-                                   ks=get(ks, i, "ks"),
-                                   ka=get(ka, i, "ka"),
-                                   effective_permittivity=get(effective_permittivity, i, "effective_permittivity"),
-                                   temperature=get(temperature, i, "temperature")
+                                   ks=lib.get(ks, i, "ks"),
+                                   ka=lib.get(ka, i, "ka"),
+                                   effective_permittivity=lib.get(effective_permittivity, i, "effective_permittivity"),
+                                   temperature=lib.get(temperature, i, "temperature")
                                   )
 
         sp.append(layer, get(interface, i))
@@ -459,19 +461,3 @@ def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, te
     return lay
 
 
-def get(x, i, name=None):  # function to take the i-eme value in an array or dict of array. Can deal with scalar as well
-
-    if isinstance(x, six.string_types):
-        return x
-    elif isinstance(x, pd.DataFrame) or isinstance(x, pd.Series):
-        if i >=len(x.values):
-            raise SMRTError("The array '%s' is too short compared to the thickness array" % name)
-        return x.values[i]
-    if isinstance(x, collections.Sequence) or isinstance(x, np.ndarray):
-        if i >=len(x):
-            raise SMRTError("The array '%s' is too short compared to the thickness array" % name)
-        return x[i]
-    elif isinstance(x, dict):
-        return {k: get(x[k], i, k) for k in x}
-    else:
-        return x

@@ -40,6 +40,7 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol, return_as_diagonal=False)
     :returns: a matrix or the diagional depending on `return_as_diagonal`
 """
 
+    mu1 = np.atleast_1d(mu1)
     assert len(mu1.shape) == 1  # 1D array
 
     reflection_coefficients = np.ones(npol*len(mu1))
@@ -74,6 +75,7 @@ def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol, return_as_diagonal=Fals
     :returns: a matrix or the diagional depending on `return_as_diagonal`
 """
 
+    mu1 = np.atleast_1d(mu1)
     assert len(mu1.shape) == 1  # 1D array
 
     transmission_coefficients = np.zeros(npol*len(mu1))
