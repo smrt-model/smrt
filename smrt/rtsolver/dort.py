@@ -353,8 +353,8 @@ class DORT(object):
             else:
                 epslm1 = self.permittivity[l-1]
 
-            print("ici", self.interfaces[l].specular_reflection_matrix)
-            print("ici_", type(self.interfaces[l]))
+            #print("ici", self.interfaces[l].specular_reflection_matrix)
+            #print("ici_", type(self.interfaces[l]))
             #help(self.interfaces[l], self.interfaces[l].specular_reflection_matrix)
             Rtop_l = fix_matrix(self.interfaces[l].specular_reflection_matrix(self.sensor.frequency, self.permittivity[l], epslm1, mu[l, 0:nsl], npol))  # snow-snow
 
