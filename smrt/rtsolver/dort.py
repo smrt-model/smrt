@@ -105,16 +105,26 @@ class DORT(object):
         intensity = intensity.reshape([intensity.shape[0]//npol, npol]+list(intensity.shape[1:]))
 
         mu = np.cos(sensor.theta)
-        if min(mu) < min(outmu) or max(mu) > max(outmu):
-            raise SMRTError("viewing zenith angle is outside the range of stream angles computed by DORT. Increase the number of streams or change your viewing zenith angle range. In the future it will be possible to explicitly force the extrapolation.")
+
+        fill_value = None
+        if np.max(mu) > np.max(outmu):
+            # need extrapolation to 0°
+            # add the mean of H and V polarisation for the smallest angle for theta=0 (mu=1)
+            if self.sensor.mode == 'P': # passive
+                outmu = np.insert(outmu, 0, 1.0)
+                intensity = np.insert(intensity, 0, np.mean(intensity[0, :, ...], axis=0), axis=0)
+            else: # active
+                fill_value = 'extrapolate'
+
+        if np.min(mu) < np.min(outmu):
+            raise SMRTError("Viewing zenith angle is higher than the stream angles computed by DORT. Either increase the number of streams or reduce the highest viewing zenith angle.")
 
         # reverse is necessary for "old" scipy version
-        intfct = scipy.interpolate.interp1d(outmu[::-1], intensity[::-1, :, ...], axis=0)  # could use fill_value to be smart about extrapolation, but it's safer to return NaN (default)
+        intfct = scipy.interpolate.interp1d(outmu[::-1], intensity[::-1, ...], axis=0, fill_value=fill_value, assume_sorted=True)  # could use fill_value to be smart about extrapolation, but it's safer to return NaN (default)
 
-        # it seems there is a bug in scipy at least when checking the boundary, mu must be sorted, outmu does not !
+        # it seems there is a bug in scipy at least when checking the boundary, mu must be sorted
+        # original code that should work: intensity = intfct(mu)
         i = np.argsort(mu)
-
-        # original that should work: intensity = intfct(mu)
         intensity = intfct(mu[i])[np.argsort(i)]  # mu[i] sort mu, and [np.argsort(i)] put in back
 
         if sensor.mode == 'A':
