@@ -24,3 +24,16 @@ def test_positive_sigmaHV():
 
 def test_positive_sigmaHH():
     ok_(res_example.sigmaHH()>0)
+
+
+def test_sigmaVV_dB():
+    np.testing.assert_allclose(res_example.sigmaVV_dB(), -13.8379882755357)
+
+def test_sigmaHH_dB():
+    np.testing.assert_allclose(res_example.sigmaHH_dB(), -14.0094546848676)
+
+def test_sigmaHV_dB():
+    np.testing.assert_allclose(res_example.sigmaHV_dB(), -14.102249856026)
+
+def test_sigmaVH_dB():
+    np.testing.assert_allclose(res_example.sigmaVH_dB(), -14.0321985560285)
