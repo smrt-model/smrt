@@ -24,6 +24,7 @@ import six
 # local import
 from smrt.core.error import SMRTError
 from smrt.core.interface import get_substrate_model
+from smrt.core.globalconstants import PERMITTIVITY_OF_FREE_SPACE
 
 
 def make_soil(substrate_model, permittivity_model, temperature, moisture=None,
@@ -93,7 +94,7 @@ def make_soil(substrate_model, permittivity_model, temperature, moisture=None,
 
 def soil_dielectric_constant_dobson(frequency, tempK, SM, S, C):
 
-    e_0 = 8.854e12
+    e_0 = PERMITTIVITY_OF_FREE_SPACE
     e_w_inf = 4.9
     e_s = 4.7
     rho_b = 1.3
@@ -122,7 +123,6 @@ def soil_dielectric_constant_dobson(frequency, tempK, SM, S, C):
 def soil_dielectric_constant_hut(frequency, tempK, SM, sand, clay, dm_rho):
 
     # Parameters for soil dielectric constant calculation with water
-    e0 = 8.854e12
     ew_inf = 4.9
 
     tempC = tempK-273.15
