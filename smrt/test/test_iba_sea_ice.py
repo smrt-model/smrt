@@ -51,9 +51,10 @@ def test_oneconfig_for_firstyear_sea_ice():
 
     print(res.TbV(), res.TbH())
     #absorption with effective permittivity
-    ok_(abs(res.TbV() - 256.0117690314184) < 1e-4)
-    ok_(abs(res.TbH() - 228.4745849369685) < 1e-4)
+    ok_(abs(res.TbV() - 256.01165061598317) < 1e-4)
+    ok_(abs(res.TbH() - 228.47447378338745) < 1e-4)
 
+ 
 
 def test_oneconfig_for_multiyear_sea_ice():
     # prepare inputs

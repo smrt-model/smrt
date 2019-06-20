@@ -117,7 +117,7 @@ class IBA(object):
 
         """
         y2 = self.mean_sq_field_ratio(self.e0, self.eps)
-        iba_coeff = (1. / (4. * np.pi)) * (self.eps - self.e0)**2. * y2 * (self.k0)**4
+        iba_coeff = (1. / (4. * np.pi)) * np.absolute(self.eps - self.e0)**2. * y2 * (self.k0)**4
         return iba_coeff
 
     def mean_sq_field_ratio(self, e0, eps):
@@ -130,7 +130,7 @@ class IBA(object):
 
         """
         quasi_permittivity = (2. * self._effective_permittivity + e0) / 3.
-        y2 = (1. / 3.) * np.sum((quasi_permittivity / (quasi_permittivity + (eps - e0) * self.depol_xyz))**2.)
+        y2 = (1. / 3.) * np.sum(np.absolute(quasi_permittivity / (quasi_permittivity + (eps - e0) * self.depol_xyz))**2.)
         return y2
 
     def basic_check(self):
