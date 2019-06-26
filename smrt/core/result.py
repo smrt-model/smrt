@@ -63,7 +63,12 @@ class Result(object):
 
     @property
     def coords(self):
+        """Return the coordinates of the result (theta, frequency, ...). Note that the coordinates are also result attribute, so result.frequency works (and so on for all the coordinates)."""
         return self.data.coords
+
+    def __getattr__(self, attr):
+        if attr in self.data.coords:
+            return self.data.coords[attr]
 
     def Tb(self, **kwargs):
         """Return brightness temperature. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V'). See xarray slicing with sel method (to document)"""
