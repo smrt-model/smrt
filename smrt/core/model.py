@@ -241,3 +241,12 @@ class Model(object):
             result = rtsolver.solve(snowpack, emmodel_instances, sensor, atmosphere)
 
             return result
+
+
+    def run_later(self, sensor, snowpack, **kwargs):
+
+        from .run_promise import RunPromise  # local import to avoid start time
+
+        return RunPromise(self, sensor, snowpack, kwargs)
+        
+

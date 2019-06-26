@@ -37,12 +37,13 @@ def import_class(scope, modulename, classname=None):
 
     modulename = scope + "." + modulename
 
-    # add user_directories       
+    # add user_directories     
     for pkg in user_plugin_package:
         #print(pkg + "." + modulename)
         try:
             res = do_import_class(pkg + "." + modulename, classname)
-        except ImportError:
+        except ImportError as e:
+            #print(e)
             continue
         return res
 
