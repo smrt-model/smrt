@@ -40,21 +40,17 @@ def import_class(scope, modulename, classname=None):
     # add user_directories     
     for pkg in user_plugin_package:
         #print(pkg + "." + modulename)
-        try:
-            res = do_import_class(pkg + "." + modulename, classname)
-        except ImportError as e:
-            #print(e)
-            continue
-        return res
+        res = do_import_class(pkg + "." + modulename, classname)
+        if res is not None:
+            return res
 
     # the last case, search in the smrt package
-    try:
-        res = do_import_class("smrt." + modulename, classname)
-    except ImportError as e:
+    res = do_import_class("smrt." + modulename, classname)
+    if res is None:
         if classname is None:
-            msg = "Unable to find the module '%s'. The error is \"%s\"" % (modulename, str(e))
+            msg = "Unable to find the module '%s'." % modulename
         else:
-            msg = "Unable to find the module '%s' to import the class '%s'. The error is \"%s\"" % (modulename, classname, str(e))
+            msg = "Unable to find the module '%s' to import the class '%s'." % (modulename, classname)
         raise SMRTError(msg)
 
     return res
@@ -62,8 +58,17 @@ def import_class(scope, modulename, classname=None):
 
 def do_import_class(modulename, classname):
 
+    # check the module
+    #spec = importlib.util.find_spec(modulename)
+    #if spec is None:
+    #    return None
+
     # import the module
-    module = importlib.import_module(modulename)
+
+    try:
+        module = importlib.import_module(modulename)
+    except ModuleNotFoundError:
+        return None
 
     if classname is None:  # search for the first class defined in the module
         for name, obj in inspect.getmembers(module, inspect.isclass):
