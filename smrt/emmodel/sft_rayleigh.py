@@ -31,7 +31,8 @@ class SFT_Rayleigh(Rayleigh):
 
         corr_length = layer.microstructure.corr_length
 
-        eg = polder_van_santen(f, eb, es)
+        self._effective_permittivity = polder_van_santen(f, eb, es)
+        eg = self._effective_permittivity  # short
         kg = k0 * np.sqrt(eg/e0)
 
         delta = 9 * eg**2/e0**2 * (f * ((es-eg)/(es+2*eg))**2 + (1-f) * ((eb-eg)/(eb+2*eg))**2 )
