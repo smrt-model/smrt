@@ -141,7 +141,7 @@ def brine_volume(temperature, salinity, porosity=0, bulk_density=None):
     elif porosity > 0:
         raise SMRTError("Calling brine_volume with both arguments bulk_density and porosity is ambigous. One is deduced from the other one.")
 
-    Vb = salinity * PSU ** -1 * bulk_density * 1e-3 / F1  # brine volume fraction (Cox and Weeks, 1983)
+    Vb = salinity / PSU * bulk_density * 1e-3 / F1  # brine volume fraction (Cox and Weeks, 1983)
 
     if Vb > 1. and abs(temperature - calculate_freezing_temperature(salinity)) < 0.1:
         Vb = 1.  # the polynomial equations for
