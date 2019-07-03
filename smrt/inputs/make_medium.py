@@ -145,15 +145,15 @@ def make_ice_column(ice_type,
     """Build a multi-layered ice column. Each parameter can be an array, list or a constant value.
 
     ice_type variable determines the type of ice, which has a big impact on how the medium is modelled and the parameters:
-    - First year is modelled as scattering brines embedded in a pure ice background
-    - Multi year is modelled as scattering air bubbles in a saline ice background (but brines are non-scattering in this case).
-    - Lake is modelled as scattering air bubbles in a pure ice background (but brines are non-scattering in this case).
+    - First year ice is modelled as scattering brines embedded in a pure ice background
+    - Multi year ice is modelled as scattering air bubbles in a saline ice background (but brines are non-scattering in this case).
+    - Fresh ice is modelled as scattering air bubbles in a pure ice background (but brines are non-scattering in this case).
 
     First-year and multi-year ice is equivalent only if scattering and porosity are nulls. It is important to understand that in multi-year ice
     scattering by brine pockets is neglected because scattering is due to air bubbles and the emmodel implemented up to now are not able to deal with
     three-phase media.
 
-    :param ice_type: Ice type. Options are "firstyear", "multiyear", "lake"
+    :param ice_type: Ice type. Options are "firstyear", "multiyear", "fresh"
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf" for a semi-infinite layer.
     :param temperature: temperature of ice/water in K
     :param brine_inclusion_shape: assumption for shape of brine inclusions. So far, "spheres" or "random_needles" (i.e. elongated ellipsoidal inclusions), and "mix" (a mix of the two) are implemented, 
@@ -343,6 +343,7 @@ def water_parameters(ice_type, **kwargs):
     Optional arguments are 'water_temperature', 'water_salinity' and 'water_depth' of the water layer.
     """
 
+    # prepare default
     if ice_type in ['firstyear', 'multiyear']:
         water_temperature = FREEZING_POINT - 1.8
         water_salinity = 0.032  # = 0.032kg/kg = 32PSU; somewhat arbitrary value, fresher than average ocean salinity, reflecting lower salinities in polar regions
