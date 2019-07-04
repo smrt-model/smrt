@@ -77,7 +77,7 @@ def active(frequency, theta_inc, theta=None, phi=None, polarization_inc=None, po
         from smrt import sensor
         scatterometer = sensor.active(frequency=18e9, theta_inc=50)
         scatterometer = sensor.active(18e9, 50, 50, 0, "V", "V")
-        scatterometer = sensor.active([18e9,36.5e9], theta=50, theta_inc=50, polarization_inc=["V", "H"], polarization["V", "H"])
+        scatterometer = sensor.active([18e9,36.5e9], theta=50, theta_inc=50, polarization_inc=["V", "H"], polarization=["V", "H"])
 
     """
 
