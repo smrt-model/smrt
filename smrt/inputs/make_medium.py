@@ -153,7 +153,7 @@ def make_ice_column(ice_type,
     scattering by brine pockets is neglected because scattering is due to air bubbles and the emmodel implemented up to now are not able to deal with
     three-phase media.
 
-    :param ice_type: Ice type. Options are "firstyear", "multiyear", "fresh"
+    :param ice_type: Ice type. Options are "firstyear", "multiyear", "fresh" not "lake"
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf" for a semi-infinite layer.
     :param temperature: temperature of ice/water in K
     :param brine_inclusion_shape: assumption for shape of brine inclusions. So far, "spheres" or "random_needles" (i.e. elongated ellipsoidal inclusions), and "mix" (a mix of the two) are implemented, 
