@@ -8,4 +8,3 @@ scipy
 oct2py
 smrt
 matplotlib
-functools

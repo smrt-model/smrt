@@ -17,7 +17,6 @@ Note that `make_snowpack` is directly imported from `smrt` instead of `smrt.inpu
 """
 
 import collections
-from functools import partial
 
 import numpy as np
 import six
