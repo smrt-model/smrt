@@ -1,5 +1,5 @@
-smrt.inputs.make\_medium module
-===============================
+smrt.inputs.make_medium module
+==============================
 
 .. automodule:: smrt.inputs.make_medium
     :members:

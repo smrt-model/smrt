@@ -25,6 +25,8 @@ Submodules
    smrt.core.run_promise
    smrt.core.sensitivity_study
    smrt.core.sensor
+   smrt.core.sensor_broken
+   smrt.core.sensor_working
    smrt.core.snowpack
    smrt.core.test_globalconstants
    smrt.core.test_interface

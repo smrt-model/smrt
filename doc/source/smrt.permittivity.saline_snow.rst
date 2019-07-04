@@ -1,7 +1,7 @@
-smrt.substrate.soil_wegmuller module
+smrt.permittivity.saline_snow module
 ====================================
 
-.. automodule:: smrt.substrate.soil_wegmuller
+.. automodule:: smrt.permittivity.saline_snow
     :members:
     :undoc-members:
     :show-inheritance:

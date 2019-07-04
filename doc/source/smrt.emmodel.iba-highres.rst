@@ -1,7 +1,7 @@
-smrt.substrate.test_flat module
+smrt.emmodel.iba-highres module
 ===============================
 
-.. automodule:: smrt.substrate.test_flat
+.. automodule:: smrt.emmodel.iba-highres
     :members:
     :undoc-members:
     :show-inheritance:

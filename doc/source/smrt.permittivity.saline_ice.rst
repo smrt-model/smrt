@@ -1,5 +1,5 @@
-smrt.permittivity.saline\_ice module
-====================================
+smrt.permittivity.saline_ice module
+===================================
 
 .. automodule:: smrt.permittivity.saline_ice
     :members:

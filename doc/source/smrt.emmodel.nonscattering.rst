@@ -1,7 +1,7 @@
-smrt.permittivity.test_ice module
+smrt.emmodel.nonscattering module
 =================================
 
-.. automodule:: smrt.permittivity.test_ice
+.. automodule:: smrt.emmodel.nonscattering
     :members:
     :undoc-members:
     :show-inheritance:

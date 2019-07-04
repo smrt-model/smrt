@@ -1,7 +1,7 @@
-smrt.core.test_sensor module
+smrt.core.check_numba module
 ============================
 
-.. automodule:: smrt.core.test_sensor
+.. automodule:: smrt.core.check_numba
     :members:
     :undoc-members:
     :show-inheritance:

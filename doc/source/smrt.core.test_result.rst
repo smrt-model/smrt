@@ -1,5 +1,5 @@
-smrt.core.test\_result module
-=============================
+smrt.core.test_result module
+============================
 
 .. automodule:: smrt.core.test_result
     :members:

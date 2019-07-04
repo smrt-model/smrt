@@ -1,7 +1,7 @@
-smrt.emmodel.dmrt_shortrange module
+smrt.substrate.test_soil_qnh module
 ===================================
 
-.. automodule:: smrt.emmodel.dmrt_shortrange
+.. automodule:: smrt.substrate.test_soil_qnh
     :members:
     :undoc-members:
     :show-inheritance:

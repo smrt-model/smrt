@@ -1,5 +1,5 @@
-smrt.core.test\_snowpack module
-===============================
+smrt.core.test_snowpack module
+==============================
 
 .. automodule:: smrt.core.test_snowpack
     :members:

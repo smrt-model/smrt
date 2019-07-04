@@ -1,5 +1,5 @@
-smrt.microstructure\_model.gaussian\_random\_field module
-=========================================================
+smrt.microstructure_model.gaussian_random_field module
+======================================================
 
 .. automodule:: smrt.microstructure_model.gaussian_random_field
     :members:

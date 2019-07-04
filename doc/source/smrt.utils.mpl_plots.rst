@@ -1,5 +1,5 @@
-smrt.utils.mpl\_plots module
-============================
+smrt.utils.mpl_plots module
+===========================
 
 .. automodule:: smrt.utils.mpl_plots
     :members:
