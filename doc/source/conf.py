@@ -67,6 +67,10 @@ templates_path = [ '_templates' ]
 exclude_patterns = ['_build', '_templates']
 autodoc_default_flags = ['members']
 
+
+# Mock imports if rtd cannot import them
+autodoc_mock_imports = ["collections"]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
