@@ -1,5 +1,5 @@
-smrt.permittivity.test_ice module
-=================================
+smrt.permittivity.test\_ice module
+==================================
 
 .. automodule:: smrt.permittivity.test_ice
     :members:

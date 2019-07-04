@@ -1,5 +1,5 @@
-smrt.microstructure_model.autocorrelation module
-================================================
+smrt.microstructure\_model.autocorrelation module
+=================================================
 
 .. automodule:: smrt.microstructure_model.autocorrelation
     :members:

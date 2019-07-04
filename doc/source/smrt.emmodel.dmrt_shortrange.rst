@@ -1,5 +1,5 @@
-smrt.emmodel.dmrt_shortrange module
-===================================
+smrt.emmodel.dmrt\_shortrange module
+====================================
 
 .. automodule:: smrt.emmodel.dmrt_shortrange
     :members:

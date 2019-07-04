@@ -12,5 +12,6 @@ Submodules
 .. toctree::
 
    smrt.interface.flat
+   smrt.interface.oflat
    smrt.interface.transparent
 

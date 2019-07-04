@@ -1,5 +1,5 @@
-smrt.emmodel.dmrt_qcacp_shortrange module
-=========================================
+smrt.emmodel.dmrt\_qcacp\_shortrange module
+===========================================
 
 .. automodule:: smrt.emmodel.dmrt_qcacp_shortrange
     :members:

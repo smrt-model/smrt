@@ -14,8 +14,10 @@ Submodules
    smrt.substrate.flat
    smrt.substrate.reflector
    smrt.substrate.reflector_backscatter
+   smrt.substrate.soil_qnh
    smrt.substrate.soil_wegmuller
    smrt.substrate.test_flat
    smrt.substrate.test_reflector
+   smrt.substrate.test_soil_qnh
    smrt.substrate.test_soil_wegmuller
 
