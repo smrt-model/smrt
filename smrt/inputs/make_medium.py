@@ -239,11 +239,12 @@ def make_ice_layer(ice_type,
 """
 
     # common setup
-    if brine_volume_fraction is None:
-        brine_volume_fraction = brine_volume(temperature, salinity)
+    if icetype in ['firstyear', 'multiyear']:
+        if brine_volume_fraction is None:
+            brine_volume_fraction = brine_volume(temperature, salinity)
 
-    if brine_permittivity_model is None:
-        brine_permittivity_model = brine_permittivity_stogryn85 # default brine permittivity model
+        if brine_permittivity_model is None:
+            brine_permittivity_model = brine_permittivity_stogryn85 # default brine permittivity model
 
     if density is None:
         density = bulk_ice_density(temperature, salinity, porosity)
