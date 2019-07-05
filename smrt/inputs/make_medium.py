@@ -239,7 +239,7 @@ def make_ice_layer(ice_type,
 """
 
     # common setup
-    if icetype in ['firstyear', 'multiyear']:
+    if ice_type in ['firstyear', 'multiyear']:
         if brine_volume_fraction is None:
             brine_volume_fraction = brine_volume(temperature, salinity)
 
