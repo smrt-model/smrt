@@ -439,7 +439,7 @@ class DORT(object):
                 ####Rtop_sub = self.interfaces[l].specular_reflection_matrix(npol, sensor.frequency, substrate.permittivity, permittivity[l], mu[l, 0:nsl], compute_coherent_only)  # sub-snow
                 ###raise Exception("finish the implementation here")
                 ###Rtop_sub = self.snowpack.substrate.emission_matrix(self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], compute_coherent_only)  # sub-snow
-                print("SUBSTRATE:", self.snowpack.substrate)
+                #print("SUBSTRATE:", self.snowpack.substrate)
                 Ttop_sub = fix_matrix(self.snowpack.substrate.emissivity_matrix(self.sensor.frequency, self.permittivity[l], mu[l, 0:nsl], npol))  # sub-snow
                 b[il_bottoml:il_bottoml+nslnpol, :] += (muleye(Ttop_sub) * self.snowpack.substrate.temperature)[:, np.newaxis]
 
