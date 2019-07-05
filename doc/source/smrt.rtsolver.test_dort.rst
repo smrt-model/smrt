@@ -1,5 +1,5 @@
-smrt.rtsolver.test\_dort module
-===============================
+smrt.rtsolver.test_dort module
+==============================
 
 .. automodule:: smrt.rtsolver.test_dort
     :members:

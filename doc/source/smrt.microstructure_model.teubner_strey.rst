@@ -1,5 +1,5 @@
-smrt.microstructure\_model.teubner\_strey module
-================================================
+smrt.microstructure_model.teubner_strey module
+==============================================
 
 .. automodule:: smrt.microstructure_model.teubner_strey
     :members:

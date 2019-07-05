@@ -1,7 +1,7 @@
-smrt.core.test_sensor module
+smrt.emmodel.iba-test module
 ============================
 
-.. automodule:: smrt.core.test_sensor
+.. automodule:: smrt.emmodel.iba-test
     :members:
     :undoc-members:
     :show-inheritance:

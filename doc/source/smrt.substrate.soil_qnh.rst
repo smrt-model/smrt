@@ -1,7 +1,7 @@
-smrt.utils.memls_legacy module
+smrt.substrate.soil_qnh module
 ==============================
 
-.. automodule:: smrt.utils.memls_legacy
+.. automodule:: smrt.substrate.soil_qnh
     :members:
     :undoc-members:
     :show-inheritance:

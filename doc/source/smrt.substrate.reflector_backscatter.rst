@@ -1,5 +1,5 @@
-smrt.substrate.reflector\_backscatter module
-============================================
+smrt.substrate.reflector_backscatter module
+===========================================
 
 .. automodule:: smrt.substrate.reflector_backscatter
     :members:

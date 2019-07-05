@@ -1,7 +1,7 @@
-smrt.utils.memls_legacy module
+smrt.permittivity.brine module
 ==============================
 
-.. automodule:: smrt.utils.memls_legacy
+.. automodule:: smrt.permittivity.brine
     :members:
     :undoc-members:
     :show-inheritance:

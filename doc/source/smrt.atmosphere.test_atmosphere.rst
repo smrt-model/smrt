@@ -1,5 +1,5 @@
-smrt.atmosphere.test\_atmosphere module
-=======================================
+smrt.atmosphere.test_atmosphere module
+======================================
 
 .. automodule:: smrt.atmosphere.test_atmosphere
     :members:

@@ -1,5 +1,5 @@
-smrt.microstructure\_model package
-==================================
+smrt.microstructure_model package
+=================================
 
 .. automodule:: smrt.microstructure_model
     :members:
@@ -17,8 +17,8 @@ Submodules
    smrt.microstructure_model.homogeneous
    smrt.microstructure_model.independent_sphere
    smrt.microstructure_model.sampled_autocorrelation
+   smrt.microstructure_model.sticky_hard_spheres-test
    smrt.microstructure_model.sticky_hard_spheres
-   smrt.microstructure_model.test_autocorrelation
    smrt.microstructure_model.test_exponential
    smrt.microstructure_model.test_sticky_hard_spheres
    smrt.microstructure_model.teubner_strey

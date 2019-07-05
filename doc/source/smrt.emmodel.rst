@@ -15,7 +15,10 @@ Submodules
    smrt.emmodel.dmrt_qca_shortrange
    smrt.emmodel.dmrt_qcacp_shortrange
    smrt.emmodel.dmrt_shortrange
+   smrt.emmodel.dmrt_test
    smrt.emmodel.effective_permittivity
+   smrt.emmodel.iba-highres
+   smrt.emmodel.iba-test
    smrt.emmodel.iba
    smrt.emmodel.iba_original
    smrt.emmodel.nonscattering

@@ -1,7 +1,7 @@
-smrt.substrate.test_flat module
+smrt.core.test_interface module
 ===============================
 
-.. automodule:: smrt.substrate.test_flat
+.. automodule:: smrt.core.test_interface
     :members:
     :undoc-members:
     :show-inheritance:
