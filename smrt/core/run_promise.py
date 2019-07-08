@@ -2,15 +2,26 @@
 import os
 import glob
 import pickle
+import random
 from uuid import uuid4
 from .error import SMRTError
+from .filelock import FileLock
 
 
-def honour_all_promises(directory_or_filename, save_result_to=None, show_progress=True):
+def honour_all_promises(directory_or_filename, save_result_to=None, show_progress=True, force_compute=True):
     """Honour many promises and save the results
 
     :param directory_or_filename: can be a directory, a filename or a list of them
+    :param save_result_to: directory where to save the results. If None, the results are not saved. The results are always returned as a list by this function.
+    :param show_progress: print progress of the calculation.
+    :param force_computate: If False and if a result or lock file is present, the computation is skipped. The order of promise processing is randomized
+     to allow more efficient parallel computation using many calls of this function on the same directory. A lock file is used between the start of a computation and 
+     writting the result in order to prevent from running several times the same computation. If the process is interupted (e.g. walltime on clusters), the lock file may persist and prevent any future computation. In this case,
+     lock files must be manually deleted.
+     IF False, the `save_result_to` argument must be set to a valid directory where the results. 
 """
+
+
     if isinstance(directory_or_filename, str):
         directory_or_filename = [directory_or_filename]
 
@@ -23,26 +34,36 @@ def honour_all_promises(directory_or_filename, save_result_to=None, show_progres
         else:
             raise SMRTError("directory_or_filename argument must be an existing directory or a filename or a list of them.")
 
+    if not force_compute:
+        random.shuffle(filename_list)
+
+    if save_result_to is not None and not os.path.isdir(save_result_to):
+            raise SMRTError("save_result_to must be an existing directory (or None).")
+
     result_list = []
     for filename in filename_list:
         if show_progress:
             print(filename)
-        if save_result_to is not None:
-            if not os.path.isdir(save_result_to):
-                raise SMRTError("save_result_to must be an existing directory (or None).")
-        result = honour_promise(filename, save_result_to=save_result_to)
-        result_list.append(result)
+        result = honour_promise(filename, save_result_to=save_result_to, force_compute=force_compute)
+        if result is not None:
+            result_list.append(result)
 
     if show_progress:
         print("Executed %i promise(s). Done!" % len(result_list))
     return result_list
 
 
-def honour_promise(filename, save_result_to=None):
-    """Honour a promise and optionally save the result"""
+def honour_promise(filename, save_result_to=None, force_compute=True):
+    """Honour a promise and optionally save the result.
+
+    :param filename: file name of the promise
+    :param save_result_to: directory where to save the result.
+    :param force_compute: see `honour_all_promise`.
+"""
 
     promise = load_promise(filename)
-    result = promise.run()
+
+    # determine the filename of the results
     if save_result_to is not None:
         if os.path.isdir(save_result_to):
             if getattr(promise, "result_filename", None) is None:
@@ -52,7 +73,28 @@ def honour_promise(filename, save_result_to=None):
             outfilename = save_result_to
         else:
             raise SMRTError("save_result_to argument must be a directory or a filename")
-        result.save(outfilename)
+
+    if force_compute is False:
+        if save_result_to is None:
+            raise SMRTError("save_result_to must be set to an existing directory when force_compute is False.")
+
+        if os.path.exists(outfilename):
+            return  # the result exist, no need to do the computation
+        lock = FileLock(outfilename + ".lock", timeout=0)  
+        try:
+            with lock:
+                if os.path.exists(outfilename): # check the result file has not been written between the first check and the lock acquisition.
+                    return  # done!
+                result = promise.run()
+                result.save(outfilename)
+        except Timeout:
+            return # another process is doing the computation according to the existence of the lock file.
+
+    else:
+        result = promise.run()
+        if save_result_to is not None:
+            result.save(outfilename)
+
     return result
 
 
