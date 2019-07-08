@@ -21,14 +21,22 @@ def honour_all_promises(directory_or_filename, save_result_to=None, show_progres
         elif os.path.isfile(item):
             filename_list.append(item)
         else:
-            raise Runtime("directory_or_filename argument must be an existing directory or a filename or a list of them.")
+            raise SMRTError("directory_or_filename argument must be an existing directory or a filename or a list of them.")
 
+    result_list = []
     for filename in filename_list:
         if show_progress:
             print(filename)
-        honour_promise(filename, save_result_to or os.path.dirname(filename))
+        if save_result_to is not None:
+            if not os.path.isdir(save_result_to):
+                raise SMRTError("save_result_to must be an existing directory (or None).")
+        result = honour_promise(filename, save_result_to=save_result_to)
+        result_list.append(result)
+
     if show_progress:
-        print("done!")
+        print("Executed %i promise(s). Done!" % len(result_list))
+    return result_list
+
 
 def honour_promise(filename, save_result_to=None):
     """Honour a promise and optionally save the result"""
@@ -37,12 +45,15 @@ def honour_promise(filename, save_result_to=None):
     result = promise.run()
     if save_result_to is not None:
         if os.path.isdir(save_result_to):
+            if getattr(promise, "result_filename", None) is None:
+                raise SMRTError("promise has no predefined output filename and save_result_to is a directory. Either rebuild the promise or provide a file for save_result_to.")
             outfilename = os.path.join(save_result_to, promise.result_filename)
         elif os.path.isfile(save_result_to):
             outfilename = save_result_to
         else:
-            raise Runtime("save_result_to argument must be a directory or a filename")
+            raise SMRTError("save_result_to argument must be a directory or a filename")
         result.save(outfilename)
+    return result
 
 
 def load_promise(filename):
