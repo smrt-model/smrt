@@ -5,7 +5,7 @@ import pickle
 import random
 from uuid import uuid4
 from .error import SMRTError
-from .filelock import FileLock
+from .filelock import FileLock, Timeout
 
 
 def honour_all_promises(directory_or_filename, save_result_to=None, show_progress=True, force_compute=True):
@@ -130,7 +130,9 @@ class RunPromise(object):
         if filename is None:
             uid = uuid4()
             filename = os.path.join(directory, "smrt-promise-%s.P" % uid)
-            self.result_filename  = "smrt-result-%s.nc" % uid
+            self.result_filename = "smrt-result-%s.nc" % uid
+        else:
+            self.result_filename = os.path.splitext(os.path.basename(filename))[0] + '.nc'
 
         with open(filename, "wb") as f:
             pickle.dump(self, f)   
