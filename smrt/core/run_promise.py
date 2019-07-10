@@ -132,10 +132,13 @@ class RunPromise(object):
             filename = os.path.join(directory, "smrt-promise-%s.P" % uid)
             self.result_filename = "smrt-result-%s.nc" % uid
         else:
-            self.result_filename = os.path.splitext(os.path.basename(filename))[0] + '.nc'
+            basename = os.path.basename(filename)
+            if basename.startswith("smrt-promise-"):
+                basename = "smrt-result-" + basename[13:]
+            self.result_filename = os.path.splitext(basename)[0] + '.nc'
 
         with open(filename, "wb") as f:
-            pickle.dump(self, f)   
+            pickle.dump(self, f)
 
         return filename
 

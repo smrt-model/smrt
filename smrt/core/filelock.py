@@ -398,6 +398,9 @@ class UnixFileLock(BaseFileLock):
         #   https://stackoverflow.com/questions/17708885/flock-removing-locked-file-without-race-condition
         fd = self._lock_file_fd
         self._lock_file_fd = None
+        os.remove(self._lock_file)  # added by Ghislain to remove the lock, 
+        # as in our case, the netcdf file has been create and will prevent any other process to acquire the file
+        # this is the approach suggested by https://stackoverflow.com/questions/17708885/flock-removing-locked-file-without-race-condition if I understand well
         fcntl.flock(fd, fcntl.LOCK_UN)
         os.close(fd)
         return None
