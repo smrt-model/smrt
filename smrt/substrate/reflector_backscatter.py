@@ -72,8 +72,8 @@ class Reflector(Substrate):
 
     def ft_even_diffuse_reflection_matrix(self, m, frequency, eps_1, mu1, npol):
 
-        if m>0:
-            return 0  # we've to assume that the backscattering is hemispheric, dealing with a dirac is not possible here
+        #if m>0:
+        #    return 0  # we've to assume that the backscattering is hemispheric, dealing with a dirac is not possible here
         if isinstance(self.backscattering_coefficient, dict):  # we have a dictionary with polarization
             diffuse_refl_coeff = np.empty(npol*len(mu1))
             if m == 0:
@@ -83,6 +83,8 @@ class Reflector(Substrate):
             else:
                 coef = 1.0
 
+            coef /= 5  # assuming n_max = 2 !!!! this is a bit dangerous !!!
+            
             # correct for the angle between the air and the medium
             #relsin2 = (1 - mu1 ** 2) * eps_1.real
             #coef *= np.where(relsin2 < 1, 1/np.sqrt(1 - relsin2), 0)

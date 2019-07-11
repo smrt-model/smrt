@@ -48,7 +48,7 @@ class Rayleigh(object):
         if not hasattr(self.layer.microstructure, "radius"):
             raise SMRTError("Only microstructure_model which defined a `radius` can be used with Rayleigh scattering")
 
-    def ft_even_phase_baseonUlaby(self, m, mu_s, mu_i, npol=None):
+    def ft_even_phase_baseonUlaby(self, mu_s, mu_i, m_max, npol=None):
         """#
         # Equations are from pg 1188-1189 Ulaby, Moore, Fung. Microwave Remote Sensing Vol III.
         # See also pg 157 of Tsang, Kong and Shin: Theory of Microwave Remote Sensing (1985) - can be used to derive
@@ -60,77 +60,71 @@ class Rayleigh(object):
         mu = mu_i
 
         if npol is None:
-            npol = 2 if m == 0 else 3
+            npol = 2 if m_max == 0 else 3
+
+        P = np.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
 
         mu2 = mu**2
 
-        if m == 0:
-            PCvvp = 0.5 * np.outer(mu2, mu2) + np.outer(1 - mu2, 1 - mu2)
-            PCvhp = 0.5 * mu2[:, np.newaxis]  #mu2[:, np.newaxis]  # equiv np.dot(mu2, np.ones_like(mu2.T))
-            PSvup = 0
+        v, h, u = 0, 1, 2
 
-            PChvp = PCvhp.T
-            PChhp = 0.5
-            PShup = 0
+        # mode m == 0
+        P[v, v, 0] = 0.5 * np.outer(mu2, mu2) + np.outer(1 - mu2, 1 - mu2)
+        P[v, h, 0] = 0.5 * mu2[:, np.newaxis]  #mu2[:, np.newaxis]  # equiv np.dot(mu2, np.ones_like(mu2.T))
+        if npol >=3: P[v, u] = 0
 
-            PSuvp = 0
-            PSuhp = 0
-            PCuup = 0
+        P[h, v, 0] = P[v, h, 0].T
+        P[h, h, 0] = 0.5
+        if npol >=3: P[h, u, 0] = 0
 
-        elif m == 1:
+        if npol >=3:
+            P[u, v, 0] = 0
+            P[u, h, 0] = 0
+            P[u, u, 0] = 0
+
+        if m_max >= 1:
             sint = np.sqrt(1. - mu2)
             cossint = mu * sint
 
-            PCvvp = 2*np.outer(cossint, cossint)
-            PCvhp = 0
-            PSvup = np.outer(cossint, sint)
+            P[v, v, 1] = 2*np.outer(cossint, cossint)
+            P[v, h, 1] = 0
+            P[v, u, 1] = np.outer(cossint, sint)
 
-            PChvp = 0
-            PChhp = 0
-            PShup = 0
+            P[h, v, 1] = 0
+            P[h, h, 1] = 0
+            P[h, u, 1] = 0
 
-            PSuvp = -2*PSvup.T
+            P[u, v, 1] = -2*P[v, u, 1].T
 
-            PSuhp = 0
-            PCuup = np.outer(sint, sint)
+            P[u, h, 1] = 0
+            P[u, u, 1] = np.outer(sint, sint)
 
-        elif m == 2:
-            PCvvp = 0.5*np.outer(mu2, mu2)
-            PCvhp = -0.5 * mu2[:, np.newaxis]
-            PSvup = 0.5 * np.outer(mu2, mu)
+        if m_max >= 2:
+            P[v, v, 2] = 0.5*np.outer(mu2, mu2)
+            P[v, h, 2] = -0.5 * mu2[:, np.newaxis]
+            P[v, u, 2] = 0.5 * np.outer(mu2, mu)
 
-            PChvp = PCvhp.T
-            PChhp = 0.5
-            PShup = -0.5 * mu[np.newaxis, :]
+            P[h, v, 2] = P[v, h, 2].T
+            P[h, h, 2] = 0.5
+            P[h, u, 2] = -0.5 * mu[np.newaxis, :]
 
-            PSuvp = -2*PSvup.T
-            PSuhp = mu[:, np.newaxis]
-            PCuup = np.outer(mu, mu)
+            P[u, v, 2] = -2*P[v, u, 2].T
+            P[u, h, 2] = mu[:, np.newaxis]
+            P[u, u, 2] = np.outer(mu, mu)
 
-        else:
-            return 0 #raise Exception("Rayleigh mode should be equal to 0, 1 or 2")
+        if m_max >=3:
+            P[:, :, 3:, :, :] = 0
+
+        if npol == 3:
+            P[v, u, :] = -P[v, u, :]  # minus comes from even phase function
+            P[h, u, :] = -P[h, u, :]  # minus comes from even phase function
 
         # this normalisation is compatible with the 1/4pi normalisation used for the RT equation.
         coef = 3 * self.ks / 2   # no*fo^2 / Ks (see TsangI 3.2.49)
 
-        n = len(mu)
-        P = np.empty((npol * n, npol * n))
-        P[0::npol, 0::npol] = PCvvp * coef
-        P[0::npol, 1::npol] = PCvhp * coef
+        return P * coef
 
-        P[1::npol, 0::npol] = PChvp * coef
-        P[1::npol, 1::npol] = PChhp * coef
-
-        if npol == 3:
-            P[0::npol, 2::npol] = -PSvup * coef  # minus comes from even phase function
-            P[1::npol, 2::npol] = -PShup * coef  # minus comes from even phase function
-            P[2::npol, 0::npol] = PSuvp * coef
-            P[2::npol, 1::npol] = PSuhp * coef
-            P[2::npol, 2::npol] = PCuup * coef
-
-        return P
-
-    def ft_even_phase_basedonJin(self, m, mu_s, mu_i, npol=None):
+    def ft_even_phase_basedonJin(self, mu_s, mu_i, m_max, npol=None):
         """Rayleigh phase matrix.
 
         These are the Fourier decomposed phase matrices for modes m = 0, 1, 2.
@@ -155,78 +149,70 @@ class Rayleigh(object):
         if npol is None:
             npol = 2 if m == 0 else 3
 
+        P = np.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
 
         mu2 = mu**2
 
-        if m == 0:
-            PCvvp = 0.5 * np.outer(mu2, mu2) + np.outer(1 - mu2, 1 - mu2)
-            PCvhp = 0.5 * mu2[:, np.newaxis]  # equiv np.dot(mu2, np.ones_like(mu2.T))
-            PSvup = 0
+        v, h, u = 0, 1, 2
 
-            PChvp = PCvhp.T
-            PChhp = 0.5
-            PShup = 0
+        # mode = 0
+        P[v, v, 0] = 0.5 * np.outer(mu2, mu2) + np.outer(1 - mu2, 1 - mu2)
+        P[v, h, 0] = 0.5 * mu2[:, np.newaxis]  # equiv np.dot(mu2, np.ones_like(mu2.T))
+        if npol > 3: P[v, u, 0] = 0
 
-            PSuvp = 0
-            PSuhp = 0
-            PCuup = 0
+        P[h, v, 0] = P[v, h, 0].T
+        P[h, h, 0] = 0.5
+        if npol > 3: P[h, u, 0] = 0
 
-        elif m == 1:
+        if npol > 3: 
+            P[u, v, 0] = 0
+            P[u, h, 0] = 0
+            P[u, u, 0] = 0
+
+        if m_max >= 1:
             sint = np.sqrt(1. - mu2)
             cossint = mu * sint
 
-            PCvvp = 2*np.outer(cossint, cossint)
-            PCvhp = 0
-            PSvup = np.outer(cossint, sint)
+            P[v, v, 1] = 2*np.outer(cossint, cossint)
+            P[v, h, 1] = 0
+            P[v, u, 1] = np.outer(cossint, sint)
 
-            PChvp = 0
-            PChhp = 0
-            PShup = 0
+            P[h, v, 1] = 0
+            P[h, h, 1] = 0
+            P[h, u, 1] = 0
 
-            PSuvp = -2*PSvup.T  # could transpose Pvu
-            PSuhp = 0
-            PCuup = np.outer(sint, sint)
+            P[u, v, 1] = -2*P[v, u, 1].T  # could transpose Pvu
+            P[u, h, 1] = 0
+            P[u, u, 1] = np.outer(sint, sint)
 
-        elif m == 2:
-            PCvvp = 0.5*np.outer(mu2, mu2)
-            PCvhp = -0.5 * mu2[:, np.newaxis]  # equiv - np.dot(mu2, np.ones_like(mu2.T))
-            PSvup = 0.5 * np.outer(mu2, mu)
+        if m_max >= 2:
+            P[v, v, 2] = 0.5*np.outer(mu2, mu2)
+            P[v, h, 2] = -0.5 * mu2[:, np.newaxis]  # equiv - np.dot(mu2, np.ones_like(mu2.T))
+            P[v, u, 2] = 0.5 * np.outer(mu2, mu)
 
-            PChvp = PCvhp.T
-            PChhp = 0.5
-            PShup = -0.5 * mu[np.newaxis, :]  ## error of theta_i theta_s in Y.Q. Jin
+            P[h, v, 2] = P[v, h, 2].T
+            P[h, h, 2] = 0.5
+            P[h, u, 2] = -0.5 * mu[np.newaxis, :]  ## error of theta_i theta_s in Y.Q. Jin
 
-            PSuvp = - np.outer(mu, mu2)
-            PSuhp = mu[:, np.newaxis]
-            PCuup = -np.outer(mu, mu)
-            PCuup = 0   # error in Y.Q. Jin ?? According to Tsang this term is null
+            P[u, v, 2] = - np.outer(mu, mu2)
+            P[u, h, 2] = mu[:, np.newaxis]
+            P[u, u, 2] = -np.outer(mu, mu)
+            P[u, u, 2] = 0   # error in Y.Q. Jin ?? According to Tsang this term is null
 
-        else:
-            return 0  #           raise Exception("Rayleigh mode should be equal to 0, 1 or 2")
-
-        # this normalisation is compatible with the 1/4pi normalisation used for the RT equation.
-        coef = 3 * self.ks / 2
-
-        n = len(mu)
-        P = np.empty((npol * n, npol * n))
-        P[0::npol, 0::npol] = PCvvp * coef
-        P[0::npol, 1::npol] = PCvhp * coef
-
-        P[1::npol, 0::npol] = PChvp * coef
-        P[1::npol, 1::npol] = PChhp * coef
+        if m_max >=3:
+            P[:, :, 3:, :, :] = 0
 
         if npol == 3:
-            P[0::npol, 2::npol] = - PSvup * coef
-            P[1::npol, 2::npol] = - PShup * coef
+            P[v, u, :] = -P[v, u, :]  # minus comes from even phase function
+            P[h, u, :] = -P[h, u, :]  # minus comes from even phase function
 
-            P[2::npol, 0::npol] = PSuvp * coef
-            P[2::npol, 1::npol] = PSuhp * coef
-            P[2::npol, 2::npol] = PCuup * coef
+        # this normalisation is compatible with the 1/4pi normalisation used for the RT equation.
+        coef = 3 * self.ks / 2   # no*fo^2 / Ks (see TsangI 3.2.49)
 
-        return P
+        return P * coef
 
 
-    def ft_even_phase_tsang(self, m, mu_s, mu_i, npol=None):
+    def ft_even_phase_tsang(self, mu_s, mu_i, m_max, npol=None):
         """Rayleigh phase matrix.
 
         These are the Fourier decomposed phase matrices for modes m = 0, 1, 2.
@@ -235,9 +221,9 @@ class Rayleigh(object):
         Coefficients within the phase function are:
         ::
 
-        M  = [PCvvp  PCvhp -PSvup]
-             [PChvp  PChhp -PShup]
-             [PSuvp  PSuhp PCuup]
+        M  = [P[v, v]  P[v, h] -P[v, u]]
+             [P[h, v]  P[h, h] -P[h, u]]
+             [P[u, v]  P[u, h] P[u, u]]
 
         Inputs are:
         :param m: mode for decomposed phase matrix (0, 1, 2)
@@ -253,77 +239,71 @@ class Rayleigh(object):
         if npol is None:
             npol = 2 if m == 0 else 3
 
+        P = np.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
+
         mu2 = mu**2
 
-        if m == 0:
-            PCvvp = 0.5 * np.outer(mu2, mu2) + np.outer(1 - mu2, 1 - mu2)
-            PCvhp = 0.5 * mu2[:, np.newaxis]  #mu2[:, np.newaxis]  # equiv np.dot(mu2, np.ones_like(mu2.T))
-            PSvup = 0
+        v, h, u = 0, 1, 2
 
-            PChvp = PCvhp.T
-            PChhp = 0.5
-            PShup = 0
 
-            PSuvp = 0
-            PSuhp = 0
-            PCuup = 0  # this one is not null !!! set to zero here for simplificity but is 2*outer(mu, mu)
+        P[v, v, 0] = 0.5 * np.outer(mu2, mu2) + np.outer(1 - mu2, 1 - mu2)
+        P[v, h, 0] = 0.5 * mu2[:, np.newaxis]  #mu2[:, np.newaxis]  # equiv np.dot(mu2, np.ones_like(mu2.T))
+        if npol >=3: P[v, u, 0] = 0
 
-        elif m == 1:
+        P[h, v, 0] = P[v, h, 0].T
+        P[h, h, 0] = 0.5
+        if npol >=3: P[h, u, 0] = 0
+
+        if npol >=3:
+            P[u, v, 0] = 0
+            P[u, h, 0] = 0
+            P[u, u, 0] = 0  # this one is not null !!! set to zero here for simplificity but is 2*outer(mu, mu)
+
+        if m_max >= 1:
             sint = np.sqrt(1. - mu2)
             cossint = mu * sint
 
-            PCvvp = 2*np.outer(cossint, cossint)
-            PCvhp = 0
-            PSvup = np.outer(cossint, sint)
+            P[v, v, 1] = 2*np.outer(cossint, cossint)
+            P[v, h, 1] = 0
+            P[v, u, 1] = np.outer(cossint, sint)
 
-            PChvp = 0
-            PChhp = 0
-            PShup = 0
+            P[h, v, 1] = 0
+            P[h, h, 1] = 0
+            P[h, u, 1] = 0
 
-            PSuvp = 2*PSvup.T  # does not work
-            PSuvp = -PSuvp      # This line is needed, I don't understand why!!!!!!!!!!!!!!!!!!!
+            P[u, v, 1] = 2*P[v, u, 1].T  # does not work
+            P[u, v, 1] = -P[u, v, 1]      # This line is needed, I don't understand why!!!!!!!!!!!!!!!!!!!
 
-            PSuhp = 0
-            PCuup = np.outer(sint, sint)
+            P[u, h, 1] = 0
+            P[u, u, 1] = np.outer(sint, sint)
 
-        elif m == 2:
-            PCvvp = 0.5*np.outer(mu2, mu2)
-            PCvhp = -0.5 * mu2[:, np.newaxis]
-            PSvup = 0.5 * np.outer(mu2, mu)
+        if m_max >= 2:
+            P[v, v, 2] = 0.5*np.outer(mu2, mu2)
+            P[v, h, 2] = -0.5 * mu2[:, np.newaxis]
+            P[v, u, 2] = 0.5 * np.outer(mu2, mu)
 
-            PChvp = PCvhp.T
-            PChhp = 0.5
-            PShup = 0.5 * mu[np.newaxis, :]
+            P[h, v, 2] = P[v, h, 2].T
+            P[h, h, 2] = 0.5
+            P[h, u, 2] = 0.5 * mu[np.newaxis, :]
 
-            PSuvp = 2*PSvup.T
-            PSuvp = -PSuvp      # This line is need, I don't understand why!!!!!!!!!!!!!!!!!!!
+            P[u, v, 2] = 2*P[v, u, 2].T
+            P[u, v, 2] = -P[u, v, 2]      # This line is need, I don't understand why!!!!!!!!!!!!!!!!!!!
 
-            PSuhp = mu[:, np.newaxis]
-            PSuhp = -PSuhp      # This line is need, I don't understand why!!!!!!!!!!!!!!!!!!!
-            PCuup = 0
+            P[u, h, 2] = mu[:, np.newaxis]
+            P[u, h, 2] = -P[u, h, 2]      # This line is need, I don't understand why!!!!!!!!!!!!!!!!!!!
+            P[u, u, 2] = 0
 
-        else:
-            return 0  # raise Exception("Rayleigh mode should be equal to 0, 1 or 2")
+        if m_max >=3:
+            P[:, :, 3:, :, :] = 0
+
+        if npol == 3:
+            P[v, u, :] = -P[v, u, :]  # minus comes from even phase function
+            P[h, u, :] = -P[h, u, :]  # minus comes from even phase function
 
         # this normalisation is compatible with the 1/4pi normalisation used for the RT equation.
         coef = 3 * self.ks / 2   # no*fo^2 / Ks (see TsangI 3.2.49)
 
-        n = len(mu)
-        P = np.empty((npol * n, npol * n))
-        P[0::npol, 0::npol] = PCvvp * coef
-        P[0::npol, 1::npol] = PCvhp * coef
-
-        P[1::npol, 0::npol] = PChvp * coef
-        P[1::npol, 1::npol] = PChhp * coef
-
-        if npol == 3:
-            P[0::npol, 2::npol] = -PSvup * coef  # minus comes from even phase function
-            P[1::npol, 2::npol] = -PShup * coef  # minus comes from even phase function
-            P[2::npol, 0::npol] = PSuvp * coef
-            P[2::npol, 1::npol] = PSuhp * coef
-            P[2::npol, 2::npol] = PCuup * coef
-
-        return P
+        return P * coef
 
     # the formulation taken by Ulaby seems to be the only one to be error-free !
     # we use this one

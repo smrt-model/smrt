@@ -34,24 +34,6 @@ def setup_snowpack():
     return snowpack
 
 
-def test_dmrt_nonormalization_oneconfig():
-    
-    snowpack = setup_snowpack()
-
-    # create the EM Model
-    m = make_model("dmrt_qcacp_shortrange", "dort_nonormalization")
-
-    # create the sensor
-    radiometer = amsre('37V')
-
-    # run the model
-    res = m.run(radiometer, snowpack)
-
-    print(res.TbV(), res.TbH())
-    ok_((res.TbV() - 202.381059705594 ) < 1e-4)
-    ok_((res.TbH() - 187.07930133881544) < 1e-4)
-
-
 def test_dmrt_oneconfig():
 
     snowpack = setup_snowpack()

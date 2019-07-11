@@ -75,13 +75,10 @@ class IBA(object):
 
     def __init__(self, sensor, layer):
 
-        # Set size of phase matrix: active needs an extended phase matrix
         if sensor.mode == 'P':
             self.npol = 2
-            self.m_max = 0
         else:
             self.npol = 3
-            self.m_max = 3
 
         # Bring layer and sensor properties into emmodel
         self.frac_volume = layer.frac_volume
@@ -137,19 +134,6 @@ class IBA(object):
         # Need to be defined
         pass
 
-    def set_max_mode(self, m_max):
-        """ Sets the maximum level of phase matrix Fourier decomposition needed. Called by
-            the radiative transfer solver.
-
-            :param m_max: maximum Fourier decomposition mode needed
-
-            .. note::
-
-                m_max = 0 for passive
-
-        """
-        self.m_max = m_max
-
     def ks_integrand(self, mu):
         """ This is the scattering function for the IBA model.
 
@@ -194,42 +178,6 @@ class IBA(object):
         ks_int = (p11 + p22)
 
         return ks_int.real
-
-    def ft_even_phase(self, m, mu_s, mu_i, npol=None):
-        """IBA phase matrix.
-
-        These are the Fourier decomposed phase matrices for modes m = 0, 1, 2.... This method
-        creates or accesses the cache of ft_phase so Fourier Decomposition only needs to be
-        done once per layer for all modes.
-
-        Coefficients within the phase function are
-
-        Passive case (m = 0 only) and active (m = 0) ::
-
-            M  = [Pvvp  Pvhp]
-                 [Phvp  Phhp]
-
-        Active case (m > 0)::
-
-            M =  [Pvvp Pvhp Pvup]
-                 [Phvp Phhp Phup]
-                 [Puvp Puhp Puup]
-
-        :param m: mode for decomposed phase matrix (0, 1, 2)
-        :param mu: 1-D array of cosines of incidence angle
-        :param npol: [Optional] number of polarizations - normally set from sensor properties
-        :returns cached_phase[m]: cached phase matrix for all scattering streams for one Fourier Decomposition mode
-
-        """
-        if npol is None:
-            npol = self.npol  # npol is set from sensor mode except in call to energy conservation test
-
-        assert mu_s is mu_i   # temporary
-        mu = mu_i
-        
-        if (not hasattr(self, "cached_mu")) or (not np.array_equal(self.cached_mu, mu)) or (len(self.cached_phase) < m):
-            self.precompute_ft_even_phase(mu, max(m, self.m_max), npol)
-        return self.cached_phase[m]
 
     def phase(self, mu_s, mu_i, dphi, npol=2):
         """ IBA Phase function (not decomposed).
@@ -306,7 +254,8 @@ class IBA(object):
 
 
         if npol == 2:
-            p = np.array([[p11, p12], [p21, p22]])
+            p = np.array([[p11, p12],
+                          [p21, p22]])
 
         elif npol == 3: # 3-pol
             p = np.array([[p11, p12, 0.5 * ( cosa2 * cosT2 * sin2ai - sina2 * sin2ai + sin2a * cosT * cos2ai)], # p13
@@ -319,14 +268,26 @@ class IBA(object):
             raise RuntimeError("invalid value of npol")
 
         return (ft_corr_fn * self.iba_coeff * p).squeeze()
-
-
-    def precompute_ft_even_phase(self, mu, m_max, npol):
+        
+    def ft_even_phase(self, mu_s, mu_i, m_max, npol=None):
         """ Calculation of the Fourier decomposed IBA phase function.
 
         This method calculates the Improved Born Approximation phase matrix for all
-        Fourier decomposition modes and stores the output in a cache so the calculation
-        is not repeated for each mode. The radiative transfer solver then accesses the cache.
+        Fourier decomposition modes and return the output.
+
+        Coefficients within the phase function are
+
+        Passive case (m = 0 only) and active (m = 0) ::
+
+            M  = [Pvvp  Pvhp]
+                 [Phvp  Phhp]
+
+        Active case (m > 0)::
+
+            M =  [Pvvp Pvhp Pvup]
+                 [Phvp Phhp Phup]
+                 [Puvp Puhp Puup]
+
 
         The IBA phase function is given in Mätzler, C. (1998). Improved Born approximation for
         scattering of radiation in a granular medium. *Journal of Applied Physics*, 83(11),
@@ -335,22 +296,18 @@ class IBA(object):
         as described in e.g. *Thermal Microwave Radiation: Applications for Remote Sensing, Mätzler (2006)*.
         Fourier decomposition is then performed to separate the azimuthal dependency from the incidence angle dependency.
 
-        :param mu: 1-D array of cosine of radiation stream angles (set by solver)
+        :param mu_s: 1-D array of cosine of viewing radiation stream angles (set by solver)
+        :param mu_i: 1-D array of cosine of incident radiation stream angles (set by solver)
         :param m_max: maximum Fourier decomposition mode needed
         :param npol: number of polarizations considered (set from sensor characteristics)
 
-        Calculates cached_phase: Stored phase matrix for each Fourier mode m
-
-        .. note::
-
-            The size of the cached_phase[m] matrix depends on the mode. Only p11, p12, p21 and p22
-            elements are needed for the m = 0 mode, whereas an extended matrix with the p13, p23, p31, p32 and p33
-            elements are required for m > 0 modes (active only). The size of the cached phase matrix
-            will also vary with snow layer, as it depends on the number of streams simulated (length of mu).
-
         """
+
+        if npol is None:
+            npol = self.npol  # npol is set from sensor mode except in call to energy conservation test
+
         # Raise exception if mu = 1 ever called for active: p13, p23, p31, p32 signs incorrect
-        if any(u == 1 for u in mu) and npol > 2:
+        if np.any(mu_i == 1) and npol > 2:
             raise SMRTError("Phase matrix signs for sine elements of mode m = 2 incorrect")
 
         nsamples = 2**(m_max + 3) #* (m_max + 1)  # 2**4  # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
@@ -359,35 +316,30 @@ class IBA(object):
 
         # Determine size of mode-dependent array
         # 2 x 2 phase matrix for mode m=0, otherwise 3 x 3
-        pm_size = ([2] + [npol] * m_max)
-        self.cached_phase = [np.empty((pm_size[m] * len(mu), pm_size[m] * len(mu))) for m in range(m_max + 1)]
-        self.cached_mu = mu
 
-        p = self.phase(mu, mu, dphi, npol)
-        decomposed_p = np.fft.fft(p, axis=2)
+        p = self.phase(mu_s, mu_i, dphi, npol)
+        ft_p = np.fft.fft(p, axis=2)
 
-        delta = 1.0 / dphi.size  # Delta is 1 for m=0 mode
-        self.cached_phase[0][0::2, 0::2] = decomposed_p[0, 0, 0].real * delta
-        self.cached_phase[0][0::2, 1::2] = decomposed_p[0, 1, 0].real * delta
-        self.cached_phase[0][1::2, 0::2] = decomposed_p[1, 0, 0].real * delta
-        self.cached_phase[0][1::2, 1::2] = decomposed_p[1, 1, 0].real * delta
+        ft_even_p = np.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)), dtype=float)
 
-        for m in range(1, m_max + 1):
-            delta = 2.0 / dphi.size  # Delta is 1 for m=0 mode
-            self.cached_phase[m][0::npol, 0::npol] = decomposed_p[0, 0, m].real * delta
-            self.cached_phase[m][0::npol, 1::npol] = decomposed_p[0, 1, m].real * delta
-            self.cached_phase[m][1::npol, 0::npol] = decomposed_p[1, 0, m].real * delta
-            self.cached_phase[m][1::npol, 1::npol] = decomposed_p[1, 1, m].real * delta
+        # m=0 mode
+        ft_even_p[:, :, 0] = ft_p[:, :, 0].real * (1.0 / dphi.size)
 
-            #print(self.cached_phase[m][0::npol, 0::npol])
-            if (m>0) and (npol>=3):
-                # For the even matrix:
-                # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
-                self.cached_phase[m][0::npol, 2::npol] = - decomposed_p[0, 2, m].imag * delta
-                self.cached_phase[m][1::npol, 2::npol] = - decomposed_p[1, 2, m].imag * delta
-                self.cached_phase[m][2::npol, 0::npol] = decomposed_p[2, 0, m].imag * delta
-                self.cached_phase[m][2::npol, 1::npol] = decomposed_p[2, 1, m].imag * delta
-                self.cached_phase[m][2::npol, 2::npol] = decomposed_p[2, 2, m].real * delta
+        # m>=1 modes
+        if npol == 2:
+            ft_even_p[:, :, 1:] = ft_p[:, :, 1:m_max+1].real * (2.0 / dphi.size)
+
+        else:
+            delta = 2.0 / dphi.size
+            ft_even_p[0:2, 0:2, 1:] = ft_p[0:2, 0:2, 1:m_max+1].real * delta
+
+            # For the even matrix:
+            # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
+            ft_even_p[0:2, 2, 1:] = - ft_p[0:2, 2, 1:m_max+1].imag * delta
+            ft_even_p[2, 0:2, 1:] = ft_p[2, 0:2, 1:m_max+1].imag * delta
+            ft_even_p[2, 2, 1:] = ft_p[2, 2, 1:m_max+1].real * delta
+
+        return ft_even_p  # order is pola_s, pola_i, m, mu_s, mu_i
 
     def compute_ka(self):
         """ IBA absorption coefficient calculated from the low-loss assumption of a general lossy medium.

@@ -10,12 +10,8 @@ from smrt import make_snowpack, make_model, sensor_list
 # Ghi: rapid hack, should be splitted in different functions
 #
 
-def test_iba_oneconfig():
+def setup_snowpack(l):
 
-    # prepare inputs
-
-    l = 2
-    n_max_stream = 64
 
     nl = l//2  # // Forces integer division
     thickness = np.array([0.1, 0.1]*nl)
@@ -30,6 +26,12 @@ def test_iba_oneconfig():
                              density=density,
                              temperature=temperature,
                              corr_length=p_ex)
+    return  snowpack
+
+def test_iba_oneconfig_passive():
+
+    # prepare inputs
+    snowpack = setup_snowpack(l=2)
 
     # create the snowpack
     m = make_model("iba", "dort")
@@ -48,3 +50,24 @@ def test_iba_oneconfig():
     ok_(abs(res.TbV() - 248.08744066791073) < 1e-4)
     ok_(abs(res.TbH() - 237.30720491883298) < 1e-4)
 
+
+
+def test_iba_oneconfig_active():
+
+    # prepare inputs
+    snowpack = setup_snowpack(l=2)
+
+    # create the snowpack
+    m = make_model("iba", "dort")
+
+    # create the sensor
+    radar = sensor_list.active(frequency=19e9, theta_inc=55)
+
+    # run the model
+    res = m.run(radar, snowpack)
+
+    print(res.sigmaVV_dB(), res.sigmaHH_dB(), res.sigmaHV_dB())
+
+    ok_(abs(res.sigmaVV_dB() - (-24.04497237)) < 1e-4)
+    ok_(abs(res.sigmaHH_dB() - (-24.41628343)) < 1e-4)
+    ok_(abs(res.sigmaHV_dB() - (-51.53673914)) < 1e-4)
