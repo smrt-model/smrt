@@ -44,9 +44,9 @@ class SoilQNH(Substrate):
 
         eps_2 = self.permittivity(frequency)
 
-        reflection_coefficients = fresnel_reflection_matrix(eps_1, eps_2, mu1, npol,return_as_diagonal=True)
+        reflection_coefficients = fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
 
-        self.adjust(reflection_coefficients[1::npol], reflection_coefficients[0::npol], mu1)
+        self.adjust(reflection_coefficients[1], reflection_coefficients[0], mu1)
 
         if npol >= 3:
             # don't modify the third compoment... this is an approximation, as the third component should be affected by the roughness...
@@ -55,7 +55,7 @@ class SoilQNH(Substrate):
         if npol == 4:
             raise NotImplementedError("to be implemented, the matrix is not diagonal anymore")
 
-        return lib.diag(reflection_coefficients)
+        return reflection_coefficients
 
     def emissivity_matrix(self, frequency, eps_1, mu1, npol):
 
@@ -64,15 +64,15 @@ class SoilQNH(Substrate):
 
         eps_2 = self.permittivity(frequency)
 
-        transmission_coefficients = fresnel_transmission_matrix(eps_1, eps_2, mu1, npol, return_as_diagonal=True)
+        transmission_coefficients = fresnel_transmission_matrix(eps_1, eps_2, mu1, npol)
 
-        rh = 1 - transmission_coefficients[1::npol]
-        rv = 1 - transmission_coefficients[0::npol]
+        rh = 1 - transmission_coefficients[1]
+        rv = 1 - transmission_coefficients[0]
 
         self.adjust(rh, rv, mu1)
 
-        transmission_coefficients[1::npol] = 1 - rh  # back to transmission coefficients
-        transmission_coefficients[0::npol] = 1 - rv
+        transmission_coefficients[1] = 1 - rh  # back to transmission coefficients
+        transmission_coefficients[0] = 1 - rv
 
         if npol >= 3:
             # don't modify the third compoment... don't know what to do with it !
@@ -80,4 +80,4 @@ class SoilQNH(Substrate):
         if npol == 4:
             raise Exception("to be implemented, the matrix is not diagonal anymore")
 
-        return lib.diag(transmission_coefficients)
+        return transmission_coefficients

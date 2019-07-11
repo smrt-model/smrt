@@ -19,6 +19,7 @@ import scipy.fftpack
 from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
 from .effective_permittivity import depolarization_factors, polder_van_santen
+from ..core.lib import smrt_matrix
 
 #
 # For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
@@ -252,7 +253,6 @@ class IBA(object):
         p21 = (sina2 * cosT2 * cosai2 + cosa2 * sinai2 + p_second_term)  #p21
         p22 = (sina2 * cosT2 * sinai2 + cosa2 * cosai2 - p_second_term) #p22
 
-
         if npol == 2:
             p = np.array([[p11, p12],
                           [p21, p22]])
@@ -267,7 +267,7 @@ class IBA(object):
         else:
             raise RuntimeError("invalid value of npol")
 
-        return (ft_corr_fn * self.iba_coeff * p).squeeze()
+        return smrt_matrix(ft_corr_fn * self.iba_coeff * p)
         
     def ft_even_phase(self, mu_s, mu_i, m_max, npol=None):
         """ Calculation of the Fourier decomposed IBA phase function.
@@ -318,9 +318,9 @@ class IBA(object):
         # 2 x 2 phase matrix for mode m=0, otherwise 3 x 3
 
         p = self.phase(mu_s, mu_i, dphi, npol)
-        ft_p = np.fft.fft(p, axis=2)
+        ft_p = np.fft.fft(p.mat, axis=2)
 
-        ft_even_p = np.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)), dtype=float)
+        ft_even_p = smrt_matrix.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
 
         # m=0 mode
         ft_even_p[:, :, 0] = ft_p[:, :, 0].real * (1.0 / dphi.size)

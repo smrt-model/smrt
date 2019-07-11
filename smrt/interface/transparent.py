@@ -4,6 +4,7 @@
 
 import numpy as np
 import scipy.sparse
+from smrt.core.lib import smrt_matrix
 
 
 class Transparent(object):
@@ -22,7 +23,7 @@ class Transparent(object):
 """
         assert len(mu1.shape) == 1  # 1D array
 
-        return scipy.sparse.diags(np.zeros(npol*len(mu1)), 0)
+        return smrt_matrix.zeros((npol, len(mu1)))
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """compute the transmission coefficients for the azimuthal mode m
@@ -36,7 +37,7 @@ class Transparent(object):
 
         :return: the transmission matrix
 """
-        return scipy.sparse.diags(np.ones(npol*len(mu1)), 0)
+        return smrt_matrix.ones((npol, len(mu1)))
 
 
 

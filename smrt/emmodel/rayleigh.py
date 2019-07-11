@@ -11,6 +11,7 @@ import numpy as np
 
 from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
+from ..core.lib import smrt_matrix
 
 
 class Rayleigh(object):
@@ -62,7 +63,7 @@ class Rayleigh(object):
         if npol is None:
             npol = 2 if m_max == 0 else 3
 
-        P = np.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
+        P = smrt_matrix.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
 
         mu2 = mu**2
 
@@ -149,7 +150,7 @@ class Rayleigh(object):
         if npol is None:
             npol = 2 if m == 0 else 3
 
-        P = np.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
+        P = smrt_matrix.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
 
         mu2 = mu**2
 
@@ -239,7 +240,7 @@ class Rayleigh(object):
         if npol is None:
             npol = 2 if m == 0 else 3
 
-        P = np.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
+        P = smrt_matrix.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
 
         mu2 = mu**2
 
@@ -337,7 +338,7 @@ class Rayleigh(object):
         else:
             raise RuntimeError("invalid number of polarisation")
 
-        return 1.5 * self.ks * np.array(p).squeeze()
+        return smrt_matrix(1.5 * self.ks * np.array(p))
 
     def ke(self, mu):
         """return the extinction coefficient"""

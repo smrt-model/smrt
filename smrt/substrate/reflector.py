@@ -35,6 +35,8 @@ import numpy as np
 from smrt.core.interface import Substrate
 from smrt import SMRTError
 from smrt.core import lib
+from smrt.core.lib import smrt_matrix
+
 
 
 def make_reflector(temperature=None, specular_reflection=None):
@@ -64,14 +66,14 @@ class Reflector(Substrate):
         if self.specular_reflection is None and self.backscatter_coefficient is None:
             self.specular_reflection = 1
 
+        spec_refl_coeff = smrt_matrix.zeros((npol, len(mu1)))
         if isinstance(self.specular_reflection, dict):  # we have a dictionary with polarization
-            spec_refl_coeff = np.empty(npol*len(mu1))
-            spec_refl_coeff[0::npol] = self._get_refl(self.specular_reflection['V'], mu1)
-            spec_refl_coeff[1::npol] = self._get_refl(self.specular_reflection['H'], mu1)
+            spec_refl_coeff[0] = self._get_refl(self.specular_reflection['V'], mu1)
+            spec_refl_coeff[1] = self._get_refl(self.specular_reflection['H'], mu1)
         else:  # we have a scalar, both polarization are the same
-            spec_refl_coeff = np.repeat(self._get_refl(self.specular_reflection, mu1), npol)
+            spec_refl_coeff[0] = spec_refl_coeff[1] = self._get_refl(self.specular_reflection, mu1)
 
-        return lib.diag(spec_refl_coeff)
+        return spec_refl_coeff
 
     def emissivity_matrix(self, frequency, eps_1, mu1, npol):
 
@@ -81,14 +83,14 @@ class Reflector(Substrate):
         if npol > 2:
             raise NotImplementedError("active model is not yet implemented, need modification for the third compunant")
 
+        emissivity = smrt_matrix.zeros((npol, len(mu1)))
         if isinstance(self.specular_reflection, dict):  # we have a dictionary with polarization
-            emissivity = np.empty(npol*len(mu1))
-            emissivity[0::npol] = 1 - self._get_refl(self.specular_reflection['V'], mu1)
-            emissivity[1::npol] = 1 - self._get_refl(self.specular_reflection['H'], mu1)
+            emissivity[0] = 1 - self._get_refl(self.specular_reflection['V'], mu1)
+            emissivity[1] = 1 - self._get_refl(self.specular_reflection['H'], mu1)
         else:  # we have a scalar, both polarization are the same
-            emissivity = 1 - np.repeat(self._get_refl(self.specular_reflection, mu1), npol)
+            emissivity[0] = emissivity[1] = 1 - self._get_refl(self.specular_reflection, mu1)
 
-        return lib.diag(emissivity)
+        return emissivity
 
     def _get_refl(self, specular_reflection, mu1):
         if callable(specular_reflection):  # we have a function, call it and see what we get

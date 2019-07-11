@@ -29,10 +29,9 @@ def test_soil_qnh_reflection():
     npol = 2
 
     refl = s.specular_reflection_matrix(frequency, 1, mu1, npol)
-    refl = refl.diagonal()
     print(refl)
-    np.testing.assert_allclose(refl[0], 0.330933, atol=1e-6)
-    np.testing.assert_allclose(refl[139], 0.748025, atol=1e-6)
+    np.testing.assert_allclose(refl[0, 0], 0.330933, atol=1e-6)
+    np.testing.assert_allclose(refl[1, 69], 0.748025, atol=1e-6)
 
 
 def test_soil_qnh_emissivity():
@@ -42,7 +41,6 @@ def test_soil_qnh_emissivity():
     npol = 2
 
     abso = s.emissivity_matrix(frequency, 1, mu1, npol)
-    abso = abso.diagonal()
     print(abso)
-    np.testing.assert_allclose(abso[0], 0.669067, atol=1e-6)
-    np.testing.assert_allclose(abso[139], 0.251975, atol=1e-6)
+    np.testing.assert_allclose(abso[0, 0], 0.669067, atol=1e-6)
+    np.testing.assert_allclose(abso[1, 69], 0.251975, atol=1e-6)

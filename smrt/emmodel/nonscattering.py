@@ -12,6 +12,7 @@ import numpy as np
 
 # local import
 from ..core.globalconstants import C_SPEED
+from smrt.core.lib import smrt_matrix
 
 
 class NonScattering(object):
@@ -41,10 +42,6 @@ class NonScattering(object):
         # Need to be defined
         pass
 
-    def set_max_mode(self, m_max):
-        """
-        """
-        self.m_max = m_max
 
     def ft_even_phase(self, mu_s, mu_i, m_max, npol=None):
         """ Non-scattering phase matrix.
@@ -55,7 +52,7 @@ class NonScattering(object):
         if npol is None:
             npol = 2 if m_max == 0 else 3
 
-        return np.zeros((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
+        return smrt_matrix.zeros((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
 
     def phase(self, mu_s, mu_i, dphi, npol=2):
         """Non-scattering phase matrix.
@@ -64,7 +61,7 @@ class NonScattering(object):
 
         """
         
-        return np.zeroes((npol, npol, len(dphi), len(mu_s), len(mu_i))).squeeze()
+        return smrt_matrix.zeros((npol, npol, len(dphi), len(mu_s), len(mu_i)))
 
     def ke(self, mu):
         return np.full(len(mu), self.ka)

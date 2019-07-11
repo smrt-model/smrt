@@ -13,7 +13,8 @@ def test_scalar_specular():
 
     m = refl.specular_reflection_matrix(None, None, mu, 2)
 
-    assert(np.all(m.diagonal() == 0.5))
+    assert(np.all(m[0] == 0.5))
+    assert(np.all(m[1] == 0.5))
 
 
 def test_dict_specular():
@@ -22,9 +23,8 @@ def test_dict_specular():
 
     m = refl.specular_reflection_matrix(None, None, mu, 2)
 
-    assert(abs(np.mean(m.diagonal()) - 0.6) < 1e-10)
-    assert(np.sum(m.diagonal() == 0.5) == len(mu))
-    assert(np.sum(m.diagonal() == 0.7) == len(mu))
+    assert(np.all(m[0] == 0.7))
+    assert(np.all(m[1] == 0.5))
 
 
 def test_func_specular():
@@ -35,4 +35,5 @@ def test_func_specular():
     refl = Reflector(specular_reflection=refl)
     m = refl.specular_reflection_matrix(None, None, mu, 2)
 
-    assert(np.all(m.diagonal() == 0.5))
+    assert(np.all(m[0] == 0.5))
+    assert(np.all(m[1] == 0.5))
