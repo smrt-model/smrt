@@ -107,38 +107,31 @@ def substrate_from_interface(interface_cls):
             SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model)
 
         def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
-            """compute the reflection coefficients for the azimuthal mode m
-               and for an array of incidence angles (given by their cosine)
-               in medium 1. Medium 2 is where the beam is transmitted.
 
-            :param eps_1: permittivity of the medium where the incident beam is propagating.
-            :param eps_2: permittivity of the other medium
-            :param mu1: array of cosine of incident angles
-            :param npol: number of polarization
-
-            :return: the reflection matrix
-"""
             eps_2 = self.permittivity(frequency)
             if eps_2 is None:
                 raise SMRTError("No permittivity_model have been given to the substrate '%s'" % str(interface_cls))
             return interface_cls.specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol)
 
         def emissivity_matrix(self, frequency, eps_1, mu1, npol):
-            """compute the transmission coefficients for the azimuthal mode m
-               and for an array of incidence angles (given by their cosine)
-               in medium 1. Medium 2 is where the beam is transmitted.
 
-            :param eps_1: permittivity of the medium where the incident beam is propagating.
-            :param eps_2: permittivity of the other medium
-            :param mu1: array of cosine of incident angles
-            :param npol: number of polarization
-
-            :return: the transmission matrix
-"""
             eps_2 = self.permittivity(frequency)
             if eps_2 is None:
                 raise SMRTError("No permittivity_model have been given to the substrate '%s'" % str(interface_cls))
             return interface_cls.coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol)
+
+        def diffuse_reflection_matrix(self, frequency, eps_1, mu_s, mu_i, dphi, npol):
+
+            eps_2 = self.permittivity(frequency)
+            if eps_2 is None:
+                raise SMRTError("No permittivity_model have been given to the substrate '%s'" % str(interface_cls))
+            return interface_cls.diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol)
+
+        def ft_even_diffuse_reflection_matrix(self, frequency, eps_1, mu_s, mu_i, m_max, npol):
+            eps_2 = self.permittivity(frequency)
+            if eps_2 is None:
+                raise SMRTError("No permittivity_model have been given to the substrate '%s'" % str(interface_cls))
+            return interface_cls.ft_even_diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, m_max, npol)
 
         def auto_add(new_method, dependency):
             new_method_name = new_method.__name__
@@ -154,6 +147,7 @@ def substrate_from_interface(interface_cls):
                     }
         auto_add(emissivity_matrix, 'coherent_transmission_matrix')
         auto_add(specular_reflection_matrix, 'specular_reflection_matrix')
+        auto_add(ft_even_diffuse_reflection_matrix, 'ft_even_diffuse_reflection_matrix')
 
         newcls = type(cls.__name__, (SubstrateBase, interface_cls), attributes)
         newcls.__doc__ = cls.__doc__

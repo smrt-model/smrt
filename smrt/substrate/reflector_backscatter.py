@@ -55,9 +55,9 @@ class Reflector(Substrate):
 
     def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
 
-        if npol > 2 and not hasattr(self, "stop_pol2_warning"):
+        if npol > 2 and not hasattr(Reflector, "stop_pol2_warning"):
             print("active model is not yet fully implemented, need modification for the third component")  # !!!
-            self.stop_pol2_warning = True
+            Reflector.stop_pol2_warning = True
 
         if self.specular_reflection is None and self.backscattering_coefficient is None:
             self.specular_reflection = 1
@@ -71,10 +71,12 @@ class Reflector(Substrate):
 
         return spec_refl_coeff
 
-    def ft_even_diffuse_reflection_matrix(self, frequency, eps_1, mu1, m_max, npol):
+    def ft_even_diffuse_reflection_matrix(self, frequency, eps_1, mu_s, mu_i, m_max, npol):
+
+        assert mu_s is mu_i
 
         if isinstance(self.backscattering_coefficient, dict):  # we have a dictionary with polarization
-            diffuse_refl_coeff = smrt_matrix.zeros((npol, m_max + 1, len(mu1)))
+            diffuse_refl_coeff = smrt_matrix.zeros((npol, m_max + 1, len(mu_i)))
             
             for m in range(m_max + 1):
                 if m == 0:
@@ -83,11 +85,11 @@ class Reflector(Substrate):
                     coef = -1.0
                 else:
                     coef = 1.0
-                coef /= mu1
-                coef /= (m_max *2 + 1) # ad hoc normalization to get the right backscatter. This is a trick to deal with the dirac.
+                coef /= 4 * np.pi * mu_i
+                coef /= (m_max + 0.5) # ad hoc normalization to get the right backscatter. This is a trick to deal with the dirac.
 
-                diffuse_refl_coeff[0, m] += coef * self._get_refl(self.backscattering_coefficient['VV'], mu1)
-                diffuse_refl_coeff[1, m] += coef * self._get_refl(self.backscattering_coefficient['HH'], mu1)
+                diffuse_refl_coeff[0, m] += coef * self._get_refl(self.backscattering_coefficient['VV'], mu_i)
+                diffuse_refl_coeff[1, m] += coef * self._get_refl(self.backscattering_coefficient['HH'], mu_i)
 
         elif self.backscattering_coefficient is not None:
             raise SMRTError("backscattering_coefficient must be a dictionary")

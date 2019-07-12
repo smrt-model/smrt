@@ -705,7 +705,7 @@ class InterfaceProperties(object):
             elif snowpack.substrate is not None:
                 self.Rbottom_coh[l] = snowpack.substrate.specular_reflection_matrix(frequency, eps_l, streams.mu[l], npol) # snow-substrate
                 if hasattr(snowpack.substrate, "ft_even_diffuse_reflection_matrix"):
-                    self.Rbottom_diff[l] = snowpack.substrate.ft_even_diffuse_reflection_matrix(frequency, eps_l, streams.mu[l], m_max, npol)  # snow-sub
+                    self.Rbottom_diff[l] = snowpack.substrate.ft_even_diffuse_reflection_matrix(frequency, eps_l, streams.mu[l], streams.mu[l], m_max, npol)  # snow-sub
                 else:
                     self.Rbottom_diff[l] = smrt_matrix(0)
             else:
@@ -728,10 +728,10 @@ class InterfaceProperties(object):
 
         if not compute_coherent_only and self.Rbottom_diff[l] is not 0:
             if m == 0:
-                coef = 1
+                coef = 2 * np.pi
                 npol = 2
             else:
-                coef = 0.5
+                coef = np.pi
                 npol = 3
 
             full_weight = np.repeat(self.streams.weight[l], npol)
