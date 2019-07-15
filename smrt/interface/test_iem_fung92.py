@@ -20,5 +20,5 @@ def test_iem_fung92():
     print(sigma_vv)
     print(sigma_hh)
 
-    assert np.all(np.abs(sigma_vv - [-20.25297061 -24.35232625 -26.74346526]) < 1e-2)
-    assert np.all(np.abs(sigma_hh - [-22.10327899 -28.69367149 -32.53013663]) < 1e-2)
+    assert np.all(np.abs(sigma_vv - [-20.25297061, -24.35232625, -26.74346526]) < 1e-2)
+    assert np.all(np.abs(sigma_hh - [-22.10327899, -28.69367149, -32.53013663]) < 1e-2)
