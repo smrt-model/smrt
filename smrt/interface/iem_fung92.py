@@ -1,14 +1,33 @@
 
 
 """
-Implement the interface boundary condition under IEM formulation provided by Fung et al. 1992. in IEEE TGRS
+Implement the interface boundary condition under IEM formulation provided by Fung et al. 1992. in IEEE TGRS. Use of this code requires special attention because of two issues:
+
+1) it only computes the backscatter diffuse reflection as described in Fung et al. 1992, the specular reflection and the coherent transmission. It does not compute the full bi-static diffuse 
+reflection and transmission. As a consequence it is only suitable when single scattering is dominant, usually at low frequency when the medium is weakly scattering.
+This happends when the main mechanism is the backscatter from the interface attenuated by the medium.  Another case is when the rough surface is relatively smooth, 
+the specular reflection is relatively strong and the energy can be scattered back by the medium (double bounce). For other situations, this code is not recommended.
+
+2) Additionaly, IEM is known to work for a limited range of roughness. Usually it is considered valid for ks < 3 and ks*kw < sqrt(eps) where k is the wavenumber, s the rms height and l the
+correlation length. The code print a warning when out of this range. There is also limitation for smooth surfaces but no warning is printed.
+
+   **Usage example:**
+
+    ::
+        # rms height and corr_length values work at 10 GHz
+        substrate = make_soil("iem_fung92", "dobson85", temperature=260, 
+                                            roughness_rms=1e-3,
+                                            corr_length=5e-2,
+                                            autocorrelation_function="exponential",
+                                            moisture=moisture, 
+                                            clay=clay, sand=sand, drymatter=drymatter)
+
 
 """
 
 import numpy as np
 
-#from altim.interface.ofresnel import fresnel_transmission_matrix, fresnel_coefficients  # a modifier quand on fusionne
-from smrt.core.fresnel import fresnel_transmission_matrix, fresnel_reflection_matrix, fresnel_coefficients  # a modifier quand on fusionne
+from smrt.core.fresnel import fresnel_transmission_matrix, fresnel_reflection_matrix, fresnel_coefficients
 from smrt.core.lib import smrt_matrix
 from smrt.core.interface import Interface
 from smrt.core.globalconstants import C_SPEED
@@ -18,11 +37,11 @@ from .vector3 import vector3
 
 
 class IEM_Fung92(Interface):
-    """A moderate rough surface.
+    """A moderate rough surface model with backscatter, specular reflection and transmission only. Use with care!
 
 """
-    args = ["roughness_rms", ]
-    optional_args = {"exponential_corr_length": 0, "gaussian_corr_length": 0}
+    args = ["roughness_rms", "corr_length"]
+    optional_args = {"autocorrelation_function": "exponential"}
 
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
@@ -36,8 +55,8 @@ class IEM_Fung92(Interface):
 
         :return: the reflection matrix
 """
-        print("inseert expo")
-        return fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
+        k2 = (2 * np.pi * frequency / C_SPEED) ** 2 * abs2(eps_1)
+        return fresnel_reflection_matrix(eps_1, eps_2, mu1, npol) * np.exp(-4 * k2 * self.roughness_rms**2 * mu1**2)    # Eq: 2.1.94 in Tsang 2001 Tome I
 
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol, debug=False):
@@ -61,7 +80,7 @@ class IEM_Fung92(Interface):
             raise NotImplementedError("Only the backscattering coefficient is implemented at this stage. ")
 
         mu = mu_i[None, :]
-        k = vector3.from_angles(2 * np.pi * frequency / C_SPEED * np.sqrt(eps_1), mu, 0)
+        k = vector3.from_angles(2 * np.pi * frequency / C_SPEED * np.sqrt(eps_1).real, mu, 0)
         eps_r = eps_2 / eps_1
 
         # check validity
@@ -69,11 +88,9 @@ class IEM_Fung92(Interface):
         if ks > 3:
             print("Warning, roughness_rms is too high for the given wavelength. Limit is ks < 3. Here ks=", ks)
 
-        kskl = abs(ks * k.norm * max(self.exponential_corr_length, self.gaussian_corr_length))
+        kskl = abs(ks * k.norm * self.corr_length)
         if kskl > np.sqrt(eps_r):
             print("Warning, roughness_rms or correlation_length are too high for the given wavelength. Limit is ks * kl < sqrt(eps_r). Here ks=", kskl)            
-
-
 
         Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
 
@@ -102,39 +119,35 @@ class IEM_Fung92(Interface):
         n_fractorial = np.cumprod(n)[:, None]
 
         # Eq 82 in Fung et al. 1992
-        coef = k.norm2 / 2 * np.exp(-2*rms2*k.z**2)
+        coef = k.norm2 / 2 * np.exp(-2 * rms2 * k.z**2)
         coef_n = (rms2**n / n_fractorial) * self.W_n(n, -2 * k.x)
-        #print((rms2**n / n_fractorial) , abs2(Ivv_n) )
 
         sigma_vv = coef * np.sum(coef_n * abs2(Ivv_n) , axis=0)  
         sigma_hh = coef * np.sum(coef_n * abs2(Ihh_n) , axis=0)
 
-        if debug:
-            self.sigma_vv_1 = ( 8*k.norm2**2*rms2*abs2(Rv*mu2 + (1-mu2)*(1+Rv)**2 / 2 * (1 - 1 / eps_r)) * self.W_n(1, -2 * k.x) ).flat
-            self.sigma_hh_1 = ( 8*k.norm2**2*rms2*abs2(Rh*mu2) * self.W_n(1, -2 * k.x) ).flat
-
-        gamma_vv = sigma_vv / (4 * np.pi * mu_i)
-        gamma_hh = sigma_hh / (4 * np.pi * mu_i)
+        #if debug:
+        #    self.sigma_vv_1 = ( 8*k.norm2**2*rms2*abs2(Rv*mu2 + (1-mu2)*(1+Rv)**2 / 2 * (1 - 1 / eps_r)) * self.W_n(1, -2 * k.x) ).flat
+        #    self.sigma_hh_1 = ( 8*k.norm2**2*rms2*abs2(Rh*mu2) * self.W_n(1, -2 * k.x) ).flat
 
         reflection_coefficients = smrt_matrix.zeros((npol, len(mu_i)))
-        reflection_coefficients[0] = gamma_vv
-        reflection_coefficients[1] = gamma_hh
+        reflection_coefficients[0] = sigma_vv / (4 * np.pi * mu_i)
+        reflection_coefficients[1] = sigma_hh / (4 * np.pi * mu_i)
 
         return reflection_coefficients
 
     def W_n(self, n, k):
 
-        if self.exponential_corr_length is 0:
-            if self.gaussian_corr_length is 0:
-                raise SMRTError("Either exponential_corr_length or gaussian_corr_length must be set")
+        if self.autocorrelation_function == "gaussian":
 
            # gaussian C(r) = exp ( -(r/l)**2 )
-            l = self.gaussian_corr_length
+            l = self.corr_length
             return (l**2/(2*n)) * np.exp(-(k*l)**2/(4*n))
-        else:
+        elif self.autocorrelation_function == "exponential":
             # exponential C(r) = exp( -r/l )
-            l = self.exponential_corr_length
+            l = self.corr_length
             return (l/n)**2 * (1 + (k*l/n)**2)**(-1.5)
+        else:
+            raise SMRTError("The autocorrelation function must be expoential or gaussian")
 
     def ft_even_diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, m_max, npol):
 
@@ -169,8 +182,12 @@ class IEM_Fung92(Interface):
 
         :return: the transmission matrix
 """
-        print("inseert expo")
-        return fresnel_transmission_matrix(eps_1, eps_2, mu1, npol)
+        k0 = (2 * np.pi * frequency / C_SPEED) ** 2
+
+        k_iz = k0 * np.sqrt(eps_1).real * mu1
+        k_sz = k0 * np.sqrt(eps_2 - (1 - mu1**2) * eps_1).real
+
+        return fresnel_transmission_matrix(eps_1, eps_2, mu1, npol) * np.exp(- (k_sz - k_iz)**2 * self.roughness_rms**2)
 
 
 def abs2(c):

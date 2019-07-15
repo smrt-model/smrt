@@ -220,6 +220,7 @@ class smrt_matrix(object):
         return self.mat[key]
 
     def __setitem__(self, key, v):
+        assert np.all(v.imag == 0)
         self.mat[key] = v
 
     def sel(self, **kwargs):
