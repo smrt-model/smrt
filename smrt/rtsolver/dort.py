@@ -572,19 +572,26 @@ class EigenValueSolver(object):
 
             # diagonalise the matrix. Eq (13)
             try:
+                B=A.copy()
                 beta, E = scipy.linalg.eig(A, overwrite_a=True)
             except scipy.linalg.LinAlgError:
                 diagonalization_failed = True
                 reason = "eig method"
             else:
-                diagonalization_failed = (not np.allclose(beta.imag, 0)) or (not np.allclose(E.imag, 0))
-                #if diagonalization_failed:
-                #    print(np.allclose(beta.imag, 0), np.allclose(E.imag, 0))
-                #    print(np.max(np.abs(E.imag)))
-                reason = "not close"
+                notclose_beta = not np.allclose(beta.imag, 0)
+                notclose_E = not np.allclose(E.imag, 0)
+                diagonalization_failed = notclose_beta or notclose_E
+
+                reason = ""
+                if notclose_beta:
+                    reason += "not close beta "
+                if notclose_E:
+                    reason += "not close E "
 
             if diagonalization_failed:
-
+                print("Reason: ", reason)
+                #mask = abs(E.imag)>1e-8
+                #print(m, E[mask], beta[np.any(mask, axis=0)], beta)
                 raise SMRTError("""The diagonalization failed in DORT which is possibly caused by single scattering albedo larger than 1.
 It is often due to grain size too large (or too low stickiness parameter) to respect the Rayleigh/low-frequency assumption required by some emmodel (DMRT ShortRange, IBA, ...)"
 It is recommended to reduce the size of the bigger grains. It is possible to disable this error raise and return NaN instead by adding the argument rtsolver_options=dict(error_handling='nan') to make_model).

@@ -310,7 +310,7 @@ class IBA(object):
         if np.any(mu_i == 1) and npol > 2:
             raise SMRTError("Phase matrix signs for sine elements of mode m = 2 incorrect")
 
-        nsamples = 2**(m_max + 3) #* (m_max + 1)  # 2**4  # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
+        nsamples = 2**np.ceil(3 + np.log(m_max + 1)/np.log(2))  # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
         dphi_interval = 2. * np.pi / nsamples  # sampling interval. Period is 2pi
         dphi = np.arange(0, 2. * np.pi, dphi_interval)  # evenly spaced from 0 to period (but not including period)
 
@@ -318,7 +318,7 @@ class IBA(object):
         # 2 x 2 phase matrix for mode m=0, otherwise 3 x 3
 
         p = self.phase(mu_s, mu_i, dphi, npol)
-        ft_p = np.fft.fft(p.mat, axis=2)
+        ft_p = np.fft.fft(p.values, axis=2)
 
         ft_even_p = smrt_matrix.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
 

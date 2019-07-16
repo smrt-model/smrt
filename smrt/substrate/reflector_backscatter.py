@@ -92,7 +92,7 @@ class Reflector(Substrate):
                 diffuse_refl_coeff[1, m] += coef * self._get_refl(self.backscattering_coefficient['HH'], mu_i)
 
         elif self.backscattering_coefficient is not None:
-            raise SMRTError("backscattering_coefficient must be a dictionary")
+            raise SMRTError("backscattering_coefficient must be a dictionary with keys VV and HH")
         else:
             return 0
 

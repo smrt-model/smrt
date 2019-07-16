@@ -93,10 +93,10 @@ class smrt_matrix(object):
     def __init__(self, mat, mtype=None):
 
         if mat is 0:
-            self.mat = 0
+            self.values = 0
             self.mtype = "0"
         else:
-            self.mat = mat
+            self.values = mat
 
             if mtype is None:
                 if isinstance(mat, list) and len(mat) in [2, 3]:
@@ -139,7 +139,7 @@ class smrt_matrix(object):
         3) convert the format of the matrix to compressed numpy, involving a change of the dimension order (pola and streams are merged).
 
 """
-        if self.mat is 0:
+        if self.values is 0:
             return 0
 
         if self.mtype == "dense5":
@@ -149,16 +149,16 @@ class smrt_matrix(object):
             else:
                 raise NotImplementedError
                 # reorder from pola_s, pola_i, m, mu_s, mu_i to  m, mu_s, pola_s, mu_i, pola_i
-                #mat = np.moveaxis(self.mat, (0, 1), (2, 4)) # 0 becomes 2, 1 becomes 4
+                #mat = np.moveaxis(self.values, (0, 1), (2, 4)) # 0 becomes 2, 1 becomes 4
                 # merge mu_s * pola_s and mu_i * pola_i
                 #return smrt_matrix(np.reshape(mat, (mat.shape[0], mat.shape[1]*mat.shape[2], mat.shape[3]*mat.shape[4])), mtype="compressed3")
     
         elif self.mtype == "dense4":
-            if self.mat.shape[0] == 3 and auto_reduce_npol and mode == 0:
+            if self.values.shape[0] == 3 and auto_reduce_npol and mode == 0:
                 ## 3pol->2pol
-                mat = self.mat[0:2, 0:2, :, :]
+                mat = self.values[0:2, 0:2, :, :]
             else:
-                mat = self.mat
+                mat = self.values
 
             # reorder from pola_s, pola_i, mu_s, mu_i to  mu_s, pola_s, mu_i, pola_i
             assert(len(mat.shape) == 4)
@@ -173,11 +173,11 @@ class smrt_matrix(object):
                 raise NotImplementedError
 
         elif self.mtype == "diagonal4":
-            if self.mat.shape[0] == 3 and auto_reduce_npol and mode == 0:
+            if self.values.shape[0] == 3 and auto_reduce_npol and mode == 0:
                 ## 3pol->2pol
-                mat = self.mat[0:2, :]
+                mat = self.values[0:2, :]
             else:
-                mat = self.mat
+                mat = self.values
             # reorder from pola, mu to mu*pola and compress
             assert(len(mat.shape) == 2)
             return smrt_diag(np.reshape(np.transpose(mat), mat.shape[0] * mat.shape[1])).as_dia_matrix()
@@ -193,53 +193,52 @@ class smrt_matrix(object):
         #         self.ft_even_phase[m] = np.reshape(pp, (pp.shape[0]*pp.shape[1], pp.shape[2]*pp.shape[3]))
 
     def __rmul__(self, other):
-        return smrt_matrix(other * self.mat)
+        return smrt_matrix(other * self.values)
 
     def __mul__(self, other):
-        return smrt_matrix(self.mat * other)
+        return smrt_matrix(self.values * other)
 
     def __truediv__(self, other):
-        return smrt_matrix(self.mat / other)
+        return smrt_matrix(self.values / other)
 
     def __add__(self, other):
         if isinstance(other, smrt_matrix):
-            return smrt_matrix(other.mat + self.mat)
+            return smrt_matrix(other.values + self.values)
         else:
             raise NotImplementedError
 
     def __sub__(self, other):
         if isinstance(other, smrt_matrix):
-            return smrt_matrix(other.mat - self.mat)
+            return smrt_matrix(other.values - self.values)
         else:
             raise NotImplementedError
 
     def __abs__(self):
-        return np.abs(self.mat)
+        return np.abs(self.values)
 
     def __getitem__(self, key):
-        return self.mat[key]
+        return self.values[key]
 
     def __setitem__(self, key, v):
-        assert np.all(v.imag == 0)
-        self.mat[key] = v
+        self.values[key] = v
 
     def sel(self, **kwargs):
 
         if 'mode' in kwargs:
             if self.mtype == "dense5":
 
-                if self.mat.shape[0] == 3 and kwargs['auto_reduce_npol'] and kwargs['mode'] == 0:
+                if self.values.shape[0] == 3 and kwargs['auto_reduce_npol'] and kwargs['mode'] == 0:
                     ## 3pol->2pol
-                    return smrt_matrix(self.mat[0:2, 0:2, kwargs['mode'], :, :], mtype='dense4')
+                    return smrt_matrix(self.values[0:2, 0:2, kwargs['mode'], :, :], mtype='dense4')
                 else:
-                    return smrt_matrix(self.mat[:, :, kwargs['mode'], :, :], mtype='dense4')
+                    return smrt_matrix(self.values[:, :, kwargs['mode'], :, :], mtype='dense4')
 
             elif self.mtype == "diagonal5":
-                if self.mat.shape[0] == 3 and kwargs['auto_reduce_npol'] and kwargs['mode'] == 0:
+                if self.values.shape[0] == 3 and kwargs['auto_reduce_npol'] and kwargs['mode'] == 0:
                     ## 3pol->2pol
-                    return smrt_matrix(self.mat[0:2, kwargs['mode'], :], mtype='diagonal4')
+                    return smrt_matrix(self.values[0:2, kwargs['mode'], :], mtype='diagonal4')
                 else:
-                    return smrt_matrix(self.mat[:, kwargs['mode'], :], mtype='diagonal4')
+                    return smrt_matrix(self.values[:, kwargs['mode'], :], mtype='diagonal4')
 
             elif self.mtype == "dense4":
                 raise SMRTError("Dense4 matrix can not be selected by mode")
