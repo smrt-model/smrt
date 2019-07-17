@@ -92,8 +92,13 @@ class Result(object):
 
     def sigma(self, **kwargs):
         """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V'). See xarray slicing with sel method (to document)"""
-        theta = np.array(self.data.theta)
-        return 4*np.pi*np.cos(np.radians(theta))*_strongsqueeze(self.data.sel(**kwargs).sel_points(theta_inc=theta, theta=theta))
+        if 'theta' in kwargs:
+            theta = np.atleast_1d(kwargs.pop('theta'))
+        else:
+            theta = self.data.theta
+
+        backscatter = self.data.sel(**kwargs).sel_points(theta_inc=theta, theta=theta).rename({'points': 'theta'})
+        return 4*np.pi*_strongsqueeze(np.cos(np.radians(theta)) * backscatter)
 
     def sigma_dB(self, **kwargs):
         """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V'). See xarray slicing with sel method (to document)"""
@@ -107,11 +112,9 @@ class Result(object):
         """Return backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V'). See xarray slicing with sel method (to document)"""
         return self.sigma_dB(**kwargs).to_dataframe(name='sigma')
 
-
     def sigmaVV(self, **kwargs):
         """Return VV backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
-        theta = np.array(self.data.theta)
-        return 4*np.pi*np.cos(np.radians(theta))*_strongsqueeze(self.data.sel(polarization_inc='V', polarization='V', **kwargs).sel_points(theta_inc=theta, theta=theta))
+        return self.sigma(polarization_inc='V', polarization='V', **kwargs)
 
     def sigmaVV_dB(self, **kwargs):
         """Return VV backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
@@ -119,8 +122,8 @@ class Result(object):
 
     def sigmaHH(self, **kwargs):
         """Return HH backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
-        theta = np.array(self.data.theta)
-        return 4*np.pi*np.cos(np.radians(theta))*_strongsqueeze(self.data.sel(polarization_inc='H', polarization='H', **kwargs).sel_points(theta_inc=theta, theta=theta))
+        return self.sigma(polarization_inc='H', polarization='H', **kwargs)
+
 
     def sigmaHH_dB(self, **kwargs):
         """Return HH backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
@@ -128,8 +131,7 @@ class Result(object):
 
     def sigmaHV(self, **kwargs):
         """Return HV backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
-        theta = np.array(self.data.theta)
-        return 4*np.pi*np.cos(np.radians(theta))*_strongsqueeze(self.data.sel(polarization_inc='H', polarization='V', **kwargs).sel_points(theta_inc=theta, theta=theta))
+        return self.sigma(polarization_inc='H', polarization='V', **kwargs)
 
     def sigmaHV_dB(self, **kwargs):
         """Return HV backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
@@ -137,8 +139,7 @@ class Result(object):
 
     def sigmaVH(self, **kwargs):
         """Return VH backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
-        theta = np.array(self.data.theta)
-        return 4*np.pi*np.cos(np.radians(theta))*_strongsqueeze(self.data.sel(polarization_inc='V', polarization='H', **kwargs).sel_points(theta_inc=theta, theta=theta))
+        return self.sigma(polarization_inc='V', polarization='H', **kwargs)
 
     def sigmaVH_dB(self, **kwargs):
         """Return VH backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
