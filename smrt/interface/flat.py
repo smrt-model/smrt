@@ -6,6 +6,7 @@ are computed using the Fresnel coefficient.
 
 """
 
+from smrt.core.lib import smrt_matrix
 from smrt.core.fresnel import fresnel_reflection_matrix, fresnel_transmission_matrix
 
 
@@ -29,6 +30,8 @@ class Flat(object):
 
         return fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
 
+    def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
+        return smrt_matrix(0)
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """compute the transmission coefficients for the azimuthal mode m
