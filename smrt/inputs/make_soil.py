@@ -79,13 +79,10 @@ def make_soil(substrate_model, permittivity_model, temperature, moisture=None,
 
     # process the substrate_model argument
     if not isinstance(substrate_model, type):
-        Substrate_Class = get_substrate_model(substrate_model)
+        substrate_model = get_substrate_model(substrate_model)
 
     # create the instance
-    return Substrate_Class(temperature, permittivity_model, **kwargs)
-
-
-
+    return substrate_model(temperature, permittivity_model, **kwargs)
 
 
 # !Dobson et al.,(1985) dielectric constant calculation
