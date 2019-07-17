@@ -90,7 +90,7 @@ class IEM_Fung92(Interface):
 
         kskl = abs(ks * k.norm * self.corr_length)
         if kskl > np.sqrt(eps_r):
-            print("Warning, roughness_rms or correlation_length are too high for the given wavelength. Limit is ks * kl < sqrt(eps_r). Here ks=", kskl)            
+            print("Warning, roughness_rms or correlation_length are too high for the given wavelength. Limit is ks * kl < sqrt(eps_r). Here ks*kl=%g and sqrt(eps_r)=%g" % (kskl, np.sqrt(eps_r)))
 
         Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
 
@@ -182,7 +182,7 @@ class IEM_Fung92(Interface):
 
         :return: the transmission matrix
 """
-        k0 = (2 * np.pi * frequency / C_SPEED) ** 2
+        k0 = 2 * np.pi * frequency / C_SPEED
 
         k_iz = k0 * np.sqrt(eps_1).real * mu1
         k_sz = k0 * np.sqrt(eps_2 - (1 - mu1**2) * eps_1).real
