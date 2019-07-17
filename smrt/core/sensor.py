@@ -188,6 +188,11 @@ class Sensor(SensorBase):
         self.frequency = C_SPEED / wls
 
     @property
+    def wavenumber(self):
+        return 2 * np.pi / self.wavelength
+    
+
+    @property
     def mode(self):
         """returns the mode of observation: "A" for active or "P" for passive.
 
