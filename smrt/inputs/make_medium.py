@@ -62,6 +62,8 @@ def make_snowpack(thickness, microstructure_model, density,
     if not isinstance(thickness, collections.Iterable):
         raise SMRTError("The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame.")
 
+    lib.check_argument_size(density, len(thickness), "density")
+    lib.check_argument_size(kwargs, len(thickness))
 
     for i, dz in enumerate(thickness):
         layer = make_snow_layer(dz, lib.get(microstructure_model, i, "microstructure_model"),
@@ -181,6 +183,12 @@ def make_ice_column(ice_type,
         substrate = substrate
 
     sp = Snowpack(substrate=substrate)
+
+    n = len(thickness)
+    for name in ["temperature", "salinity", "microstructure_model", "brine_inclusion_shape", "brine_volume_fraction", 
+                "porosity", "density", "brine_permittivity_model", "ice_permittivity_model", "saline_ice_permittivity_model",
+                "interface", "kwargs"]:
+        lib.check_argument_size(locals()[name], n)
 
     for i, dz in enumerate(thickness):
         layer = make_ice_layer(ice_type, 

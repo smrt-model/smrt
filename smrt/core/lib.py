@@ -1,7 +1,6 @@
 
 
 import collections
-import six
 import numpy as np
 import pandas as pd
 import scipy.sparse
@@ -12,7 +11,7 @@ from .error import SMRTError
 
 def get(x, i, name=None):  # function to take the i-eme value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the value.
 
-    if isinstance(x, six.string_types):
+    if isinstance(x, str):
         return x
     elif isinstance(x, pd.DataFrame) or isinstance(x, pd.Series):
         if i >=len(x.values):
@@ -20,12 +19,29 @@ def get(x, i, name=None):  # function to take the i-eme value in an array or dic
         return x.values[i]
     if isinstance(x, collections.Sequence) or isinstance(x, np.ndarray):
         if i >=len(x):
-            raise SMRTError("The array '%s' is too short compared to the thickness array.")
+            raise SMRTError("The array '%s' is too short compared to the thickness array." % name)
         return x[i]
     elif isinstance(x, dict):
         return {k: get(x[k], i, k) for k in x}
     else:
         return x
+
+
+def check_argument_size(x, n, name=None):
+    # this function check that x is either a scalar or a sequence of exactly n items
+
+    if isinstance(x, pd.DataFrame) or isinstance(x, pd.Series):
+        error = len(x.values) != n
+    elif (not isinstance(x, str) and isinstance(x, collections.Sequence)) or isinstance(x, np.ndarray):
+        error = len(x) != n
+    elif isinstance(x, dict):
+        for k in x:
+            check_argument_size(x[k], n, k)
+        return 
+    else:
+        return
+    if error:
+        raise SMRTError("The array '%s' must be a scalar or have the same size as the 'thickness' array." % name) 
 
 
 def is_sequence(x):
@@ -35,7 +51,7 @@ def is_sequence(x):
             isinstance(x, np.ndarray) or \
             isinstance(x, pd.DataFrame) or \
             isinstance(x, pd.Series)
-            ) and not isinstance(x, six.string_types)
+            ) and not isinstance(x, str)
 
 
 def len_atleast_1d(x):
