@@ -38,6 +38,13 @@ def is_sequence(x):
             ) and not isinstance(x, six.string_types)
 
 
+def len_atleast_1d(x):
+    try:
+        return len(x)
+    except TypeError:
+        return 1 if x is not None else 0
+
+
 class smrt_diag(object):
     """Scipy.sparse is very slow for diagonal matrix and numpy has no good support for linear algebra. This diag class
     implements simple diagional object without numpy subclassing and without much features.
@@ -222,6 +229,15 @@ class smrt_matrix(object):
     def __setitem__(self, key, v):
         self.values[key] = v
 
+    @property
+    def diagonal(self):
+        if self.values is 0:
+            return np.array([0])
+        if self.mtype.startswith("diagonal"):
+            return self.values
+        else:
+            return np.diagonal(np.diagonal(self.values, axis1=-2, axis2=-1))  # diagonal in pola and incidence angle
+
     def sel(self, **kwargs):
 
         if 'mode' in kwargs:
@@ -249,3 +265,8 @@ class smrt_matrix(object):
                 raise NotImplementedError 
         else:
             raise SMRTError("Currently only selection by mode is implemented")
+
+    def __repr__(self):
+
+        shape = getattr(self.values, "shape", "")
+        return str("smrt_matrix %s %s" % (self.mtype, shape)) + "\n" + str(self.values)
