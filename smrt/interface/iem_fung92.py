@@ -28,7 +28,7 @@ correlation length. The code print a warning when out of this range. There is al
 import numpy as np
 
 from smrt.core.fresnel import fresnel_transmission_matrix, fresnel_reflection_matrix, fresnel_coefficients
-from smrt.core.lib import smrt_matrix
+from smrt.core.lib import smrt_matrix, abs2
 from smrt.core.interface import Interface
 from smrt.core.globalconstants import C_SPEED
 from smrt.core.error import SMRTError
@@ -41,7 +41,8 @@ class IEM_Fung92(Interface):
 
 """
     args = ["roughness_rms", "corr_length"]
-    optional_args = {"autocorrelation_function": "exponential"}
+    optional_args = {"autocorrelation_function": "exponential",
+                    "warning_handling": "print"}
 
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
@@ -84,13 +85,22 @@ class IEM_Fung92(Interface):
         eps_r = eps_2 / eps_1
 
         # check validity
+        warning = None
         ks = abs(k.norm * self.roughness_rms)
         if ks > 3:
-            print("Warning, roughness_rms is too high for the given wavelength. Limit is ks < 3. Here ks=", ks)
+            warning = "Warning, roughness_rms is too high for the given wavelength. Limit is ks < 3. Here ks=%g" % ks
 
         kskl = abs(ks * k.norm * self.corr_length)
         if kskl > np.sqrt(eps_r):
-            print("Warning, roughness_rms or correlation_length are too high for the given wavelength. Limit is ks * kl < sqrt(eps_r). Here ks*kl=%g and sqrt(eps_r)=%g" % (kskl, np.sqrt(eps_r)))
+            warning ="Warning, roughness_rms or correlation_length are too high for the given wavelength. Limit is ks * kl < sqrt(eps_r). Here ks*kl=%g and sqrt(eps_r)=%g" % (kskl, np.sqrt(eps_r))
+
+        if warning:
+            if self.warning_handling == "print":
+                print(warning)
+            elif self.warning_handling == "nan":
+                return smrt_matrix.full((npol, len(mu_i)), np.nan)
+        # chekc validity done
+
 
         Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
 
@@ -190,5 +200,3 @@ class IEM_Fung92(Interface):
         return fresnel_transmission_matrix(eps_1, eps_2, mu1, npol) * np.exp(- (k_sz - k_iz)**2 * self.roughness_rms**2)
 
 
-def abs2(c):
-    return c.real**2 + c.imag**2
