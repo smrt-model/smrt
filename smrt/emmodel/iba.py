@@ -19,7 +19,7 @@ import scipy.fftpack
 from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
 from .effective_permittivity import depolarization_factors, polder_van_santen
-from ..core.lib import smrt_matrix
+from ..core.lib import smrt_matrix, generic_ft_even_matrix
 
 #
 # For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
@@ -310,49 +310,11 @@ class IBA(object):
         if np.any(mu_i == 1) and npol > 2:
             raise SMRTError("Phase matrix signs for sine elements of mode m = 2 incorrect")
 
-        nsamples = 2**np.ceil(3 + np.log(m_max + 1)/np.log(2))  # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
-
-        # dphi must be evenly spaced from 0 to 2 * np.pi (but not including period), but we can use the symmetry of the phase function
-        # to reduce the computation to 0 to pi (including 0 and pi) and mirroring for pi to 2*pi (excluding both)
-
-        dphi = np.linspace(0, np.pi, nsamples / 2 + 1)
-
         # compute the phase function
-        p = self.phase(mu_s, mu_i, dphi, npol)
+        def phase_function(dphi):
+            return self.phase(mu_s, mu_i, dphi, npol)
 
-        # mirror the phase function
-        p_mirror = p.values[:, :, -2:0:-1, :, :].copy()
-        if npol >=3 :
-            p_mirror[0:2, 2] = -p_mirror[0:2, 2]
-            p_mirror[2, 0:2] = -p_mirror[2, 0:2]
-
-        # concatenate the two mirrored phase function
-        p = np.concatenate((p.values, p_mirror), axis=2)
-        assert(p.shape[2] == nsamples)
-
-        # compute the Fourier Transform of the phase function along phi axis (axis=2)
-        ft_p = np.fft.fft(p, axis=2)
-
-        ft_even_p = smrt_matrix.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
-
-        # m=0 mode
-        ft_even_p[:, :, 0] = ft_p[:, :, 0].real * (1.0 / nsamples)
-
-        # m>=1 modes
-        if npol == 2:
-            ft_even_p[:, :, 1:] = ft_p[:, :, 1:m_max+1].real * (2.0 / nsamples)
-
-        else:
-            delta = 2.0 / nsamples
-            ft_even_p[0:2, 0:2, 1:] = ft_p[0:2, 0:2, 1:m_max+1].real * delta
-
-            # For the even matrix:
-            # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
-            ft_even_p[0:2, 2, 1:] = - ft_p[0:2, 2, 1:m_max+1].imag * delta
-            ft_even_p[2, 0:2, 1:] = ft_p[2, 0:2, 1:m_max+1].imag * delta
-            ft_even_p[2, 2, 1:] = ft_p[2, 2, 1:m_max+1].real * delta
-
-        return ft_even_p  # order is pola_s, pola_i, m, mu_s, mu_i
+        return generic_ft_even_matrix(phase_function, m_max)  # order is pola_s, pola_i, m, mu_s, mu_i
 
     def compute_ka(self):
         """ IBA absorption coefficient calculated from the low-loss assumption of a general lossy medium.
