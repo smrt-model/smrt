@@ -29,6 +29,7 @@ from ..core.error import SMRTError
 from ..core.result import Result
 from ..core import lib
 from smrt.core.lib import smrt_matrix
+# Lazy import: from smrt.interface.coherent_flat import process_coherent_layers 
 
 
 class DORT(object):
@@ -50,7 +51,9 @@ class DORT(object):
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "phi", "polarization"}
 
-    def __init__(self, n_max_stream=32, m_max=2, stream_mode="most_refringent", phase_normalization=True, error_handling="exception"):
+    def __init__(self, n_max_stream=32, m_max=2, stream_mode="most_refringent", 
+                                                 phase_normalization=True, error_handling="exception",
+                                                 process_coherent_layers=False):
         # """
         # :param n_max_stream: number of stream in the most refringent layer
         # :param m_max: number of mode (azimuth)
@@ -61,12 +64,12 @@ class DORT(object):
         self.m_max = m_max
         self.phase_normalization = phase_normalization
         self.error_handling = error_handling
+        self.process_coherent_layers = process_coherent_layers
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
         """solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
 """
-
         try:
             len(self.sensor.phi)
         except Exception:
@@ -74,37 +77,34 @@ class DORT(object):
         else:
             raise Exception("phi as an array must be implemented")
 
+        if self.process_coherent_layers:
+            from smrt.interface.coherent_flat import process_coherent_layers  # we only import this if requested by the users.
+            snowpack, emmodels = process_coherent_layers(snowpack, emmodels, sensor)  
+
         # all these assignements are for convenience, this would break with parallel code (// !!)
-        self.snowpack = snowpack
         self.emmodels = emmodels
+        self.snowpack = snowpack
         self.sensor = sensor
 
         self.atmosphere = atmosphere
-
-        self.nlayer = self.snowpack.nlayer
-
-        self.thickness = self.snowpack.layer_thicknesses
-        self.interfaces = self.snowpack.interfaces
 
         self.effective_permittivity = np.array([emmodel.effective_permittivity() for emmodel in emmodels])
         self.substrate_permittivity = self.snowpack.substrate.permittivity(self.sensor.frequency) if self.snowpack.substrate is not None else None
 
         if self.sensor.mode == 'P':
             self.temperature = [layer.temperature for layer in self.snowpack.layers]
+            pola = ['V', 'H'] 
+            m_max = 0 # force m_max=0 for passive microwave
         else:
             self.temperature = None
+            pola = ['V', 'H', 'U']
+            m_max = self.m_max
 
-        m_max = self.m_max if self.sensor.mode == 'A' else 0  # force m_max=0 for passive microwave
-
+        # solve the RT equation
         outmu, intensity = self.dort(m_max=m_max)
 
-        #
-        # reshape the intensity vector to unpack the theta, polarization
-        #
-        pola = ['V', 'H'] if self.sensor.mode == 'P' else ['V', 'H', 'U']
-        npol = len(pola)
-
         # reshape the first dimension in two dimensions (theta, pola)
+        npol = len(pola)
         intensity = intensity.reshape([intensity.shape[0]//npol, npol] + list(intensity.shape[1:]))
 
         mu = np.cos(sensor.theta)
@@ -154,7 +154,6 @@ class DORT(object):
         #   compute the cosine of the angles in all layers
         # first compute the permittivity of the ground
 
-
         streams = compute_stream(self.n_max_stream, self.effective_permittivity, self.substrate_permittivity, mode=self.stream_mode)
 
         #
@@ -162,37 +161,29 @@ class DORT(object):
 
         intensity_0, intensity_higher = self.prepare_intensity_array(streams)  # TODO Ghi: make an iterator
 
-        #
-        # need to compute coherent wave propagation ?
+        npol = 3 if self.sensor.mode == 'A' else 2
 
-        compute_coherent_only = self.sensor.mode == 'A'
+        #
+        # compute interface reflection and transmittance properties
+
+        interfaces = InterfaceProperties(self.sensor.frequency, self.snowpack.interfaces, self.snowpack.substrate,
+                                         self.effective_permittivity, streams, m_max, npol)
 
         #
         # create eigenvalue solvers
-
         eigenvalue_solver = [EigenValueSolver(self.emmodels[l].ke,
                                               self.emmodels[l].ks,
                                               self.emmodels[l].ft_even_phase,
                                               streams.mu[l],
                                               streams.weight[l],
                                               m_max,
-                                              self.phase_normalization) for l in range(self.nlayer)]
-
-        npol = 3 if self.sensor.mode == 'A' else 2
-
-        #
-        # compute interface reflection and transmittance properties
-
-        interfaces = InterfaceProperties(self.sensor.frequency, self.snowpack, self.effective_permittivity, streams, m_max, npol)
+                                              self.phase_normalization) for l in range(len(self.emmodels))]
 
         #
         # compute the outgoing intensity for each mode
 
         for m in range(0, m_max+1):
-            if m == 0:
-                intensity_down_m = intensity_0
-            else:
-                intensity_down_m = intensity_higher
+            intensity_down_m = intensity_0 if m == 0 else intensity_higher
 
             # compute the upwelling intensity for mode m
             intensity_up_m = self.dort_modem_banded(m, streams, eigenvalue_solver, interfaces, intensity_down_m, special_return=special_return)
@@ -200,7 +191,7 @@ class DORT(object):
             if special_return:  # debuging
                 return intensity_up_m
 
-            if compute_coherent_only:
+            if self.sensor.mode == 'A':
                 # substrate the coherent contribution
                 intensity_up_m -= self.dort_modem_banded(m, streams, eigenvalue_solver, interfaces, intensity_down_m, compute_coherent_only=True)
 
@@ -315,12 +306,14 @@ class DORT(object):
         if debug_compute_BC:
             BC = np.zeros((nboundary, nboundary))  # full/dense Boundary condition matrix. Only for debugging.
 
-        for l in range(0, self.nlayer):
+        nlayer = len(eigenvalue_solver)
+
+        for l in range(0, nlayer):
             nsl = streams.n[l]  # number of streams in layer l
             nsl_npol = nsl * npol  # number of streams * npol in layer l
             nsl2_npol = 2 * nsl_npol    # number of eigenvalues in layer l (should be 2*npol*n_stream)
             nslm1_npol = (streams.n[l-1] * npol) if l > 0 else (streams.n_air * npol)  # number of streams * npol in the layer l-1 (lm1)
-            nslp1_npol = (streams.n[l+1] * npol) if l < self.nlayer-1 else (streams.n_substrate * npol)  # number of streams * npol in the layer l+1 (lp1)
+            nslp1_npol = (streams.n[l+1] * npol) if l < nlayer-1 else (streams.n_substrate * npol)  # number of streams * npol in the layer l+1 (lp1)
 
             # solve the eigenvalue problem for layer l
 
@@ -337,8 +330,8 @@ class DORT(object):
             assert(Eu.shape[0] == npol * nsl)
 
             # deduce the transmittance through the layers
-            transt = scipy.sparse.diags(np.exp(-np.maximum(beta, 0) * self.thickness[l]), 0)  # positive beta, reference at the bottom
-            transb = scipy.sparse.diags(np.exp(np.minimum(beta, 0) * self.thickness[l]), 0)   # negative beta, reference at the top
+            transt = scipy.sparse.diags(np.exp(-np.maximum(beta, 0) * self.snowpack.layers[l].thickness), 0)  # positive beta, reference at the bottom
+            transb = scipy.sparse.diags(np.exp(np.minimum(beta, 0) * self.snowpack.layers[l].thickness), 0)   # negative beta, reference at the top
 
             # where we have chosen
             # beta>0  : z(0)(l) = z(l)    # reference is at the bottom
@@ -366,7 +359,7 @@ class DORT(object):
             if debug_compute_BC:
                 BC[il_topl:il_topl+nsl_npol, j:j+nsl2_npol] = (Ed - Rtop_l * Eu) * transt   # a mettre en (l,l), theta<0 et * transt  # a mettre en (l,l)
 
-            if l < self.nlayer - 1:
+            if l < nlayer - 1:
                 ns_npol_common_bottom_ = min(nsl_npol, nslp1_npol)
                 Tbottom_lp1 = interfaces.transmission_bottom(l, m, compute_coherent_only)
                 todiag(bBC, (il_top[l+1], j), - Tbottom_lp1 * Ed[0:ns_npol_common_bottom_, :] * transb)
@@ -381,7 +374,7 @@ class DORT(object):
                     b[il_topl:il_topl+nsl_npol, :] -= ((1.0 - muleye(Rtop_l)) * self.temperature[l])[:, np.newaxis]  # a mettre en (l)
                 # the muleye comes from the isotropic emission of the black body
 
-                if l < self.nlayer - 1 and self.temperature[l] > 0:
+                if l < nlayer - 1 and self.temperature[l] > 0:
                     b[il_top[l+1]:il_top[l+1]+ns_npol_common_bottom_, :] += (muleye(Tbottom_lp1) * self.temperature[l])[:, np.newaxis]     # a mettre en (l+1)
 
             if l == 0:  # Air-snow interface
@@ -415,7 +408,7 @@ class DORT(object):
                 if l > 0:
                     b[il_bottom[l-1]:il_bottom[l-1]+ns_npol_common_top_, :] += (muleye(Ttop_lm1) * self.temperature[l])[:, np.newaxis]  # a mettre en (l-1)
 
-            if m == 0 and l == self.nlayer-1 and self.snowpack.substrate is not None and \
+            if m == 0 and l == nlayer-1 and self.snowpack.substrate is not None and \
                 self.snowpack.substrate.temperature is not None and self.temperature is not None:
                 Tbottom_sub = interfaces.transmission_bottom(l, m, compute_coherent_only)
                 b[il_bottoml:il_bottoml+nsl_npol, :] += (muleye(Tbottom_sub) * self.snowpack.substrate.temperature)[:, np.newaxis]
@@ -662,12 +655,12 @@ It is recommended to reduce the size of the bigger grains. It is possible to dis
 
 class InterfaceProperties(object):
 
-    def __init__(self, frequency, snowpack, permittivity, streams, m_max, npol):
+    def __init__(self, frequency, interfaces, substrate, permittivity, streams, m_max, npol):
 
         self.streams = streams
 
 
-        nlayer = len(snowpack.layers)
+        nlayer = len(interfaces)
 
         self.Rtop_coh = dict()
         self.Ttop_coh = dict()
@@ -687,32 +680,30 @@ class InterfaceProperties(object):
             nslp1 = streams.n[l+1] if l < nlayer-1 else streams.n_substrate  # number of streams * npol in the layer l+1 (lp1)
 
             # compute reflection coefficient between l and l-1  UP
-            self.Rtop_coh[l] = snowpack.interfaces[l].specular_reflection_matrix(frequency, eps_l, 
-                                                                                eps_lm1, streams.mu[l], npol)  # snow-snow UP
+            self.Rtop_coh[l] = interfaces[l].specular_reflection_matrix(frequency, eps_l, eps_lm1, 
+                                                                        streams.mu[l], npol)  # snow-snow UP
 
             # compute transmission coefficient between l and l-1 UP
             ns_common_top = min(nsl, nslm1)
-            self.Ttop_coh[l] = snowpack.interfaces[l].coherent_transmission_matrix(frequency, eps_l, 
-                                                                             eps_lm1, streams.mu[l][0:ns_common_top], npol)  # snow-snow or air UP
-
+            self.Ttop_coh[l] = interfaces[l].coherent_transmission_matrix(frequency, eps_l, eps_lm1,
+                                                                          streams.mu[l][0:ns_common_top], npol)  # snow-snow or air UP
 
             # compute transmission coefficient between l and l+1  DOWN
             if l < nlayer - 1:
                 ns_common_bottom = min(nsl, nslp1)
-                self.Tbottom_coh[l] = snowpack.interfaces[l].coherent_transmission_matrix(frequency, 
-                                                                                        eps_l, eps_lp1,
-                                                                                        streams.mu[l][0:ns_common_bottom], npol)  # snow-snow DOWN
-            elif snowpack.substrate is not None:
-                self.Tbottom_coh[nlayer -1] = snowpack.substrate.emissivity_matrix(frequency, eps_l, streams.mu[l], npol)  # sub-snow
+                self.Tbottom_coh[l] = interfaces[l].coherent_transmission_matrix(frequency, eps_l, eps_lp1,
+                                                                                streams.mu[l][0:ns_common_bottom], npol)  # snow-snow DOWN
+            elif substrate is not None:
+                self.Tbottom_coh[nlayer -1] = substrate.emissivity_matrix(frequency, eps_l, streams.mu[l], npol)  # sub-snow
 
             # compute reflection coefficient between l and l+1  DOWN
             if l < nlayer - 1:
-                self.Rbottom_coh[l] = snowpack.interfaces[l].specular_reflection_matrix(frequency, eps_l, eps_lp1, streams.mu[l], npol)  # snow-snow DOWN
+                self.Rbottom_coh[l] = interfaces[l].specular_reflection_matrix(frequency, eps_l, eps_lp1, streams.mu[l], npol)  # snow-snow DOWN
                 self.Rbottom_diff[l] = 0    
-            elif snowpack.substrate is not None:
-                self.Rbottom_coh[l] = snowpack.substrate.specular_reflection_matrix(frequency, eps_l, streams.mu[l], npol) # snow-substrate
-                if hasattr(snowpack.substrate, "ft_even_diffuse_reflection_matrix"):
-                    self.Rbottom_diff[l] = snowpack.substrate.ft_even_diffuse_reflection_matrix(frequency, eps_l, streams.mu[l], streams.mu[l], m_max, npol)  # snow-sub
+            elif substrate is not None:
+                self.Rbottom_coh[l] = substrate.specular_reflection_matrix(frequency, eps_l, streams.mu[l], npol) # snow-substrate
+                if hasattr(substrate, "ft_even_diffuse_reflection_matrix"):
+                    self.Rbottom_diff[l] = substrate.ft_even_diffuse_reflection_matrix(frequency, eps_l, streams.mu[l], streams.mu[l], m_max, npol)  # snow-sub
                 else:
                     self.Rbottom_diff[l] = smrt_matrix(0)
             else:
@@ -721,8 +712,8 @@ class InterfaceProperties(object):
 
             #self.full_weight[l] = np.repeat(streams.weight[l], npol)
 
-        self.Tbottom_coh[-1] = snowpack.interfaces[0].coherent_transmission_matrix(frequency, 1, permittivity[0], streams.outmu, npol) # air-snow DOWN 
-        self.Rbottom_coh[-1] = snowpack.interfaces[0].specular_reflection_matrix(frequency, 1, permittivity[0], streams.outmu, npol) # air-snow DOWN 
+        self.Tbottom_coh[-1] = interfaces[0].coherent_transmission_matrix(frequency, 1, permittivity[0], streams.outmu, npol) # air-snow DOWN 
+        self.Rbottom_coh[-1] = interfaces[0].specular_reflection_matrix(frequency, 1, permittivity[0], streams.outmu, npol) # air-snow DOWN 
         self.Rbottom_diff[-1] = 0
 
 

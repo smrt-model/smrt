@@ -67,8 +67,6 @@ class Snowpack(object):
 """
         return np.insert(self.layer_depths, 0, 0)
 
-
-
     def append(self, layer, interface=None):
         """append a new layer at the bottom of the stack of layers. The interface is that at the top of the appended layer.
 
@@ -86,6 +84,24 @@ class Snowpack(object):
         if interface is None:
             interface = Flat()
         self.interfaces.append(interface)
+
+    def delete(self, ilayer):
+        """delete a layer and the upper interface
+
+    :param ilayer: index of the layer
+"""
+        self.layers.pop(ilayer)
+        self.interfaces.pop(ilayer)
+
+    def copy(self):
+        """make a shallow copy of a snowpack by copying the list of layers and interfaces but not the layers and interfaces themselves which are still shared with the original snowpacl.
+        This method allows the user to create a new snowpack and remove, append or replace some layers or interfaces afterward. It does not allow to alter the layers or interfaces without 
+        changing the original snowpack. In this latter case, use copy.deepcopy.
+"""
+        new_sp = copy.copy(self)
+        new_sp.layers = copy.copy(self.layers)
+        new_sp.interfaces = copy.copy(self.interfaces)
+        return new_sp
 
     def basic_check(self):
 

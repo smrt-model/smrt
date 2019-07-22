@@ -80,6 +80,10 @@ class smrt_diag(object):
     def diagonal(self):
         return self.diag
 
+    # @property
+    # def shape(self):
+    #     return self.values.shape
+
     def __rmatmul__(self, other):
         self.check_type(other)
         return other * self.diag[np.newaxis, :]
@@ -154,6 +158,16 @@ class smrt_matrix(object):
     def ones(dims, mtype=None):
         mat = np.ones(dims)
         return smrt_matrix(mat, mtype)
+
+    @staticmethod
+    def full(dims, value, mtype=None):
+        mat = np.full(dims, value)
+        return smrt_matrix(mat, mtype)
+
+    @property
+    def npol(self):
+        return self.values.shape[0]
+
 
     def compress(self, mode=None, auto_reduce_npol=False):
         """compress a matrix. This comprises several actions:
@@ -286,3 +300,78 @@ class smrt_matrix(object):
 
         shape = getattr(self.values, "shape", "")
         return str("smrt_matrix %s %s" % (self.mtype, shape)) + "\n" + str(self.values)
+
+
+
+def abs2(c):
+    return c.real**2 + c.imag**2
+
+
+def generic_ft_even_matrix(phase_function, m_max):
+    """ Calculation of the Fourier decomposed of the phase or reflection or transmission matrix provided by the function.
+
+    This method calculates the Fourier decomposition modes and return the output.
+
+    Coefficients within the phase function are
+
+    Passive case (m = 0 only) and active (m = 0) ::
+
+        M  = [Pvvp  Pvhp]
+             [Phvp  Phhp]
+
+    Active case (m > 0)::
+
+        M =  [Pvvp Pvhp Pvup]
+             [Phvp Phhp Phup]
+             [Puvp Puhp Puup]
+
+    :param phase_function: must be a function taking dphi as input. It is assumed that phi is symmetrical (it is in cos(phi))
+    :param m_max: maximum Fourier decomposition mode needed
+
+    """
+
+    nsamples = 2**np.ceil(3 + np.log(m_max + 1)/np.log(2))  # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
+
+    # dphi must be evenly spaced from 0 to 2 * np.pi (but not including period), but we can use the symmetry of the phase function
+    # to reduce the computation to 0 to pi (including 0 and pi) and mirroring for pi to 2*pi (excluding both)
+
+    dphi = np.linspace(0, np.pi, nsamples / 2 + 1)
+
+    # compute the phase function
+    p = phase_function(dphi)
+
+    npol = p.npol
+    
+    # mirror the phase function
+    p_mirror = p.values[:, :, -2:0:-1, :, :].copy()
+    if npol >=3 :
+        p_mirror[0:2, 2] = -p_mirror[0:2, 2]
+        p_mirror[2, 0:2] = -p_mirror[2, 0:2]
+
+    # concatenate the two mirrored phase function
+    p = np.concatenate((p.values, p_mirror), axis=2)
+    assert(p.shape[2] == nsamples)
+
+    # compute the Fourier Transform of the phase function along phi axis (axis=2)
+    ft_p = np.fft.fft(p, axis=2)
+
+    ft_even_p = smrt_matrix.empty((npol, npol, m_max + 1, p.shape[-2], p.shape[-1]))
+
+    # m=0 mode
+    ft_even_p[:, :, 0] = ft_p[:, :, 0].real * (1.0 / nsamples)
+
+    # m>=1 modes
+    if npol == 2:
+        ft_even_p[:, :, 1:] = ft_p[:, :, 1:m_max+1].real * (2.0 / nsamples)
+
+    else:
+        delta = 2.0 / nsamples
+        ft_even_p[0:2, 0:2, 1:] = ft_p[0:2, 0:2, 1:m_max+1].real * delta
+
+        # For the even matrix:
+        # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
+        ft_even_p[0:2, 2, 1:] = - ft_p[0:2, 2, 1:m_max+1].imag * delta
+        ft_even_p[2, 0:2, 1:] = ft_p[2, 0:2, 1:m_max+1].imag * delta
+        ft_even_p[2, 2, 1:] = ft_p[2, 2, 1:m_max+1].real * delta
+
+    return ft_even_p  # order is pola_s, pola_i, m, mu_s, mu_i
