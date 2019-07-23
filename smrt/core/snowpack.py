@@ -29,6 +29,7 @@ from .error import SMRTError
 from ..interface.flat import Flat  # core should not depend on something defined in interface...
 from .layer import Layer
 from .plugin import import_class
+from .interface import SubstrateBase
 
 
 class Snowpack(object):
@@ -110,25 +111,43 @@ class Snowpack(object):
 
     def check_addition_validity(self, other):
 
-        if not (hasattr(other, "layers") and hasattr(other, "interfaces") and hasattr(other, "substrate")):
+        if isinstance(other, SubstrateBase):
+            if self.substrate is not None:
+                raise SMRTError("Adding a substrate to a snowpack that already has one is not valid. Unset the substrate first")            
+        elif not (hasattr(other, "layers") and hasattr(other, "interfaces") and hasattr(other, "substrate")):
             raise SMRTError("Addition of snowpacks requires two instances of class Snowpack or equivalent compatible objects")
 
-        if self.substrate is not None:
-            raise SMRTError("While adding snowpacks, the first (topmost) snowpack can not have a substrate. Unset the substrate"
-                            " before adding the two snowpackes.")
+        elif self.substrate is not None:
+            raise SMRTError("While adding snowpacks, the first (topmost) snowpack must not have a substrate. Unset the substrate"
+                            " before adding the two snowpacks.")
 
     def __add__(self, other):
-        """Return a new snowpack made of the first snowpack stacked on top of the second one."""
+        """Return a new snowpack made of the first snowpack stacked on top of the second one.
+
+        :param other: the snowpack or substrate to add to the first argument."""
 
         self.check_addition_validity(other)
-        return Snowpack(layers=self.layers + other.layers,
-                        interfaces=self.interfaces + other.interfaces,
-                        substrate=other.substrate)
+
+        if isinstance(other, SubstrateBase):
+            return Snowpack(layers=self.layers,
+                            interfaces=self.interfaces,
+                            substrate=other)
+        else:
+            return Snowpack(layers=self.layers + other.layers,
+                            interfaces=self.interfaces + other.interfaces,
+                            substrate=other.substrate)
 
     def __iadd__(self, other): ## just for optimization
+        """Inplace addition of object to snowpack. See :func:`~snowpack.Snowpack.__add__` description.
+
+"""
         self.check_addition_validity(other)
 
-        self.layers += other.layers
-        self.interfaces += other.interfaces
-        self.substrate = other.substrate
+        if isinstance(other, SubstrateBase):
+            self.substrate = other
+        else:
+            self.layers += other.layers
+            self.interfaces += other.interfaces
+            self.substrate = other.substrate
+
         return self

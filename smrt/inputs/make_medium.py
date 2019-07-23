@@ -42,14 +42,13 @@ def make_snowpack(thickness, microstructure_model, density,
     build a multi-layered snowpack. Each parameter can be an array, list or a constant value.
 
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf" for a semi-infinite layer.
-    :param microstructure_model: microstructure_model to use (e.g. sticky_hard_spheres or independent_sphere or exponential)
-    :param interface: type of interface, flat/fresnel is the default
-    :param density: densities of the layers
+    :param microstructure_model: microstructure_model to use (e.g. sticky_hard_spheres or independent_sphere or exponential).
+    :param interface: type of interface, flat/fresnel is the default.
+    :param density: densities of the layers.
+    :param substrate: set the substrate of the snowpack. Another way to add a substrate is to use the + operator (e.g. snowpack + substrate).
     All the other parameters (temperature, microstructure parameters, emmodel, etc, etc) are given as optional arguments (e.g. temperature=[270, 250]).
     They are passed for each layer to the function :py:func:`~smrt.inputs.make_medium.make_snow_layer`. Thus, the documentation of this function is the reference. It describes precisely the available parameters.
     The microstructure parameter(s) depend on the microstructure_model used and is documented in each microstructure_model module.
-
-    TODO: include the documentation of make_snow_layer here once stabilized
 
     e.g.::
 
