@@ -266,7 +266,8 @@ class smrt_matrix(object):
         if self.mtype.startswith("diagonal"):
             return self.values
         else:
-            return np.diagonal(np.diagonal(self.values, axis1=-2, axis2=-1))  # diagonal in pola and incidence angle
+            return np.moveaxis(np.diagonal(np.diagonal(self.values, axis1=-2, axis2=-1)), -1, 0)  # diagonal in incidence angle and pola
+            # the moveaxis is necessary to put back the pola indice at the first position because diagonal move the diagonale "index" to the end of the array.
 
     def sel(self, **kwargs):
 
