@@ -1,7 +1,7 @@
-smrt.emmodel.dmrt\_qca\_shortrange module
+smrt.interface.geometrical\_optics module
 =========================================
 
-.. automodule:: smrt.emmodel.dmrt_qca_shortrange
+.. automodule:: smrt.interface.geometrical_optics
     :members:
     :undoc-members:
     :show-inheritance:

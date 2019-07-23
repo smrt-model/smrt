@@ -3,7 +3,7 @@
 """
 Implement the interface boundary condition under the Geometrical Approximation between layers charcterized by their effective permittivities. This code is
 for backscatter only, that is, to use as a substrate and at low frequency when the backscatter is the main mecahnism, and conversely when mulitple scattering
-and double bounce between snow and substrate are negligible. In any other case, it is recommended to use :py:class:`~geometrical_optics.GeometricalOptics`
+and double bounce between snow and substrate are negligible. In any other case, it is recommended to use :py:class:`~smrt.interface.geometrical_optics.GeometricalOptics`.
 
 """
 

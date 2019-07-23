@@ -1,5 +1,5 @@
-smrt.permittivity.saline_snow module
-====================================
+smrt.permittivity.saline\_snow module
+=====================================
 
 .. automodule:: smrt.permittivity.saline_snow
     :members:

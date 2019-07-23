@@ -1,5 +1,5 @@
-smrt.emmodel.effective_permittivity module
-==========================================
+smrt.emmodel.effective\_permittivity module
+===========================================
 
 .. automodule:: smrt.emmodel.effective_permittivity
     :members:

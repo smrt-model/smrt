@@ -1,5 +1,5 @@
-smrt.substrate.test_soil_qnh module
-===================================
+smrt.substrate.test\_soil\_qnh module
+=====================================
 
 .. automodule:: smrt.substrate.test_soil_qnh
     :members:

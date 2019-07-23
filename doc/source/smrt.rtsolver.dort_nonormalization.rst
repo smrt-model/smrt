@@ -1,5 +1,5 @@
-smrt.rtsolver.dort_nonormalization module
-=========================================
+smrt.rtsolver.dort\_nonormalization module
+==========================================
 
 .. automodule:: smrt.rtsolver.dort_nonormalization
     :members:

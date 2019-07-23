@@ -1,5 +1,5 @@
-smrt.core.sensitivity_study module
-==================================
+smrt.core.sensitivity\_study module
+===================================
 
 .. automodule:: smrt.core.sensitivity_study
     :members:

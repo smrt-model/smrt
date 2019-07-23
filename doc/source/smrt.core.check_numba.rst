@@ -1,5 +1,5 @@
-smrt.core.check_numba module
-============================
+smrt.core.check\_numba module
+=============================
 
 .. automodule:: smrt.core.check_numba
     :members:

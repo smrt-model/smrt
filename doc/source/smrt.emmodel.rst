@@ -15,15 +15,15 @@ Submodules
    smrt.emmodel.dmrt_qca_shortrange
    smrt.emmodel.dmrt_qcacp_shortrange
    smrt.emmodel.dmrt_shortrange
-   smrt.emmodel.dmrt_test
    smrt.emmodel.effective_permittivity
-   smrt.emmodel.iba-highres
-   smrt.emmodel.iba-test
    smrt.emmodel.iba
+   smrt.emmodel.iba_old_order
+   smrt.emmodel.iba_oldorder
    smrt.emmodel.iba_original
    smrt.emmodel.nonscattering
    smrt.emmodel.prescribed_kskaeps
    smrt.emmodel.rayleigh
+   smrt.emmodel.rayleigh_old_order
    smrt.emmodel.sft_rayleigh
    smrt.emmodel.test_dmrt_shortrange
    smrt.emmodel.test_effective_permittivity

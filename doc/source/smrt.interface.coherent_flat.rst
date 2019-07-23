@@ -1,7 +1,7 @@
-smrt.emmodel.dmrt\_shortrange module
+smrt.interface.coherent\_flat module
 ====================================
 
-.. automodule:: smrt.emmodel.dmrt_shortrange
+.. automodule:: smrt.interface.coherent_flat
     :members:
     :undoc-members:
     :show-inheritance:

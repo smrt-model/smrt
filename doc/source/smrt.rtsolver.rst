@@ -12,7 +12,7 @@ Submodules
 .. toctree::
 
    smrt.rtsolver.dort
-   smrt.rtsolver.dort_debug
    smrt.rtsolver.dort_nonormalization
+   smrt.rtsolver.dort_old_order
    smrt.rtsolver.test_dort
 

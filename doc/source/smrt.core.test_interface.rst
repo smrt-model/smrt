@@ -1,5 +1,5 @@
-smrt.core.test_interface module
-===============================
+smrt.core.test\_interface module
+================================
 
 .. automodule:: smrt.core.test_interface
     :members:

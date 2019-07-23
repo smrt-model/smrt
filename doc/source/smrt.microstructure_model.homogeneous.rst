@@ -1,5 +1,5 @@
-smrt.microstructure_model.homogeneous module
-============================================
+smrt.microstructure\_model.homogeneous module
+=============================================
 
 .. automodule:: smrt.microstructure_model.homogeneous
     :members:

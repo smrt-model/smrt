@@ -1,7 +1,7 @@
-smrt.utils.hut\_legacy module
+smrt.interface.vector3 module
 =============================
 
-.. automodule:: smrt.utils.hut_legacy
+.. automodule:: smrt.interface.vector3
     :members:
     :undoc-members:
     :show-inheritance:

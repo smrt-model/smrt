@@ -1,5 +1,5 @@
-smrt.core.run_promise module
-============================
+smrt.core.run\_promise module
+=============================
 
 .. automodule:: smrt.core.run_promise
     :members:
