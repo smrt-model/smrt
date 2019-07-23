@@ -21,7 +21,7 @@ def fresnel_coefficients(eps_1, eps_2, mu1):
     b = 1.0 - (1.0 - mu1**2) / n**2
     #mask = b > 0
 
-    mu2 = np.where(b >0, np.sqrt(b).real, 0)
+    mu2 = np.where((b >0) & (mu1 > 0), np.sqrt(b).real, 0)
 
     rv = (n * mu1 - mu2) / (n * mu1 + mu2)
     rh = (mu1 - n * mu2) / (mu1 + n * mu2)
