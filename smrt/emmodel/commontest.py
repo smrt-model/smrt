@@ -3,7 +3,6 @@
 import numpy as np
 import scipy.integrate
 
-from nose.tools import ok_
 
 
 
@@ -35,4 +34,4 @@ def test_energy_conservation(em, tolerance_pc, npol=None, subset=16):
             print ('Test failed for incidence__polarization_angle_number: ', inc, pol)  # Only prints if test fails
             print ('Integrated phase function is: ', phase_integral)  # Only prints if test fails
             print ('Scattering coefficient is: ', em.ks)  # Only prints if test fails
-            ok_(abs(phase_integral - em.ks) < tolerance_pc * em.ks)
+            assert abs(phase_integral - em.ks) < tolerance_pc * em.ks

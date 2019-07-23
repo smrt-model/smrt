@@ -1,7 +1,6 @@
 # coding: utf-8
 
 import numpy as np
-from nose.tools import ok_
 
 # local import
 from smrt import make_snowpack, make_model, make_soil, sensor_list

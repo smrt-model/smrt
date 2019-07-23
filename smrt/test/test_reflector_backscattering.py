@@ -1,7 +1,5 @@
 
 
-from nose.tools import ok_
-
 import numpy as np
 
 from smrt import make_snowpack, make_model, sensor_list
@@ -37,5 +35,5 @@ def test_reflector_backscattering():
     res = m.run(radar, snowpack)
     print(res.sigmaVV_dB())
     print(res.sigmaHH_dB())
-    ok_(np.all(np.abs(res.sigmaVV_dB() - (-10)) < 0.01))
-    ok_(np.all(np.abs(res.sigmaHH_dB() - (-15)) < 0.01))
+    assert np.all(np.abs(res.sigmaVV_dB() - (-10)) < 0.01)
+    assert np.all(np.abs(res.sigmaHH_dB() - (-15)) < 0.01)

@@ -1,7 +1,6 @@
 # coding: utf-8
 
 import numpy as np
-from nose.tools import ok_
 
 # local import
 from smrt import make_snowpack, make_model, sensor_list
@@ -39,15 +38,15 @@ def test_mixed_emmodel():
 
     print(res.TbV(), res.TbH())
 
-    #ok_((res.TbV() - 203.84730126016882) < 1e-4)
-    #ok_((res.TbH() - 189.53130277932084) < 1e-4)
+    #assert (res.TbV() - 203.84730126016882) < 1e-4
+    #assert (res.TbH() - 189.53130277932084) < 1e-4
 
 
 
-    #ok_((res.TbV() - 203.8473395866384) < 1e-4)
-    #ok_((res.TbH() - 189.53346053779396) < 1e-4)
+    #assert (res.TbV() - 203.8473395866384) < 1e-4
+    #assert (res.TbH() - 189.53346053779396) < 1e-4
 
-    #ok_((res.TbV() - 204.6641326749464) < 1e-4)
-    #ok_((res.TbH() - 190.42438454209372) < 1e-4)
-    ok_((res.TbV() - 204.61156255625286) < 1e-4)
-    ok_((res.TbH() - 190.5085529486018) < 1e-4)
+    #assert (res.TbV() - 204.6641326749464) < 1e-4
+    #assert (res.TbH() - 190.42438454209372) < 1e-4
+    assert (res.TbV() - 204.61156255625286) < 1e-4
+    assert (res.TbH() - 190.5085529486018) < 1e-4

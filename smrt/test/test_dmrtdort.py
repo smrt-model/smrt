@@ -1,7 +1,6 @@
 # coding: utf-8
 
 import numpy as np
-from nose.tools import ok_, eq_
 
 # local import
 from smrt import make_snowpack, make_model, make_snow_layer
@@ -48,8 +47,8 @@ def test_dmrt_oneconfig():
     res = m.run(radiometer, snowpack)
 
     print(res.TbV(), res.TbH())
-    ok_((res.TbV() - 202.1726891947754) < 1e-4)
-    ok_((res.TbH() - 187.45835882462404) < 1e-4)
+    assert (res.TbV() - 202.1726891947754) < 1e-4
+    assert (res.TbH() - 187.45835882462404) < 1e-4
 
 
 def test_dmrt_twoconfig():
@@ -68,11 +67,11 @@ def test_dmrt_twoconfig():
     res = m.run(radiometer, snowpack)
 
     print(res.TbV(), res.TbH())
-    ok_((res.TbV(channel="37") - 202.1726891947754) < 1e-4)
-    ok_((res.TbH(channel="37") - 187.45835882462404) < 1e-4)
+    assert (res.TbV(channel="37") - 202.1726891947754) < 1e-4
+    assert (res.TbH(channel="37") - 187.45835882462404) < 1e-4
 
-    ok_((res.TbV(channel="19") - 242.550043) < 1e-4)
-    ok_((res.TbH(channel="19") - 230.118448) < 1e-4)
+    assert (res.TbV(channel="19") - 242.550043) < 1e-4
+    assert (res.TbH(channel="19") - 230.118448) < 1e-4
 
 
 def test_less_refringent_bottom_layer_VV():
@@ -82,7 +81,7 @@ def test_less_refringent_bottom_layer_VV():
     scat = active(10e9, 45)
     res = m.run(scat, snowpack)
     print(res.sigmaVV())
-    ok_(abs(res.sigmaVV() - 9.42202173e-06) < 1e-9)
+    assert abs(res.sigmaVV() - 9.42202173e-06) < 1e-9
 
 
 def test_less_refringent_bottom_layer_HH():
@@ -92,7 +91,7 @@ def test_less_refringent_bottom_layer_HH():
     scat = active(10e9, 45)
     res = m.run(scat, snowpack)
     print(res.sigmaHH())
-    ok_(abs(res.sigmaHH() - 8.85784528e-06) < 1e-9)
+    assert abs(res.sigmaHH() - 8.85784528e-06) < 1e-9
 
 # The following test fails
 # def test_less_refringent_bottom_layer_VV():
@@ -102,7 +101,7 @@ def test_less_refringent_bottom_layer_HH():
 #     scat = active(10e9, 45)
 #     res = m.run(scat, snowpack)
 #     print(res.sigmaVV())
-#     ok_(abs(res.sigmaVV() - 7.54253344e-05) < 1e-7)
+#     assert abs(res.sigmaVV() - 7.54253344e-05) < 1e-7
 #
 #
 # def test_less_refringent_bottom_layer_HH():
@@ -112,4 +111,4 @@ def test_less_refringent_bottom_layer_HH():
 #     scat = active(10e9, 45)
 #     res = m.run(scat, snowpack)
 #     print(res.sigmaHH())
-#     ok_(abs(res.sigmaHH() - 7.09606407e-05) < 1e-7)
+#     assert abs(res.sigmaHH() - 7.09606407e-05) < 1e-7

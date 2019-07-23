@@ -1,8 +1,6 @@
 # coding: utf-8
 
 from nose.tools import raises
-from nose.tools import eq_
-from nose.tools import ok_
 import numpy as np
 import scipy.integrate
 
@@ -91,7 +89,7 @@ def test_ks_pc_is_0p3_mm():
     em = setup_func_em(testpack)
     # Allow 5% error
     memls_ks = 4.13718676e+00
-    ok_(abs(em.ks - memls_ks) < tolerance_pc * em.ks)
+    assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
 
 def test_ks_pc_is_0p25_mm():
     testpack = setup_func_pc(0.25e-3)
@@ -99,28 +97,28 @@ def test_ks_pc_is_0p25_mm():
     # Allow 5% error
     memls_ks = 2.58158887e+00
     # eq_(em.ks, memls_ks)
-    ok_(abs(em.ks - memls_ks) < tolerance_pc * em.ks)
+    assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
 
 def test_ks_pc_is_0p2_mm():
     testpack = setup_func_pc(0.2e-3)
     em = setup_func_em(testpack)
     # Allow 5% error
     memls_ks = 1.41304849e+00
-    ok_(abs(em.ks - memls_ks) < tolerance_pc * em.ks)
+    assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
 
 def test_ks_pc_is_0p15_mm():
     testpack = setup_func_pc(0.15e-3)
     em = setup_func_em(testpack)
     # Allow 5% error
     memls_ks = 6.30218291e-01
-    ok_(abs(em.ks - memls_ks) < tolerance_pc * em.ks)
+    assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
 
 def test_ks_pc_is_0p1_mm():
     testpack = setup_func_pc(0.1e-3)
     em = setup_func_em(testpack)
     # Allow 5% error
     memls_ks = 1.94727497e-01
-    ok_(abs(em.ks - memls_ks) < tolerance_pc * em.ks)
+    assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
 
 
 def test_ks_pc_is_0p2_mm():
@@ -128,7 +126,7 @@ def test_ks_pc_is_0p2_mm():
     em = setup_func_em(testpack)
     # Allow 5% error
     memls_ks = 2.49851702e-02
-    ok_(abs(em.ks - memls_ks) < tolerance_pc * em.ks)
+    assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
 
 
 def test_energy_conservation_exp():
@@ -150,12 +148,12 @@ def test_energy_conservation_shs():
 
 def test_npol_passive_is_2():
     em = setup_func_em()
-    eq_(em.npol, 2)
+    assert em.npol == 2
 
 
 def test_npol_active_is_3():
     em = setup_func_active()
-    eq_(em.npol, 3)
+    assert em.npol == 3
 
 
 def test_energy_conservation_exp_active():
@@ -184,14 +182,14 @@ def test_energy_conservation_shs_active():
 def test_iba_vs_rayleigh_passive_m0():
     em_iba, em_ray = setup_func_rayleigh()
     mu = setup_mu(1. / 64)
-    ok_((abs(em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks) < tolerance_pc).all())
+    assert (abs(em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks) < tolerance_pc).all()
 
 
 def test_iba_vs_rayleigh_active_m0():
     # Have to set npol = 2 for m=0 mode in active otherwise rayleigh will produce 3x3 matrix
     em_iba, em_ray = setup_func_rayleigh()
     mu = setup_mu(1. / 64, bypass_exception=True)
-    ok_((abs(em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks) < tolerance_pc).all())
+    assert (abs(em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks) < tolerance_pc).all()
 
 
 def test_iba_vs_rayleigh_active_m1():
@@ -199,13 +197,13 @@ def test_iba_vs_rayleigh_active_m1():
     mu = setup_mu(1. / 64, bypass_exception=True)
     # Clear cache
     em_iba.cached_mu = None
-    ok_((abs(em_iba.ft_even_phase(mu, mu, 1, npol=3)[:, :, 1] / em_iba.ks - em_ray.ft_even_phase(mu, mu, 1, npol=3)[:, :, 1] / em_ray.ks) < tolerance_pc).all())
+    assert (abs(em_iba.ft_even_phase(mu, mu, 1, npol=3)[:, :, 1] / em_iba.ks - em_ray.ft_even_phase(mu, mu, 1, npol=3)[:, :, 1] / em_ray.ks) < tolerance_pc).all()
 
 
 def test_iba_vs_rayleigh_active_m2():
     em_iba, em_ray = setup_func_rayleigh()
     mu = setup_mu(1. / 64, bypass_exception=True)
-    ok_((abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[:, :, 2] / em_iba.ks - em_ray.ft_even_phase(mu, mu, 2, npol=3)[:, :, 2] / em_ray.ks) < tolerance_pc).all())
+    assert (abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[:, :, 2] / em_iba.ks - em_ray.ft_even_phase(mu, mu, 2, npol=3)[:, :, 2] / em_ray.ks) < tolerance_pc).all()
 
 
 @raises(SMRTError)

@@ -1,7 +1,6 @@
 # coding: utf-8
 
 import numpy as np
-from nose.tools import ok_
 
 # local import
 from smrt import make_snowpack, make_model, sensor_list
@@ -44,11 +43,11 @@ def test_iba_oneconfig_passive():
 
     print(res.TbV(), res.TbH())
     #absorption with effective permittivity
-    # ok_(abs(res.TbV() - 248.08794944809972) < 1e-4)
-    # ok_(abs(res.TbH() - 237.3056263719142) < 1e-4)
+    # abs(res.TbV() - 248.08794944809972) < 1e-4
+    # abs(res.TbH() - 237.3056263719142) < 1e-4
 
-    ok_(abs(res.TbV() - 248.08744066791073) < 1e-4)
-    ok_(abs(res.TbH() - 237.30720491883298) < 1e-4)
+    abs(res.TbV() - 248.08744066791073) < 1e-4
+    abs(res.TbH() - 237.30720491883298) < 1e-4
 
 
 
@@ -68,6 +67,6 @@ def test_iba_oneconfig_active():
 
     print(res.sigmaVV_dB(), res.sigmaHH_dB(), res.sigmaHV_dB())
 
-    ok_(abs(res.sigmaVV_dB() - (-24.04497237)) < 1e-4)
-    ok_(abs(res.sigmaHH_dB() - (-24.41628343)) < 1e-4)
-    ok_(abs(res.sigmaHV_dB() - (-51.53673914)) < 1e-4)
+    abs(res.sigmaVV_dB() - (-24.04497237)) < 1e-4
+    abs(res.sigmaHH_dB() - (-24.41628343)) < 1e-4
+    abs(res.sigmaHV_dB() - (-51.53673914)) < 1e-4

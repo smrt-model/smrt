@@ -1,6 +1,5 @@
 
 import numpy as np
-from nose.tools import ok_
 
 
 from smrt.inputs.make_soil import make_soil

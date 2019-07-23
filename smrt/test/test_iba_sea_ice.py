@@ -1,7 +1,6 @@
 # coding: utf-8
 
 import numpy as np
-from nose.tools import ok_
 
 # local import
 from smrt import make_model, sensor_list, PSU
@@ -51,8 +50,8 @@ def test_oneconfig_for_firstyear_sea_ice():
 
     print(res.TbV(), res.TbH())
     #absorption with effective permittivity
-    ok_(abs(res.TbV() - 256.01165061598317) < 1e-4)
-    ok_(abs(res.TbH() - 228.47447378338745) < 1e-4)
+    assert abs(res.TbV() - 256.01165061598317) < 1e-4
+    assert abs(res.TbH() - 228.47447378338745) < 1e-4
 
  
 
@@ -85,8 +84,8 @@ def test_oneconfig_for_multiyear_sea_ice():
 
     print(res.TbV(), res.TbH())
     # absorption with effective permittivity
-    ok_(abs(res.TbV() - 257.5689162188296) < 1e-4)
-    ok_(abs(res.TbH() - 232.03924683304172) < 1e-4)
+    assert abs(res.TbV() - 257.5689162188296) < 1e-4
+    assert abs(res.TbH() - 232.03924683304172) < 1e-4
 
 
 def test_equivalence_porosity_density():
@@ -142,5 +141,5 @@ def test_equivalence_porosity_density():
     print(res2.TbV(), res2.TbH())
 
     # The two should be similar
-    ok_(abs(res1.TbV() - res2.TbV()) < 1e-4)
-    ok_(abs(res1.TbH() - res2.TbH()) < 1e-4)
+    assert abs(res1.TbV() - res2.TbV()) < 1e-4
+    assert abs(res1.TbH() - res2.TbH()) < 1e-4
