@@ -43,7 +43,7 @@ The `res` variable has now a coordinate `time` and res.TbV() returns a timeserie
 
 """
 
-import collections
+from collections.abc import Sequence
 import itertools
 import inspect
 import copy
@@ -182,7 +182,7 @@ class Model(object):
             snowpack_dimension = (snowpack.variable, snowpack.values)
             snowpack = snowpack.snowpacks.tolist()
 
-        if isinstance(snowpack, collections.Sequence):
+        if isinstance(snowpack, Sequence):
             if snowpack_dimension is None:
                 dimension_name, dimension_values = "Snowpack", None
             else:
@@ -218,7 +218,7 @@ class Model(object):
             emmodel_list = itertools.cycle([self.emmodel])
 
         for i, (emmodel, layer) in enumerate(zip(emmodel_list, snowpack.layers)):
-            if isinstance(self.emmodel_options, collections.Sequence):
+            if isinstance(self.emmodel_options, Sequence):
                 emmodel_options = self.emmodel_options[i]
             else:
                 emmodel_options = self.emmodel_options

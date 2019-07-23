@@ -17,7 +17,7 @@ You may also want to increase the number of streams in passive/DMRT_QMS_passive.
 """
 
 import os
-import collections
+from collection.abc import Sequence
 
 import numpy as np
 
@@ -67,7 +67,7 @@ def run(sensor, snowpack, dmrt_qms_path=None, snowpack_dimension=None, full_outp
             snowpack_dimension = (snowpack.variable, snowpack.values)
             snowpack = snowpack.snowpacks.tolist()
 
-    if isinstance(snowpack, collections.Sequence):
+    if isinstance(snowpack, Sequence):
         result_list = [run(sensor, sp) for sp in snowpack]
         if snowpack_dimension is None:
             snowpack_dimension = 'snowpack', range(len(snowpack))

@@ -16,7 +16,7 @@
 
 import os
 from tempfile import NamedTemporaryFile
-import collections
+from collections.abc import Sequence
 import itertools
 
 import numpy as np
@@ -75,14 +75,14 @@ def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=N
     if memls_path is not None:
         set_memls_path(memls_path)
 
-    if isinstance(sensor.frequency, collections.Sequence) or isinstance(sensor.frequency, np.ndarray):
+    if isinstance(sensor.frequency, Sequence) or isinstance(sensor.frequency, np.ndarray):
         raise SMRTError("Sensor must have a single frequency for running memls_legagcy")
 
     if isinstance(snowpack, SensitivityStudy):
             snowpack_dimension = (snowpack.variable, snowpack.values)
             snowpack = snowpack.snowpacks.tolist()
 
-    if isinstance(snowpack, collections.Sequence):
+    if isinstance(snowpack, Sequence):
         result_list = [run(sensor, sp, scattering_choice=scattering_choice,
                            atmosphere=atmosphere, memls_driver=memls_driver) for sp in snowpack]
         if snowpack_dimension is None:

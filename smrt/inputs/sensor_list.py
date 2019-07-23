@@ -10,7 +10,7 @@ but functions for specific sensors are more convenient. See examples in the func
 """
 
 import six
-from collections import Sequence
+from collections.abc import Sequence
 
 from smrt.core.sensor import Sensor, SensorList
 from smrt.core.error import SMRTError

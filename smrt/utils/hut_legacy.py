@@ -17,7 +17,7 @@
 """
 
 import os
-import collections
+from collections.abc import Sequence
 
 import numpy as np
 
@@ -60,7 +60,7 @@ def run(sensor, snowpack, ke_option=0, grainsize_option=1, hut_path=None):
     if hut_path is not None:
         set_hut_path(hut_path)
 
-    if isinstance(snowpack, collections.Sequence):
+    if isinstance(snowpack, Sequence):
         result_list = [run(sensor, sp, ke_option=ke_option, grainsize_option=grainsize_option) for sp in snowpack]
         return concat_results(result_list, ('snowpack', range(len(snowpack))))
 

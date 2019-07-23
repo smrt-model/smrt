@@ -1,6 +1,6 @@
 
 
-import collections
+from collections.abc import Sequence
 import numpy as np
 import pandas as pd
 import scipy.sparse
@@ -17,7 +17,7 @@ def get(x, i, name=None):  # function to take the i-eme value in an array or dic
         if i >=len(x.values):
             raise SMRTError("The array '%s' is too short compared to the thickness array" % name)
         return x.values[i]
-    if isinstance(x, collections.Sequence) or isinstance(x, np.ndarray):
+    if isinstance(x, Sequence) or isinstance(x, np.ndarray):
         if i >=len(x):
             raise SMRTError("The array '%s' is too short compared to the thickness array." % name)
         return x[i]
@@ -32,7 +32,7 @@ def check_argument_size(x, n, name=None):
 
     if isinstance(x, pd.DataFrame) or isinstance(x, pd.Series):
         error = len(x.values) != n
-    elif (not isinstance(x, str) and isinstance(x, collections.Sequence)) or isinstance(x, np.ndarray):
+    elif (not isinstance(x, str) and isinstance(x, Sequence)) or isinstance(x, np.ndarray):
         error = len(x) != n
     elif isinstance(x, dict):
         for k in x:
@@ -47,7 +47,7 @@ def check_argument_size(x, n, name=None):
 def is_sequence(x):
     # maybe not the smartest way...
     return (
-            isinstance(x, collections.Sequence) or \
+            isinstance(x, Sequence) or \
             isinstance(x, np.ndarray) or \
             isinstance(x, pd.DataFrame) or \
             isinstance(x, pd.Series)
@@ -341,7 +341,7 @@ def generic_ft_even_matrix(phase_function, m_max):
     p = phase_function(dphi)
 
     npol = p.npol
-    
+
     # mirror the phase function
     p_mirror = p.values[:, :, -2:0:-1, :, :].copy()
     if npol >=3 :
