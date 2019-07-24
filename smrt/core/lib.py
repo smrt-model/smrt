@@ -254,7 +254,10 @@ class smrt_matrix(object):
         return np.abs(self.values)
 
     def __getitem__(self, key):
-        return self.values[key]
+        if self.values is 0:
+            return 0
+        else:
+            return self.values[key]
 
     def __setitem__(self, key, v):
         self.values[key] = v
