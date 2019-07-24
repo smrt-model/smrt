@@ -154,7 +154,7 @@ class Model(object):
 
         self.emmodel_options.update(kwargs) # update the options
 
-    def run(self, sensor, snowpack, atmosphere=None, snowpack_dimension=None, progressbar=False):
+    def run(self, sensor, snowpack, atmosphere=None, snowpack_dimension=None, progressbar=False, parallel_computation=False):
         """ Run the model for the given sensor configuration and return the results
 
             :param sensor: sensor to use for the calculation
@@ -193,12 +193,22 @@ class Model(object):
             if progressbar:
                 pb = Progress(len(snowpack))
 
-            result_list = list()
-            for i, sp in enumerate(snowpack):    # TODO: parallel computation
-                res = self.run(sensor, sp, atmosphere=atmosphere)
-                result_list.append(res)
-                if progressbar:
-                    pb.animate(i + 1)
+            if parallel_computation:
+                import os
+                from joblib import Parallel, delayed
+                # for parallelization, it is much better to switch OpenMP off.
+                os.environ['MKL_NUM_THREADS'] = '1'
+                os.environ['OPENBLAS_NUM_THREADS'] = '1'
+                result_list = Parallel(n_jobs=-1)(delayed(self.run)(sensor, sp, atmosphere=atmosphere) for sp in snowpack)
+                print(result_list)
+            else:
+                result_list = list()
+                for i, sp in enumerate(snowpack):    # TODO: parallel computation
+                
+                    res = self.run(sensor, sp, atmosphere=atmosphere)
+                    result_list.append(res)
+                    if progressbar:
+                        pb.animate(i + 1)
 
             return concat_results(result_list, (dimension_name, dimension_values))
 
