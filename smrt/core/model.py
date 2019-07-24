@@ -197,6 +197,7 @@ class Model(object):
                 import os
                 from joblib import Parallel, delayed
                 # for parallelization, it is much better to switch OpenMP off.
+                # see: https://github.com/numpy/numpy/issues/11826#issuecomment-442107764 for better handling the number of threads
                 os.environ['MKL_NUM_THREADS'] = '1'
                 os.environ['OPENBLAS_NUM_THREADS'] = '1'
                 result_list = Parallel(n_jobs=-1)(delayed(self.run)(sensor, sp, atmosphere=atmosphere) for sp in snowpack)

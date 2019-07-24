@@ -70,7 +70,7 @@ class Result(object):
         if attr != "data" and attr in self.data.coords:
             return self.data.coords[attr]
         else:
-            return super().__getattr__(self, attr)
+            return super().__getattr__(attr)
 
     def Tb(self, **kwargs):
         """Return brightness temperature. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V'). See xarray slicing with sel method (to document)"""
