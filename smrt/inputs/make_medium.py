@@ -442,7 +442,7 @@ def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permitt
                                    temperature=lib.get(temperature, i, "temperature")
                                   )
 
-        sp.append(layer, get(interface, i))
+        sp.append(layer, lib.get(interface, i))
 
     return sp
 
