@@ -4,7 +4,7 @@
 
 import numpy as np
 import scipy.sparse
-from smrt.core.lib import smrt_matrix
+from smrt.core.lib import smrt_matrix, len_atleast_1d
 
 
 class Transparent(object):
@@ -25,6 +25,9 @@ class Transparent(object):
 
         return smrt_matrix.zeros((npol, len(mu1)))
 
+    def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
+        return smrt_matrix(0)
+
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """compute the transmission coefficients for the azimuthal mode m
            and for an array of incidence angles (given by their cosine)
@@ -37,7 +40,7 @@ class Transparent(object):
 
         :return: the transmission matrix
 """
-        return smrt_matrix.ones((npol, len(mu1)))
+        return smrt_matrix.ones((npol, len_atleast_1d(mu1)))
 
 
 
