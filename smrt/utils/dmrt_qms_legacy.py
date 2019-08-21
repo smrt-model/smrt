@@ -17,7 +17,7 @@ You may also want to increase the number of streams in passive/DMRT_QMS_passive.
 """
 
 import os
-from collection.abc import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 
