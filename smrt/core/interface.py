@@ -148,6 +148,7 @@ def substrate_from_interface(interface_cls):
         auto_add(emissivity_matrix, 'coherent_transmission_matrix')
         auto_add(specular_reflection_matrix, 'specular_reflection_matrix')
         auto_add(ft_even_diffuse_reflection_matrix, 'ft_even_diffuse_reflection_matrix')
+        auto_add(diffuse_reflection_matrix, 'diffuse_reflection_matrix')
 
         newcls = type(cls.__name__, (SubstrateBase, interface_cls), attributes)
         newcls.__doc__ = cls.__doc__
