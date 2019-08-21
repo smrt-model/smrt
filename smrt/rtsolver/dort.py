@@ -638,7 +638,7 @@ It is recommended to reduce the size of the bigger grains. It is possible to dis
                     It is at last possible to disable this error raise and return NaN instead by adding the argument rtsolver_options=dict(error_handling='nan') to make_model).""")
         else:
             if self.norm_m is None:
-                if self.norm_0 is None:
+                if self.norm_0 is None:  # be careful, this code is not re-entrant
                     raise Exception("For the normalization, it is necessary to call this function for the mode m=0 first.")
                 # transform the norm_0 for npol
                 self.norm_m = np.empty(len(self.norm_0)//2*npol)
