@@ -224,7 +224,7 @@ class GeometricalOptics(Interface):
 
         return transmission_coefficients * coef.real
 
-    def reflection_integrand_for_energy_conservation_test(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
+    def reflection_integrand_for_energy_conservation_test(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi):
         """function relevant to compute energy conservation. See p87 in Tsang_tomeIII.
 """
         mu_i = np.atleast_1d(mu_i)[np.newaxis, np.newaxis, :]
@@ -273,7 +273,7 @@ class GeometricalOptics(Interface):
                coef * (vi_ks**2 * abs2(Rh) + hi_ks**2 * abs2(Rv)) 
 
 
-    def transmission_integrand_for_energy_conservation_test(self, frequency, eps_1, eps_2, mu_t, mu_i, dphi, npol):
+    def transmission_integrand_for_energy_conservation_test(self, frequency, eps_1, eps_2, mu_t, mu_i, dphi):
         """function relevant to compute energy conservation. See p87 in Tsang_tomeIII.
 """
         n_2 = np.sqrt(eps_2)
@@ -328,6 +328,40 @@ class GeometricalOptics(Interface):
         #return Tv, Th  #
         return coef*Tv, coef*Th
 
+    def reflection_coefficients(self, frequency, eps_1, eps_2, mu_i):
+        # for debugging only at this stage
+        n = 100
+        mu = np.linspace(1e-7, 1, n, endpoint=False)
+        dphi = np.linspace(0, 2*np.pi, n, endpoint=False)
+        norm = (mu[1]-mu[0])  * (dphi[1]-dphi[0])
+        
+        R = self.diffuse_reflection_matrix(10e9, eps_1, eps_2, mu, mu_i, dphi, 2)
+
+        # Rv_bis, Rh_bis = go.reflection_integrand_for_energy_conservation_test(10e9, eps_1, eps_2, mu, mu_i, dphi)
+        # Rv_bis = Rv_bis.sum() * norm
+        # Rh_bis = Rh_bis.sum() * norm
+        return self._integrate_coefficients(mu, dphi, R)
+
+    def transmission_coefficients(self, frequency, eps_1, eps_2, mu_i):
+        # for debugging only at this stage
+        n = 100
+        mu = np.linspace(1e-7, 1, n, endpoint=False)
+        dphi = np.linspace(0, np.pi, n, endpoint=True)
+        
+        T = self.diffuse_transmission_matrix(10e9, eps_1, eps_2, mu, mu_i, dphi, 2)
+
+        #Tv_bis, Th_bis = go.transmission_integrand_for_energy_conservation_test(10e9, eps_1, eps_2, mu, mu_i, dphi)
+        # Tv_bis = Tv_bis.sum() * norm
+        # Th_bis = Th_bis.sum() * norm
+
+        return self._integrate_coefficients(mu, dphi, T)
+
+    def _integrate_coefficients(self, mu, dphi, T):
+
+        T = T.values.sum(axis=3).sum(axis=2).sum(axis=0)   # sum the mu axis, then on the phi axis and then the pola
+
+        norm = (mu[1]-mu[0])  * (dphi[1]-dphi[0])
+        return T * norm
 
 def shadow_function(mean_square_slope, cotan):
 
