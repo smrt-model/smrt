@@ -200,8 +200,7 @@ class Model(object):
                 # see: https://github.com/numpy/numpy/issues/11826#issuecomment-442107764 for better handling the number of threads
                 os.environ['MKL_NUM_THREADS'] = '1'
                 os.environ['OPENBLAS_NUM_THREADS'] = '1'
-                result_list = Parallel(n_jobs=-1)(delayed(self.run)(sensor, sp, atmosphere=atmosphere) for sp in snowpack)
-                print(result_list)
+                result_list = Parallel(n_jobs=-1, prefer='processes')(delayed(self.run)(sensor, sp, atmosphere=atmosphere) for sp in snowpack)
             else:
                 result_list = list()
                 for i, sp in enumerate(snowpack):    # TODO: parallel computation
