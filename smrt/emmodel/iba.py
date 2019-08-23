@@ -19,7 +19,7 @@ import scipy.fftpack
 from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
 from .effective_permittivity import depolarization_factors, polder_van_santen
-from ..core.lib import smrt_matrix, generic_ft_even_matrix
+from ..core.lib import smrt_matrix, generic_ft_even_matrix, len_atleast_1d
 
 #
 # For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
@@ -357,7 +357,7 @@ class IBA(object):
                 streams, which is set by the radiative transfer solver.
 
         """
-        return np.full(len(mu), self.ks + self.ka)
+        return np.full(len_atleast_1d(mu), self.ks + self.ka)
 
     def effective_permittivity(self):
         """ Calculation of complex effective permittivity of the medium.

@@ -149,7 +149,7 @@ class Sensor(SensorBase):
 
         if theta_deg is None:
             raise SMRTError("Sensor requires the argument 'theta_deg' to be set")
-        self.theta_deg = np.atleast_1d(theta_deg).flatten()
+        self.theta_deg = np.atleast_1d(theta_deg).flatten().astype(dtype=float)
 
         if len(np.unique(self.theta_deg)) != len(self.theta_deg):
             raise SMRTError("Zenith angle theta has duplicated values which is invalid.")
@@ -158,7 +158,7 @@ class Sensor(SensorBase):
         self.mu_s = np.cos(self.theta)
 
         if phi_deg is not None:
-            self.phi_deg = np.atleast_1d(phi_deg).flatten()
+            self.phi_deg = np.atleast_1d(phi_deg).flatten().astype(dtype=float)
             self.phi = np.radians(self.phi_deg)
         else:
             self.phi = 0.0
@@ -167,7 +167,7 @@ class Sensor(SensorBase):
             self.theta_inc_deg = None
             self.theta_inc = None
         else:
-            self.theta_inc_deg = np.atleast_1d(theta_inc_deg).flatten()
+            self.theta_inc_deg = np.atleast_1d(theta_inc_deg).flatten().astype(dtype=float)
 
             if len(np.unique(self.theta_inc_deg)) != len(self.theta_inc_deg):
                 raise SMRTError("Zenith angle theta_inc has duplicated values which is invalid.")
