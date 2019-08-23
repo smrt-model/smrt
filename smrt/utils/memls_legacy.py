@@ -54,7 +54,7 @@ except KeyError:
     pass
 
 
-def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=None, memls_driver="memlsmain", snowpack_dimension=None):
+def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=None, memls_driver=None, snowpack_dimension=None):
     """ call MEMLS for the snowpack and sensor configuration given as argument. Any microstructure model that defines the "corr_length" parameter
         is valid, but it must be clear that MEMLS only considers exponential autocorrelation.
 
@@ -66,7 +66,7 @@ def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=N
             corresponding to oblate spheroidal calculation of effective permittivity from the empirical representation of depolarization factors. To use a Polder-Van Santen representation of effective permittivity for small spheres, graintype=2 must be set in your local copy of MEMLS.
         :param atmosphere: describe the atmosphere. Only tbdown is used for the Tsky argument of memlsmain.
         :param memls_path: directory path to the memls Matlab scripts
-        :param memls_driver: matlab function to call to run memls. memlsmain.m is the default driver in the original MEMLS distribution.
+        :param memls_driver: matlab function to call to run memls. memlsmain.m is the default driver in the original MEMLS distribution for the passive case and amemlsmain.m for the active case.
         :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and the values are from 1 to the number of snowpacks.
 
 
@@ -116,17 +116,35 @@ def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=N
     #with open(f.name) as ff:
     #    print(ff.readlines())
 
+    if memls_driver is None:
+        memls_driver = "memlsmain" if sensor.mode == 'P' else "amemlsmain"
+
     memlsfct = getattr(octave, memls_driver)
 
-    res = [memlsfct(sensor.frequency*1e-9, thetad,
+    if sensor.mode == 'P':
+        res = [memlsfct(sensor.frequency*1e-9, thetad,
                     float(reflH), float(reflV), f.name, float(Tsky), float(Tgnd), scattering_choice)
-           for thetad, reflH, reflV in zip(np.degrees(sensor.theta), ground_reflH, ground_reflV)]
+                for thetad, reflH, reflV in zip(sensor.theta_deg, ground_reflH, ground_reflV)]
+        res = np.vstack(res)
+        coords = [('theta', sensor.theta_deg), ('polarization', ['V', 'H'])]
+
+    else: # active
+        mean_slope = 1e3  # a high value to remove this contribution. But in the future should be taken from the substrate model, depending on the model...
+        res = [memlsfct(sensor.frequency*1e-9, thetad,
+                    float(reflH), float(reflV), float(reflH), float(reflV), f.name, float(Tsky), float(Tgnd), scattering_choice, mean_slope, 0)
+                    ['sigma0'][0, :]
+                for thetad, reflH, reflV in zip(sensor.theta_inc_deg, ground_reflH, ground_reflV)]
+
+        coords = [('polarization', ['V', 'H']), ('polarization_inc', ['V', 'H']), ('theta_inc', sensor.theta_inc_deg), ('theta', sensor.theta_deg)]
+        res = np.array(res)
+        norm = 4 * np.pi * np.cos(sensor.theta)  # convert back backscattering coefficient
+        # assemble in the polarizations
+        res = [[np.diagflat(res[:, 0] / norm), np.diagflat(res[:, 2] / norm)], 
+               [np.diagflat(res[:, 2] / norm), np.diagflat(res[:, 1]) / norm]]
 
     os.unlink(f.name)
 
-    coords = [('theta', sensor.theta), ('polarization', ['V', 'H'])]
-
-    return Result(np.vstack(res), coords)
+    return Result(res, coords)
 
 
 def memls_emmodel(sensor, layer, scattering_choice=ABORN, graintype=2):
