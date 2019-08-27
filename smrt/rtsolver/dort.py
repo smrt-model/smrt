@@ -28,7 +28,7 @@ import scipy.sparse
 from ..core.error import SMRTError
 from ..core.result import Result
 from ..core import lib
-from smrt.core.lib import smrt_matrix
+from smrt.core.lib import smrt_matrix, isnull
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers 
 
 
@@ -401,7 +401,7 @@ class DORT(object):
 
             # fill the vector
             if m == 0 and self.temperature is not None and self.temperature[l] > 0:
-                if Rbottom_l is 0:
+                if isnull(Rbottom_l):
                     b[il_bottoml:il_bottoml+nsl_npol, :] -= self.temperature[l]   # a mettre en (l)
                 else:
                     b[il_bottoml:il_bottoml+nsl_npol, :] -= ((1.0 - muleye(Rbottom_l)) * self.temperature[l])[:, np.newaxis]  # a mettre en (l)
@@ -545,7 +545,7 @@ class EigenValueSolver(object):
         # calculate the A matrix. Eq (12),  or 0 if compute_coherent_only
         A = self.ft_even_phase.compress(mode=m, auto_reduce_npol=True) if not compute_coherent_only else 0
 
-        if A is 0:
+        if isnull(A):
             # the solution is trivial
             beta = invmu * np.repeat(self.ke(mu), npol)
             E = np.eye(2 * n, 2 * n)
