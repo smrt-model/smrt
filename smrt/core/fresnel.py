@@ -4,7 +4,6 @@ fresnel coefficients formulae used in the packages :py:mod:`smrt.interface` and 
 """
 
 import numpy as np
-import scipy.sparse
 from smrt.core.lib import smrt_matrix, abs2
 
 

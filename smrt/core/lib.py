@@ -120,7 +120,7 @@ class smrt_matrix(object):
     def __init__(self, mat, mtype=None):
 
         if mat is 0:
-            self.values = 0
+            self.values = 0.
             self.mtype = "0"
         else:
             self.values = mat
@@ -176,7 +176,7 @@ class smrt_matrix(object):
         3) convert the format of the matrix to compressed numpy, involving a change of the dimension order (pola and streams are merged).
 
 """
-        if self.values is 0:
+        if self.mtype == "0":
             return 0.
 
         if self.mtype == "dense5":
@@ -264,7 +264,7 @@ class smrt_matrix(object):
 
     @property
     def diagonal(self):
-        if self.values is 0:
+        if self.mtype == "0":
             return np.array([0.])
         if self.mtype.startswith("diagonal"):
             return self.values
@@ -305,6 +305,16 @@ class smrt_matrix(object):
         shape = getattr(self.values, "shape", "")
         return str("smrt_matrix %s %s" % (self.mtype, shape)) + "\n" + str(self.values)
 
+
+def isnull(m):
+    """return true if the smrt matrix is null"""
+
+    if isinstance(m, scipy.sparse.dia.dia_matrix):
+        m = m.diagonal()
+
+    return (m is 0) or \
+            (getattr(m, "mtype", None) == "0") or \
+             (~np.any(m))
 
 
 def abs2(c):
