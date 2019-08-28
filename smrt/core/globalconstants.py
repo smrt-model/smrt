@@ -28,4 +28,7 @@ C_SPEED = 299792458.0
 PERMITTIVITY_OF_FREE_SPACE = 1 / (4e-7 * np.pi * C_SPEED ** 2)
 
 GHz = 1e9    # G in fact
+cm = 1e-2    # centimeter
+mm = 1e-3    # millimeter
+micron = 1e-6 # micron
 PSU = 1e-3   # g/kg -> kg/kg
