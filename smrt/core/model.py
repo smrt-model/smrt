@@ -184,7 +184,7 @@ class Model(object):
 
         if isinstance(snowpack, Sequence):
             if snowpack_dimension is None:
-                dimension_name, dimension_values = "Snowpack", None
+                dimension_name, dimension_values = "snowpack", None
             else:
                 dimension_name, dimension_values = snowpack_dimension
             if dimension_values is None:
