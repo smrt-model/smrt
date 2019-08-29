@@ -130,9 +130,9 @@ class CoherentFlat(object):
         R01_v, R01_h, mu_1 = fresnel_coefficients(eps_0, eps_1, mu_0)
         R1t_v, R1t_h, mu_t = fresnel_coefficients(eps_1, eps_t, mu_1)
 
-        k = 2 * np.pi / C_SPEED * frequency * np.sqrt(eps_1)
+        k_1 = 2 * np.pi / C_SPEED * frequency * np.sqrt(eps_1)
 
-        phase = k * mu_1 * np.sqrt(eps_1) * self.layer.thickness
+        phase = k_1 * mu_1 * self.layer.thickness
         assert np.all(phase.imag >=0)
 
         incoherent = phase.real > 3 * np.pi / 4  # we consider coherency up to 3 pi / 2 like in MEMLS
