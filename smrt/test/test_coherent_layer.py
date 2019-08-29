@@ -29,5 +29,5 @@ def test_snowpack_with_coherent_layer():
 
     print(res.TbV(), res.TbH())
 
-    assert abs(res.TbV() - 267.0654445338113) < 1e-4
-    assert abs(res.TbH() - 243.39520140712304) < 1e-4
+    assert abs(res.TbV() - 261.1994214138529) < 1e-4
+    assert abs(res.TbH() - 201.1848483718344) < 1e-4
