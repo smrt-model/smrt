@@ -5,6 +5,8 @@ Implement the interface boundary condition under the Geometrical Approximation b
 for backscatter only, that is, to use as a substrate and at low frequency when the backscatter is the main mecahnism, and conversely when mulitple scattering
 and double bounce between snow and substrate are negligible. In any other case, it is recommended to use :py:class:`~smrt.interface.geometrical_optics.GeometricalOptics`.
 
+The transmitted energy is also computed in an approximate way suitable for 1st order scattering. We use energy conservation to compute the total transmitted energy
+and consider that all this energy is transmitted in the refraction (specular) direction.
 """
 
 import numpy as np
@@ -12,7 +14,7 @@ import numpy as np
 from smrt.core.fresnel import fresnel_transmission_matrix, fresnel_coefficients  # a modifier quand on fusionne
 from smrt.core.lib import smrt_matrix
 from smrt.core.interface import Interface
-from smrt.interface.geometrical_optics import shadow_function
+from smrt.interface.geometrical_optics import shadow_function, GeometricalOptics
 
 
 class GeometricalOpticsBackscatter(Interface):
@@ -98,9 +100,10 @@ class GeometricalOpticsBackscatter(Interface):
         return diffuse_refl_coeff
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """compute the transmission coefficients for the azimuthal mode m
-           and for an array of incidence angles (given by their cosine)
-           in medium 1. Medium 2 is where the beam is transmitted.
+        """compute the transmission coefficients for an array of incidence angles (given by their cosine)
+           in medium 1. Medium 2 is where the beam is transmitted. While Geometrical Optics, we here consider that power not reflected
+           is scattered in the specular transmitted direction. This is an approximation which is reasonable in the context of a "1st order"
+           geometrical optics.
 
         :param eps_1: permittivity of the medium where the incident beam is propagating.
         :param eps_2: permittivity of the other medium
@@ -109,7 +112,14 @@ class GeometricalOpticsBackscatter(Interface):
 
         :return: the transmission matrix
 """
+        go = GeometricalOptics(mean_square_slope=self.mean_square_slope, shadow_function=self.shadow_correction)
+        total_reflection = go.reflection_coefficients(frequency, eps_1, eps_2, mu1)
 
-        return fresnel_transmission_matrix(eps_1, eps_2, mu1, npol)
+        transmission_matrix = smrt_matrix.zeros((npol, len(mu1)))
+        transmission_matrix[0] = 1 - total_reflection
+        transmission_matrix[1] = 1 - total_reflection
+
+        return transmission_matrix
+
 
 
