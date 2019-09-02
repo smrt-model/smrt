@@ -24,8 +24,9 @@ import numpy as np
 DENSITY_OF_ICE = 916.7
 FREEZING_POINT = 273.15
 PERMITTIVITY_OF_AIR = 1.
-C_SPEED = 299792458.0
+C_SPEED = 299792458.
 PERMITTIVITY_OF_FREE_SPACE = 1 / (4e-7 * np.pi * C_SPEED ** 2)
+EARTH_RADIUS = 6371000.
 
 GHz = 1e9    # G in fact
 cm = 1e-2    # centimeter
