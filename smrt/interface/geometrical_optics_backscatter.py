@@ -12,7 +12,7 @@ and consider that all this energy is transmitted in the refraction (specular) di
 import numpy as np
 
 from smrt.core.fresnel import fresnel_transmission_matrix, fresnel_coefficients  # a modifier quand on fusionne
-from smrt.core.lib import smrt_matrix
+from smrt.core.lib import smrt_matrix, len_atleast_1d
 from smrt.core.interface import Interface
 from smrt.interface.geometrical_optics import shadow_function, GeometricalOptics
 
@@ -115,9 +115,9 @@ class GeometricalOpticsBackscatter(Interface):
         go = GeometricalOptics(mean_square_slope=self.mean_square_slope, shadow_function=self.shadow_correction)
         total_reflection = go.reflection_coefficients(frequency, eps_1, eps_2, mu1)
 
-        transmission_matrix = smrt_matrix.zeros((npol, len(mu1)))
-        transmission_matrix[0] = 1 - total_reflection
-        transmission_matrix[1] = 1 - total_reflection
+        transmission_matrix = smrt_matrix.zeros((npol, len_atleast_1d(mu1)))
+        transmission_matrix[0] = 1 - total_reflection[0]
+        transmission_matrix[1] = 1 - total_reflection[1]
 
         return transmission_matrix
 
