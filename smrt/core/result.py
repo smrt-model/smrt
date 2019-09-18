@@ -141,11 +141,11 @@ class ActiveResult(Result):
         """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V').
          See xarray slicing with sel method (to document)"""
         if 'theta' in kwargs:
-            theta = np.atleast_1d(kwargs.pop('theta'))
+            theta = xr.DataArray(np.atleast_1d(kwargs.pop('theta')), dims=['theta'])
         else:
             theta = self.data.theta
 
-        backscatter = self.data.sel(**kwargs).sel_points(theta_inc=theta, theta=theta).rename({'points': 'theta'})
+        backscatter = self.data.sel(**kwargs).sel(theta_inc=theta, theta=theta)
         return 4 * np.pi * _strongsqueeze(np.cos(np.radians(theta)) * backscatter)
 
     def sigma_dB(self, **kwargs):
