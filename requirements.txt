@@ -2,4 +2,4 @@ numpy
 six
 pandas
 scipy
-xarray
+xarray>=0.10
