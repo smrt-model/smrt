@@ -1,16 +1,19 @@
 # coding: utf-8
 
 """ The results of RT Solver are hold by the :py:class:`Result` class. This class provides several functions
-to access to the Stokes Vector and Muller matrix in a simple way. Most notable ones are :py:meth:`Result.TbV` and :py:meth:`Result.TbH` for the passive mode calculations and
-:py:meth:`Result.sigmaHH` and :py:meth:`Result.sigmaVV`. Other methods could be developed for specific needs.
+to access to the Stokes Vector and Muller matrix in a simple way. Most notable ones are :py:meth:`Result.TbV` and :py:meth:`Result.TbH`
+for the passive mode calculations and :py:meth:`Result.sigmaHH` and :py:meth:`Result.sigmaVV`. Other methods could be developed for
+specific needs.
 
-To save results of calculations in a file, simply use the pickle module or other serialization schemes. We may provide a unified and inter-operable solution in the future.
+To save results of calculations in a file, simply use the pickle module or other serialization schemes. We may provide a unified and
+inter-operable solution in the future.
 
-Under the hood, :py:class:`Result` uses xarray module which provides multi-dimensional array with explicit, named, dimensions. Here the common dimensions
-are frequency, polarization, polarization_inc, theta_inc, theta, and phi. They are created by the RT Solver. The interest of using named dimension is that slice of the xarray (i.e. results)
-can be selected based on the dimension name whereas with numpy the order of the dimensions matters. Because this is very convenient, users may be
-interested in adding other dimensions specific to their context such as time, longitude, latitude, points, ... To do so, :py:meth:`smrt.core.model.Model.run` accepts a list of snowpack
-and optionally the parameter `snowpack_dimension` is used to specify the name and values of the new dimension to build.
+Under the hood, :py:class:`Result` uses xarray module which provides multi-dimensional array with explicit, named, dimensions. Here the
+common dimensions are frequency, polarization, polarization_inc, theta_inc, theta, and phi. They are created by the RT Solver. The interest
+ of using named dimension is that slice of the xarray (i.e. results) can be selected based on the dimension name whereas with numpy the order
+ of the dimensions matters. Because this is very convenient, users may be interested in adding other dimensions specific to their context such
+  as time, longitude, latitude, points, ... To do so, :py:meth:`smrt.core.model.Model.run` accepts a list of snowpack and optionally
+  the parameter `snowpack_dimension` is used to specify the name and values of the new dimension to build.
 
 Example::
 
@@ -33,6 +36,7 @@ import numpy as np
 import xarray as xr
 import pandas as pd
 from smrt.utils import dB
+from smrt.core.error import SMRTError
 
 
 def open_result(filename):
@@ -44,7 +48,23 @@ def open_result(filename):
         if d.startswith("polarization"):
             data[d] = data[d].astype("U1")
 
-    return Result(data)
+    mode = getattr(data.attrs, 'mode', None)
+    if (mode is None) or (mode not in 'AP'):
+        # guess the mode
+        if 'theta_inc' in data.coords:
+            mode = 'A'
+        else:
+            mode = 'P'
+
+    return make_result(mode, data)
+
+
+def make_result(mode, *args, **kwargs):
+    """create an active or passive result object according to the mode"""
+    if mode == 'A':
+        return ActiveResult(*args, **kwargs)
+    else:
+        return PassiveResult(*args, **kwargs)
 
 
 class Result(object):
@@ -61,96 +81,130 @@ class Result(object):
         else:
             self.data = xr.DataArray(intensity, coords)
 
+        if hasattr(self, "mode"):
+            self.data.attrs['mode'] = self.mode
+        else:
+            raise SMRTError("Result base class is abstract, uses a subclass instead. The subclass must define the 'mode' attribute")
+
     @property
     def coords(self):
-        """Return the coordinates of the result (theta, frequency, ...). Note that the coordinates are also result attribute, so result.frequency works (and so on for all the coordinates)."""
+        """Return the coordinates of the result (theta, frequency, ...). Note that the coordinates are also result attribute,
+        so result.frequency works (and so on for all the coordinates)."""
         return self.data.coords
 
     def __getattr__(self, attr):
         if attr != "data" and attr in self.data.coords:
             return self.data.coords[attr]
         else:
-            return super().__getattr__(attr)
+            raise AttributeError("AttributeError: '%s' object has no attribute '%s'" % (type(self), attr))
+
+    def save(self, filename):
+        """save a result to disk. Under the hood, this is a netCDF file produced by xarray (http://xarray.pydata.org/en/stable/io.html)."""
+        self.data.to_netcdf(filename)
+
+
+class PassiveResult(Result):
+
+    mode = 'P'
 
     def Tb(self, **kwargs):
-        """Return brightness temperature. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V'). See xarray slicing with sel method (to document)"""
+        """Return brightness temperature. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V').
+         See xarray slicing with sel method (to document)"""
         return _strongsqueeze(self.data.sel(**kwargs))
 
     def Tb_as_dataframe(self, **kwargs):
-        """Return brightness temperature. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V'). See xarray slicing with sel method (to document)"""
+        """Return brightness temperature. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V').
+         See xarray slicing with sel method (to document)"""
         return self.Tb(**kwargs).to_dataframe(name='Tb')
 
     def TbV(self, **kwargs):
-        """Return V polarization. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return V polarization. Any parameter can be added to slice the results (e.g. frequency=37e9).
+         See xarray slicing with sel method (to document)"""
         return _strongsqueeze(self.data.sel(polarization='V', **kwargs))
 
     def TbH(self, **kwargs):
-        """Return H polarization. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return H polarization. Any parameter can be added to slice the results (e.g. frequency=37e9).
+         See xarray slicing with sel method (to document)"""
         return _strongsqueeze(self.data.sel(polarization='H', **kwargs))
 
     def polarization_ratio(self, ratio="H_V", **kwargs):
-        """Return polarization ratio. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return polarization ratio. Any parameter can be added to slice the results (e.g. frequency=37e9).
+         See xarray slicing with sel method (to document)"""
         return _strongsqueeze(self.data.sel(polarization=ratio[0], **kwargs) / self.data.sel(polarization=ratio[-1], **kwargs))
 
+
+class ActiveResult(Result):
+
+    mode = 'A'
+
     def sigma(self, **kwargs):
-        """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V'). See xarray slicing with sel method (to document)"""
+        """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V').
+         See xarray slicing with sel method (to document)"""
         if 'theta' in kwargs:
             theta = np.atleast_1d(kwargs.pop('theta'))
         else:
             theta = self.data.theta
 
         backscatter = self.data.sel(**kwargs).sel_points(theta_inc=theta, theta=theta).rename({'points': 'theta'})
-        return 4*np.pi*_strongsqueeze(np.cos(np.radians(theta)) * backscatter)
+        return 4 * np.pi * _strongsqueeze(np.cos(np.radians(theta)) * backscatter)
 
     def sigma_dB(self, **kwargs):
-        """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V'). See xarray slicing with sel method (to document)"""
+        """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V').
+         See xarray slicing with sel method (to document)"""
         return dB(self.simga(**kwargs))
 
     def sigma_as_dataframe(self, **kwargs):
-        """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V'). See xarray slicing with sel method (to document)"""
+        """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V').
+         See xarray slicing with sel method (to document)"""
         return self.sigma(**kwargs).to_dataframe(name='sigma')
 
     def sigma_dB_as_dataframe(self, **kwargs):
-        """Return backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V'). See xarray slicing with sel method (to document)"""
+        """Return backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', 
+        polarization='V'). See xarray slicing with sel method (to document)"""
         return self.sigma_dB(**kwargs).to_dataframe(name='sigma')
 
     def sigmaVV(self, **kwargs):
-        """Return VV backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return VV backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
+         See xarray slicing with sel method (to document)"""
         return self.sigma(polarization_inc='V', polarization='V', **kwargs)
 
     def sigmaVV_dB(self, **kwargs):
-        """Return VV backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return VV backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9).
+         See xarray slicing with sel method (to document)"""
         return dB(self.sigmaVV(**kwargs))
 
     def sigmaHH(self, **kwargs):
-        """Return HH backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return HH backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
+         See xarray slicing with sel method (to document)"""
         return self.sigma(polarization_inc='H', polarization='H', **kwargs)
 
-
     def sigmaHH_dB(self, **kwargs):
-        """Return HH backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return HH backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9).
+         See xarray slicing with sel method (to document)"""
         return dB(self.sigmaHH(**kwargs))
 
     def sigmaHV(self, **kwargs):
-        """Return HV backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return HV backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
+         See xarray slicing with sel method (to document)"""
         return self.sigma(polarization_inc='H', polarization='V', **kwargs)
 
     def sigmaHV_dB(self, **kwargs):
-        """Return HV backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return HV backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9).
+         See xarray slicing with sel method (to document)"""
         return dB(self.sigmaHV(**kwargs))
 
     def sigmaVH(self, **kwargs):
-        """Return VH backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return VH backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
+         See xarray slicing with sel method (to document)"""
         return self.sigma(polarization_inc='V', polarization='H', **kwargs)
 
     def sigmaVH_dB(self, **kwargs):
-        """Return VH backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9). See xarray slicing with sel method (to document)"""
+        """Return VH backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9).
+         See xarray slicing with sel method (to document)"""
         return dB(self.sigmaVH(**kwargs))
 
-    def save(self, filename):
-        """save a result to disk. Under the hood, this is a netCDF file produced by xarray (http://xarray.pydata.org/en/stable/io.html)."""
-        self.data.to_netcdf(filename)
-    #def groupby(self, variable):
+
+    # def groupby(self, variable):
     #    """iterated over a given variable. Variable is typically frequency, theta, polarization or snowpack"""
     #
     #    return ResultGroup(self.data.groupby(variable))
@@ -209,11 +263,13 @@ class Result(object):
 
 
 def concat_results(result_list, coord):
-    """Concatenate several results from :py:meth:`smrt.core.model.Model.run` (of type :py:class:`Result`) into a single result (of type :py:class:`Result`). This extends
-    the number of dimension in the xarray hold by the instance. The new dimension is specified with coord
+    """Concatenate several results from :py:meth:`smrt.core.model.Model.run` (of type :py:class:`Result`) into a single result
+    (of type :py:class:`Result`). This extends the number of dimension in the xarray hold by the instance. The new dimension
+    is specified with coord
 
     :param result_list: list of results returned by :py:meth:`smrt.core.model.Model.run` or other functions.
-    :param coord: a tuple (dimension_name, dimension_values) for the new dimension. Dimension_values must be a sequence or array with the same length as result_list.
+    :param coord: a tuple (dimension_name, dimension_values) for the new dimension. Dimension_values must be a sequence or
+    array with the same length as result_list.
 
     :returns: :py:class:`Result` instance
 
@@ -221,7 +277,12 @@ def concat_results(result_list, coord):
 
     dim_name, dim_value = coord
 
-    return Result(xr.concat([result.data for result in result_list], pd.Index(dim_value, name=dim_name)))
+    ResultClass = type(result_list[0])
+
+    if not all([type(result) == ResultClass for result in result_list]):
+        raise SMRTError("The results are not all of the same type")
+
+    return ResultClass(xr.concat([result.data for result in result_list], pd.Index(dim_value, name=dim_name)))
 
 
 def _strongsqueeze(x):

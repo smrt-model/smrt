@@ -26,7 +26,7 @@ import scipy.sparse
 
 # local import
 from ..core.error import SMRTError
-from ..core.result import Result
+from ..core.result import make_result
 from ..core import lib
 from smrt.core.lib import smrt_matrix, isnull
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers 
@@ -135,10 +135,11 @@ class DORT(object):
             intensity = intensity.reshape(list(intensity.shape[:-1])+[intensity.shape[-1]//npol, npol])
         #  describe the results list of (dimension name, dimension array of value)
         coords = [('theta', sensor.theta_deg), ('polarization', pola)]
+        
         if sensor.mode == 'A':
             coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola)] + coords
 
-        return Result(intensity, coords)
+        return make_result(sensor.mode, intensity, coords)
 
     def dort(self, m_max=0, special_return=False):
         # not to be called by the user
@@ -368,7 +369,7 @@ class DORT(object):
 
             # fill the vector
             if m == 0 and self.temperature is not None and self.temperature[l] > 0:
-                if Rtop_l is 0:
+                if isnull(Rtop_l):
                     b[il_topl:il_topl+nsl_npol, :] -= self.temperature[l]  # a mettre en (l)
                 else:
                     b[il_topl:il_topl+nsl_npol, :] -= ((1.0 - muleye(Rtop_l)) * self.temperature[l])[:, np.newaxis]  # a mettre en (l)

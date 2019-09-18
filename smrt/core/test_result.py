@@ -7,11 +7,15 @@ from smrt.core import result
 
 
 # Tests written in response to -ve intensity bug in result.py
-res_example = result.Result([[[[4.01445680e-03, 3.77746658e-03, 0.00000000e+00]],
+res_example = result.ActiveResult([[[[4.01445680e-03, 3.77746658e-03, 0.00000000e+00]],
                     [[3.83889082e-03, 3.85904771e-03, 0.00000000e+00]],
                     [[2.76453599e-20, -2.73266027e-20, 0.00000000e+00]]]],
                     coords = [('theta', [35]), ('polarization', ['V','H','U']),
                     ('theta_inc', [35]), ('polarization_inc', ['V','H','U'])])
+
+def test_methods():
+    assert hasattr(res_example, "sigma")
+    assert not hasattr(res_example, "Tb")
 
 def test_positive_sigmaVV():
     ok_(res_example.sigmaVV()>0)
@@ -37,3 +41,4 @@ def test_sigmaHV_dB():
 
 def test_sigmaVH_dB():
     np.testing.assert_allclose(res_example.sigmaVH_dB(), -14.0321985560285)
+
