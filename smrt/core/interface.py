@@ -10,7 +10,6 @@ from functools import wraps
 
 from .error import SMRTError
 from .plugin import import_class
-from ..interface.flat import Flat  # core should not depend on something defined in interface...
 from smrt.core import lib
 
 
@@ -24,6 +23,7 @@ def make_interface(inst_class_or_modulename, broadcast=True, **kwargs):
 
     # import the module
     if inst_class_or_modulename is None:
+        from ..interface.flat import Flat  # core should not depend on something defined in interface...
         interface_cls = Flat
     elif isinstance(inst_class_or_modulename, str):
         interface_cls = import_class("interface", inst_class_or_modulename)
@@ -45,7 +45,7 @@ def make_interface(inst_class_or_modulename, broadcast=True, **kwargs):
 
 
 class Interface(object):
-    """ Abstract class for interface between layer or at the bottom of the snowpack.
+    """ Abstract class for interface between layer and substrate at the bottom of the snowpack.
 It provides argument handling.
 """
     args = []
@@ -70,7 +70,7 @@ It provides argument handling.
 
 class SubstrateBase(object):
     """ Abstract class for substrate at the bottom of the snowpack.
-It provides argument handling and calculation of the permittivity constant for soil case.
+It provides calculation of the permittivity constant for soil case. Argument handline is delegated to the instance of the interface
 """
 
     def __init__(self, temperature=None, permittivity_model=None):
@@ -103,35 +103,36 @@ def substrate_from_interface(interface_cls):
     
     def decorator(cls):
         def __init__(self, temperature=None, permittivity_model=None, **kwargs):
-            interface_cls.__init__(self, **kwargs)
             SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model)
+            # create an interface instance
+            self.interface_inst = interface_cls(**kwargs)
 
         def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
 
             eps_2 = self.permittivity(frequency)
             if eps_2 is None:
                 raise SMRTError("No permittivity_model have been given to the substrate '%s'" % str(interface_cls))
-            return interface_cls.specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol)
+            return self.interface_inst.specular_reflection_matrix(frequency, eps_1, eps_2, mu1, npol)
 
         def emissivity_matrix(self, frequency, eps_1, mu1, npol):
 
             eps_2 = self.permittivity(frequency)
             if eps_2 is None:
                 raise SMRTError("No permittivity_model have been given to the substrate '%s'" % str(interface_cls))
-            return interface_cls.coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol)
+            return self.interface_inst.coherent_transmission_matrix(frequency, eps_1, eps_2, mu1, npol)
 
         def diffuse_reflection_matrix(self, frequency, eps_1, mu_s, mu_i, dphi, npol):
 
             eps_2 = self.permittivity(frequency)
             if eps_2 is None:
                 raise SMRTError("No permittivity_model have been given to the substrate '%s'" % str(interface_cls))
-            return interface_cls.diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol)
+            return self.interface_inst.diffuse_reflection_matrix(frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol)
 
         def ft_even_diffuse_reflection_matrix(self, frequency, eps_1, mu_s, mu_i, m_max, npol):
             eps_2 = self.permittivity(frequency)
             if eps_2 is None:
                 raise SMRTError("No permittivity_model have been given to the substrate '%s'" % str(interface_cls))
-            return interface_cls.ft_even_diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, m_max, npol)
+            return self.interface_inst.ft_even_diffuse_reflection_matrix(frequency, eps_1, eps_2, mu_s, mu_i, m_max, npol)
 
         def auto_add(new_method, dependency):
             new_method_name = new_method.__name__
@@ -150,17 +151,19 @@ def substrate_from_interface(interface_cls):
         auto_add(ft_even_diffuse_reflection_matrix, 'ft_even_diffuse_reflection_matrix')
         auto_add(diffuse_reflection_matrix, 'diffuse_reflection_matrix')
 
-        newcls = type(cls.__name__, (SubstrateBase, interface_cls), attributes)
+        newcls = type(cls.__name__, (SubstrateBase, ), attributes)
         newcls.__doc__ = cls.__doc__
         return newcls
+
     return decorator
 
 
 # define the Substrate class that is to be derived for object that are not build from Interface
-@substrate_from_interface(Interface)
-class Substrate:
-    pass
+class Substrate(SubstrateBase, Interface):
 
+    def __init__(self, temperature=None, permittivity_model=None, **kwargs):
+        SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model)
+        Interface.__init__(self, **kwargs)
 
 def get_substrate_model(substrate_model):
     """return the class corresponding to the substrate model called name. This function imports the correct module if possible and returns the class"""

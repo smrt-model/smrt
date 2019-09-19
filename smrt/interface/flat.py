@@ -8,9 +8,10 @@ are computed using the Fresnel coefficient.
 
 from smrt.core.lib import smrt_matrix
 from smrt.core.fresnel import fresnel_reflection_matrix, fresnel_transmission_matrix
+from smrt.core.interface import Interface
 
 
-class Flat(object):
+class Flat(Interface):
     """A flat surface. The reflection is in the specular direction and the coefficient is calculated with the Fresnel coefficients
 
 """
