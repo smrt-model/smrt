@@ -17,6 +17,7 @@
 import os
 from tempfile import NamedTemporaryFile
 from collections.abc import Sequence
+from collections import namedtuple
 import itertools
 
 import numpy as np
@@ -157,5 +158,5 @@ def memls_emmodel(sensor, layer, scattering_choice=ABORN, graintype=2):
     res = octave.memlsscatt(sensor.frequency/1e9, float(layer.temperature), float(layer.liquid_water), layer.frac_volume*DENSITY_OF_ICE,
                             float(layer.salinity), layer.microstructure.corr_length*1000.0, scattering_choice, graintype)
 
-    nt = collections.namedtuple("memls_emmodel", "ks ka")
+    nt = namedtuple("memls_emmodel", "ks ka")
     return nt(ks=res[0, 0], ka=res[0, 1])
