@@ -325,7 +325,7 @@ class DORT(object):
                     # run in a try to catch the exception
                     beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
                 except SMRTError:
-                    return np.full(len(outmu) * npol, np.nan)
+                    return np.full_like(intensity_down_m, np.nan)
             else:
                 beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
             assert(Eu.shape[0] == npol * nsl)
@@ -572,8 +572,8 @@ class EigenValueSolver(object):
                 diagonalization_failed = True
                 reason = "eig method"
             else:
-                notclose_beta = not np.allclose(beta.imag, 0)
-                notclose_E = not np.allclose(E.imag, 0)
+                notclose_beta = not np.allclose(beta.imag, 0,  atol=1e-06)
+                notclose_E = not np.allclose(E.imag, 0,  atol=1e-06)
                 diagonalization_failed = notclose_beta or notclose_E
 
                 reason = ""
