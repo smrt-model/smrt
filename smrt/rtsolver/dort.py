@@ -325,7 +325,7 @@ class DORT(object):
                     # run in a try to catch the exception
                     beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
                 except SMRTError:
-                    return np.full_like(intensity_down_m, np.nan)
+                    return np.full_like(intensity_down_m, np.nan).squeeze()
             else:
                 beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
             assert(Eu.shape[0] == npol * nsl)
