@@ -42,7 +42,8 @@ class IEM_Fung92(Interface):
 """
     args = ["roughness_rms", "corr_length"]
     optional_args = {"autocorrelation_function": "exponential",
-                    "warning_handling": "print"}
+                    "warning_handling": "print",
+                    "series_truncation": 10}
 
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
@@ -108,8 +109,8 @@ class IEM_Fung92(Interface):
         fhh = -2 * Rh / mu  # Eq 45 in Fung et al. 1992
 
         # prepare the series
-        N = 4
-        n  = np.arange(1, N + 1)[:, None]
+        N = self.series_truncation
+        n  = np.arange(1, N + 1, dtype=np.float64)[:, None]
 
         rms2 = self.roughness_rms**2
 
@@ -126,11 +127,11 @@ class IEM_Fung92(Interface):
         Ihh_n += -k.z**n * (sin2/mu * (1 + Rh)**2 * (eps_r - 1) / mu2)  # part of Eq 95.
 
         # compute the series
-        n_fractorial = np.cumprod(n)[:, None]
+        rms2_over_fractorial = np.cumprod(rms2 / n)[:, None]
 
         # Eq 82 in Fung et al. 1992
         coef = k.norm2 / 2 * np.exp(-2 * rms2 * k.z**2)
-        coef_n = (rms2**n / n_fractorial) * self.W_n(n, -2 * k.x)
+        coef_n = rms2_over_fractorial * self.W_n(n, -2 * k.x)
 
         sigma_vv = coef * np.sum(coef_n * abs2(Ivv_n) , axis=0)  
         sigma_hh = coef * np.sum(coef_n * abs2(Ihh_n) , axis=0)
