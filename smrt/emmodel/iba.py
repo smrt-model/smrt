@@ -82,12 +82,13 @@ class IBA(object):
             self.npol = 3
 
         # Bring layer and sensor properties into emmodel
-        self.frac_volume = layer.frac_volume
+        self.layer = layer
+        self.sensor = sensor
+
         self.microstructure = layer.microstructure  # Do this here, so can pass FT of correlation fn to phase function
         self.e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
         self.eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
         self.k0 = 2 * np.pi * sensor.frequency / C_SPEED  # Wavenumber in free space
-        self.inclusion_shape = layer.inclusion_shape # for assuming spherical or ellipsoidal inclusions
 
         # Calculate depolarization factors and iba_coefficient
         self.depol_xyz = depolarization_factors()
@@ -366,9 +367,9 @@ class IBA(object):
 
         """
 
-        eps = type(self).effective_permittivity_model(
-            self.frac_volume, self.e0, self.eps, self.depol_xyz, self.inclusion_shape)
-        
+        eps = type(self).effective_permittivity_model(self.layer.frac_volume, self.e0, self.eps,
+                                                      self.depol_xyz, self.layer.inclusion_shape)
+
         if eps.imag < 0:
             raise SMRTError("the imaginary part of the permittivity must be positive, by convention, in SMRT")
         return eps
@@ -378,13 +379,14 @@ class IBA_MM(IBA):
     # Undocumented: this is test code for comparison with MEMLS, and may be removed from later versions.
 
     def __init__(self, sensor, layer):
-        IBA.__init__(self, sensor, layer)  # Gives all IBA parameters. Some need to be recalculated (effective permittivity, scattering and absorption coefficients)
+        # Gives all IBA parameters. Some need to be recalculated (effective permittivity, scattering and absorption coefficients):
+        IBA.__init__(self, sensor, layer)
 
         self._effective_permittivity = polder_van_santen(self.frac_volume)
 
         # Imaginary component for effective permittivity from Wiesmann and Matzler (1999)
         y2 = self.mean_sq_field_ratio(self.e0, self.eps)
-        effective_permittivity_imag = self.frac_volume * self.eps.imag * y2 * np.sqrt(self._effective_permittivity)
+        effective_permittivity_imag = self.layer.frac_volume * self.eps.imag * y2 * np.sqrt(self._effective_permittivity)
         self._effective_permittivity = self._effective_permittivity + 1j * effective_permittivity_imag
 
         self.iba_coeff = self.compute_iba_coeff()
