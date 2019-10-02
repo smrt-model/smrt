@@ -120,7 +120,7 @@ class smrt_matrix(object):
     def __init__(self, mat, mtype=None):
 
         if mat is 0:
-            self.values = 0.
+            self.values = np.float64(0.)  # 0, but can be used as a numpy thing
             self.mtype = "0"
         else:
             self.values = mat
@@ -177,7 +177,7 @@ class smrt_matrix(object):
 
 """
         if self.mtype == "0":
-            return 0.
+            return np.float64(0.)  # 0, but can be used as a numpy thing
 
         if self.mtype == "dense5":
             if mode is not None:
@@ -255,7 +255,8 @@ class smrt_matrix(object):
 
     def __getitem__(self, key):
         if self.mtype == "0":
-            return 0.
+            return np.float64(0.)  # 0, but can be used as a numpy thing
+
         else:
             return self.values[key]
 
@@ -265,7 +266,7 @@ class smrt_matrix(object):
     @property
     def diagonal(self):
         if self.mtype == "0":
-            return np.array([0.])
+            return np.array([[0.]])
         if self.mtype.startswith("diagonal"):
             return self.values
         else:

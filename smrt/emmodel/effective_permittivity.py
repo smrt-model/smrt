@@ -176,25 +176,3 @@ def maxwell_garnett(frac_volume, e0, eps, depol_xyz=None, inclusion_shape=None):
     # See pg 68 Sihvola: Electromagnetic mixing formulas and applications
 
     return np.mean(effective_permittivity_xyz, dtype=np.complex128)
-
-
-# def ice_permittivity_tiuri84(frac_volume, temperature, **kwargs):
-#     """ Calculates the complex ice dielectric constant depending on the frequency and temperature
-
-#     Based on Tiuri et al. (1984). The Complex Dielectric Constant of Snow at Microwave Frequencies.
-#     IEEE Journal of Oceanic Engineering, vol. 9, no. 5., pp. 377-382
-
-# """
-
-#     # Units conversion
-#     density_gm3 = frac_volume * DENSITY_OF_ICE * 1e-3
-#     temp_degC = temperature - 273.15
-
-#     # Eq (1) - Real part
-#     eps_real = 1 + 1.7 * density_gm3 + 0.7 * density_gm3**2
-
-#     # Eq (6) - Imaginary part
-#     eps_imag = 1.59e6 * (0.52 * density_gm3 + 0.62 * density_gm3**2) * \
-#                (frequency**-1 + 1.23e-14 * frequency**.5) * np.exp(0.036 * temp_degC)
-
-#     return eps_real + 1j * eps_imag
