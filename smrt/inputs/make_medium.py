@@ -58,7 +58,7 @@ def make_snowpack(thickness, microstructure_model, density,
 
     sp = Snowpack(substrate=substrate)
 
-    if not isinstance(thickness, collections.Iterable):
+    if not isinstance(thickness, collections.abc.Iterable):
         raise SMRTError("The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame.")
 
     lib.check_argument_size(density, len(thickness), "density")
@@ -430,7 +430,7 @@ def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permitt
 
     sp = Snowpack(substrate=substrate)
 
-    if not isinstance(thickness, collections.Iterable):
+    if not isinstance(thickness, collections.abc.Iterable):
         raise SMRTError("The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame.")
 
 
