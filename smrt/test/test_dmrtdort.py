@@ -3,7 +3,7 @@
 import numpy as np
 
 # local import
-from smrt import make_snowpack, make_model, make_snow_layer
+from smrt import make_snowpack, make_model, make_snow_layer, make_soil
 from smrt.inputs.sensor_list import amsre, active
 
 #
@@ -17,7 +17,7 @@ def setup_snowpack():
 
     nl = l//2  # // Forces integer division
     thickness = np.array([0.1, 0.1]*nl)
-    thickness[-1] = 100  # last one is semi-infinit
+    thickness[-1] = 1000  # last one is semi-infinit
     radius = np.array([2e-4]*l)
     temperature = np.array([250.0, 250.0]*nl)
     density = [200, 400]*nl
@@ -76,7 +76,8 @@ def test_dmrt_twoconfig():
 
 def test_less_refringent_bottom_layer_VV():
     # Regression test 19-03-2018: value may change if other bugs found
-    snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density = [290.0, 250.0], radius = 50e-6, stickiness=0.2)
+    snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density = [290.0, 250.0], radius = 50e-6, stickiness=0.2,
+                             substrate=make_soil("transparent", 1, 270))
     m = make_model("dmrt_qcacp_shortrange", "dort")
     scat = active(10e9, 45)
     res = m.run(scat, snowpack)
@@ -86,7 +87,8 @@ def test_less_refringent_bottom_layer_VV():
 
 def test_less_refringent_bottom_layer_HH():
     # Regression test 19-03-2018: value may change if other bugs found
-    snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density = [290.0, 250.0], radius = 50e-6, stickiness=0.2)
+    snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density = [290.0, 250.0], radius = 50e-6, stickiness=0.2,
+                             substrate=make_soil("transparent", 1, 270))
     m = make_model("dmrt_qcacp_shortrange", "dort")
     scat = active(10e9, 45)
     res = m.run(scat, snowpack)

@@ -16,6 +16,7 @@ It is important not to set too low a value for n_max_streams. E.g. 32 is usually
 
 # Stdlib import
 import math
+from warnings import warn
 
 # other import
 import numpy as np
@@ -309,6 +310,9 @@ class DORT(object):
 
         nlayer = len(eigenvalue_solver)
 
+        # used to estimate if the medium is deep enough
+        optical_depth = 0
+
         for l in range(0, nlayer):
             nsl = streams.n[l]  # number of streams in layer l
             nsl_npol = nsl * npol  # number of streams * npol in layer l
@@ -333,6 +337,7 @@ class DORT(object):
             # deduce the transmittance through the layers
             transt = scipy.sparse.diags(np.exp(-np.maximum(beta, 0) * self.snowpack.layers[l].thickness), 0)  # positive beta, reference at the bottom
             transb = scipy.sparse.diags(np.exp(np.minimum(beta, 0) * self.snowpack.layers[l].thickness), 0)   # negative beta, reference at the top
+            optical_depth += np.min(np.abs(beta)) * self.snowpack.layers[l].thickness
 
             # where we have chosen
             # beta>0  : z(0)(l) = z(l)    # reference is at the bottom
@@ -429,6 +434,11 @@ class DORT(object):
             np.testing.assert_allclose(x, x2, rtol=1e-06)
             print("both matrix are equal")
 
+        if self.snowpack.substrate is None and optical_depth < 5:
+            warn("DORT has detected that the snowpack is optically shallow (tau=%g)and no substrate has been set, meaning that the space "
+                 "under the snowpack is vaccum and that the snowpack is shallow enough to affect the signal measured at the surface."
+                 "This is usually not wanted. Either increase the thickness of the snowpack or set a substrate. If wanted, add a transparent "
+                 "substrate to supress this warning" % optical_depth)
 
         #x = scipy.linalg.solve(BC, b, overwrite_a=True, overwrite_b=False)
         x = scipy.linalg.solve_banded((nband, nband), bBC, b, overwrite_ab=True, overwrite_b=True)

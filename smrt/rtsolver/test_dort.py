@@ -1,5 +1,8 @@
 
 import numpy as np
+import warnings
+
+import pytest
 
 from smrt import make_snowpack
 from smrt.core.sensor import passive, active
@@ -16,11 +19,11 @@ def setup_snowpack():
 
 
 def setup_snowpack_with_DH():
-    return make_snowpack(2*[0.5], "homogeneous", density=[300, 250], temperature=2*[250], interface=2*[Transparent])
+    return make_snowpack([0.5, 1000], "homogeneous", density=[300, 250], temperature=2*[250], interface=2*[Transparent])
 
 
 def setup_2layer_snowpack():
-    return make_snowpack(2*[0.5], "homogeneous", density=[250, 300], temperature=2*[250], interface=2*[Transparent])
+    return make_snowpack([0.5, 1000], "homogeneous", density=[250, 300], temperature=2*[250], interface=2*[Transparent])
 
 
 def test_noabsoprtion():
@@ -77,3 +80,13 @@ def test_2layer_pack():
     sensor = active(13e9, 45)
     m = Model(NonScattering, DORT)
     m.run(sensor, sp).sigmaVV()
+
+
+def test_shallow_snowpack():
+    warnings.filterwarnings('error', message=".*optically shallow.*", module=".*dort")
+
+    with pytest.raises(UserWarning) as e_info:
+        sp = make_snowpack([0.5, 0.5], "homogeneous", density=[300, 250], temperature=2 * [250], interface=2 * [Transparent])
+        sensor = active(13e9, 45)
+        m = Model(NonScattering, DORT)
+        m.run(sensor, sp).sigmaVV()
