@@ -8,17 +8,17 @@ import scipy.sparse
 from .error import SMRTError
 
 
-
-def get(x, i, name=None):  # function to take the i-eme value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the value.
+def get(x, i, name=None):  
+    # function to take the i-eme value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the value.
 
     if isinstance(x, str):
         return x
     elif isinstance(x, pd.DataFrame) or isinstance(x, pd.Series):
-        if i >=len(x.values):
+        if i >= len(x.values):
             raise SMRTError("The array '%s' is too short compared to the thickness array" % name)
         return x.values[i]
     if isinstance(x, Sequence) or isinstance(x, np.ndarray):
-        if i >=len(x):
+        if i >= len(x):
             raise SMRTError("The array '%s' is too short compared to the thickness array." % name)
         return x[i]
     elif isinstance(x, dict):

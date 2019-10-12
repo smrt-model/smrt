@@ -104,7 +104,8 @@ def make_snow_layer(layer_thickness, microstructure_model,
 
     if ice_permittivity_model is None:
         # must import this here instead of the top of the file because of cross-dependencies
-        from ..permittivity.wetsnow import wetsnow_permittivity  # default ice permittivity model, use ice_permittivity_maetzler06 for dry snow and add support for wet snow
+        # default ice permittivity model, use ice_permittivity_maetzler06 for dry snow and add support for wet snow
+        from ..permittivity.wetsnow import wetsnow_permittivity
         ice_permittivity_model = wetsnow_permittivity
 
     # ice in air background. Note that the emmodel might inverse the medium or use other technique for mid-range densities.
@@ -117,13 +118,13 @@ def make_snow_layer(layer_thickness, microstructure_model,
         microstructure_model = get_microstructure_model(microstructure_model)
 
     lay = Layer(layer_thickness, microstructure_model,
-                frac_volume=frac_volume,
-                temperature=temperature,
+                frac_volume=float(frac_volume),
+                temperature=float(temperature),
                 permittivity_model=(eps_1, eps_2), **kwargs)
 
-    lay.liquid_water = liquid_water
-    lay.salinity = salinity
-    lay.density = density # just for information
+    lay.liquid_water = float(liquid_water)
+    lay.salinity = float(salinity)
+    lay.density = float(density)  # just for information
 
     return lay
 
@@ -272,7 +273,7 @@ def make_ice_layer(ice_type,
 
         # fractional volume of brine
         frac_volume = brine_volume_fraction
-        
+
         # shape of brine
         inclusion_shape = brine_inclusion_shape
 
@@ -322,20 +323,19 @@ def make_ice_layer(ice_type,
     if isinstance(microstructure_model, six.string_types):
         microstructure_model = get_microstructure_model(microstructure_model)
 
-    lay = Layer(layer_thickness,
+    lay = Layer(float(layer_thickness),
                 microstructure_model,
-                frac_volume=frac_volume,
-                temperature=temperature,
+                frac_volume=float(frac_volume),
+                temperature=float(temperature),
                 permittivity_model=(eps_1, eps_2),
                 inclusion_shape=inclusion_shape,
-                salinity=salinity,
+                salinity=float(salinity),
                 **kwargs)
 
-    lay.temperature = temperature
-    lay.brine_volume_fraction = brine_volume_fraction
-    lay.density = density  # just for information
+    lay.brine_volume_fraction = float(brine_volume_fraction)
+    lay.density = float(density)  # just for information
     lay.brine_inclusion_shape = brine_inclusion_shape
-    lay.porosity = porosity  # just for information
+    lay.porosity = float(porosity)  # just for information
     lay.inclusion_shape = inclusion_shape  # shape of inclusions (air or brine depending on ice_type)
     lay.ice_type = ice_type  # just for information
 
@@ -460,10 +460,10 @@ def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, te
 
     lay = Layer(layer_thickness, frac_volume=1, temperature=temperature)
 
-    lay.temperature = temperature
+    lay.temperature = float(temperature)
     lay.effective_permittivity = effective_permittivity
-    lay.ks = ks
-    lay.ka = ka
+    lay.ks = float(ks)
+    lay.ka = float(ka)
 
     return lay
 
