@@ -332,9 +332,10 @@ def make_ice_layer(ice_type,
                 salinity=float(salinity),
                 **kwargs)
 
-    lay.brine_volume_fraction = float(brine_volume_fraction)
+    if brine_volume_fraction is not None:
+        lay.brine_volume_fraction = float(brine_volume_fraction)
+        lay.brine_inclusion_shape = brine_inclusion_shape
     lay.density = float(density)  # just for information
-    lay.brine_inclusion_shape = brine_inclusion_shape
     lay.porosity = float(porosity)  # just for information
     lay.inclusion_shape = inclusion_shape  # shape of inclusions (air or brine depending on ice_type)
     lay.ice_type = ice_type  # just for information
