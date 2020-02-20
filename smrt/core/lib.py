@@ -5,10 +5,10 @@ import numpy as np
 import pandas as pd
 import scipy.sparse
 
-from .error import SMRTError
+from smrt.core.error import SMRTError
 
 
-def get(x, i, name=None):  
+def get(x, i, name=None):
     # function to take the i-eme value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the value.
 
     if isinstance(x, str):
@@ -37,11 +37,11 @@ def check_argument_size(x, n, name=None):
     elif isinstance(x, dict):
         for k in x:
             check_argument_size(x[k], n, k)
-        return 
+        return
     else:
         return
     if error:
-        raise SMRTError("The array '%s' must be a scalar or have the same size as the 'thickness' array." % name) 
+        raise SMRTError("The array '%s' must be a scalar or have the same size as the 'thickness' array." % name)
 
 
 def is_sequence(x):
@@ -107,7 +107,7 @@ class smrt_diag(object):
 
     def check_type(self, other):
         if not isinstance(other, np.ndarray) or other.ndim != 2:
-            raise Runtime("multiplication with diag is only implemented for 2-d ndarray")
+            raise NotImplementedError("multiplication with diag is only implemented for 2-d ndarray")
 
 
 class smrt_matrix(object):
@@ -168,7 +168,6 @@ class smrt_matrix(object):
     def npol(self):
         return self.values.shape[0]
 
-
     def compress(self, mode=None, auto_reduce_npol=False):
         """compress a matrix. This comprises several actions:
         1) select one mode, if relevant (dense5, and diagonal5).
@@ -199,9 +198,9 @@ class smrt_matrix(object):
 
             # reorder from pola_s, pola_i, mu_s, mu_i to  mu_s, pola_s, mu_i, pola_i
             assert(len(mat.shape) == 4)
-            mat = np.moveaxis(mat, (0, 1), (1, 3)) # 0 becomes 1, 1 becomes 3, so 2 becomes 0 and 3 becomes 2
+            mat = np.moveaxis(mat, (0, 1), (1, 3))  # 0 becomes 1, 1 becomes 3, so 2 becomes 0 and 3 becomes 2
             # merge mu_s * pola_s and mu_i * pola_i
-            return np.reshape(mat, (mat.shape[0]*mat.shape[1], mat.shape[2]*mat.shape[3])) # return an 2x2 array !
+            return np.reshape(mat, (mat.shape[0]*mat.shape[1], mat.shape[2]*mat.shape[3]))  # return an 2x2 array !
 
         elif self.mtype == "diagonal5":
             if mode is not None:
@@ -345,12 +344,12 @@ def generic_ft_even_matrix(phase_function, m_max):
 
     """
 
-    nsamples = 2**np.ceil(3 + np.log(m_max + 1)/np.log(2))  # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
+    nsamples = 2**np.ceil(3 + np.log(m_max + 1) / np.log(2))  # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
 
     # dphi must be evenly spaced from 0 to 2 * np.pi (but not including period), but we can use the symmetry of the phase function
     # to reduce the computation to 0 to pi (including 0 and pi) and mirroring for pi to 2*pi (excluding both)
 
-    dphi = np.linspace(0, np.pi, nsamples / 2 + 1)
+    dphi = np.linspace(0, np.pi, int(nsamples // 2 + 1))
 
     # compute the phase function
     p = phase_function(dphi)
