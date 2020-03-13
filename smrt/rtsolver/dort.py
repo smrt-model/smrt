@@ -576,14 +576,13 @@ class EigenValueSolver(object):
 
             # diagonalise the matrix. Eq (13)
             try:
-                B=A.copy()
                 beta, E = scipy.linalg.eig(A, overwrite_a=True)
             except scipy.linalg.LinAlgError:
                 diagonalization_failed = True
                 reason = "eig method"
             else:
-                notclose_beta = not np.allclose(beta.imag, 0,  atol=1e-06)
-                notclose_E = not np.allclose(E.imag, 0,  atol=1e-06)
+                notclose_beta = not np.allclose(beta.imag, 0, atol=1e-06)
+                notclose_E = not np.allclose(E.imag, 0, atol=1e-06)
                 diagonalization_failed = notclose_beta or notclose_E
 
                 reason = ""
@@ -593,15 +592,13 @@ class EigenValueSolver(object):
                     reason += "not close E "
 
             if diagonalization_failed:
-                print("Reason: ", reason)
-                #mask = abs(E.imag)>1e-8
-                #print(m, E[mask], beta[np.any(mask, axis=0)], beta)
+                print("Reason: ", reason, " ks:", self.ks)
+                mask = np.abs(E.imag) > 1e-8
+                print("Info:", m, E[mask], beta[np.any(mask, axis=0)])
                 raise SMRTError("""The diagonalization failed in DORT which is possibly caused by single scattering albedo larger than 1.
 It is often due to grain size too large (or too low stickiness parameter) to respect the Rayleigh/low-frequency assumption required by some emmodel (DMRT ShortRange, IBA, ...)"
 It is recommended to reduce the size of the bigger grains. It is possible to disable this error raise and return NaN instead by adding the argument rtsolver_options=dict(error_handling='nan') to make_model).
 """)
-
-            #np.testing.assert_allclose(beta.imag, 0, atol=np.linalg.norm(beta)*1e-5)
 
             if np.iscomplexobj(E):
                 mask = abs(E.imag) > np.linalg.norm(E) * 1e-5
@@ -641,7 +638,6 @@ It is recommended to reduce the size of the bigger grains. It is possible to dis
             norm = self.norm_0
 
             if self.normalization != "forced" and np.any(np.abs(self.norm_0 - 1.0) > 0.3):
-                #print(self.norm_0)
                 raise SMRTError("""The re-normalization of the phase function exceeds the predefined threshold of 30%.
                     This is likely because of a too large grain size or a bug in the phase function.
                     It is recommended to check the grain size.
@@ -652,7 +648,7 @@ It is recommended to reduce the size of the bigger grains. It is possible to dis
                 if self.norm_0 is None:  # be careful, this code is not re-entrant
                     raise Exception("For the normalization, it is necessary to call this function for the mode m=0 first.")
                 # transform the norm_0 for npol
-                self.norm_m = np.empty(len(self.norm_0)//2*npol)
+                self.norm_m = np.empty(len(self.norm_0) // 2 * npol)
                 self.norm_m[0::npol] = self.norm_0[0::2]
                 self.norm_m[1::npol] = self.norm_0[1::2]
                 for ipol in range(2, npol):
@@ -669,7 +665,6 @@ class InterfaceProperties(object):
     def __init__(self, frequency, interfaces, substrate, permittivity, streams, m_max, npol):
 
         self.streams = streams
-
 
         nlayer = len(interfaces)
 
