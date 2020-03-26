@@ -70,7 +70,7 @@ class StickyHardSpheres(Autocorrelation):
         tau = self.stickiness
 
         # scaling variable, Eq 32, LP2015
-        X = np.asarray(k) * d / 2.0
+        X = np.atleast_1d(k) * d / 2.0
 
         # solution of the quadratic equation, Eq. 32, LP2015
         if np.isfinite(tau):
