@@ -10,7 +10,6 @@ Otherwise, we recommend to add these functions in your own files (outside of smr
 
 import copy
 import numpy as np
-import six
 from ..core.globalconstants import C_SPEED
 
 
@@ -139,11 +138,11 @@ class Sensor(SensorBase):
 
         self.channel = channel
 
-        if isinstance(polarization, six.string_types):
+        if isinstance(polarization, str):
             polarization = list(polarization)
         self.polarization = polarization
 
-        if isinstance(polarization_inc, six.string_types):
+        if isinstance(polarization_inc, str):
             polarization_inc = list(polarization_inc)
         self.polarization_inc = polarization_inc
 

@@ -47,7 +47,6 @@ from collections.abc import Sequence
 import itertools
 import inspect
 import copy
-import six
 
 import numpy as np
 
@@ -90,7 +89,7 @@ def make_model(emmodel, rtsolver=None, emmodel_options=None, rtsolver_options=No
 
 def get_emmodel(emmodel):
     """get a new emmodel class from the file name"""
-    if isinstance(emmodel, six.string_types):
+    if isinstance(emmodel, str):
         emmodel = import_class("emmodel", emmodel)
     assert inspect.isclass(emmodel)
     return emmodel
@@ -124,7 +123,7 @@ class Model(object):
         else:
             self.emmodel = get_emmodel(emmodel)
 
-        if isinstance(rtsolver, six.string_types):
+        if isinstance(rtsolver, str):
             self.rtsolver = import_class('rtsolver', rtsolver)
         else:
             self.rtsolver = rtsolver

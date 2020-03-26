@@ -19,7 +19,6 @@ Note that `make_snowpack` is directly imported from `smrt` instead of `smrt.inpu
 import collections
 
 import numpy as np
-import six
 
 from smrt.core.snowpack import Snowpack
 from smrt.core.interface import make_interface
@@ -114,7 +113,7 @@ def make_snow_layer(layer_thickness, microstructure_model,
     eps_1 = background_permittivity_model
     eps_2 = ice_permittivity_model
 
-    if isinstance(microstructure_model, six.string_types):
+    if isinstance(microstructure_model, str):
         microstructure_model = get_microstructure_model(microstructure_model)
 
     lay = Layer(layer_thickness, microstructure_model,
@@ -320,7 +319,7 @@ def make_ice_layer(ice_type,
     else:
         raise SMRTError("Unknown ice_type. Must be firstyear, multiyear, or fresh")
 
-    if isinstance(microstructure_model, six.string_types):
+    if isinstance(microstructure_model, str):
         microstructure_model = get_microstructure_model(microstructure_model)
 
     lay = Layer(float(layer_thickness),

@@ -22,7 +22,6 @@ import copy
 import collections
 import numpy as np
 import pandas as pd
-import six
 import inspect
 
 from .error import SMRTError

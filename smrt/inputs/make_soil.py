@@ -20,7 +20,6 @@ from numbers import Number
 
 import numpy as np
 
-import six
 # local import
 from smrt.core.error import SMRTError
 from smrt.core.interface import get_substrate_model
@@ -51,7 +50,7 @@ def make_soil(substrate_model, permittivity_model, temperature, moisture=None,
     """
 
     # process the permittivity_model argument
-    if isinstance(permittivity_model, six.string_types):
+    if isinstance(permittivity_model, str):
         if sand is None or clay is None or drymatter is None:
             raise SMRTError("The parameters sand, clay and drymatter must be set")
 

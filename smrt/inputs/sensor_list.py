@@ -9,7 +9,6 @@ but functions for specific sensors are more convenient. See examples in the func
 .. autofunction:: active
 """
 
-import six
 from collections.abc import Sequence
 
 from smrt.core.sensor import Sensor, SensorList
@@ -99,10 +98,10 @@ def amsr2(channel=None, frequency=None, polarization=None, theta=55):
 
 def common_amsr(sensor_name, frequency_dict, channel=None, frequency=None, polarization=None, theta=55):
 
-    if isinstance(channel, Sequence) and not isinstance(channel, six.string_types):
+    if isinstance(channel, Sequence) and not isinstance(channel, str):
         if frequency is not None:
             raise SMRTError("Either channel or frequency should be given. Mixing both arguments is not understood.")
-        return SensorList([common_amsr(sensor_name, frequency_dict, c, frequency=None,
+        return SensorList([common_amsr(sensor_name, frequency_dict, channel=c, frequency=None,
                                          polarization=polarization, theta=theta) for c in channel])
 
     if channel is not None:
@@ -178,7 +177,7 @@ def ascat(theta=None):
 
 def decompose_channel(channel, lengths):
 
-    if isinstance(channel, Sequence) and not isinstance(channel, six.string_types):
+    if isinstance(channel, Sequence) and not isinstance(channel, str):
 
         data = [decompose_channel(ch) for ch in channel]
         frequency, theta, polarization, polarization_inc = tuple(map(list, zip(*data)))  # transpose

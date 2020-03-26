@@ -1,5 +1,4 @@
 numpy
-six
 pandas
 scipy
 xarray>=0.10

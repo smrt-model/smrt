@@ -21,7 +21,6 @@ to create a snowpack using :py:func:`~smrt.inputs.make_medium.make_snowpack`.
 from warnings import warn
 from functools import wraps
 import copy
-import six
 
 # local import
 from .error import SMRTError
@@ -196,7 +195,7 @@ To import the StickyHardSpheres class with spheres radius of 1mm, stickiness of 
 
 """
 
-    if isinstance(modelname_or_class, six.string_types):
+    if isinstance(modelname_or_class, str):
         cls = get_microstructure_model(modelname_or_class)
     else:
         cls = modelname_or_class
