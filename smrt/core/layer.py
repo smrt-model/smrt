@@ -55,6 +55,9 @@ class Layer(object):
         self.microstructure_model = microstructure_model
 
         self.temperature = temperature
+        if temperature < 0:
+            raise SMRTError("Layer temperature is negative. Temperature must be in Kelvin")
+
         self.permittivity_model = permittivity_model
         self.inclusion_shape = inclusion_shape
 
