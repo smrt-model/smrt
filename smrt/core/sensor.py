@@ -254,6 +254,10 @@ class SensorList(SensorBase):
     def channel(self):
         return [s.channel for s in self.sensor_list]
 
+    @property
+    def frequency(self):
+        return [s.frequency for s in self.sensor_list]
+
     def configurations(self):
         yield self.axis, np.array([getattr(s, self.axis) for s in self.sensor_list])
 
