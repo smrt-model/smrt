@@ -158,7 +158,7 @@ class Model(object):
         """ Run the model for the given sensor configuration and return the results
 
             :param sensor: sensor to use for the calculation
-            :param snowpack: snowpack to use for the calculation. Can be a single snowpack, a list or a SensitivityStudy object.
+            :param snowpack: snowpack to use for the calculation. Can be a single snowpack, a list of snowpack, a dict of snowpack or a SensitivityStudy object.
             :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and the values are from 1 to the number of snowpacks.
             :param progressbar: if True, display a progress bar during multi-snowpacks computation
             :returns: result of the calculation(s) as a :py:class:`Results` instance
@@ -178,10 +178,17 @@ class Model(object):
                 return concat_results(result_list, (axis, values))
 
         # second determine if we have several snowpacks
+        # is it a SensitivityStudy object ?
         if isinstance(snowpack, SensitivityStudy):
             snowpack_dimension = (snowpack.variable, snowpack.values)
             snowpack = snowpack.snowpacks.tolist()
 
+        # or is it a dict ?
+        if isinstance(snowpack, dict):
+            snowpack_dimension = "snowpack", list(snowpack.keys())
+            snowpack = list(snowpack.values())
+
+        # or a sequence ?
         if isinstance(snowpack, Sequence):
             if snowpack_dimension is None:
                 dimension_name, dimension_values = "snowpack", None
