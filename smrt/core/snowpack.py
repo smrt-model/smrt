@@ -19,15 +19,11 @@ Example::
 """
 
 import copy
-import collections
 import numpy as np
-import pandas as pd
-import inspect
 
 from .error import SMRTError
 from ..interface.flat import Flat  # core should not depend on something defined in interface...
 from .layer import Layer
-from .plugin import import_class
 from .interface import SubstrateBase
 
 

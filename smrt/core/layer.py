@@ -18,7 +18,6 @@ to create a snowpack using :py:func:`~smrt.inputs.make_medium.make_snowpack`.
 
 """
 
-from warnings import warn
 from functools import wraps
 import copy
 
@@ -26,7 +25,7 @@ import copy
 from .error import SMRTError
 from .plugin import import_class
 
-from .globalconstants import DENSITY_OF_ICE, FREEZING_POINT
+from .globalconstants import FREEZING_POINT
 
 
 class Layer(object):
