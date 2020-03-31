@@ -105,7 +105,8 @@ class IBA(object):
         ks_int = scipy.integrate.romb(y, mu[0] - mu[1])  # integrate between 0 and pi (i.e. mu between -1 and 1)
         self.ks = ks_int / 4.  # Ding et al. (2010), normalised by (1/4pi)
 
-        assert(self.ks >= 0)
+        if not (self.ks >= 0):
+            print("ks, the scattering coefficient has an invalid value '%g' in layer nb '%i'" % (self.ks, getattr(layer, 'number', 0)))
 
     def compute_iba_coeff(self):
         """ Calculate angular independent IBA coefficient: used in both scattering coefficient and phase function calculations

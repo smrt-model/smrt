@@ -38,6 +38,8 @@ class Snowpack(object):
 
     def __init__(self, layers=None, interfaces=None, substrate=None):
         self.layers = layers if layers is not None else list()
+        self.update_layer_number()
+
         self.interfaces = interfaces if interfaces is not None else list()
         self.substrate = substrate
 
@@ -78,6 +80,7 @@ class Snowpack(object):
         if not isinstance(layer, Layer):
             raise Warning("the layer to append in the snowpack is not an instance of the class Layer. This may be a mistake in your code.")
 
+        layer.number = 0 if not self.layers else self.layers[-1].number + 1
         self.layers.append(layer)
 
         # interface can be a class or an instance. Both must work equaly.
@@ -120,6 +123,11 @@ class Snowpack(object):
             raise SMRTError("While adding snowpacks, the first (topmost) snowpack must not have a substrate. Unset the substrate"
                             " before adding the two snowpacks.")
 
+    def update_layer_number(self):
+
+        for i in range(len(self.layers)):
+            self.layers[i].number = i
+
     def __add__(self, other):
         """Return a new snowpack made of the first snowpack stacked on top of the second one.
 
@@ -148,5 +156,6 @@ class Snowpack(object):
             self.layers += other.layers
             self.interfaces += other.interfaces
             self.substrate = other.substrate
+            self.update_layer_number()
 
         return self
