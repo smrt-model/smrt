@@ -112,10 +112,16 @@ class PassiveResult(Result):
          See xarray slicing with sel method (to document)"""
         return _strongsqueeze(self.data.sel(**kwargs))
 
-    def Tb_as_dataframe(self, **kwargs):
+    def Tb_as_dataframe(self, index_by_channel=False, **kwargs):
         """Return brightness temperature. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V').
          See xarray slicing with sel method (to document)"""
-        return self.Tb(**kwargs).to_dataframe(name='Tb')
+        tb = self.Tb(**kwargs).to_dataframe(name='Tb')
+        if not index_by_channel:
+            return tb
+        else:
+            if 'channel' not in tb.index.names:
+                raise SMRTError("No channel information is given in the result. Unable to index the result by channel.")
+            return tb.set_index(np.array([f"{channel}{pola}" for channel, pola in tb.index]))            
 
     def TbV(self, **kwargs):
         """Return V polarization. Any parameter can be added to slice the results (e.g. frequency=37e9).
