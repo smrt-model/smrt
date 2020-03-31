@@ -1,9 +1,12 @@
 
+import pandas as pd
+import numpy as np
 
 from nose.tools import raises
 
-from .make_medium import make_snowpack, make_ice_column
+from .make_medium import make_snowpack, make_ice_column, make_medium
 from ..core.error import SMRTError
+
 
 
 def test_make_snowpack():
@@ -34,3 +37,20 @@ def test_make_lake_ice():
     assert(sp.layers[0].thickness == 1)
     assert (sp.layers[0].density == 300)
     assert (sp.layers[0].microstructure.corr_length == 200e-6)
+
+
+def test_make_medium():
+
+    sp_dict = {
+        'thickness': [0.1, 1],
+        'density': [200, 300],
+        'microstructure_model': 'sticky_hard_spheres',
+        'radius': [100e-6, 100e-6],
+        'temperature': 273
+    }
+
+    sp = make_medium(sp_dict)
+
+    assert np.allclose(sp.layer_thicknesses, sp_dict['thickness'])
+    assert np.allclose([l.temperature for l in sp.layers], sp_dict['temperature'])
+    assert np.allclose([l.microstructure.radius for l in sp.layers], sp_dict['radius'])

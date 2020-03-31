@@ -144,7 +144,15 @@ class Snowpack(object):
                             interfaces=self.interfaces + other.interfaces,
                             substrate=other.substrate)
 
-    def __iadd__(self, other): ## just for optimization
+    def __radd__(self, other):
+
+        if other is 0:
+            return self
+        else:
+            # should never be called
+            return other.__add__(self)
+
+    def __iadd__(self, other):  # just for optimization
         """Inplace addition of object to snowpack. See :func:`~snowpack.Snowpack.__add__` description.
 
 """

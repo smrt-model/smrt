@@ -16,9 +16,11 @@ Note that `make_snowpack` is directly imported from `smrt` instead of `smrt.inpu
 
 """
 
+import itertools
 import collections
 
 import numpy as np
+import pandas as pd
 
 from smrt.core.snowpack import Snowpack
 from smrt.core.interface import make_interface
@@ -32,6 +34,65 @@ from smrt.permittivity.saline_water import seawater_permittivity_klein76, brine_
 from smrt.permittivity.saline_ice import saline_ice_permittivity_pvs_mixing
 
 from smrt.substrate.flat import Flat
+
+
+def make_medium(data, interface=None, substrate=None, **kwargs):
+    """build a multi-layered medium using a pandas DataFrame (or a dict that can be transformed into a DataFrame) and optinal arguments.
+The 'medium' column (or key) in data indicates the medium type: 'snow' or 'ice'. If not given, it defaults to 'snow'.
+'data' must contain enough information to build either a snowpack or an ice_column. The minimum requirements are:
+    - for a snowpack: ('z' or 'thickness'), 'density', 'microstructure_model' and the arguments required by the microstructural_model.
+    - for a ice column: ice_type, ('z' or 'thickness'), 'temperature', 'salinity', 'microstructure_model' and the arguments required by the microstructural_model.
+
+When reading a dataframe from disk for instance, it is convenient to use df.rename(columns={...}) to map the column names of the file to the column names 
+required by SMRT.
+
+if 'z' is given, the thickness is deduced using :py:meth:`~smrt.core.inputs.make_medium.compute_thickness_from_z`.
+"""
+
+    if isinstance(data, dict):
+        # should be a dataframe, let's try to make one
+        data = pd.DataFrame(data)
+
+    if "z" in data:
+        data = data.copy()
+        data['thickness'] = compute_thickness_from_z(data['z'])
+
+    if kwargs:
+        data = data.copy()
+        for k in kwargs:
+            data[k] = kwargs[k]
+
+    # group layers by medium type
+    if 'medium' not in data:
+        medium_chunks = [('snow', data)]
+    else:
+        medium_chunks = ((group, data.iloc[list(imedia)]) for group, imedia in
+                         itertools.groupby(range(len(data)), lambda i: data.iloc[i]['medium']))
+
+    # iterate on media chunk
+    medium_list = []
+
+    for medium, group_data in medium_chunks:
+
+        if medium == 'snow':
+            required_args = ['thickness', 'microstructure_model', 'density']
+            func = make_snowpack
+        elif medium == 'ice':
+            required_args = ['ice_type', 'thickness', 'temperature', 'microstructure_model']
+            func = make_ice_column
+        else:
+            raise SMRTError("Unknown medium '%s' in data" % medium)
+
+        # compute required and optional arguments
+        args = [group_data[a] for a in required_args]
+        kwargs = {a: group_data[a] for a in data.columns if a not in required_args}
+
+        m = func(*args, interface=interface, substrate=substrate, **kwargs)
+        medium_list.append(m)
+
+    # stack the media
+    return sum(medium_list)
+
 
 def make_snowpack(thickness, microstructure_model, density,
                   interface=None,
@@ -468,3 +529,42 @@ def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, te
     return lay
 
 
+def compute_thickness_from_z(z):
+    """Compute the thickness of layers given the elevation z. Whatever the sign of z, the order *MUST* be from the topmost layer to the lowermost.
+
+Several situation are accepted and interpretated as follows:
+- z is positive and decreasing. The first value is the height of the surface about the ground (z=0) and z represents the top elevation of each layer. This is typical of the seasonal snowpack.
+- z is negative and decreasing. The first value is the elevation of the bottom of the first layer with respect to the surface (z=0). This is typical of a snowpack on ice-sheet. 
+- z is positive and increasing. The first value is the depth of the bottom of the first layer with respect to the surface. This is typical of a snowpack on ice-sheet. 
+- other case, when z is not monoton or is increasing with negative value raises an error.
+
+Because z indicate the top or the bottom of a layer depending whether z=0 is the ground or the surface, the value 0 can never be in z. This raises an error.
+
+"""
+    order = (np.diff(z) < 0)
+    if np.any(z == 0):
+        raise SMRTError("z must not include 0")
+    positive = z >= 0
+
+    if np.all(order):
+        # descending z
+        if np.all(positive):
+            # z >0, this is typically a seasonal snowpack. z= height above ground
+            z = -np.append(z.values, 0)
+        else:
+            # z < 0, this is typically a permanent, deep snowpack, without ground reference. z is the depth from the surface.
+            z = -np.insert(z.values, 0, 0)
+
+    elif np.any(order):
+        # ascending z
+        if np.all(positive):
+            # ascending z and z > 0, this is typically a permanent, deep snowpack, without ground reference. z is the depth from the surface.
+            z = np.insert(z.values, 0, 0)
+        else:
+            # this is unusual
+            raise SMRTError("z is ascending and has negative values, which an ambiguous situation")
+               
+    else:
+        raise SMRTError("The z argument is not sorted")
+
+    return np.diff(z)
