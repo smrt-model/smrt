@@ -47,6 +47,15 @@ When reading a dataframe from disk for instance, it is convenient to use df.rena
 required by SMRT.
 
 if 'z' is given, the thickness is deduced using :py:meth:`~smrt.core.inputs.make_medium.compute_thickness_from_z`.
+
+** Warning **: Using this function is a bit dangerous as any unrecognized column names are silently ignored. For instance, a column named 'Temperature' 
+is ignore (due to the uppercase), and the temperature in the snowpack will be set to its default value (273.15 K). This issue applies to any optional argument.
+Double ckeck the spelling of the columns. 
+
+** Note **: `make_medium` create laters using all the columns in the dataframe. It means that any column name becomes an attribute of the layer objects, even if not recognized/used by SMRT.
+This can be seen as an interesting feature to store information in layers, but this is also dangerous if column names collide with internal
+ layer attributes or method names. It is recommended to clean the dataframe (with df.drop(columns=[...])) before calling make_medium.
+
 """
 
     if isinstance(data, dict):
