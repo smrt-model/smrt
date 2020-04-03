@@ -157,7 +157,7 @@ class ActiveResult(Result):
     def sigma_dB(self, **kwargs):
         """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V').
          See xarray slicing with sel method (to document)"""
-        return dB(self.simga(**kwargs))
+        return dB(self.sigma(**kwargs))
 
     def sigma_as_dataframe(self, **kwargs):
         """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V').
