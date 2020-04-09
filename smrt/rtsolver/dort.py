@@ -38,23 +38,38 @@ class DORT(object):
 
         :param n_max_stream: number of stream in the most refringent layer
         :param m_max: number of mode (azimuth)
-        :param phase_normalization: the integral of the phase matrix should in principe be equal to the scattering coefficient. However, some emmodels do not 
-        respect this strictly. In general a small difference is due to numerical rounding and is acceptable, but a large difference rather indicates either a bug in the emmodel or input parameters that breaks the 
-        assumption of the emmodel. The most typical case is when the grain size is too big compared to wavelength for emmodels that rely on Rayleigh assumption. 
-        If this argument is to True (the default), the phase matrix is normalized to be coherent with the scattering coefficient, but only when the difference is moderate (0.7 to 1.3). 
-        If set to "force" the normalization is always performed. This option is dangerous because it may hide bugs or unappropriate input parameters (typically too big grains).
-        If set to False, no normalization is performed.
+        :param phase_normalization: the integral of the phase matrix should in principe be equal to the scattering coefficient.
+        However, some emmodels do not respect this strictly. In general a small difference is due to numerical rounding and is acceptable,
+        but a large difference rather indicates either a bug in the emmodel or input parameters that breaks the 
+        assumption of the emmodel. The most typical case is when the grain size is too big compared to wavelength for emmodels
+        that rely on Rayleigh assumption. If this argument is to True (the default), the phase matrix is normalized to be coherent
+        with the scattering coefficient, but only when the difference is moderate (0.7 to 1.3). 
+        If set to "force" the normalization is always performed. This option is dangerous because it may hide bugs or unappropriate
+        input parameters (typically too big grains). If set to False, no normalization is performed.
         :param error_handling: If set to "exception" (the default), raise an exception in cause of error, stopping the code. If set to "nan", return a nan, so the calculation can continue, 
         but the result is of course unusuable and the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
+        :param process_coherent_layers: Adapt the layers thiner than the wavelegnth using the MEMLS method. The radiative transfer theory is inadequate
+        layers thiner than the wavelength and using DORT with thin layers is generally not recommended. In some parcticular cases (such as ice lenses)
+        where the thin layer is isolated between large layers, it is possible to replace the thin layer by an equivalent reflective interface.
+        This neglects scattering in the thin layer, which is acceptable in most case, because the layer is thin. To use this option and more generally 
+        to investigate ice lenses, it is recommended to read MEMLS documentation on this topic.
+        :param prune_deep_snowpack: this value is the optical depth from which the layers are discarded in the calculation. It is to be use to accelerate the calculations
+        for deep snowpacks or at high frequencies when the contribution of the lowest layers is neglegible. The optical depth is a good criteria to determine this limit.
+        A value of about 6 is recommended. Use with care, especially values lower than 6.
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "phi", "polarization"}
 
-    def __init__(self, n_max_stream=32, m_max=2, stream_mode="most_refringent", 
-                                                 phase_normalization=True, error_handling="exception",
-                                                 process_coherent_layers=False):
+    def __init__(self,
+                 n_max_stream=32,
+                 m_max=2,
+                 stream_mode="most_refringent",
+                 phase_normalization=True,
+                 error_handling="exception",
+                 process_coherent_layers=False,
+                 prune_deep_snowpack=None):
         # """
         # :param n_max_stream: number of stream in the most refringent layer
         # :param m_max: number of mode (azimuth)
@@ -66,6 +81,10 @@ class DORT(object):
         self.phase_normalization = phase_normalization
         self.error_handling = error_handling
         self.process_coherent_layers = process_coherent_layers
+
+        if prune_deep_snowpack is True:
+            prune_deep_snowpack = 6
+        self.prune_deep_snowpack = prune_deep_snowpack
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
         """solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
@@ -136,7 +155,7 @@ class DORT(object):
             intensity = intensity.reshape(list(intensity.shape[:-1])+[intensity.shape[-1]//npol, npol])
         #  describe the results list of (dimension name, dimension array of value)
         coords = [('theta', sensor.theta_deg), ('polarization', pola)]
-        
+
         if sensor.mode == 'A':
             coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola)] + coords
 
@@ -274,7 +293,9 @@ class DORT(object):
 
         return intensity_0, intensity_higher
 
-    def dort_modem_banded(self, m, streams, eigenvalue_solver, interfaces, intensity_down_m, compute_coherent_only=False, special_return=False):
+    def dort_modem_banded(self, m, streams, eigenvalue_solver,
+                          interfaces, intensity_down_m,
+                          compute_coherent_only=False, special_return=False):
 
         # Index convention
         # for phase, Ke, and R matrix pola must be the fast index, then stream, then +-
@@ -284,10 +305,10 @@ class DORT(object):
         npol = 2 if m == 0 else 3
 
         # indexes of the columns
-        jl = 2 * (np.cumsum(streams.n)-streams.n) * npol
+        jl = 2 * (np.cumsum(streams.n) - streams.n) * npol
 
         # indexes of the rows: start Eq 19, then Eq TOP then Eq BOTTOM, then Eq 22
-        il_top = 2 * (np.cumsum(streams.n)-streams.n) * npol
+        il_top = 2 * (np.cumsum(streams.n) - streams.n) * npol
         il_bottom = il_top + streams.n * npol
 
         nboundary = sum(streams.n) * 2 * npol
@@ -298,7 +319,7 @@ class DORT(object):
         debug_compute_BC = special_return in ["BC", "testeq"]  # compute the full matrix boundary condition
 
         # Boundary condition matrix
-        bBC = np.zeros((2*nband+1, nboundary))  # we use banded Boundary condition matrix
+        bBC = np.zeros((2 * nband + 1, nboundary))  # we use banded Boundary condition matrix
 
         # rhs vector size
         assert(len(intensity_down_m.shape) == 2)
@@ -337,7 +358,6 @@ class DORT(object):
             # deduce the transmittance through the layers
             transt = scipy.sparse.diags(np.exp(-np.maximum(beta, 0) * self.snowpack.layers[l].thickness), 0)  # positive beta, reference at the bottom
             transb = scipy.sparse.diags(np.exp(np.minimum(beta, 0) * self.snowpack.layers[l].thickness), 0)   # negative beta, reference at the top
-            optical_depth += np.min(np.abs(beta)) * self.snowpack.layers[l].thickness
 
             # where we have chosen
             # beta>0  : z(0)(l) = z(l)    # reference is at the bottom
@@ -418,6 +438,18 @@ class DORT(object):
                 self.snowpack.substrate.temperature is not None and self.temperature is not None:
                 Tbottom_sub = interfaces.transmission_bottom(l, m, compute_coherent_only)
                 b[il_bottoml:il_bottoml+nsl_npol, :] += (muleye(Tbottom_sub) * self.snowpack.substrate.temperature)[:, np.newaxis]
+
+            # Finalize
+            optical_depth += np.min(np.abs(beta)) * self.snowpack.layers[l].thickness
+
+            if self.prune_deep_snowpack is not None and optical_depth > self.prune_deep_snowpack:
+                print("DEBUG: Prune layer %i/%i at optical depth %g" % (l + 1, nlayer, optical_depth))
+                # prune the matrix and vector
+                nboundary = sum(streams.n[0:l + 1]) * 2 * npol
+                bBC = bBC[:, 0:nboundary]
+                b = b[0:nboundary, :]
+
+                break
 
         # -------------------------------------------------------------------------------
         #   solve the boundary system BCx=b
