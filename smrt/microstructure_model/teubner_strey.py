@@ -41,7 +41,7 @@ class TeubnerStrey(Autocorrelation):
 
         """
 
-        acf = self.corr_func_at_origin * np.exp(-r/self.corr_length) * np.sinc(2*r/self.repeat_distance)
+        acf = self.corr_func_at_origin * np.exp(-r / self.corr_length) * np.sinc(2 * r / self.repeat_distance)
         return acf
 
     def ft_autocorrelation_function(self, k):
@@ -51,7 +51,7 @@ class TeubnerStrey(Autocorrelation):
 
         """
 
-        X = (self.corr_length * k)**2
+        X = (k * self.corr_length)**2
         Y = (2 * np.pi * self.corr_length / self.repeat_distance)**2
         ft_acf_normalized = 8 * np.pi * self.corr_length**3 / ((1 + Y)**2 + 2 * (1 - Y) * X + X**2)
 

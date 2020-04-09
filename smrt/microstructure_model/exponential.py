@@ -48,5 +48,7 @@ class Exponential(Autocorrelation):
 
     def ft_autocorrelation_function(self, k):
         """compute the fourier transform of the autocorrelation function analytically"""
-        ft = self.corr_func_at_origin * 8 * np.pi * self.corr_length**3 / (1. + (k * self.corr_length)**2)**2
+        X = (k * self.corr_length)**2
+
+        ft = self.corr_func_at_origin * 8 * np.pi * self.corr_length**3 / (1. + X)**2
         return ft
