@@ -115,7 +115,7 @@ class PassiveResult(Result):
     def Tb_as_dataframe(self, index_by_channel=False, **kwargs):
         """Return brightness temperature. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V').
          See xarray slicing with sel method (to document)"""
-        tb = self.Tb(**kwargs).to_dataframe(name='Tb')
+        tb = self.data.sel(**kwargs).to_dataframe(name='Tb')
         if not index_by_channel:
             return tb
         else:
