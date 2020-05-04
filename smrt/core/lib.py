@@ -185,13 +185,13 @@ class smrt_matrix(object):
             else:
                 raise NotImplementedError
                 # reorder from pola_s, pola_i, m, mu_s, mu_i to  m, mu_s, pola_s, mu_i, pola_i
-                #mat = np.moveaxis(self.values, (0, 1), (2, 4)) # 0 becomes 2, 1 becomes 4
+                # mat = np.moveaxis(self.values, (0, 1), (2, 4)) # 0 becomes 2, 1 becomes 4
                 # merge mu_s * pola_s and mu_i * pola_i
                 #return smrt_matrix(np.reshape(mat, (mat.shape[0], mat.shape[1]*mat.shape[2], mat.shape[3]*mat.shape[4])), mtype="compressed3")
-    
+
         elif self.mtype == "dense4":
             if self.values.shape[0] == 3 and auto_reduce_npol and mode == 0:
-                ## 3pol->2pol
+                # 3pol->2pol
                 mat = self.values[0:2, 0:2, :, :]
             else:
                 mat = self.values
@@ -275,20 +275,16 @@ class smrt_matrix(object):
     def sel(self, **kwargs):
 
         if 'mode' in kwargs:
+            mode = kwargs['mode']
+            # 3pol->2pol
+            if self.values.shape[0] == 3 and kwargs['auto_reduce_npol'] and mode == 0:
+                pola = slice(0, 2)
+            else:
+                pola = slice(None)
             if self.mtype == "dense5":
-
-                if self.values.shape[0] == 3 and kwargs['auto_reduce_npol'] and kwargs['mode'] == 0:
-                    ## 3pol->2pol
-                    return smrt_matrix(self.values[0:2, 0:2, kwargs['mode'], :, :], mtype='dense4')
-                else:
-                    return smrt_matrix(self.values[:, :, kwargs['mode'], :, :], mtype='dense4')
-
+                return smrt_matrix(self.values[pola, pola, mode, :, :], mtype='dense4')
             elif self.mtype == "diagonal5":
-                if self.values.shape[0] == 3 and kwargs['auto_reduce_npol'] and kwargs['mode'] == 0:
-                    ## 3pol->2pol
-                    return smrt_matrix(self.values[0:2, kwargs['mode'], :], mtype='diagonal4')
-                else:
-                    return smrt_matrix(self.values[:, kwargs['mode'], :], mtype='diagonal4')
+                return smrt_matrix(self.values[pola, mode, :], mtype='diagonal4')
 
             elif self.mtype == "dense4":
                 raise SMRTError("Dense4 matrix can not be selected by mode")
@@ -296,7 +292,7 @@ class smrt_matrix(object):
             elif self.mtype == "diagonal4":
                 raise SMRTError("Diagonal4 matrix can not be selected by mode")
             else:
-                raise NotImplementedError 
+                raise NotImplementedError
         else:
             raise SMRTError("Currently only selection by mode is implemented")
 
