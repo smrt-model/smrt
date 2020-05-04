@@ -111,9 +111,8 @@ to see how to use this class.
 
         # fft for auxiliary wave vector array
         ft_resampled = np.empty_like(C)
-        ft_resampled[1:] = dst(4 * np.pi * C[1:] * r[1:], type=1)
-        ft_resampled[1:] /= 2 / dr * k_resampled[1:]
-        ft_resampled[0] = dr * 4 * np.pi * np.sum(C*r**2)
+        ft_resampled[1:] = dst(4 * np.pi * C[1:] * r[1:], type=1) / (2 / dr * k_resampled[1:])
+        ft_resampled[0] = dr * 4 * np.pi * np.sum(C * r**2)
 
         # get ft values for input k-values by linear interpolation
         ft = np.interp(k_abs, k_resampled, ft_resampled)
@@ -136,16 +135,15 @@ to see how to use this class.
 
         no_points = (np.max(r) - np.min(r)) / r_spacing
         points = np.arange(no_points)
-        r_resampled = r_spacing*points
+        r_resampled = r_spacing * points
 
         dk = np.pi / (no_points * r_spacing)
-        k = dk*points
+        k = dk * points
         ft = self.ft_autocorrelation_function(k)
 
         C_resampled = np.empty_like(ft)
-        C_resampled[1:] = dst(4 * np.pi * ft[1:] * k[1:], type=1)
-        C_resampled[1:] /= 2 / (dk / (2*np.pi)**3) * r_resampled[1:]
-        C_resampled[0] = (dk / (2*np.pi)**3) * 4 * np.pi*sum(ft*k**2)
+        C_resampled[1:] = dst(4 * np.pi * ft[1:] * k[1:], type=1) / (2 / (dk / (2 * np.pi)**3) * r_resampled[1:])
+        C_resampled[0] = (dk / (2 * np.pi)**3) * 4 * np.pi * np.sum(ft * k**2)
 
         # get invft values corresponding to input r-values by linear interpolation
         C = np.interp(r, r_resampled, C_resampled)
