@@ -28,7 +28,6 @@ import scipy.sparse
 # local import
 from ..core.error import SMRTError
 from ..core.result import make_result
-from ..core import lib
 from smrt.core.lib import smrt_matrix, isnull
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers 
 
@@ -40,10 +39,10 @@ class DORT(object):
         :param m_max: number of mode (azimuth)
         :param phase_normalization: the integral of the phase matrix should in principe be equal to the scattering coefficient.
         However, some emmodels do not respect this strictly. In general a small difference is due to numerical rounding and is acceptable,
-        but a large difference rather indicates either a bug in the emmodel or input parameters that breaks the 
+        but a large difference rather indicates either a bug in the emmodel or input parameters that breaks the
         assumption of the emmodel. The most typical case is when the grain size is too big compared to wavelength for emmodels
         that rely on Rayleigh assumption. If this argument is to True (the default), the phase matrix is normalized to be coherent
-        with the scattering coefficient, but only when the difference is moderate (0.7 to 1.3). 
+        with the scattering coefficient, but only when the difference is moderate (0.7 to 1.3).
         If set to "force" the normalization is always performed. This option is dangerous because it may hide bugs or unappropriate
         input parameters (typically too big grains). If set to False, no normalization is performed.
         :param error_handling: If set to "exception" (the default), raise an exception in cause of error, stopping the code. If set to "nan", return a nan, so the calculation can continue, 
@@ -109,15 +108,16 @@ class DORT(object):
         self.atmosphere = atmosphere
 
         self.effective_permittivity = np.array([emmodel.effective_permittivity() for emmodel in emmodels])
-        self.substrate_permittivity = self.snowpack.substrate.permittivity(self.sensor.frequency) if self.snowpack.substrate is not None else None
+        self.substrate_permittivity = self.snowpack.substrate.permittivity(self.sensor.frequency) \
+            if self.snowpack.substrate is not None else None
 
         if self.sensor.mode == 'P':
+            pola = ['V', 'H']
             self.temperature = [layer.temperature for layer in self.snowpack.layers]
-            pola = ['V', 'H'] 
-            m_max = 0 # force m_max=0 for passive microwave
+            m_max = 0  # force m_max=0 for passive microwave
         else:
-            self.temperature = None
             pola = ['V', 'H', 'U']
+            self.temperature = None
             m_max = self.m_max
 
         # solve the RT equation
@@ -125,7 +125,7 @@ class DORT(object):
 
         # reshape the first dimension in two dimensions (theta, pola)
         npol = len(pola)
-        intensity = intensity.reshape([intensity.shape[0]//npol, npol] + list(intensity.shape[1:]))
+        intensity = intensity.reshape([intensity.shape[0] // npol, npol] + list(intensity.shape[1:]))
 
         mu = np.cos(sensor.theta)
 
@@ -133,17 +133,20 @@ class DORT(object):
         if np.max(mu) > np.max(outmu):
             # need extrapolation to 0°
             # add the mean of H and V polarisation for the smallest angle for theta=0 (mu=1)
-            if self.sensor.mode == 'P': # passive
+            if self.sensor.mode == 'P':  # passive
                 outmu = np.insert(outmu, 0, 1.0)
                 intensity = np.insert(intensity, 0, np.mean(intensity[0, :, ...], axis=0), axis=0)
-            else: # active
+            else:  # active
                 fill_value = 'extrapolate'
 
         if np.min(mu) < np.min(outmu):
-            raise SMRTError("Viewing zenith angle is higher than the stream angles computed by DORT. Either increase the number of streams or reduce the highest viewing zenith angle.")
+            raise SMRTError("Viewing zenith angle is higher than the stream angles computed by DORT."
+                            " Either increase the number of streams or reduce the highest viewing zenith angle.")
 
         # reverse is necessary for "old" scipy version
-        intfct = scipy.interpolate.interp1d(outmu[::-1], intensity[::-1, ...], axis=0, fill_value=fill_value, assume_sorted=True)  # could use fill_value to be smart about extrapolation, but it's safer to return NaN (default)
+        intfct = scipy.interpolate.interp1d(outmu[::-1], intensity[::-1, ...],
+                                            axis=0, fill_value=fill_value, assume_sorted=True)
+        # the preivous call could use fill_value to be smart about extrapolation, but it's safer to return NaN (default)
 
         # it seems there is a bug in scipy at least when checking the boundary, mu must be sorted
         # original code that should work: intensity = intfct(mu)
@@ -152,7 +155,7 @@ class DORT(object):
 
         if sensor.mode == 'A':
             # reshape the outer/first dimension in two dimensions (theta_inc, pola_inc)
-            intensity = intensity.reshape(list(intensity.shape[:-1])+[intensity.shape[-1]//npol, npol])
+            intensity = intensity.reshape(list(intensity.shape[:-1]) + [intensity.shape[-1] // npol, npol])
         #  describe the results list of (dimension name, dimension array of value)
         coords = [('theta', sensor.theta_deg), ('polarization', pola)]
 
@@ -203,18 +206,20 @@ class DORT(object):
         #
         # compute the outgoing intensity for each mode
 
-        for m in range(0, m_max+1):
+        for m in range(0, m_max + 1):
             intensity_down_m = intensity_0 if m == 0 else intensity_higher
 
             # compute the upwelling intensity for mode m
-            intensity_up_m = self.dort_modem_banded(m, streams, eigenvalue_solver, interfaces, intensity_down_m, special_return=special_return)
+            intensity_up_m = self.dort_modem_banded(m, streams, eigenvalue_solver, interfaces, intensity_down_m,
+                                                    special_return=special_return)
 
             if special_return:  # debuging
                 return intensity_up_m
 
             if self.sensor.mode == 'A':
                 # substrate the coherent contribution
-                intensity_up_m -= self.dort_modem_banded(m, streams, eigenvalue_solver, interfaces, intensity_down_m, compute_coherent_only=True)
+                intensity_up_m -= self.dort_modem_banded(m, streams, eigenvalue_solver, interfaces, intensity_down_m,
+                                                         compute_coherent_only=True)
 
             # reconstruct the intensity
             if m == 0:
@@ -224,7 +229,8 @@ class DORT(object):
                 intensity_up[1::npol] += intensity_up_m[1::npol] * np.cos(m * self.sensor.phi)  # TODO Ghi: deals with an array of phi
                 intensity_up[2::npol] += intensity_up_m[2::npol] * np.sin(m * self.sensor.phi)  # TODO Ghi: deals with an array of phi
 
-                # TODO: implement a convergence test if we want to avoid long computation when self.m_max is too high for the phase function.
+                # TODO: implement a convergence test if we want to avoid long computation
+                # when self.m_max is too high for the phase function.
 
         if self.atmosphere is not None:
             intensity_up = self.atmosphere.tbup(self.sensor.frequency, streams.outmu, npol) + \
@@ -244,29 +250,29 @@ class DORT(object):
             # delta(x) = 1/2pi + 1/pi*sum_{n=1}{infinty} cos(nx)
             #
 
-            intensity_0 = np.zeros((2*len(streams.outmu), 2*len(self.sensor.theta_inc)))  # 2 is for the two polarizations
+            intensity_0 = np.zeros((2 * len(streams.outmu), 2 * len(self.sensor.theta_inc)))  # 2 is for the two polarizations
 
             j0 = 0
             for theta in self.sensor.theta_inc:
                 mu_inc = math.cos(theta)
                 i0 = np.searchsorted(-streams.outmu, -mu_inc)
 
-                if i0 == 0 or i0==len(streams.outmu):
+                if i0 == 0 or i0 == len(streams.outmu):
                     if i0 == len(streams.outmu):
                         i0 -= 1
                     for ipol in [0, 1]:
-                        intensity_0[2*i0 + ipol, j0] = 1.0 / (2 * math.pi * streams.outweight[i0])
+                        intensity_0[2 * i0 + ipol, j0] = 1.0 / (2 * math.pi * streams.outweight[i0])
                         j0 += 1
                 else:
                     i1 = i0 - 1
-                    alpha = (streams.outmu[i0]-mu_inc)/(streams.outmu[i0]-streams.outmu[i1])
+                    alpha = (streams.outmu[i0] - mu_inc) / (streams.outmu[i0] - streams.outmu[i1])
 
                     delta_0 = (1 - alpha) / (2 * math.pi * streams.outweight[i0])
                     delta_1 = alpha / (2 * math.pi * streams.outweight[i1])
 
                     for ipol in [0, 1]:
-                        intensity_0[2*i0 + ipol, j0] = delta_0
-                        intensity_0[2*i1 + ipol, j0] = delta_1
+                        intensity_0[2 * i0 + ipol, j0] = delta_0
+                        intensity_0[2 * i1 + ipol, j0] = delta_1
                         j0 += 1
 
             intensity_higher = 2 * extend_2pol_npol(intensity_0, 3)
@@ -283,7 +289,7 @@ class DORT(object):
                 intensity_higher = np.zeros_like(intensity_0)
 
             else:
-                intensity_0 = np.zeros((len(streams.outmu)*npol, 1))
+                intensity_0 = np.zeros((len(streams.outmu) * npol, 1))
                 intensity_higher = intensity_0
                 intensity_0.flags.writeable = False  # make immutable
                 intensity_higher.flags.writeable = False  # make immutable
@@ -337,13 +343,15 @@ class DORT(object):
         for l in range(0, nlayer):
             nsl = streams.n[l]  # number of streams in layer l
             nsl_npol = nsl * npol  # number of streams * npol in layer l
-            nsl2_npol = 2 * nsl_npol    # number of eigenvalues in layer l (should be 2*npol*n_stream)
-            nslm1_npol = (streams.n[l-1] * npol) if l > 0 else (streams.n_air * npol)  # number of streams * npol in the layer l-1 (lm1)
-            nslp1_npol = (streams.n[l+1] * npol) if l < nlayer-1 else (streams.n_substrate * npol)  # number of streams * npol in the layer l+1 (lp1)
+            nsl2_npol = 2 * nsl_npol    # number of eigenvalues in layer l (should be 2 * npol*n_stream)
+            nslm1_npol = (streams.n[l - 1] * npol) if l > 0 else (streams.n_air * npol)  # number of streams * npol in the layer l - 1 (lm1)
+            # number of streams * npol in the layer l + 1 (lp1)
+            nslp1_npol = (streams.n[l + 1] * npol) if l < nlayer - 1 else (streams.n_substrate * npol)
 
             # solve the eigenvalue problem for layer l
 
-            # TODO: the following duplicates the eignevalue_solver call line. A better way should be implemented, either with a variable holding the exception type (
+            # TODO: the following duplicates the eignevalue_solver call line. A better way should be implemented,
+            # either with a variable holding the exception type (
             # and use of a never raised exception or see contextlib module if useful)
             if self.error_handling == 'nan':
                 try:
@@ -356,12 +364,14 @@ class DORT(object):
             assert(Eu.shape[0] == npol * nsl)
 
             # deduce the transmittance through the layers
-            transt = scipy.sparse.diags(np.exp(-np.maximum(beta, 0) * self.snowpack.layers[l].thickness), 0)  # positive beta, reference at the bottom
-            transb = scipy.sparse.diags(np.exp(np.minimum(beta, 0) * self.snowpack.layers[l].thickness), 0)   # negative beta, reference at the top
+            # positive beta, reference at the bottom
+            transt = scipy.sparse.diags(np.exp(-np.maximum(beta, 0) * self.snowpack.layers[l].thickness), 0)
+            # negative beta, reference at the top
+            transb = scipy.sparse.diags(np.exp(np.minimum(beta, 0) * self.snowpack.layers[l].thickness), 0)
 
             # where we have chosen
             # beta>0  : z(0)(l) = z(l)    # reference is at the bottom
-            # beta<0  : z(0)(l) = z(l-1)  # reference is at the top
+            # beta<0  : z(0)(l) = z(l - 1)  # reference is at the top
             # so that the transmittance are < 1
 
             # few short-cut
@@ -376,74 +386,80 @@ class DORT(object):
                 Eu_0 = Eu
                 transt_0 = transt
 
-            # compute reflection coefficient between l and l-1
+            # compute reflection coefficient between l and l - 1
             Rtop_l = interfaces.reflection_top(l, m, compute_coherent_only)
 
             # fill the matrix
-            todiag(bBC, (il_topl, j), (Ed - Rtop_l * Eu) * transt)  # this line perform matrix multiplication between Rtop_l and Eu. Make sure that reflection_matrix return matrix!
+            # this line perform matrix multiplication between Rtop_l and Eu. Make sure that reflection_matrix return matrix!
+            todiag(bBC, (il_topl, j), (Ed - Rtop_l * Eu) * transt)
 
             if debug_compute_BC:
-                BC[il_topl:il_topl+nsl_npol, j:j+nsl2_npol] = (Ed - Rtop_l * Eu) * transt   # a mettre en (l,l), theta<0 et * transt  # a mettre en (l,l)
+                # a mettre en (l,l), theta<0 et * transt  # a mettre en (l,l)
+                BC[il_topl:il_topl + nsl_npol, j:j + nsl2_npol] = (Ed - Rtop_l * Eu) * transt
 
             if l < nlayer - 1:
                 ns_npol_common_bottom_ = min(nsl_npol, nslp1_npol)
                 Tbottom_lp1 = interfaces.transmission_bottom(l, m, compute_coherent_only)
-                todiag(bBC, (il_top[l+1], j), - Tbottom_lp1 * Ed[0:ns_npol_common_bottom_, :] * transb)
+                todiag(bBC, (il_top[l + 1], j), - Tbottom_lp1 * Ed[0:ns_npol_common_bottom_, :] * transb)
                 if debug_compute_BC:
-                    BC[il_top[l+1]:il_top[l+1]+ns_npol_common_bottom_, j:j+nsl2_npol] = - Tbottom_lp1 * Ed[0:ns_npol_common_bottom_, :] * transb  # a mettre en (l+1,l)
+                    BC[il_top[l + 1]:il_top[l + 1] + ns_npol_common_bottom_, j:j + nsl2_npol] = \
+                        - Tbottom_lp1 * Ed[0:ns_npol_common_bottom_, :] * transb  # a mettre en (l + 1,l)
 
             # fill the vector
             if m == 0 and self.temperature is not None and self.temperature[l] > 0:
                 if isnull(Rtop_l):
-                    b[il_topl:il_topl+nsl_npol, :] -= self.temperature[l]  # a mettre en (l)
+                    b[il_topl:il_topl + nsl_npol, :] -= self.temperature[l]  # a mettre en (l)
                 else:
-                    b[il_topl:il_topl+nsl_npol, :] -= ((1.0 - muleye(Rtop_l)) * self.temperature[l])[:, np.newaxis]  # a mettre en (l)
+                    b[il_topl:il_topl + nsl_npol, :] -= ((1.0 - muleye(Rtop_l)) * self.temperature[l])[:, np.newaxis]  # a mettre en (l)
                 # the muleye comes from the isotropic emission of the black body
 
                 if l < nlayer - 1 and self.temperature[l] > 0:
-                    b[il_top[l+1]:il_top[l+1]+ns_npol_common_bottom_, :] += (muleye(Tbottom_lp1) * self.temperature[l])[:, np.newaxis]     # a mettre en (l+1)
+                    b[il_top[l + 1]:il_top[l + 1] + ns_npol_common_bottom_, :] += \
+                        (muleye(Tbottom_lp1) * self.temperature[l])[:, np.newaxis]     # a mettre en (l + 1)
 
             if l == 0:  # Air-snow interface
                 Tbottom_air_down = interfaces.transmission_bottom(-1, m, compute_coherent_only)
-                b[il_topl:il_topl+streams.n_air*npol, :] += Tbottom_air_down * intensity_down_m
+                b[il_topl:il_topl + streams.n_air * npol, :] += Tbottom_air_down * intensity_down_m
 
             # -------------------------------------------------------------------------------
             # Eq 18 & 22 BOTTOM of layer l
 
-            # compute reflection coefficient between l and l+1
+            # compute reflection coefficient between l and l + 1
             Rbottom_l = interfaces.reflection_bottom(l, m, compute_coherent_only)
 
             # fill the matrix
             todiag(bBC, (il_bottoml, j), (Eu - Rbottom_l * Ed) * transb)
             if debug_compute_BC:
-                BC[il_bottoml:il_bottoml+nsl_npol, j:j+nsl2_npol] = (Eu - Rbottom_l * Ed) * transb  # a mettre en (l,l), theta >0
+                BC[il_bottoml:il_bottoml + nsl_npol, j:j + nsl2_npol] = (Eu - Rbottom_l * Ed) * transb  # a mettre en (l,l), theta >0
 
             if l > 0:
                 ns_npol_common_top_ = min(nsl_npol, nslm1_npol)
                 Ttop_lm1 = interfaces.transmission_top(l, m, compute_coherent_only)
-                todiag(bBC, (il_bottom[l-1], j), -Ttop_lm1 * Eu[0:ns_npol_common_top_, :] * transt)
+                todiag(bBC, (il_bottom[l - 1], j), -Ttop_lm1 * Eu[0:ns_npol_common_top_, :] * transt)
                 if debug_compute_BC:
-                    BC[il_bottom[l-1]:il_bottom[l-1]+ns_npol_common_top_, j:j+nsl2_npol] = -Ttop_lm1 * Eu[0:ns_npol_common_top_, :] * transt  # a mettre en (l-1)
+                    BC[il_bottom[l - 1]:il_bottom[l - 1] + ns_npol_common_top_, j:j + nsl2_npol] = \
+                        -Ttop_lm1 * Eu[0:ns_npol_common_top_, :] * transt  # a mettre en (l - 1)
 
             # fill the vector
             if m == 0 and self.temperature is not None and self.temperature[l] > 0:
                 if isnull(Rbottom_l):
-                    b[il_bottoml:il_bottoml+nsl_npol, :] -= self.temperature[l]   # a mettre en (l)
+                    b[il_bottoml:il_bottoml + nsl_npol, :] -= self.temperature[l]   # a mettre en (l)
                 else:
-                    b[il_bottoml:il_bottoml+nsl_npol, :] -= ((1.0 - muleye(Rbottom_l)) * self.temperature[l])[:, np.newaxis]  # a mettre en (l)
+                    b[il_bottoml:il_bottoml + nsl_npol, :] -= \
+                        ((1.0 - muleye(Rbottom_l)) * self.temperature[l])[:, np.newaxis]  # a mettre en (l)
                 if l > 0:
-                    b[il_bottom[l-1]:il_bottom[l-1]+ns_npol_common_top_, :] += (muleye(Ttop_lm1) * self.temperature[l])[:, np.newaxis]  # a mettre en (l-1)
+                    b[il_bottom[l - 1]:il_bottom[l - 1] + ns_npol_common_top_, :] += \
+                        (muleye(Ttop_lm1) * self.temperature[l])[:, np.newaxis]  # a mettre en (l - 1)
 
-            if m == 0 and l == nlayer-1 and self.snowpack.substrate is not None and \
-                self.snowpack.substrate.temperature is not None and self.temperature is not None:
+            if m == 0 and l == nlayer - 1 and self.snowpack.substrate is not None and \
+                    self.snowpack.substrate.temperature is not None and self.temperature is not None:
                 Tbottom_sub = interfaces.transmission_bottom(l, m, compute_coherent_only)
-                b[il_bottoml:il_bottoml+nsl_npol, :] += (muleye(Tbottom_sub) * self.snowpack.substrate.temperature)[:, np.newaxis]
+                b[il_bottoml:il_bottoml + nsl_npol, :] += (muleye(Tbottom_sub) * self.snowpack.substrate.temperature)[:, np.newaxis]
 
             # Finalize
             optical_depth += np.min(np.abs(beta)) * self.snowpack.layers[l].thickness
 
             if self.prune_deep_snowpack is not None and optical_depth > self.prune_deep_snowpack:
-                print("DEBUG: Prune layer %i/%i at optical depth %g" % (l + 1, nlayer, optical_depth))
                 # prune the matrix and vector
                 nboundary = sum(streams.n[0:l + 1]) * 2 * npol
                 bBC = bBC[:, 0:nboundary]
@@ -469,10 +485,9 @@ class DORT(object):
         if self.snowpack.substrate is None and optical_depth < 5:
             warn("DORT has detected that the snowpack is optically shallow (tau=%g)and no substrate has been set, meaning that the space "
                  "under the snowpack is vaccum and that the snowpack is shallow enough to affect the signal measured at the surface."
-                 "This is usually not wanted. Either increase the thickness of the snowpack or set a substrate. If wanted, add a transparent "
-                 "substrate to supress this warning" % optical_depth)
+                 "This is usually not wanted. Either increase the thickness of the snowpack or set a substrate."
+                 " If wanted, add a transparent substrate to supress this warning" % optical_depth)
 
-        #x = scipy.linalg.solve(BC, b, overwrite_a=True, overwrite_b=False)
         x = scipy.linalg.solve_banded((nband, nband), bBC, b, overwrite_ab=True, overwrite_b=True)
         x = np.matrix(x)
 
@@ -487,13 +502,13 @@ class DORT(object):
 
         Rbottom_air_down = interfaces.reflection_bottom(-1, m, compute_coherent_only)
         Ttop_0 = interfaces.transmission_top(0, m, compute_coherent_only)  # snow-air
-        I0up_m = Rbottom_air_down * np.matrix(intensity_down_m) + (Ttop_0 * I1up_m[:streams.n_air*npol])
+        I0up_m = Rbottom_air_down * np.matrix(intensity_down_m) + (Ttop_0 * I1up_m[:streams.n_air * npol])
 
         return np.array(I0up_m).squeeze()
 
 
 def muleye(x):
-    #"""multiply x * 1v """
+    #  """multiply x * 1v """
     if isinstance(x, scipy.sparse.dia_matrix) or isinstance(x, np.matrix):
         return x.sum(axis=1).A1
     else:
@@ -501,7 +516,7 @@ def muleye(x):
 
 
 def todiag(bmat, ij, dmat):
-    #"""insert the small dense dmat matrix in the diagonal bmat matrix"""
+    #  """insert the small dense dmat matrix in the diagonal bmat matrix"""
     oi, oj = ij
 
     u = (bmat.shape[0]-1) // 2
@@ -514,7 +529,7 @@ def todiag(bmat, ij, dmat):
         ldiag = min(n, m-j)
         bmat[u+oi-oj-j, j+oj:j+oj+ldiag] = df[j::m+1][:ldiag]
 
-    for i in range(1, min(l+1, n)):
+    for i in range(1, min(l + 1, n)):
         ldiag = min(n-i, m)
         bmat[u+oi-oj+i, 0+oj:0+oj+ldiag] = df[i*m::m+1][:ldiag]
 
@@ -527,11 +542,11 @@ def extend_2pol_npol(x, npol):
     if scipy.sparse.isspmatrix_dia(x):
         y = scipy.sparse.diags(extend_2pol_npol(x.diagonal(), npol))
     elif len(x.shape) == 1:
-        y = np.zeros(len(x)//2*npol)
+        y = np.zeros(len(x)//2 * npol)
         y[0::npol] = x[0::2]
         y[1::npol] = x[1::2]
     elif len(x.shape) == 2:
-        y = np.zeros((x.shape[0]//2*npol, x.shape[1]//2*npol))
+        y = np.zeros((x.shape[0]//2 * npol, x.shape[1]//2 * npol))
         y[0::npol, 0::npol] = x[0::2, 0::2]
         y[0::npol, 1::npol] = x[0::2, 1::2]
         y[1::npol, 0::npol] = x[1::2, 0::2]
@@ -628,8 +643,9 @@ class EigenValueSolver(object):
                 mask = np.abs(E.imag) > 1e-8
                 print("Info:", m, E[mask], beta[np.any(mask, axis=0)])
                 raise SMRTError("""The diagonalization failed in DORT which is possibly caused by single scattering albedo larger than 1.
-It is often due to grain size too large (or too low stickiness parameter) to respect the Rayleigh/low-frequency assumption required by some emmodel (DMRT ShortRange, IBA, ...)"
-It is recommended to reduce the size of the bigger grains. It is possible to disable this error raise and return NaN instead by adding the argument rtsolver_options=dict(error_handling='nan') to make_model).
+It is often due to grain size too large (or too low stickiness parameter) to respect the Rayleigh/low-frequency assumption required by
+some emmodel (DMRT ShortRange, IBA, ...). It is recommended to reduce the size of the bigger grains. It is possible to disable this error
+raise and return NaN instead by adding the argument rtsolver_options=dict(error_handling='nan') to make_model).
 """)
 
             if np.iscomplexobj(E):
@@ -671,10 +687,9 @@ It is recommended to reduce the size of the bigger grains. It is possible to dis
 
             if self.normalization != "forced" and np.any(np.abs(self.norm_0 - 1.0) > 0.3):
                 raise SMRTError("""The re-normalization of the phase function exceeds the predefined threshold of 30%.
-                    This is likely because of a too large grain size or a bug in the phase function.
-                    It is recommended to check the grain size.
-                    You can also deactivate this check using normalization="forced" as an options of the dort solver. 
-                    It is at last possible to disable this error raise and return NaN instead by adding the argument rtsolver_options=dict(error_handling='nan') to make_model).""")
+This is likely because of a too large grain size or a bug in the phase function. It is recommended to check the grain size.
+You can also deactivate this check using normalization="forced" as an options of the dort solver. It is at last possible
+to disable this error raise and return NaN instead by adding the argument rtsolver_options=dict(error_handling='nan') to make_model).""")
         else:
             if self.norm_m is None:
                 if self.norm_0 is None:  # be careful, this code is not re-entrant
@@ -708,52 +723,59 @@ class InterfaceProperties(object):
         self.full_weight = dict()
 
         for l in range(nlayer):
-            eps_lm1 = permittivity[l-1] if l > 0 else 1
+            eps_lm1 = permittivity[l - 1] if l > 0 else 1
             eps_l = permittivity[l]
             if l < nlayer - 1:
-                eps_lp1 = permittivity[l+1]
+                eps_lp1 = permittivity[l + 1]
 
             nsl = streams.n[l]  # number of streams in layer l
-            nslm1 = streams.n[l-1] if l > 0 else streams.n_air  # number of streams * npol in the layer l-1 (lm1)
-            nslp1 = streams.n[l+1] if l < nlayer-1 else streams.n_substrate  # number of streams * npol in the layer l+1 (lp1)
+            nslm1 = streams.n[l - 1] if l > 0 else streams.n_air  # number of streams * npol in the layer l - 1 (lm1)
+            nslp1 = streams.n[l + 1] if l < nlayer - 1 else streams.n_substrate  # number of streams * npol in the layer l + 1 (lp1)
 
-            # compute reflection coefficient between l and l-1  UP
-            self.Rtop_coh[l] = interfaces[l].specular_reflection_matrix(frequency, eps_l, eps_lm1, 
-                                                                        streams.mu[l], npol)  # snow-snow UP
+            # compute reflection coefficient between l and l - 1  UP
+            # snow-snow UP
+            self.Rtop_coh[l] = interfaces[l].specular_reflection_matrix(frequency, eps_l, eps_lm1,
+                                                                        streams.mu[l], npol)
 
-            # compute transmission coefficient between l and l-1 UP
+            # compute transmission coefficient between l and l - 1 UP
             ns_common_top = min(nsl, nslm1)
+            # snow-snow or air UP
             self.Ttop_coh[l] = interfaces[l].coherent_transmission_matrix(frequency, eps_l, eps_lm1,
-                                                                          streams.mu[l][0:ns_common_top], npol)  # snow-snow or air UP
+                                                                          streams.mu[l][0:ns_common_top], npol)
 
-            # compute transmission coefficient between l and l+1  DOWN
+            # compute transmission coefficient between l and l + 1  DOWN
             if l < nlayer - 1:
                 ns_common_bottom = min(nsl, nslp1)
+                # snow-snow DOWN
                 self.Tbottom_coh[l] = interfaces[l].coherent_transmission_matrix(frequency, eps_l, eps_lp1,
-                                                                                streams.mu[l][0:ns_common_bottom], npol)  # snow-snow DOWN
+                                                                                 streams.mu[l][0:ns_common_bottom], npol)
             elif substrate is not None:
-                self.Tbottom_coh[nlayer -1] = substrate.emissivity_matrix(frequency, eps_l, streams.mu[l], npol)  # sub-snow
+                # sub-snow
+                self.Tbottom_coh[nlayer - 1] = substrate.emissivity_matrix(frequency, eps_l, streams.mu[l], npol)
 
-            # compute reflection coefficient between l and l+1  DOWN
+            # compute reflection coefficient between l and l + 1  DOWN
             if l < nlayer - 1:
-                self.Rbottom_coh[l] = interfaces[l].specular_reflection_matrix(frequency, eps_l, eps_lp1, streams.mu[l], npol)  # snow-snow DOWN
-                self.Rbottom_diff[l] = 0    
+                # snow-snow DOWN
+                self.Rbottom_coh[l] = interfaces[l].specular_reflection_matrix(frequency, eps_l, eps_lp1, streams.mu[l], npol)
+                self.Rbottom_diff[l] = 0
             elif substrate is not None:
-                self.Rbottom_coh[l] = substrate.specular_reflection_matrix(frequency, eps_l, streams.mu[l], npol) # snow-substrate
+                # snow-substrate
+                self.Rbottom_coh[l] = substrate.specular_reflection_matrix(frequency, eps_l, streams.mu[l], npol)
                 if hasattr(substrate, "ft_even_diffuse_reflection_matrix"):
-                    self.Rbottom_diff[l] = substrate.ft_even_diffuse_reflection_matrix(frequency, eps_l, streams.mu[l], streams.mu[l], m_max, npol)  # snow-sub
+                    # snow-sub
+                    self.Rbottom_diff[l] = substrate.ft_even_diffuse_reflection_matrix(frequency, eps_l,
+                                                                                       streams.mu[l], streams.mu[l], m_max, npol)
                 else:
                     self.Rbottom_diff[l] = smrt_matrix(0)
             else:
                 self.Rbottom_coh[l] = smrt_matrix(0)  # fully absorbant substrate
                 self.Rbottom_diff[l] = 0
 
-            #self.full_weight[l] = np.repeat(streams.weight[l], npol)
-
-        self.Tbottom_coh[-1] = interfaces[0].coherent_transmission_matrix(frequency, 1, permittivity[0], streams.outmu, npol) # air-snow DOWN 
-        self.Rbottom_coh[-1] = interfaces[0].specular_reflection_matrix(frequency, 1, permittivity[0], streams.outmu, npol) # air-snow DOWN 
+        # air-snow DOWN
+        self.Tbottom_coh[-1] = interfaces[0].coherent_transmission_matrix(frequency, 1, permittivity[0], streams.outmu, npol)
+        # air-snow DOWN
+        self.Rbottom_coh[-1] = interfaces[0].specular_reflection_matrix(frequency, 1, permittivity[0], streams.outmu, npol)
         self.Rbottom_diff[-1] = 0
-
 
     def reflection_top(self, l, m, compute_coherent_only):
         return self.Rtop_coh[l].compress(mode=m, auto_reduce_npol=True)
@@ -796,7 +818,6 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="mos
     #     :returns: mu, weight, outmu
     # """
 
-
     streams = Streams()
 
     #  ### search and proceed with the most refringent layer
@@ -810,30 +831,33 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="mos
     elif mode == "air":
 
         raise Warning("This code has not been tested yet. Use with caution.")
+
         def number_stream_in_air(n_stream_densest_layer):
             mu_most_refringent, weight_most_refringent = gaussquad(int(n_stream_densest_layer))
             relsin = real_index_air * np.sqrt(1 - mu_most_refringent ** 2)
             return np.sum(relsin < 1) - n_max_stream
 
-        streams.n = scipy.optimize.brentq(n_max_stream, 2*n_max_stream)
+        streams.n = scipy.optimize.brentq(n_max_stream, 2 * n_max_stream)
         mu_most_refringent, weight_most_refringent = gaussquad(streams.n)
 
     else:
-        raise Runtime("Unknow mode to compute the number of stream")
+        raise RuntimeError("Unknow mode to compute the number of stream")
 
     nlayer = len(permittivity)
-    mu = np.zeros((nlayer, n_max_stream), dtype=np.float64)
 
     #  calculate the nodes and weights of all the other layers
 
-    # calculate real part of the index. It is an approximation. See for instance "Semiconductor Physics, Quantum Electronics & Optoelectronics. 2001. V. 4, N 3. P. 214-218."
+    # calculate real part of the index. It is an approximation.
+    # See for instance "Semiconductor Physics, Quantum Electronics & Optoelectronics. 2001. V. 4, N 3. P. 214-218."
     real_index = np.real(np.sqrt(permittivity[k_most_refringent] / permittivity[:]))
 
     # calculate the angles (=node)
     relsin = real_index[:, np.newaxis] * np.sqrt(1 - mu_most_refringent[np.newaxis, :]**2)
 
     real_reflection = relsin < 1  # mask where real reflection occurs
-    mu[real_reflection] = np.sqrt(1-relsin[real_reflection]**2)
+
+    mu = np.zeros((nlayer, n_max_stream), dtype=np.float64)
+    mu[real_reflection] = np.sqrt(1 - relsin[real_reflection]**2)
 
     # calculate the number of streams per layer
     streams.mu = [mu[l, real_reflection[l, :]] for l in range(nlayer)]
@@ -842,16 +866,15 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="mos
     assert(all(streams.n > 2))
 
     # calculate the weight ("a" in Y-Q Jin)
-    # weight(1,k)=1-0.5*(mu(1,k)+mu(2,k))
-    # weight(nsk,k)=0.5*(mu(nsk-1,k)+mu(nsk,k))
-    # weight(2:nsk-1,k)=0.5*(mu(1:nsk-2,k)-mu(3:nsk,k))
+    # weight(1,k)=1-0.5 * (mu(1,k)+mu(2,k))
+    # weight(nsk,k)=0.5 * (mu(nsk-1,k)+mu(nsk,k))
+    # weight(2:nsk-1,k)=0.5 * (mu(1:nsk-2,k)-mu(3:nsk,k))
 
-    streams.weight = [np.empty_like(mu) for mu in streams.mu]    
+    streams.weight = [np.empty_like(mu) for mu in streams.mu]
     for l in range(nlayer):   # TODO: parallel
-        #if True or k != k_most_refringent:
-        streams.weight[l][0] = 1 - 0.5*(streams.mu[l][0] + streams.mu[l][1])
-        streams.weight[l][-1] = np.abs(0.5*(streams.mu[l][-2] + streams.mu[l][-1]))
-        streams.weight[l][1:-1] = np.abs(0.5*(streams.mu[l][0:-2] - streams.mu[l][2:]))
+        streams.weight[l][0] = 1 - 0.5 * (streams.mu[l][0] + streams.mu[l][1])
+        streams.weight[l][-1] = np.abs(0.5 * (streams.mu[l][-2] + streams.mu[l][-1]))
+        streams.weight[l][1:-1] = np.abs(0.5 * (streams.mu[l][0:-2] - streams.mu[l][2:]))
 
     # ### calculate the angles (=node) in the air
     # real_index = np.real(np.sqrt(permittivity[0]/1.0))
@@ -867,9 +890,9 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="mos
     streams.n_air = len(streams.outmu)
 
     streams.outweight = np.empty_like(streams.outmu)
-    streams.outweight[0] = 1 - 0.5*(streams.outmu[0] + streams.outmu[1])
-    streams.outweight[-1] = 0.5*(streams.outmu[-2] + streams.outmu[-1])
-    streams.outweight[1:-1] = 0.5*(streams.outmu[0:-2] - streams.outmu[2:])
+    streams.outweight[0] = 1 - 0.5 * (streams.outmu[0] + streams.outmu[1])
+    streams.outweight[-1] = 0.5 * (streams.outmu[-2] + streams.outmu[-1])
+    streams.outweight[1:-1] = 0.5 * (streams.outmu[0:-2] - streams.outmu[2:])
 
     # compute the number of stream in the substrate
     if permittivity_substrate is None:
@@ -879,7 +902,7 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="mos
 
         # calculate the angles (=node) in the substrate
         relsin = real_index * np.sqrt(1 - mu_most_refringent[:]**2)
-        streams.n_substrate = np.sum (relsin < 1)   # count where real reflection occurs
+        streams.n_substrate = np.sum(relsin < 1)   # count where real reflection occurs
 
     return streams
 
@@ -891,9 +914,9 @@ def gaussquad(n):
     # """
     assert n >= 2
 
-    mu, weight = scipy.special.orthogonal.p_roots(2*n)
+    mu, weight = scipy.special.orthogonal.p_roots(2 * n)
 
-    mu = mu[-1:n-1:-1]
-    weight = weight[-1:n-1:-1]
+    mu = mu[-1:n - 1:-1]
+    weight = weight[-1:n - 1:-1]
 
     return mu, weight
