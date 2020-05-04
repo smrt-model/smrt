@@ -77,7 +77,7 @@ class Reflector(Substrate):
 
         if isinstance(self.backscattering_coefficient, dict):  # we have a dictionary with polarization
             diffuse_refl_coeff = smrt_matrix.zeros((npol, m_max + 1, len(mu_i)))
-            
+
             for m in range(m_max + 1):
                 if m == 0:
                     coef = 0.5
@@ -86,10 +86,11 @@ class Reflector(Substrate):
                 else:
                     coef = 1.0
                 coef /= 4 * np.pi * mu_i
-                coef /= (m_max + 0.5) # ad hoc normalization to get the right backscatter. This is a trick to deal with the dirac.
 
-                diffuse_refl_coeff[0, m] += coef * self._get_refl(self.backscattering_coefficient['VV'], mu_i)
-                diffuse_refl_coeff[1, m] += coef * self._get_refl(self.backscattering_coefficient['HH'], mu_i)
+                coef /= 0.5 * (m_max + 1)  # ad hoc normalization to get the right backscatter. This is a trick to deal with the dirac.
+
+                diffuse_refl_coeff[0, m, :] += coef * self._get_refl(self.backscattering_coefficient['VV'], mu_i)
+                diffuse_refl_coeff[1, m, :] += coef * self._get_refl(self.backscattering_coefficient['HH'], mu_i)
 
         elif self.backscattering_coefficient is not None:
             raise SMRTError("backscattering_coefficient must be a dictionary with keys VV and HH")
@@ -104,7 +105,7 @@ class Reflector(Substrate):
             self.specular_reflection = 1
 
         if npol > 2 and not hasattr(self, "stop_pol2_warning"):
-            print("active model is not yet fully implemented, need modification for the third component") # !!!
+            print("active model is not yet fully implemented, need modification for the third component")  # !!!
             self.stop_pol2_warning = True
 
         emissivity = smrt_matrix.zeros((npol, len(mu1)))
