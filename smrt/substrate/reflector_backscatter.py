@@ -34,7 +34,6 @@ import numpy as np
 # local import
 from smrt.core.interface import Substrate
 from smrt import SMRTError
-from smrt.core import lib
 from smrt.core.lib import smrt_matrix
 
 
@@ -45,7 +44,8 @@ def make_reflector(temperature=None, specular_reflection=None, backscattering_co
     """
 
     # create the instance
-    return Reflector(temperature=temperature, specular_reflection=specular_reflection, backscattering_coefficient=backscattering_coefficient)
+    return Reflector(temperature=temperature, specular_reflection=specular_reflection,
+                     backscattering_coefficient=backscattering_coefficient)
 
 
 class Reflector(Substrate):

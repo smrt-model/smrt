@@ -13,9 +13,9 @@ def test_reflector_backscattering():
     # prepare inputs
     density = [0.1]
     temperature = [210.0]
-    thickness = [0.01]
+    thickness = [0.1]
 
-    theta=np.arange(5,60,1)
+    theta = np.arange(5, 65, 1)
     radar = sensor_list.active(1e9, theta)
 
     backscattering_coefficient = {'VV': invdB(-10), 'HH': invdB(-15)}
