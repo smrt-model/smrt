@@ -149,9 +149,13 @@ class ActiveResult(Result):
         if 'theta' in kwargs:
             theta = xr.DataArray(np.atleast_1d(kwargs.pop('theta')), dims=['theta'])
         else:
-            theta = self.data.theta
+            theta = self.data.theta_inc
 
-        backscatter = self.data.sel(**kwargs).sel(theta_inc=theta, theta=theta)
+        if 'theta' in self.data.coords:
+            backscatter = self.data.sel(**kwargs).sel(theta_inc=theta, theta=theta)
+        else:
+            # data are backscatter only
+            backscatter = self.data.sel(**kwargs).sel(theta_inc=theta)
         return 4 * np.pi * _strongsqueeze(np.cos(np.radians(theta)) * backscatter)
 
     def sigma_dB(self, **kwargs):
