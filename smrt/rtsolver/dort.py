@@ -245,7 +245,7 @@ class DORT(object):
             for j, i in enumerate(incident_streams):
                 # the j-th column vector contains the stram i, with angle mu[i]
                 backscatter_intensity_up[3 * j: 3 * j + 3, :] = intensity_up[3 * i: 3 * i + 3, 3 * j: 3 * j + 3]
-            
+
             outmu = streams.outmu[incident_streams]
             intensity_up = backscatter_intensity_up
         else:
