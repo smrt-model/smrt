@@ -277,7 +277,7 @@ class DORT(object):
                 else:
                     incident_streams.add(i0)
                     incident_streams.add(i0 - 1)
-            incident_streams = list(incident_streams)  # fix the order (optional, but cleaner)
+            incident_streams = sorted(list(incident_streams))  # fix the order (required for the interpolation)
 
             intensity_0 = np.zeros((2 * len(streams.outmu), 2 * len(incident_streams)))  # 2 is for the two polarizations
             intensity_higher = np.zeros((3 * len(streams.outmu), 3 * len(incident_streams)))  # 2 is for the two polarizations
