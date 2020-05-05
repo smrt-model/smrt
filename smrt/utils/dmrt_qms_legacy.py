@@ -23,7 +23,7 @@ import numpy as np
 
 from oct2py import octave, Struct
 
-from smrt.core.result import Result, concat_results
+from smrt.core.result import PassiveResult, concat_results
 from smrt.core.sensitivity_study import SensitivityStudy
 from smrt.core.globalconstants import DENSITY_OF_ICE
 
@@ -121,9 +121,9 @@ def run(sensor, snowpack, dmrt_qms_path=None, snowpack_dimension=None, full_outp
         ke = ot / np.array([lay.thickness for lay in snowpack.layers])
         ks = albedo * ke
         ka = (1 - albedo) * ke
-        return Result(np.vstack([TbV, TbH]).T, coords), ks, ka, epsr_snow
+        return PassiveResult(np.vstack([TbV, TbH]).T, coords), ks, ka, epsr_snow
     else:
-        return Result(np.vstack([TbV, TbH]).T, coords)
+        return PassiveResult(np.vstack([TbV, TbH]).T, coords)
 
 
 

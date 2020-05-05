@@ -24,7 +24,7 @@ import numpy as np
 
 from oct2py import octave
 
-from smrt.core.result import Result, concat_results
+from smrt.core.result import PassiveResult, ActiveResult, concat_results
 from smrt import SMRTError
 from smrt.core.sensitivity_study import SensitivityStudy
 from smrt.core.globalconstants import DENSITY_OF_ICE
@@ -145,7 +145,10 @@ def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=N
 
     os.unlink(f.name)
 
-    return Result(res, coords)
+    if sensor.mode == 'P':
+        return PassiveResult(res, coords)
+    else: # sensor.mode == 'A':
+        return ActiveResult(res, coords)
 
 
 def memls_emmodel(sensor, layer, scattering_choice=ABORN, graintype=2):
