@@ -74,26 +74,17 @@ def test_dmrt_twoconfig():
     assert (res.TbH(channel="19") - 230.118448) < 1e-4
 
 
-def test_less_refringent_bottom_layer_VV():
+def test_less_refringent_bottom_layer():
     # Regression test 19-03-2018: value may change if other bugs found
-    snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density = [290.0, 250.0], radius = 50e-6, stickiness=0.2,
+    snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density=[290.0, 250.0], radius=50e-6, stickiness=0.2,
                              substrate=make_soil("transparent", 1, 270))
     m = make_model("dmrt_qcacp_shortrange", "dort")
     scat = active(10e9, 45)
     res = m.run(scat, snowpack)
-    print(res.sigmaVV())
-    assert abs(res.sigmaVV() - 9.42202173e-06) < 1e-9
+    print(res.sigmaVV_dB(), res.sigmaHH_dB())
+    assert abs(res.sigmaVV_dB() - -52.01373960728898) < 1e-1
+    assert abs(res.sigmaHH_dB() - -51.776918861699706) < 1e-1
 
-
-def test_less_refringent_bottom_layer_HH():
-    # Regression test 19-03-2018: value may change if other bugs found
-    snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density = [290.0, 250.0], radius = 50e-6, stickiness=0.2,
-                             substrate=make_soil("transparent", 1, 270))
-    m = make_model("dmrt_qcacp_shortrange", "dort")
-    scat = active(10e9, 45)
-    res = m.run(scat, snowpack)
-    print(res.sigmaHH())
-    assert abs(res.sigmaHH() - 8.85784528e-06) < 1e-9
 
 # The following test fails
 # def test_less_refringent_bottom_layer_VV():

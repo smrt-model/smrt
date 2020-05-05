@@ -146,21 +146,24 @@ class DORT(object):
         # reverse is necessary for "old" scipy version
         intfct = scipy.interpolate.interp1d(outmu[::-1], intensity[::-1, ...],
                                             axis=0, fill_value=fill_value, assume_sorted=True)
-        # the preivous call could use fill_value to be smart about extrapolation, but it's safer to return NaN (default)
+        # the previous call could use fill_value to be smart about extrapolation, but it's safer to return NaN (default)
 
         # it seems there is a bug in scipy at least when checking the boundary, mu must be sorted
         # original code that should work: intensity = intfct(mu)
         i = np.argsort(mu)
         intensity = intfct(mu[i])[np.argsort(i)]  # mu[i] sort mu, and [np.argsort(i)] put in back
 
-        if sensor.mode == 'A':
-            # reshape the outer/first dimension in two dimensions (theta_inc, pola_inc)
-            intensity = intensity.reshape(list(intensity.shape[:-1]) + [intensity.shape[-1] // npol, npol])
-        #  describe the results list of (dimension name, dimension array of value)
-        coords = [('theta', sensor.theta_deg), ('polarization', pola)]
+        #if sensor.mode == 'A':
+        #    # reshape the outer/first dimension in two dimensions (theta_inc, pola_inc)
+        #    intensity = intensity.reshape(list(intensity.shape[:-1]) + [intensity.shape[-1] // npol, npol])
 
-        if sensor.mode == 'A':
-            coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola)] + coords
+        #  describe the results list of (dimension name, dimension array of value)
+        if sensor.mode == 'P':
+            coords = [('theta', sensor.theta_deg), ('polarization', pola)]
+
+        else: # sensor.mode == 'A':
+            #coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola)] + coords
+            coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola), ('polarization', pola)]
 
         return make_result(sensor.mode, intensity, coords)
 
@@ -183,7 +186,7 @@ class DORT(object):
         #
         # compute the incident intensity array depending on the sensor
 
-        intensity_0, intensity_higher = self.prepare_intensity_array(streams)  # TODO Ghi: make an iterator
+        intensity_0, intensity_higher, incident_streams = self.prepare_intensity_array(streams)  # TODO Ghi: make an iterator
 
         npol = 3 if self.sensor.mode == 'A' else 2
 
@@ -232,11 +235,23 @@ class DORT(object):
                 # TODO: implement a convergence test if we want to avoid long computation
                 # when self.m_max is too high for the phase function.
 
-        if self.atmosphere is not None:
+        if self.sensor.mode == 'P' and self.atmosphere is not None:
             intensity_up = self.atmosphere.tbup(self.sensor.frequency, streams.outmu, npol) + \
                 self.atmosphere.trans(self.sensor.frequency, streams.outmu, npol) * intensity_up
 
-        return streams.outmu, intensity_up
+        if self.sensor.mode == 'A':
+            # compress to get only the backscatter
+            backscatter_intensity_up = np.empty((npol * len(incident_streams), npol))
+            for j, i in enumerate(incident_streams):
+                # the j-th column vector contains the stram i, with angle mu[i]
+                backscatter_intensity_up[3 * j: 3 * j + 3, :] = intensity_up[3 * i: 3 * i + 3, 3 * j: 3 * j + 3]
+            
+            outmu = streams.outmu[incident_streams]
+            intensity_up = backscatter_intensity_up
+        else:
+            outmu = streams.outmu
+
+        return outmu, intensity_up
 
     def prepare_intensity_array(self, streams):
 
@@ -250,36 +265,38 @@ class DORT(object):
             # delta(x) = 1/2pi + 1/pi*sum_{n=1}{infinty} cos(nx)
             #
 
-            intensity_0 = np.zeros((2 * len(streams.outmu), 2 * len(self.sensor.theta_inc)))  # 2 is for the two polarizations
+            incident_streams = set()
 
-            j0 = 0
             for theta in self.sensor.theta_inc:
                 mu_inc = math.cos(theta)
                 i0 = np.searchsorted(-streams.outmu, -mu_inc)
-
-                if i0 == 0 or i0 == len(streams.outmu):
-                    if i0 == len(streams.outmu):
-                        i0 -= 1
-                    for ipol in [0, 1]:
-                        intensity_0[2 * i0 + ipol, j0] = 1.0 / (2 * math.pi * streams.outweight[i0])
-                        j0 += 1
+                if i0 == 0:
+                    incident_streams.add(i0)
+                elif i0 == len(streams.outmu):
+                    incident_streams.add(i0 - 1)
                 else:
-                    i1 = i0 - 1
-                    alpha = (streams.outmu[i0] - mu_inc) / (streams.outmu[i0] - streams.outmu[i1])
+                    incident_streams.add(i0)
+                    incident_streams.add(i0 - 1)
+            incident_streams = list(incident_streams)  # fix the order (optional, but cleaner)
 
-                    delta_0 = (1 - alpha) / (2 * math.pi * streams.outweight[i0])
-                    delta_1 = alpha / (2 * math.pi * streams.outweight[i1])
+            intensity_0 = np.zeros((2 * len(streams.outmu), 2 * len(incident_streams)))  # 2 is for the two polarizations
+            intensity_higher = np.zeros((3 * len(streams.outmu), 3 * len(incident_streams)))  # 2 is for the two polarizations
 
-                    for ipol in [0, 1]:
-                        intensity_0[2 * i0 + ipol, j0] = delta_0
-                        intensity_0[2 * i1 + ipol, j0] = delta_1
-                        j0 += 1
-
-            intensity_higher = 2 * extend_2pol_npol(intensity_0, 3)
+            j0 = 0
+            j_higher = 0
+            for i in incident_streams:
+                power = 1.0 / (2 * math.pi * streams.outweight[i])
+                for ipol in [0, 1]:
+                    intensity_0[2 * i + ipol, j0] = power
+                    j0 += 1
+                for ipol in [0, 1, 2]:
+                    intensity_higher[3 * i + ipol, j_higher] = power
+                    j_higher += 1
 
         elif self.sensor.mode == 'P':
 
             npol = 2
+            incident_streams = []
 
             if self.atmosphere is not None:
 
@@ -297,7 +314,7 @@ class DORT(object):
         else:
             raise SMRTError("Unknow sensor mode")
 
-        return intensity_0, intensity_higher
+        return intensity_0, intensity_higher, incident_streams
 
     def dort_modem_banded(self, m, streams, eigenvalue_solver,
                           interfaces, intensity_down_m,
@@ -542,11 +559,11 @@ def extend_2pol_npol(x, npol):
     if scipy.sparse.isspmatrix_dia(x):
         y = scipy.sparse.diags(extend_2pol_npol(x.diagonal(), npol))
     elif len(x.shape) == 1:
-        y = np.zeros(len(x)//2 * npol)
+        y = np.zeros(len(x) // 2 * npol)
         y[0::npol] = x[0::2]
         y[1::npol] = x[1::2]
     elif len(x.shape) == 2:
-        y = np.zeros((x.shape[0]//2 * npol, x.shape[1]//2 * npol))
+        y = np.zeros((x.shape[0] // 2 * npol, x.shape[1] // 2 * npol))
         y[0::npol, 0::npol] = x[0::2, 0::2]
         y[0::npol, 1::npol] = x[0::2, 1::2]
         y[1::npol, 0::npol] = x[1::2, 0::2]
@@ -590,7 +607,8 @@ class EigenValueSolver(object):
 
         n = npol * len(self.mu)
 
-        # this coefficient comme from the 1/4pi normalization of the RT equation and the 1/(4*pi) * int_{phi=0}^{2*pi} cos(m phi)*cos(n phi) dphi
+        # this coefficient comme from the 1/4pi normalization of the RT equation and the 
+        # 1/(4*pi) * int_{phi=0}^{2*pi} cos(m phi)*cos(n phi) dphi
         # note that equation A7 and A8 in Picard et al. 2018 has an error, it does not show this coefficient.
         coef = 0.5 if m == 0 else 0.25
 
@@ -784,7 +802,7 @@ class InterfaceProperties(object):
 
         R = self.Rbottom_coh[l].compress(mode=m, auto_reduce_npol=True)
 
-        if not compute_coherent_only and self.Rbottom_diff[l] is not 0:
+        if not compute_coherent_only and self.Rbottom_diff[l] is not 0 and not self.Rbottom_diff[l].isnull():
             if m == 0:
                 coef = 2 * np.pi
                 npol = 2
@@ -792,8 +810,15 @@ class InterfaceProperties(object):
                 coef = np.pi
                 npol = 3
 
-            full_weight = np.repeat(self.streams.weight[l], npol)
-            R += self.Rbottom_diff[l].compress(mode=m, auto_reduce_npol=True) * (coef * full_weight)
+            full_weight = coef * np.repeat(self.streams.weight[l], npol)
+
+            Rdiff = self.Rbottom_diff[l].compress(mode=m, auto_reduce_npol=True)
+            # the following is temporary. Really hacky
+            if isinstance(Rdiff, scipy.sparse.dia.dia_matrix):
+                R = scipy.sparse.diags(R.diagonal() + Rdiff.diagonal() * full_weight, 0)
+            else:
+                R += Rdiff * full_weight
+                raise NotImplementedError("This branch is probably not correct, sorry. Please contact developer")
 
         return R
 
