@@ -168,6 +168,9 @@ class smrt_matrix(object):
     def npol(self):
         return self.values.shape[0]
 
+    def isnull(self):
+        return isnull(self)
+
     def compress(self, mode=None, auto_reduce_npol=False):
         """compress a matrix. This comprises several actions:
         1) select one mode, if relevant (dense5, and diagonal5).
@@ -310,7 +313,7 @@ def isnull(m):
 
     return (m is 0) or \
             (getattr(m, "mtype", None) == "0") or \
-             (~np.any(m))
+             (not np.any(m))
 
 
 def abs2(c):
