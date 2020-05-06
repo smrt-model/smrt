@@ -23,12 +23,12 @@ import numpy as np
 import scipy.special.orthogonal
 import scipy.linalg
 import scipy.interpolate
-import scipy.sparse
 
 # local import
 from ..core.error import SMRTError
 from ..core.result import make_result
-from smrt.core.lib import smrt_matrix, isnull
+from smrt.core.lib import smrt_matrix, smrt_diag, isnull
+from smrt.core.optional_numba import numba
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers 
 
 
@@ -335,7 +335,13 @@ class DORT(object):
         il_bottom = il_top + streams.n * npol
 
         nboundary = sum(streams.n) * 2 * npol
-        nband = 3 * npol * np.max(streams.n)  # each layer appears in 3 blocks
+        if len(streams.n) >= 2:
+            nband = npol * max(np.max(2 * streams.n[1:] + streams.n[:-1]),
+                               np.max(streams.n[1:] + 2 * streams.n[:-1]))
+            #print("gain:", nband / (3 * npol * np.max(streams.)))
+            # in principle could be better optimized as the number of upper and lower diagol can be different
+        else:
+            nband = 3 * npol * np.max(streams.n)  # each layer appears in 3 blocks
         # (bottom, top of the current layer, and top of layer below (for downward directons) and
         # bottom of the layer above (for upward directions)
 
@@ -382,9 +388,9 @@ class DORT(object):
 
             # deduce the transmittance through the layers
             # positive beta, reference at the bottom
-            transt = scipy.sparse.diags(np.exp(-np.maximum(beta, 0) * self.snowpack.layers[l].thickness), 0)
+            transt = smrt_diag(np.exp(-np.maximum(beta, 0) * self.snowpack.layers[l].thickness))
             # negative beta, reference at the top
-            transb = scipy.sparse.diags(np.exp(np.minimum(beta, 0) * self.snowpack.layers[l].thickness), 0)
+            transb = smrt_diag(np.exp(np.minimum(beta, 0) * self.snowpack.layers[l].thickness))
 
             # where we have chosen
             # beta>0  : z(0)(l) = z(l)    # reference is at the bottom
@@ -407,20 +413,12 @@ class DORT(object):
             Rtop_l = interfaces.reflection_top(l, m, compute_coherent_only)
 
             # fill the matrix
-            # this line perform matrix multiplication between Rtop_l and Eu. Make sure that reflection_matrix return matrix!
-            todiag(bBC, (il_topl, j), (Ed - Rtop_l * Eu) * transt)
-
-            if debug_compute_BC:
-                # a mettre en (l,l), theta<0 et * transt  # a mettre en (l,l)
-                BC[il_topl:il_topl + nsl_npol, j:j + nsl2_npol] = (Ed - Rtop_l * Eu) * transt
+            todiag(bBC, il_topl, j, matmul(Ed - matmul(Rtop_l, Eu), transt))
 
             if l < nlayer - 1:
                 ns_npol_common_bottom_ = min(nsl_npol, nslp1_npol)
                 Tbottom_lp1 = interfaces.transmission_bottom(l, m, compute_coherent_only)
-                todiag(bBC, (il_top[l + 1], j), - Tbottom_lp1 * Ed[0:ns_npol_common_bottom_, :] * transb)
-                if debug_compute_BC:
-                    BC[il_top[l + 1]:il_top[l + 1] + ns_npol_common_bottom_, j:j + nsl2_npol] = \
-                        - Tbottom_lp1 * Ed[0:ns_npol_common_bottom_, :] * transb  # a mettre en (l + 1,l)
+                todiag(bBC, il_top[l + 1], j, -matmul(Tbottom_lp1, Ed[0:ns_npol_common_bottom_, :], transb))
 
             # fill the vector
             if m == 0 and self.temperature is not None and self.temperature[l] > 0:
@@ -436,7 +434,7 @@ class DORT(object):
 
             if l == 0:  # Air-snow interface
                 Tbottom_air_down = interfaces.transmission_bottom(-1, m, compute_coherent_only)
-                b[il_topl:il_topl + streams.n_air * npol, :] += Tbottom_air_down * intensity_down_m
+                b[il_topl:il_topl + streams.n_air * npol, :] += matmul(Tbottom_air_down, intensity_down_m)
 
             # -------------------------------------------------------------------------------
             # Eq 18 & 22 BOTTOM of layer l
@@ -445,17 +443,12 @@ class DORT(object):
             Rbottom_l = interfaces.reflection_bottom(l, m, compute_coherent_only)
 
             # fill the matrix
-            todiag(bBC, (il_bottoml, j), (Eu - Rbottom_l * Ed) * transb)
-            if debug_compute_BC:
-                BC[il_bottoml:il_bottoml + nsl_npol, j:j + nsl2_npol] = (Eu - Rbottom_l * Ed) * transb  # a mettre en (l,l), theta >0
+            todiag(bBC, il_bottoml, j, matmul(Eu - matmul(Rbottom_l, Ed), transb))
 
             if l > 0:
                 ns_npol_common_top_ = min(nsl_npol, nslm1_npol)
                 Ttop_lm1 = interfaces.transmission_top(l, m, compute_coherent_only)
-                todiag(bBC, (il_bottom[l - 1], j), -Ttop_lm1 * Eu[0:ns_npol_common_top_, :] * transt)
-                if debug_compute_BC:
-                    BC[il_bottom[l - 1]:il_bottom[l - 1] + ns_npol_common_top_, j:j + nsl2_npol] = \
-                        -Ttop_lm1 * Eu[0:ns_npol_common_top_, :] * transt  # a mettre en (l - 1)
+                todiag(bBC, il_bottom[l - 1], j, -matmul(Ttop_lm1, Eu[0:ns_npol_common_top_, :], transt))
 
             # fill the vector
             if m == 0 and self.temperature is not None and self.temperature[l] > 0:
@@ -506,49 +499,63 @@ class DORT(object):
                  " If wanted, add a transparent substrate to supress this warning" % optical_depth)
 
         x = scipy.linalg.solve_banded((nband, nband), bBC, b, overwrite_ab=True, overwrite_b=True)
-        x = np.matrix(x)
 
         # #  ! calculate the intensity emerging from the snowpack
         l = 0
         j = jl[l]  # should be 0
         nsl2_npol = 2 * streams.n[l] * npol
-        I1up_m = Eu_0 * transt_0 * x[j:j + nsl2_npol, :]
+        I1up_m = Eu_0 @ transt_0 @ x[j:j + nsl2_npol, :]
 
         if m == 0 and self.temperature is not None and self.temperature[0] > 0:
             I1up_m += self.temperature[0]  # just under the interface
 
         Rbottom_air_down = interfaces.reflection_bottom(-1, m, compute_coherent_only)
         Ttop_0 = interfaces.transmission_top(0, m, compute_coherent_only)  # snow-air
-        I0up_m = Rbottom_air_down * np.matrix(intensity_down_m) + (Ttop_0 * I1up_m[:streams.n_air * npol])
+        I0up_m = Rbottom_air_down @ intensity_down_m + (Ttop_0 @ I1up_m[:streams.n_air * npol])
 
         return np.array(I0up_m).squeeze()
 
 
 def muleye(x):
     #  """multiply x * 1v """
-    if isinstance(x, scipy.sparse.dia_matrix) or isinstance(x, np.matrix):
-        return x.sum(axis=1).A1
+
+    if isinstance(x, smrt_diag):
+        return x.diagonal()
     else:
         return x
 
 
-def todiag(bmat, ij, dmat):
-    #  """insert the small dense dmat matrix in the diagonal bmat matrix"""
-    oi, oj = ij
+def matmul(a, b, *args):
+    # """just because numpy matrix operator does not support scalar multiplication..."""
+    if args:
+        b = matmul(b, *args)
+    if np.isscalar(a) or np.isscalar(b):
+        return a * b
+    else:
+        return a @ b
+
+
+def todiag(bmat, oi, oj, dmat):
+    #"""insert the small dense dmat matrix in the diagonal bmat matrix"""
 
     u = (bmat.shape[0]-1) // 2
     l = u  # special case here
 
     n, m = dmat.shape
-    df = np.array(dmat).flatten('C')
+    dmat_flat = dmat.flatten()
 
-    for j in range(0, min(u+1, m)):
+    for j in range(0, m):
         ldiag = min(n, m-j)
-        bmat[u+oi-oj-j, j+oj:j+oj+ldiag] = df[j::m+1][:ldiag]
+        bmat[u+oi-oj-j, j+oj:j+oj+ldiag] = dmat_flat[j:j+(m+1)*ldiag:m+1]
 
-    for i in range(1, min(l + 1, n)):
+    for i in range(1, n):
         ldiag = min(n-i, m)
-        bmat[u+oi-oj+i, 0+oj:0+oj+ldiag] = df[i*m::m+1][:ldiag]
+        bmat[u+oi-oj+i, 0+oj:0+oj+ldiag] = dmat_flat[i*m:i*m+(m+1)*ldiag:m+1]
+
+if numba:
+    compiled_todiag = numba.jit(nopython=True, cache=True)(todiag)
+    def todiag(bmat, oi, oj, dmat):
+        compiled_todiag(bmat, int(oi), int(oj), dmat)
 
 
 def extend_2pol_npol(x, npol):
@@ -690,7 +697,7 @@ raise and return NaN instead by adding the argument rtsolver_options=dict(error_
         Eu = E[0:n, :]  # upwelling
         Ed = E[n:, :]  # downwelling
 
-        return beta, np.matrix(Eu), np.matrix(Ed)
+        return beta, Eu, Ed
         # !-----------------------------------------------------------------------------!
 
     def normalize(self, m, A):
@@ -813,12 +820,8 @@ class InterfaceProperties(object):
             full_weight = coef * np.repeat(self.streams.weight[l], npol)
 
             Rdiff = self.Rbottom_diff[l].compress(mode=m, auto_reduce_npol=True)
-            # the following is temporary. Really hacky
-            if isinstance(Rdiff, scipy.sparse.dia.dia_matrix):
-                R = scipy.sparse.diags(R.diagonal() + Rdiff.diagonal() * full_weight, 0)
-            else:
-                R += Rdiff * full_weight
-                raise NotImplementedError("This branch is probably not correct, sorry. Please contact developer")
+
+            R += Rdiff @ smrt_diag(full_weight)
 
         return R
 

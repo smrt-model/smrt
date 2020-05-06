@@ -41,6 +41,3 @@ class Transparent(object):
         :return: the transmission matrix
 """
         return smrt_matrix.ones((npol, len_atleast_1d(mu1)))
-
-
-

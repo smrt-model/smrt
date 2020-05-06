@@ -71,14 +71,16 @@ class Rayleigh(object):
 
         # mode m == 0
         P[v, v, 0] = 0.5 * np.outer(mu2, mu2) + np.outer(1 - mu2, 1 - mu2)
-        P[v, h, 0] = 0.5 * mu2[:, np.newaxis]  #mu2[:, np.newaxis]  # equiv np.dot(mu2, np.ones_like(mu2.T))
-        if npol >=3: P[v, u] = 0
+        P[v, h, 0] = 0.5 * mu2[:, np.newaxis]  # mu2[:, np.newaxis]  # equiv np.dot(mu2, np.ones_like(mu2.T))
+        if npol >= 3:
+            P[v, u] = 0
 
         P[h, v, 0] = P[v, h, 0].T
         P[h, h, 0] = 0.5
-        if npol >=3: P[h, u, 0] = 0
+        if npol >= 3:
+            P[h, u, 0] = 0
 
-        if npol >=3:
+        if npol >= 3:
             P[u, v, 0] = 0
             P[u, h, 0] = 0
             P[u, u, 0] = 0
@@ -87,7 +89,7 @@ class Rayleigh(object):
             sint = np.sqrt(1. - mu2)
             cossint = mu * sint
 
-            P[v, v, 1] = 2*np.outer(cossint, cossint)
+            P[v, v, 1] = 2 * np.outer(cossint, cossint)
             P[v, h, 1] = 0
             P[v, u, 1] = np.outer(cossint, sint)
 
@@ -95,13 +97,13 @@ class Rayleigh(object):
             P[h, h, 1] = 0
             P[h, u, 1] = 0
 
-            P[u, v, 1] = -2*P[v, u, 1].T
+            P[u, v, 1] = -2 * P[v, u, 1].T
 
             P[u, h, 1] = 0
             P[u, u, 1] = np.outer(sint, sint)
 
         if m_max >= 2:
-            P[v, v, 2] = 0.5*np.outer(mu2, mu2)
+            P[v, v, 2] = 0.5 * np.outer(mu2, mu2)
             P[v, h, 2] = -0.5 * mu2[:, np.newaxis]
             P[v, u, 2] = 0.5 * np.outer(mu2, mu)
 
@@ -109,7 +111,7 @@ class Rayleigh(object):
             P[h, h, 2] = 0.5
             P[h, u, 2] = -0.5 * mu[np.newaxis, :]
 
-            P[u, v, 2] = -2*P[v, u, 2].T
+            P[u, v, 2] = -2 * P[v, u, 2].T
             P[u, h, 2] = mu[:, np.newaxis]
             P[u, u, 2] = np.outer(mu, mu)
 
@@ -159,11 +161,13 @@ class Rayleigh(object):
         # mode = 0
         P[v, v, 0] = 0.5 * np.outer(mu2, mu2) + np.outer(1 - mu2, 1 - mu2)
         P[v, h, 0] = 0.5 * mu2[:, np.newaxis]  # equiv np.dot(mu2, np.ones_like(mu2.T))
-        if npol > 3: P[v, u, 0] = 0
+        if npol > 3:
+            P[v, u, 0] = 0
 
         P[h, v, 0] = P[v, h, 0].T
         P[h, h, 0] = 0.5
-        if npol > 3: P[h, u, 0] = 0
+        if npol > 3:
+            P[h, u, 0] = 0
 
         if npol > 3: 
             P[u, v, 0] = 0
@@ -174,7 +178,7 @@ class Rayleigh(object):
             sint = np.sqrt(1. - mu2)
             cossint = mu * sint
 
-            P[v, v, 1] = 2*np.outer(cossint, cossint)
+            P[v, v, 1] = 2 * np.outer(cossint, cossint)
             P[v, h, 1] = 0
             P[v, u, 1] = np.outer(cossint, sint)
 
@@ -182,12 +186,12 @@ class Rayleigh(object):
             P[h, h, 1] = 0
             P[h, u, 1] = 0
 
-            P[u, v, 1] = -2*P[v, u, 1].T  # could transpose Pvu
+            P[u, v, 1] = -2 * P[v, u, 1].T  # could transpose Pvu
             P[u, h, 1] = 0
             P[u, u, 1] = np.outer(sint, sint)
 
         if m_max >= 2:
-            P[v, v, 2] = 0.5*np.outer(mu2, mu2)
+            P[v, v, 2] = 0.5 * np.outer(mu2, mu2)
             P[v, h, 2] = -0.5 * mu2[:, np.newaxis]  # equiv - np.dot(mu2, np.ones_like(mu2.T))
             P[v, u, 2] = 0.5 * np.outer(mu2, mu)
 
@@ -198,6 +202,7 @@ class Rayleigh(object):
             P[u, v, 2] = - np.outer(mu, mu2)
             P[u, h, 2] = mu[:, np.newaxis]
             P[u, u, 2] = -np.outer(mu, mu)
+            raise Exception("Tsang is wrong, to be check in Y.Q. Jin again")
             P[u, u, 2] = 0   # error in Y.Q. Jin ?? According to Tsang this term is null
 
         if m_max >=3:
@@ -238,7 +243,7 @@ class Rayleigh(object):
         mu = mu_i
 
         if npol is None:
-            npol = 2 if m == 0 else 3
+            npol = 2 if m_max == 0 else 3
 
         P = smrt_matrix.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
 
@@ -246,16 +251,19 @@ class Rayleigh(object):
 
         v, h, u = 0, 1, 2
 
+        raise SMRTError("There is a sign error in Tsang's book.")
 
         P[v, v, 0] = 0.5 * np.outer(mu2, mu2) + np.outer(1 - mu2, 1 - mu2)
-        P[v, h, 0] = 0.5 * mu2[:, np.newaxis]  #mu2[:, np.newaxis]  # equiv np.dot(mu2, np.ones_like(mu2.T))
-        if npol >=3: P[v, u, 0] = 0
+        P[v, h, 0] = 0.5 * mu2[:, np.newaxis]  # mu2[:, np.newaxis]  # equiv np.dot(mu2, np.ones_like(mu2.T))
+        if npol >= 3:
+            P[v, u, 0] = 0
 
         P[h, v, 0] = P[v, h, 0].T
         P[h, h, 0] = 0.5
-        if npol >=3: P[h, u, 0] = 0
+        if npol >= 3:
+            P[h, u, 0] = 0
 
-        if npol >=3:
+        if npol >= 3:
             P[u, v, 0] = 0
             P[u, h, 0] = 0
             P[u, u, 0] = 0  # this one is not null !!! set to zero here for simplificity but is 2*outer(mu, mu)
@@ -264,7 +272,7 @@ class Rayleigh(object):
             sint = np.sqrt(1. - mu2)
             cossint = mu * sint
 
-            P[v, v, 1] = 2*np.outer(cossint, cossint)
+            P[v, v, 1] = 2 * np.outer(cossint, cossint)
             P[v, h, 1] = 0
             P[v, u, 1] = np.outer(cossint, sint)
 
@@ -272,14 +280,14 @@ class Rayleigh(object):
             P[h, h, 1] = 0
             P[h, u, 1] = 0
 
-            P[u, v, 1] = 2*P[v, u, 1].T  # does not work
-            P[u, v, 1] = -P[u, v, 1]      # This line is needed, I don't understand why!!!!!!!!!!!!!!!!!!!
+            P[u, v, 1] = 2 * P[v, u, 1].T  # does not work
+            #P[u, v, 1] = -P[u, v, 1]      # This line is needed, I don't understand why!!!!!!!!!!!!!!!!!!!
 
             P[u, h, 1] = 0
             P[u, u, 1] = np.outer(sint, sint)
 
         if m_max >= 2:
-            P[v, v, 2] = 0.5*np.outer(mu2, mu2)
+            P[v, v, 2] = 0.5 * np.outer(mu2, mu2)
             P[v, h, 2] = -0.5 * mu2[:, np.newaxis]
             P[v, u, 2] = 0.5 * np.outer(mu2, mu)
 
@@ -287,14 +295,14 @@ class Rayleigh(object):
             P[h, h, 2] = 0.5
             P[h, u, 2] = 0.5 * mu[np.newaxis, :]
 
-            P[u, v, 2] = 2*P[v, u, 2].T
-            P[u, v, 2] = -P[u, v, 2]      # This line is need, I don't understand why!!!!!!!!!!!!!!!!!!!
+            P[u, v, 2] = 2 * P[v, u, 2].T
+            #P[u, v, 2] = -P[u, v, 2]      # This line is need, I don't understand why!!!!!!!!!!!!!!!!!!!
 
             P[u, h, 2] = mu[:, np.newaxis]
-            P[u, h, 2] = -P[u, h, 2]      # This line is need, I don't understand why!!!!!!!!!!!!!!!!!!!
+            #P[u, h, 2] = -P[u, h, 2]      # This line is need, I don't understand why!!!!!!!!!!!!!!!!!!!
             P[u, u, 2] = 0
 
-        if m_max >=3:
+        if m_max >= 3:
             P[:, :, 3:, :, :] = 0
 
         if npol == 3:
@@ -337,6 +345,10 @@ class Rayleigh(object):
                  [2 * fvv * fhv, 2 * fvh * fhh, fvv * fhh + fvh * fhv]]
         else:
             raise RuntimeError("invalid number of polarisation")
+
+        # broadcast, it is not automatic (anymore?)
+        shape = dphi.size, mu_s.size, mu_i.size
+        p = [[np.broadcast_to(ppp, shape) for ppp in pp] for pp in p]
 
         return smrt_matrix(1.5 * self.ks * np.array(p))
 
