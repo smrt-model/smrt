@@ -8,7 +8,7 @@ from smrt.emmodel import commontest
 
 # import the microstructure
 from smrt.microstructure_model.independent_sphere import IndependentSphere
-tolerance_pc = 0.01  # 5% tolerance
+tolerance_pc = 0.01  # 1% tolerance
 
 
 def setup_func_sp():
