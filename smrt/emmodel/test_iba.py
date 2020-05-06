@@ -204,13 +204,20 @@ def test_iba_vs_rayleigh_active_m1():
     mu = setup_mu(1. / 64, bypass_exception=True)
     # Clear cache
     em_iba.cached_mu = None
-    assert (abs(em_iba.ft_even_phase(mu, mu, 1, npol=3)[: , :, 1] / em_iba.ks - em_ray.ft_even_phase(mu, mu, 1, npol=3)[: , :, 1] / em_ray.ks) < tolerance_pc).all()
+    assert (abs(em_iba.ft_even_phase(mu, mu, 1, npol=3)[1, : , :] / em_iba.ks - em_ray.ft_even_phase(mu, mu, 1, npol=3)[1, : , :] / em_ray.ks) < tolerance_pc).all()
 
 
 def test_iba_vs_rayleigh_active_m2():
     em_iba, em_ray = setup_func_rayleigh()
     mu = setup_mu(1. / 64, bypass_exception=True)
-    assert (abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[: , :, 2] / em_iba.ks - em_ray.ft_even_phase(mu, mu, 2, npol=3)[: , :, 2] / em_ray.ks) < tolerance_pc).all()
+
+    print("------------")
+    print(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, : , :] / em_iba.ks)
+    print(em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, : , :] / em_ray.ks)
+    assert abs( (abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, : , :] / em_iba.ks) - abs(em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, : , :] / em_ray.ks) )  < tolerance_pc).all()
+
+
+    assert (abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, : , :] / em_iba.ks - em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, : , :] / em_ray.ks) < tolerance_pc).all()
 
 
 def test_permittivity_model():
