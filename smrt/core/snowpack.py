@@ -65,6 +65,12 @@ class Snowpack(object):
 """
         return np.insert(self.layer_depths, 0, 0)
 
+    @property
+    def layer_densities(self):
+        """return the density of each layer
+"""
+        return [lay.density for lay in self.layers]  # TODO Ghi: caching
+
     def append(self, layer, interface=None):
         """append a new layer at the bottom of the stack of layers. The interface is that at the top of the appended layer.
 
