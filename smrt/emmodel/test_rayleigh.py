@@ -35,3 +35,4 @@ def test_energy_conservation():
 
     em = setup_func_em()
     commontest.test_energy_conservation(em, tolerance_pc)
+
