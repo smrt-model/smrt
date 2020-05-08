@@ -162,7 +162,6 @@ class Model(object):
             :param progressbar: if True, display a progress bar during multi-snowpacks computation
             :returns: result of the calculation(s) as a :py:class:`Results` instance
         """
-
         if not isinstance(sensor, SensorBase):
             raise SMRTError("the first argument of 'run' must be a sensor")
 
@@ -188,7 +187,7 @@ class Model(object):
             snowpack = list(snowpack.values())
 
         # or a sequence ?
-        if isinstance(snowpack, Sequence):
+        if lib.is_sequence(snowpack):
             if snowpack_dimension is None:
                 dimension_name, dimension_values = "snowpack", None
             else:
@@ -210,12 +209,10 @@ class Model(object):
             else:
                 result_list = list()
                 for i, sp in enumerate(snowpack):    # TODO: parallel computation
-                
                     res = self.run(sensor, sp, atmosphere=atmosphere)
                     result_list.append(res)
                     if progressbar:
                         pb.animate(i + 1)
-
             return concat_results(result_list, (dimension_name, dimension_values))
 
         # not need to iterate anymore, either because the solver deals with the dimension or sensor config has single values.
