@@ -216,8 +216,7 @@ class Model(object):
             if dimension_values is None:
                 dimension_values = range(len(snowpack))
 
-            if parallel_computation:
-                result_list = Runner(run(sensor, sp, atmosphere=atmosphere) for sp in snowpack)
+            result_list = Runner(run(sensor, sp, atmosphere=atmosphere) for sp in snowpack)
             return concat_results(result_list, (dimension_name, dimension_values))
 
         # not need to iterate anymore, either because the solver deals with the dimension or sensor config has single values.
@@ -260,11 +259,8 @@ class Model(object):
 
             return result
 
-
     def run_later(self, sensor, snowpack, **kwargs):
 
         from .run_promise import RunPromise  # local import to avoid start time
 
         return RunPromise(self, sensor, snowpack, kwargs)
-        
-
