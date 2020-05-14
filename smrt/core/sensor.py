@@ -9,6 +9,7 @@ Otherwise, we recommend to add these functions in your own files (outside of smr
 """
 
 import copy
+from collections import Sequence
 import numpy as np
 from ..core.globalconstants import C_SPEED
 
@@ -135,6 +136,9 @@ class Sensor(SensorBase):
             self.wavelength = wavelength
         else:
             self.frequency = frequency
+
+        if isinstance(self.frequency, Sequence):
+            self.frequency = np.array(self.frequency)
 
         self.channel = channel
 
