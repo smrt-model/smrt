@@ -137,7 +137,13 @@ class DORT(object):
                 outmu = np.insert(outmu, 0, 1.0)
                 intensity = np.insert(intensity, 0, np.mean(intensity[0, :, ...], axis=0), axis=0)
             else:  # active
-                fill_value = 'extrapolate'
+                copol = (intensity[0, 0, 0] + intensity[0, 1, 1]) / 2
+                crosspol = (intensity[0, 1, 0] + intensity[0, 0, 1]) / 2
+
+                intensity = np.insert(intensity, 0, [[copol, crosspol, intensity[0, 0, 2]],
+                                                     [crosspol, copol, intensity[0, 1, 2]],
+                                                     intensity[0, 2, :]], axis=0)
+                outmu = np.insert(outmu, 0, 1.0)
 
         if np.min(mu) < np.min(outmu):
             raise SMRTError("Viewing zenith angle is higher than the stream angles computed by DORT."
