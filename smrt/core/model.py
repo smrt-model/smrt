@@ -165,13 +165,34 @@ class Model(object):
         if not isinstance(sensor, SensorBase):
             raise SMRTError("the first argument of 'run' must be a sensor")
 
+        if parallel_computation:
+            from joblib import Parallel, delayed
+            run = delayed(self.run)  # delayed self.run
+            Runner = Parallel(n_jobs=-1, backend='loky')  # Parallel Runner
+        else:
+            run = self.run  # non-delayed self.run
+
+            if progressbar:
+                def Runner(result_generator):
+                    # sequential computation
+                    result_list = list()
+                    pb = Progress(len(snowpack))
+                    for i, res in enumerate(result_generator):
+                        result_list.append(res)
+                        pb.animate(i + 1)
+                    return result_list
+            else:
+                Runner = list  # Sequential Runner
+
         # first determine which dimension we must iterate on in this routine
         for axis, values in sensor.configurations():
             if axis not in getattr(self.rtsolver, "_broadcast_capability", []):
-                result_list = []
-                for sensor_subset in sensor.iterate(axis):  # iterate over the values  # TODO: parallel computation
-                    res = self.run(sensor_subset, snowpack, atmosphere=atmosphere, snowpack_dimension=snowpack_dimension)  # recursive call
-                    result_list.append(res)
+
+                result_list = Runner(run(sensor_subset, snowpack,
+                                         atmosphere=atmosphere,
+                                         snowpack_dimension=snowpack_dimension,
+                                         progressbar=progressbar,
+                                         parallel_computation=parallel_computation) for sensor_subset in sensor.iterate(axis))
 
                 return concat_results(result_list, (axis, values))
 
@@ -195,24 +216,8 @@ class Model(object):
             if dimension_values is None:
                 dimension_values = range(len(snowpack))
 
-            if progressbar:
-                pb = Progress(len(snowpack))
-
             if parallel_computation:
-                import os
-                from joblib import Parallel, delayed
-                # for parallelization, it is much better to switch OpenMP off.
-                # see: https://github.com/numpy/numpy/issues/11826#issuecomment-442107764 for better handling the number of threads
-                os.environ['MKL_NUM_THREADS'] = '1'
-                os.environ['OPENBLAS_NUM_THREADS'] = '1'
-                result_list = Parallel(n_jobs=-1, prefer='processes')(delayed(self.run)(sensor, sp, atmosphere=atmosphere) for sp in snowpack)
-            else:
-                result_list = list()
-                for i, sp in enumerate(snowpack):    # TODO: parallel computation
-                    res = self.run(sensor, sp, atmosphere=atmosphere)
-                    result_list.append(res)
-                    if progressbar:
-                        pb.animate(i + 1)
+                result_list = Runner(run(sensor, sp, atmosphere=atmosphere) for sp in snowpack)
             return concat_results(result_list, (dimension_name, dimension_values))
 
         # not need to iterate anymore, either because the solver deals with the dimension or sensor config has single values.
