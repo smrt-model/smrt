@@ -11,6 +11,8 @@ but functions for specific sensors are more convenient. See examples in the func
 
 from collections.abc import Sequence
 
+import numpy as np
+
 from smrt.core.sensor import Sensor, SensorList
 from smrt.core.error import SMRTError
 
@@ -173,6 +175,20 @@ def ascat(theta=None):
     return active(5.255e9, theta, polarization_inc='V', polarization='V')
 
 
+def sentinel1(theta=None):
+    """ Configuration for C-SAR on Sentinel 1.
+
+       This function return a sensor at 5.405 GHz (C-band). The incidence angle can be chosen or is by defaut from 20 to 46° by step of 5°
+
+       :param theta: incidence angle
+       :type theta: float or sequence
+
+       :returns: :py:class:`Sensor` instance
+  """
+    if theta is None:
+        theta = np.arange(20, 46, 5)
+
+    return active(5.405e9, theta)
 
 
 def decompose_channel(channel, lengths):
