@@ -1,4 +1,5 @@
 
+import os
 
 from collections.abc import Sequence
 import numpy as np
@@ -412,3 +413,16 @@ def generic_ft_even_matrix(phase_function, m_max):
         ft_even_p[2, 2, 1:] = ft_p[2, 2, 1:m_max + 1].real * delta
 
     return ft_even_p  # order is pola_s, pola_i, m, mu_s, mu_i
+
+
+def set_max_num_threads(nthreads):
+    """set the maximum number of threads for a few known library. This is useful to disable parallel computing in 
+SMRT when using parallel computing to call multiple // SMRT runs. This avoid over-committing the CPUs and results 
+in much better performance. Inspire from joblib."""
+
+    nthreads = str(nthreads)
+    os.environ['MKL_NUM_THREADS'] = nthreads
+    os.environ['OPENBLAS_NUM_THREADS'] = nthreads
+    os.environ['OMP_NUM_THREADS'] = nthreads
+    os.environ['VECLIB_MAXIMUM_THREADS'] = nthreads
+    os.environ['NUMEXPR_NUM_THREADS'] = nthreads
