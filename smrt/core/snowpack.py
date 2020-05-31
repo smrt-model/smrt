@@ -25,6 +25,7 @@ from .error import SMRTError
 from ..interface.flat import Flat  # core should not depend on something defined in interface...
 from .layer import Layer
 from .interface import SubstrateBase
+from .atmosphere import AtmosphereBase
 
 
 class Snowpack(object):
@@ -32,12 +33,13 @@ class Snowpack(object):
 
 """
 
-    def __init__(self, layers=None, interfaces=None, substrate=None):
+    def __init__(self, layers=None, interfaces=None, substrate=None, atmosphere=None):
         self.layers = layers if layers is not None else list()
         self.update_layer_number()
 
         self.interfaces = interfaces if interfaces is not None else list()
         self.substrate = substrate
+        self.atmosphere = atmosphere  # this is temporary as in the future atmosphere will/may be normal layers
 
     @property
     def nlayer(self):
@@ -118,11 +120,17 @@ class Snowpack(object):
         if isinstance(other, SubstrateBase):
             if self.substrate is not None:
                 raise SMRTError("Adding a substrate to a snowpack that already has one is not valid. Unset the substrate first")            
+        elif isinstance(other, AtmosphereBase):
+            if self.atmosphere is not None:
+                raise SMRTError("Adding an atmosphere to a snowpack that already has one is not valid. Unset the atmosphere first")            
         elif not (hasattr(other, "layers") and hasattr(other, "interfaces") and hasattr(other, "substrate")):
             raise SMRTError("Addition of snowpacks requires two instances of class Snowpack or equivalent compatible objects")
 
         elif self.substrate is not None:
             raise SMRTError("While adding snowpacks, the first (topmost) snowpack must not have a substrate. Unset the substrate"
+                            " before adding the two snowpacks.")
+        elif other.atmosphere is not None:
+            raise SMRTError("While adding snowpacks, the second (bottommost) snowpack must not have an atmosphere. Unset the atmosphere"
                             " before adding the two snowpacks.")
 
     def update_layer_number(self):
@@ -140,11 +148,18 @@ class Snowpack(object):
         if isinstance(other, SubstrateBase):
             return Snowpack(layers=self.layers,
                             interfaces=self.interfaces,
+                            atmosphere=self.atmosphere,
                             substrate=other)
+        if isinstance(other, AtmosphereBase):
+            return Snowpack(layers=self.layers,
+                            interfaces=self.interfaces,
+                            substrate=self.substrate,
+                            atmosphere=other)
         else:
             return Snowpack(layers=self.layers + other.layers,
                             interfaces=self.interfaces + other.interfaces,
-                            substrate=other.substrate)
+                            substrate=other.substrate,
+                            atmosphere=self.atmosphere)
 
     def __radd__(self, other):
 
@@ -162,6 +177,8 @@ class Snowpack(object):
 
         if isinstance(other, SubstrateBase):
             self.substrate = other
+        elif isinstance(other, AtmosphereBase):
+            self.atmosphere = other
         else:
             self.layers += other.layers
             self.interfaces += other.interfaces

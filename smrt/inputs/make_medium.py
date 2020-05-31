@@ -24,6 +24,7 @@ import pandas as pd
 
 from smrt.core.snowpack import Snowpack
 from smrt.core.interface import make_interface
+from smrt.core.plugin import import_class
 from smrt.core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE, PERMITTIVITY_OF_AIR, PSU
 from smrt.core.layer import get_microstructure_model, Layer
 from smrt.core.error import SMRTError
@@ -105,7 +106,9 @@ This can be seen as an interesting feature to store information in layers, but t
 
 def make_snowpack(thickness, microstructure_model, density,
                   interface=None,
-                  substrate=None, **kwargs):
+                  substrate=None,
+                  atmosphere=None,
+                  **kwargs):
 
     """
     build a multi-layered snowpack. Each parameter can be an array, list or a constant value.
@@ -125,7 +128,7 @@ def make_snowpack(thickness, microstructure_model, density,
 
 """
 
-    sp = Snowpack(substrate=substrate)
+    sp = Snowpack(substrate=substrate, atmosphere=atmosphere)
 
     if not isinstance(thickness, collections.abc.Iterable):
         raise SMRTError("The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame.")
@@ -210,7 +213,9 @@ def make_ice_column(ice_type,
                     density=None,
                     add_water_substrate=True,
                     interface=None,
-                    substrate=None, **kwargs):
+                    substrate=None,
+                    atmosphere=None,
+                    **kwargs):
     """Build a multi-layered ice column. Each parameter can be an array, list or a constant value.
 
     ice_type variable determines the type of ice, which has a big impact on how the medium is modelled and the parameters:
@@ -251,7 +256,7 @@ def make_ice_column(ice_type,
     else:
         substrate = substrate
 
-    sp = Snowpack(substrate=substrate)
+    sp = Snowpack(substrate=substrate, atmosphere=atmosphere)
 
     n = len(thickness)
     for name in ["temperature", "salinity", "microstructure_model", "brine_inclusion_shape", "brine_volume_fraction", 
@@ -479,7 +484,8 @@ def bulk_ice_density(temperature, salinity, porosity):
 
 def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permittivity=1,
                        interface=None,
-                       substrate=None):
+                       substrate=None,
+                       atmosphere=None):
 
     """
     build a multi-layered medium with prescribed scattering and absorption coefficients and effective permittivity. Must be used with presribed_kskaeps emmodel.
@@ -498,7 +504,7 @@ def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permitt
 #
 #"""
 
-    sp = Snowpack(substrate=substrate)
+    sp = Snowpack(substrate=substrate, atmosphere=atmosphere)
 
     if not isinstance(thickness, collections.abc.Iterable):
         raise SMRTError("The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame.")
@@ -536,6 +542,23 @@ def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, te
     lay.ka = float(ka)
 
     return lay
+
+
+def make_atmosphere(atmosphere_model, **kwargs):
+
+    """
+    make a atmospheric single-layer using the prescribed atmosphere model.
+    Warning: this function is subject to change in the future when refactoring how SMRT deals with atmosphere.
+
+    :param atmosphere_model: the name of the model to use. The available models are in smrt.atmosphere.
+    :param **kwargs: all the parameters used by the atmosphere_model.
+
+"""
+
+    atmosphere_class = import_class("atmosphere", atmosphere_model)
+
+    return atmosphere_class(**kwargs)
+
 
 
 def compute_thickness_from_z(z):

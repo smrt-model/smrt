@@ -251,7 +251,7 @@ class Model(object):
                 rtsolver = self.rtsolver
 
             # run the rtsolver
-            result = rtsolver.solve(snowpack, emmodel_instances, sensor, atmosphere)
+            result = rtsolver.solve(snowpack, emmodel_instances, sensor, snowpack.atmosphere or atmosphere)
 
             return result
 

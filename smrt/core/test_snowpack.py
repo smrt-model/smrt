@@ -3,6 +3,8 @@
 from ..inputs.make_medium import make_snowpack
 from .error import SMRTError
 from .interface import Substrate
+from .atmosphere import AtmosphereBase
+
 
 def test_addition():
 
@@ -34,3 +36,24 @@ def test_substrate_addition():
     sp += substrate
 
     assert sp.substrate is substrate
+
+def test_atmosphere_addition():
+
+    atmosphere = AtmosphereBase()  # this one do nothing, but does not matter here.
+
+    sp = make_snowpack([0.1], "exponential", density=300, corr_length=200e-6)
+    sp += atmosphere
+
+    assert sp.atmosphere is atmosphere
+
+
+def test_atmosphere_addition_double_snowpack():
+
+    atmosphere = AtmosphereBase()  # this one do nothing, but does not matter here.
+
+    sp = make_snowpack([0.1], "exponential", density=300, corr_length=200e-6)
+    sp2 = make_snowpack([0.1], "exponential", density=300, corr_length=200e-6)
+
+    sp = (sp + atmosphere) + sp2
+
+    assert sp.atmosphere is atmosphere

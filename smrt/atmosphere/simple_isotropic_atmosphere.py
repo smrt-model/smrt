@@ -10,8 +10,7 @@
 import numpy as np
 
 # local import
-#from ..core.error import SMRTError
-
+from ..core.atmosphere import AtmosphereBase
 
 #
 # For the developers:
@@ -21,7 +20,7 @@ import numpy as np
 #
 
 
-class SimpleIsotropicAtmosphere(object):
+class SimpleIsotropicAtmosphere(AtmosphereBase):
 
     def __init__(self, tbdown=0, tbup=0, trans=1):
 
