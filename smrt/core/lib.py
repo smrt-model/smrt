@@ -343,7 +343,8 @@ def generic_ft_even_matrix(phase_function, m_max):
 
     """
 
-    nsamples = 2**np.ceil(3 + np.log(m_max + 1) / np.log(2))  # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
+    # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
+    nsamples = 2**np.ceil(3 + np.log(m_max + 1) / np.log(2))
 
     # dphi must be evenly spaced from 0 to 2 * np.pi (but not including period), but we can use the symmetry of the phase function
     # to reduce the computation to 0 to pi (including 0 and pi) and mirroring for pi to 2*pi (excluding both)
@@ -357,7 +358,7 @@ def generic_ft_even_matrix(phase_function, m_max):
 
     # mirror the phase function
     p_mirror = p.values[:, :, -2:0:-1, :, :].copy()
-    if npol >=3 :
+    if npol >= 3 :
         p_mirror[0:2, 2] = -p_mirror[0:2, 2]
         p_mirror[2, 0:2] = -p_mirror[2, 0:2]
 
@@ -375,16 +376,16 @@ def generic_ft_even_matrix(phase_function, m_max):
 
     # m>=1 modes
     if npol == 2:
-        ft_even_p[:, :, 1:] = ft_p[:, :, 1:m_max+1].real * (2.0 / nsamples)
+        ft_even_p[:, :, 1:] = ft_p[:, :, 1:m_max + 1].real * (2.0 / nsamples)
 
     else:
         delta = 2.0 / nsamples
-        ft_even_p[0:2, 0:2, 1:] = ft_p[0:2, 0:2, 1:m_max+1].real * delta
+        ft_even_p[0:2, 0:2, 1:] = ft_p[0:2, 0:2, 1:m_max + 1].real * delta
 
         # For the even matrix:
         # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
-        ft_even_p[0:2, 2, 1:] = - ft_p[0:2, 2, 1:m_max+1].imag * delta
-        ft_even_p[2, 0:2, 1:] = ft_p[2, 0:2, 1:m_max+1].imag * delta
-        ft_even_p[2, 2, 1:] = ft_p[2, 2, 1:m_max+1].real * delta
+        ft_even_p[0:2, 2, 1:] = - ft_p[0:2, 2, 1:m_max + 1].imag * delta
+        ft_even_p[2, 0:2, 1:] = ft_p[2, 0:2, 1:m_max + 1].imag * delta
+        ft_even_p[2, 2, 1:] = ft_p[2, 2, 1:m_max + 1].real * delta
 
     return ft_even_p  # order is pola_s, pola_i, m, mu_s, mu_i
