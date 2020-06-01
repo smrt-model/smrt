@@ -121,7 +121,7 @@ class PassiveResult(Result):
         else:
             if 'channel' not in tb.index.names:
                 raise SMRTError("No channel information is given in the result. Unable to index the result by channel.")
-            return tb.set_index(np.array([f"{channel}{pola}" for channel, pola in tb.index]))            
+            return tb.set_index(np.array([str(channel) + str(pola) for channel, pola in tb.index]))
 
     def TbV(self, **kwargs):
         """Return V polarization. Any parameter can be added to slice the results (e.g. frequency=37e9).
