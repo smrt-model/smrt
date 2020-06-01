@@ -25,7 +25,6 @@ from .error import SMRTError
 from ..interface.flat import Flat  # core should not depend on something defined in interface...
 from .layer import Layer
 from .interface import SubstrateBase
-from .atmosphere import AtmosphereBase
 
 
 class Snowpack(object):
@@ -117,12 +116,15 @@ class Snowpack(object):
 
     def check_addition_validity(self, other):
 
+        # import here to avoid circular reference
+        from .atmosphere import AtmosphereBase
+
         if isinstance(other, SubstrateBase):
             if self.substrate is not None:
-                raise SMRTError("Adding a substrate to a snowpack that already has one is not valid. Unset the substrate first")            
+                raise SMRTError("Adding a substrate to a snowpack that already has a substrate set is not valid."
+                                " Unset the substrate first.")
         elif isinstance(other, AtmosphereBase):
-            if self.atmosphere is not None:
-                raise SMRTError("Adding an atmosphere to a snowpack that already has one is not valid. Unset the atmosphere first")            
+            raise SMRTError("Adding an atmosphere to a snowpack is not allowed. Add an atmosphere and a snowpack.")
         elif not (hasattr(other, "layers") and hasattr(other, "interfaces") and hasattr(other, "substrate")):
             raise SMRTError("Addition of snowpacks requires two instances of class Snowpack or equivalent compatible objects")
 
@@ -150,11 +152,6 @@ class Snowpack(object):
                             interfaces=self.interfaces,
                             atmosphere=self.atmosphere,
                             substrate=other)
-        if isinstance(other, AtmosphereBase):
-            return Snowpack(layers=self.layers,
-                            interfaces=self.interfaces,
-                            substrate=self.substrate,
-                            atmosphere=other)
         else:
             return Snowpack(layers=self.layers + other.layers,
                             interfaces=self.interfaces + other.interfaces,
@@ -167,6 +164,7 @@ class Snowpack(object):
             return self
         else:
             # should never be called
+            raise SMRTError("The addition operator is not commutative for snowpacks")
             return other.__add__(self)
 
     def __iadd__(self, other):  # just for optimization
@@ -177,8 +175,6 @@ class Snowpack(object):
 
         if isinstance(other, SubstrateBase):
             self.substrate = other
-        elif isinstance(other, AtmosphereBase):
-            self.atmosphere = other
         else:
             self.layers += other.layers
             self.interfaces += other.interfaces
