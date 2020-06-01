@@ -1,5 +1,7 @@
 
 
+import pytest
+
 from ..inputs.make_medium import make_snowpack
 from .error import SMRTError
 from .interface import Substrate
@@ -42,7 +44,7 @@ def test_atmosphere_addition():
     atmosphere = AtmosphereBase()  # this one do nothing, but does not matter here.
 
     sp = make_snowpack([0.1], "exponential", density=300, corr_length=200e-6)
-    sp += atmosphere
+    sp = atmosphere + sp
 
     assert sp.atmosphere is atmosphere
 
@@ -54,6 +56,50 @@ def test_atmosphere_addition_double_snowpack():
     sp = make_snowpack([0.1], "exponential", density=300, corr_length=200e-6)
     sp2 = make_snowpack([0.1], "exponential", density=300, corr_length=200e-6)
 
-    sp = (sp + atmosphere) + sp2
+    sp = (atmosphere + sp) + sp2
 
     assert sp.atmosphere is atmosphere
+
+
+def test_invalid_addition_atmosphere():
+
+    atmosphere = AtmosphereBase()  # this one do nothing, but does not matter here.
+
+    sp = make_snowpack([0.1], "exponential", density=300, corr_length=200e-6)
+
+    with pytest.raises(SMRTError):
+        sp = sp + atmosphere
+
+
+def test_invalid_addition_atmosphere2():
+
+    atmosphere = AtmosphereBase()  # this one do nothing, but does not matter here.
+
+    sp = make_snowpack([0.1], "exponential", density=300, corr_length=200e-6)
+    sp2 = atmosphere + make_snowpack([0.1], "exponential", density=300, corr_length=200e-6)
+
+    with pytest.raises(SMRTError):
+        sp += sp2
+
+
+def test_invalid_addition_substrate():
+
+    substrate = Substrate()
+
+    sp = make_snowpack([0.1], "exponential", density=300, corr_length=200e-6)
+
+    with pytest.raises(SMRTError):
+        sp = substrate + sp
+
+
+def test_invalid_addition_substrate2():
+
+    substrate = Substrate()
+
+    sp = make_snowpack([0.1], "exponential", density=300, corr_length=200e-6)
+    sp2 = make_snowpack([0.1], "exponential", density=300, corr_length=200e-6)
+
+    sp += substrate
+
+    with pytest.raises(SMRTError):
+        sp += sp2  # the first snowpack can not have a substrate

@@ -1,6 +1,5 @@
 
 import numpy as np
-from nose.tools import ok_
 
 # local import
 from smrt import make_snowpack, make_model, sensor_list

@@ -1,7 +1,6 @@
 
-
+import pytest
 import numpy as np
-from nose.tools import raises
 
 from smrt.core.error import SMRTError
 from smrt.substrate.reflector import Reflector
@@ -52,10 +51,10 @@ def test_dict_multifrequency():
     assert np.all(m2[1] == 0.7)
 
 
-@raises(SMRTError)
 def test_missing_frequency_warning():
-    refl = Reflector(specular_reflection={21e9: 0.5, 36e9: 0.7})
-    m1 = refl.specular_reflection_matrix(10e9, None, mu, 2)
+    with pytest.raises(SMRTError):
+        refl = Reflector(specular_reflection={21e9: 0.5, 36e9: 0.7})
+        m1 = refl.specular_reflection_matrix(10e9, None, mu, 2)
 
 
 def test_emissivity_reflectivity_relation():

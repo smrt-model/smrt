@@ -1,10 +1,6 @@
 
-from nose.tools import raises
-from nose.tools import eq_
 
 from .layer import make_microstructure_model
-from .error import SMRTError
-
 
 
 def test_microstructure_model():

@@ -1,12 +1,10 @@
 
-import pandas as pd
-import numpy as np
+import pytest
 
-from nose.tools import raises
+import numpy as np
 
 from .make_medium import make_snowpack, make_ice_column, make_medium
 from ..core.error import SMRTError
-
 
 
 def test_make_snowpack():
@@ -18,17 +16,16 @@ def test_make_snowpack():
     assert(sp.layer_depths[-1] == 3)
 
 
-@raises(SMRTError)
 def test_make_snowpack_with_scalar_thickness():
+    with pytest.raises(SMRTError):
+        sp = make_snowpack(thickness=1, microstructure_model="exponential", density=300, corr_length=200e-6)
 
-    sp = make_snowpack(thickness=1, microstructure_model="exponential", density=300, corr_length=200e-6)
 
-
-@raises(SMRTError)
 def test_make_snowpack_array_size():
 
     # should raise an exception because density is len 1 whereas thickness is len 2
-    sp = make_snowpack(thickness=[1, 2], microstructure_model="exponential", density=[300], corr_length=200e-6)
+    with pytest.raises(SMRTError):
+        sp = make_snowpack(thickness=[1, 2], microstructure_model="exponential", density=[300], corr_length=200e-6)
 
 
 def test_make_lake_ice():

@@ -1,7 +1,6 @@
 # coding: utf-8
 
 import numpy as np
-from nose.tools import ok_
 
 # local import
 from smrt import make_snowpack, make_model, sensor_list
@@ -43,7 +42,5 @@ def test_iba_oneconfig():
     print(res.TbV(), res.TbH())
 
     #original absorption (Maetzler 1998)
-    #ok_(abs(res.TbV() - 247.9239598860865) < 1e-4)
-    #ok_(abs(res.TbH() - 237.08471336386063) < 1e-4)
-    ok_(abs(res.TbV() - 247.92344524715216) < 1e-4)
-    ok_(abs(res.TbH() - 237.0863426896562) < 1e-4)
+    assert abs(res.TbV() - 247.92344524715216) < 1e-4
+    assert abs(res.TbH() - 237.0863426896562) < 1e-4

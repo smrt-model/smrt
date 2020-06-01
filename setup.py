@@ -26,5 +26,14 @@ The Snow Microwave Radiative Transfer (SMRT) model is a highly modular model to 
 thermal emission of snowpacks and other cryospheric bodies in the microwave domain.
 
 SMRT is compatible with Python 3.6+
-"""
+""",
+    install_requires=['numpy',
+                      'pandas',
+                      'xarray',
+                      'scipy'],
+    extras_require={
+        'dev': [
+            'pytest',
+        ]
+    }
 )

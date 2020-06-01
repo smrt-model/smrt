@@ -10,6 +10,6 @@ matrix:
  
 install:
   - pip install -r requirements.txt
-  - pip install nose
+  - pip install pytest
 script:
-- nosetests
+- python -m pytest

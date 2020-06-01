@@ -1,6 +1,7 @@
 # coding: utf-8
 
-from nose.tools import raises
+import pytest
+
 import numpy as np
 import scipy.integrate
 
@@ -221,9 +222,9 @@ def test_permittivity_model():
     new_iba(sensor, layer)
 
 
-@raises(SMRTError)
 def test_iba_raise_exception_mu_is_1():
     shs_pack = setup_func_shs()
     em = setup_func_active(testpack=shs_pack)
     bad_mu = np.array([0.2, 1])
-    em.ft_even_phase(bad_mu, bad_mu, 2, npol=3)[: ,:, 2]
+    with pytest.raises(SMRTError):
+        em.ft_even_phase(bad_mu, bad_mu, 2, npol=3)[:, :, 2]

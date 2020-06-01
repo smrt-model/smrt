@@ -1,6 +1,5 @@
 
 
-from nose.tools import raises
 
 from smrt.core.interface import make_interface
 from smrt import SMRTError

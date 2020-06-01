@@ -1,6 +1,5 @@
 
-from nose.tools import raises
-from nose.tools import eq_
+import pytest
 
 import numpy as np
 
@@ -35,28 +34,28 @@ def test_iterate():
 
 def test_wavelength():
     s = sensor.Sensor(wavelength=0.21, theta_deg=0)
-    assert s.wavelength==0.21
+    assert s.wavelength == 0.21
     assert np.allclose(s.frequency, 1427583133)
 
 
-@raises(SMRTError)
 def test_no_theta():
-    sensor.passive(1e9, theta=None)
+    with pytest.raises(SMRTError):
+        sensor.passive(1e9, theta=None)
 
 
-@raises(SMRTError)
 def test_passive_wrong_frequency_units_warning():
-    sensor.passive([1e9, 35], theta=55)
+    with pytest.raises(SMRTError):
+        sensor.passive([1e9, 35], theta=55)
 
 
-@raises(SMRTError)
 def test_duplicate_theta():
-    sensor.passive([1e9, 35], theta=[55, 55])
+    with pytest.raises(SMRTError):
+        sensor.passive([1e9, 35], theta=[55, 55])
 
 
-@raises(SMRTError)
 def test_duplicate_theta_active():
-    sensor.active([1e9, 35], [55, 55])
+    with pytest.raises(SMRTError):
+        sensor.active([1e9, 35], [55, 55])
 
 
 def test_passive_mode():
@@ -67,9 +66,10 @@ def test_passive_mode():
 # active test
 
 
-@raises(SMRTError)
+
 def test_active_wrong_frequency_units_warning():
-    sensor.active([1e9, 35], 55)
+    with pytest.raises(SMRTError):
+        sensor.active([1e9, 35], 55)
 
 
 #def test_active_fourpol():

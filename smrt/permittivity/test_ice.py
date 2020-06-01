@@ -1,6 +1,6 @@
 
-from nose.tools import raises
-from nose.tools import eq_
+import pytest
+
 import warnings
 import numpy as np
 
@@ -80,7 +80,7 @@ def test_imaginary_ice_permittivity_output_matzler_temp_250_freq_40GHz():
 def test_real_ice_permittivity_output_maetzler87_temp_268():
     eps87 = ice_permittivity_maetzler87(10e9, 268.15)
     eps06 = ice_permittivity_maetzler06(10e9, 268.15)
-    eq_(eps87.real, eps06.real)
+    assert eps87.real == eps06.real
 
 
 # Test output of this maetzler 87 against manually calculated value
@@ -129,7 +129,7 @@ def test_ice_permittivity_output_tuiri84_temp_250K_freq_40GHz():
 # Test output of HUT version
 def test_real_ice_permittivity_output_HUT():
     eps = _ice_permittivity_HUT(10e9, 270)
-    eq_(eps.real, 3.18567)
+    assert np.allclose(eps.real, 3.18567)
 
 
 # Test output of HUT version
@@ -141,7 +141,7 @@ def test_imaginary_ice_permittivity_output_HUT():
 # Test output of DMRT version
 def test_real_ice_permittivity_output_DMRTML():
     eps = _ice_permittivity_DMRTML(10e9, 270)
-    eq_(eps.real, 3.18567)
+    assert np.allclose(eps.real, 3.18567)
 
 
 # Test output of DMRT version
@@ -154,7 +154,7 @@ def test_imaginary_ice_permittivity_output_DMRTML():
 # Should be exact
 def test_real_ice_permittivity_output_matzler_temp_270_MEMLS():
     eps = _ice_permittivity_MEMLS(10e9, 270, 0)
-    eq_(eps.real, 3.18567)
+    assert np.allclose(eps.real, 3.18567)
 
 
 # Test output MEMLS version
