@@ -821,7 +821,8 @@ class InterfaceProperties(object):
             Rdiff = self.Rbottom_diff[l].compress(mode=m, auto_reduce_npol=True)
             # the following is temporary. Really hacky
             if isinstance(Rdiff, scipy.sparse.dia.dia_matrix):
-                R = scipy.sparse.diags(R.diagonal() + Rdiff.diagonal() * full_weight, 0)
+                Rdiag = R.diagonal() if len(R.shape) == 2 else R
+                R = scipy.sparse.diags(Rdiag + Rdiff.diagonal() * full_weight, 0)
             else:
                 R += Rdiff * full_weight
                 raise NotImplementedError("This branch is probably not correct, sorry. Please contact developer")
