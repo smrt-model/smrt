@@ -69,7 +69,7 @@ class smrt_diag(object):
     __array_ufunc__ = None
 
     def __init__(self, arr):
-        self.diag = arr
+        self.diag = np.atleast_1d(arr)
 
     def diagonal(self):
         return self.diag
@@ -102,13 +102,17 @@ class smrt_diag(object):
 
     def __add__(self, other):
         if isinstance(other, smrt_diag):
-            return smrt_diag(other.values + self.values)
+            return smrt_diag(other.diag + self.diag)
+        elif np.isscalar(other) and other == 0:
+            return self
         else:
             raise NotImplementedError
 
     def __sub__(self, other):
         if isinstance(other, smrt_diag):
             return smrt_diag(other.diag - self.diag)
+        elif np.isscalar(other) and other == 0:
+            return self
         else:
             raise NotImplementedError
 
@@ -367,7 +371,8 @@ def generic_ft_even_matrix(phase_function, m_max):
 
     """
 
-    nsamples = 2**np.ceil(3 + np.log(m_max + 1) / np.log(2))  # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
+    # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
+    nsamples = 2**np.ceil(3 + np.log(m_max + 1) / np.log(2))
 
     # dphi must be evenly spaced from 0 to 2 * np.pi (but not including period), but we can use the symmetry of the phase function
     # to reduce the computation to 0 to pi (including 0 and pi) and mirroring for pi to 2*pi (excluding both)
@@ -426,3 +431,4 @@ in much better performance. Inspire from joblib."""
     os.environ['OMP_NUM_THREADS'] = nthreads
     os.environ['VECLIB_MAXIMUM_THREADS'] = nthreads
     os.environ['NUMEXPR_NUM_THREADS'] = nthreads
+
