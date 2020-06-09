@@ -9,7 +9,7 @@ Otherwise, we recommend to add these functions in your own files (outside of smr
 """
 
 import copy
-from collections import Sequence
+from collections.abc import Sequence
 import numpy as np
 from ..core.globalconstants import C_SPEED
 
