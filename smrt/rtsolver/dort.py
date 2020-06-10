@@ -827,7 +827,7 @@ class InterfaceProperties(object):
 
             Rdiff = self.Rbottom_diff[l].compress(mode=m, auto_reduce_npol=True)
 
-            R += Rdiff @ smrt_diag(full_weight)
+            R = Rdiff @ smrt_diag(full_weight) + R
 
         return R
 
