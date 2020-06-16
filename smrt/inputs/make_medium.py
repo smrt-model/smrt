@@ -479,6 +479,10 @@ def bulk_ice_density(temperature, salinity, porosity):
 
     # Density of mixture:
     rho = (1. - porosity) * (rho_ice * F1 / (F1 - rho_ice * salinity * PSU**-1 * F2)) * 1e3  # in kg/m3 (eq. 15, C&W, 1983)
+
+    if rho < 0:
+        raise SMRTError("Ice density may not be negative.")
+
     return rho
 
 
