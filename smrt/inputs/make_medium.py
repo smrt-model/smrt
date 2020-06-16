@@ -234,7 +234,7 @@ def make_ice_column(ice_type,
     :param salinity: salinity of ice/water in kg/kg (see PSU constant in smrt module). Default is 0. If neither salinity nor brine_volume_fraction are given, the ice column is considered to consist of fresh water ice.
     :param brine_volume_fraction: brine / liquid water fraction in sea ice, optional parameter, if not given brine volume fraction is calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
     :param density: density of ice layer in kg m :sup:`-3`
-    :param porosity: porosity of ice layer (in %). Default is 0. 
+    :param porosity: porosity of ice layer (0 - 1). Default is 0.
     :param add_water_substrate: Adds a substrate made of water below the ice column.
     Possible arguments are True (default) or False. If True looks for ice_type to determine if a saline or fresh water layer is added and/or uses the
     optional arguments 'water_temperature', 'water_salinity' of the water substrate.
