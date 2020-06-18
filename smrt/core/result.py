@@ -59,12 +59,13 @@ def open_result(filename):
     return make_result(mode, data)
 
 
-def make_result(mode, *args, **kwargs):
+def make_result(sensor, *args, **kwargs):
     """create an active or passive result object according to the mode"""
-    if mode == 'A':
-        return ActiveResult(*args, **kwargs)
+
+    if sensor.mode == 'A':
+        return ActiveResult(*args, channel_map=sensor.channel_map, **kwargs)
     else:
-        return PassiveResult(*args, **kwargs)
+        return PassiveResult(*args, channel_map=sensor.channel_map, **kwargs)
 
 
 class Result(object):
@@ -72,7 +73,7 @@ class Result(object):
 
     """
 
-    def __init__(self, intensity, coords=None):
+    def __init__(self, intensity, coords=None, channel_map=None):
         """Construct results array with the given intensity array (numpy array or xarray) and dimensions if numpy array is given
 
 """
@@ -85,6 +86,8 @@ class Result(object):
             self.data.attrs['mode'] = self.mode
         else:
             raise SMRTError("Result base class is abstract, uses a subclass instead. The subclass must define the 'mode' attribute")
+
+        self.channel_map = channel_map or dict()
 
     @property
     def coords(self):
@@ -102,26 +105,62 @@ class Result(object):
         """save a result to disk. Under the hood, this is a netCDF file produced by xarray (http://xarray.pydata.org/en/stable/io.html)."""
         self.data.to_netcdf(filename)
 
+    def sel_data(self, channel=None, **kwargs):
+        # this function allows selection as xarray.DataArray.sel and in addition by channel if a channel_map is defined.
+
+        # ffilter the variables of channel_map[channel] that are effectively in self.data.dims
+        # and apply them to the selector sel in addition to kwargs
+
+        if channel is not None:
+            kwargs.update({k: v for k, v in self.channel_map[channel].items() if k in self.data.dims})
+
+        return self.data.sel(drop=True, **kwargs)
+
+    def return_as_dataframe(self, name, channel_axis=None, **kwargs):
+
+        if channel_axis in ["column", "index"]:
+            if not self.channel_map:
+                raise SMRTError("No channel information is given in the result. Unable to index the result by channel.")
+
+            # concat the dataframe obtained for each channel
+            x = pd.concat([self.sel_data(channel=ch, **kwargs).to_dataframe(name=ch) for ch in self.channel_map], axis=1, join='inner')
+
+            if channel_axis == "index":
+                x = x.stack().index.set_names('channel', level=-1)
+
+            return x
+        else:
+            return self.data.sel(**kwargs).to_dataframe(name)
+
 
 class PassiveResult(Result):
 
     mode = 'P'
 
-    def Tb(self, **kwargs):
+    def Tb(self, channel=None, **kwargs):
         """Return brightness temperature. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V').
-         See xarray slicing with sel method (to document)"""
-        return _strongsqueeze(self.data.sel(**kwargs))
+         See xarray slicing with sel method (to document). It is also posisble to select by channel if the sensor has a channel_map.
 
-    def Tb_as_dataframe(self, index_by_channel=False, **kwargs):
-        """Return brightness temperature. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V').
-         See xarray slicing with sel method (to document)"""
-        tb = self.data.sel(**kwargs).to_dataframe(name='Tb')
-        if not index_by_channel:
-            return tb
-        else:
-            if 'channel' not in tb.index.names:
-                raise SMRTError("No channel information is given in the result. Unable to index the result by channel.")
-            return tb.set_index(np.array([f"{channel}{pola}" for channel, pola in tb.index]))            
+         :param channel: channel to select
+         :param **kwargs: any parameter to slice the results.
+"""
+        return _strongsqueeze(self.sel_data(channel=channel, **kwargs))
+
+    def Tb_as_dataframe(self, channel_axis=None, **kwargs):
+        """Return brightness temperature as a pandas.DataFrame or pandas.Series. Any parameter can be added to slice the results
+        (e.g. frequency=37e9 or polarization='V'). See xarray slicing with sel method (to document).
+        In addition channel_axis controls the format of the output. If set to None, the DataFrame has a multi-index formed with all the
+        dimensions (frequency, polarization, ...).
+        If channel_axis is set to "column", and if the sensor has named channels (channel_map in SMRT wording), the channel are 
+        in columns and the other dimensions are in index. If set to "index", the channel are in index with all the other dimensions.
+
+        The most conviennent is probably channel_axis="column" while channel_axis=None (default) contains all the data even those 
+        not corresponding to a channel and applies to any sensor even those without channel_map.
+
+        :param channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
+"""
+
+        return self.return_as_dataframe(name='Tb', channel_axis=channel_axis, **kwargs)
 
     def TbV(self, **kwargs):
         """Return V polarization. Any parameter can be added to slice the results (e.g. frequency=37e9).
@@ -143,19 +182,25 @@ class ActiveResult(Result):
 
     mode = 'A'
 
-    def sigma(self, **kwargs):
-        """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V').
-         See xarray slicing with sel method (to document)"""
+    def sigma(self, channel=None, **kwargs):
+        """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V').
+         See xarray slicing with sel method (to document). It is also posisble to select by channel if the sensor has a channel_map.
+
+         :param channel: channel to select
+         :param **kwargs: any parameter to slice the results.
+"""
+        data = self.sel_data(channel=channel, **kwargs)
+
         if 'theta' in kwargs:
             theta = xr.DataArray(np.atleast_1d(kwargs.pop('theta')), dims=['theta'])
         else:
             theta = self.data.theta_inc
 
         if 'theta' in self.data.coords:
-            backscatter = self.data.sel(**kwargs).sel(theta_inc=theta, theta=theta)
+            backscatter = data.sel(theta_inc=theta, theta=theta)
         else:
             # data are backscatter only
-            backscatter = self.data.sel(**kwargs).sel(theta_inc=theta)
+            backscatter = data.sel(theta_inc=theta)
         return 4 * np.pi * _strongsqueeze(np.cos(np.radians(theta)) * backscatter)
 
     def sigma_dB(self, **kwargs):
@@ -163,15 +208,37 @@ class ActiveResult(Result):
          See xarray slicing with sel method (to document)"""
         return dB(self.sigma(**kwargs))
 
-    def sigma_as_dataframe(self, **kwargs):
-        """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V').
-         See xarray slicing with sel method (to document)"""
-        return self.sigma(**kwargs).to_dataframe(name='sigma')
+    def sigma_as_dataframe(self, channel_axis=None, **kwargs):
+        """Return backscattering coefficient as a pandas.DataFrame or pandas.Series. Any parameter can be added to slice the results
+        (e.g. frequency=37e9 or polarization='V'). See xarray slicing with sel method (to document).
+        In addition channel_axis controls the format of the output. If set to None, the DataFrame has a multi-index formed with all the
+        dimensions (frequency, polarization, ...).
+        If channel_axis is set to "column", and if the sensor has named channels (channel_map in SMRT wording), the channel are 
+        in columns and the other dimensions are in index. If set to "index", the channel are in index with all the other dimensions.
 
-    def sigma_dB_as_dataframe(self, **kwargs):
-        """Return backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', 
-        polarization='V'). See xarray slicing with sel method (to document)"""
-        return self.sigma_dB(**kwargs).to_dataframe(name='sigma')
+        The most conviennent is probably channel_axis="column" while channel_axis=None (default) contains all the data even those 
+        not corresponding to a channel and applies to any sensor even those without channel_map.
+
+        :param channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
+"""
+
+        return self.return_as_dataframe(name='sigma', channel_axis=channel_axis, **kwargs)
+
+    def sigma_dB_as_dataframe(self, channel_axis=None, **kwargs):
+        """Return backscattering coefficient in dB as a pandas.DataFrame or pandas.Series. Any parameter can be added to slice the results
+        (e.g. frequency=37e9 or polarization='V'). See xarray slicing with sel method (to document).
+        In addition channel_axis controls the format of the output. If set to None, the DataFrame has a multi-index formed with all the
+        dimensions (frequency, polarization, ...).
+        If channel_axis is set to "column", and if the sensor has named channels (channel_map in SMRT wording), the channel are 
+        in columns and the other dimensions are in index. If set to "index", the channel are in index with all the other dimensions.
+
+        The most conviennent is probably channel_axis="column" while channel_axis=None (default) contains all the data even those 
+        not corresponding to a channel and applies to any sensor even those without channel_map.
+
+        :param channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
+"""
+
+        return dB(self.return_as_dataframe(name='sigma', channel_axis=channel_axis, **kwargs))
 
     def sigmaVV(self, **kwargs):
         """Return VV backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
@@ -292,7 +359,8 @@ def concat_results(result_list, coord):
     if not all([type(result) == ResultClass for result in result_list]):
         raise SMRTError("The results are not all of the same type")
 
-    return ResultClass(xr.concat([result.data for result in result_list], pd.Index(dim_value, name=dim_name)))
+    return ResultClass(xr.concat([result.data for result in result_list], pd.Index(dim_value, name=dim_name)),
+                       channel_map=result_list[0].channel_map)  # use the first channel_map. Assume all the results have the same channel_map...
 
 
 def _strongsqueeze(x):

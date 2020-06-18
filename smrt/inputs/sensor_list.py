@@ -10,8 +10,9 @@ but functions for specific sensors are more convenient. See examples in the func
 """
 
 from collections.abc import Sequence
+import numpy as np
 
-from smrt.core.sensor import Sensor, SensorList
+from smrt.core.sensor import Sensor
 from smrt.core.error import SMRTError
 
 
@@ -47,10 +48,8 @@ def amsre(channel=None, frequency=None, polarization=None, theta=55):
     amsre_frequency_dict = {
         '06': 6.925e9,
         '10': 10.65e9,
-        '18': 18.7e9,
         '19': 18.7e9,
         '23': 23.8e9,
-        '36': 36.5e9,
         '37': 36.5e9,
         '89': 89e9}
 
@@ -86,10 +85,8 @@ def amsr2(channel=None, frequency=None, polarization=None, theta=55):
         '06': 6.925e9,
         '07': 7.3e9,
         '10': 10.65e9,
-        '18': 18.7e9,
         '19': 18.7e9,
         '23': 23.8e9,
-        '36': 36.5e9,
         '37': 36.5e9,
         '89': 89e9}
 
@@ -98,36 +95,49 @@ def amsr2(channel=None, frequency=None, polarization=None, theta=55):
 
 def common_amsr(sensor_name, frequency_dict, channel=None, frequency=None, polarization=None, theta=55):
 
-    if isinstance(channel, Sequence) and not isinstance(channel, str):
-        if frequency is not None:
-            raise SMRTError("Either channel or frequency should be given. Mixing both arguments is not understood.")
-        return SensorList([common_amsr(sensor_name, frequency_dict, channel=c, frequency=None,
-                                         polarization=polarization, theta=theta) for c in channel])
-
-    if channel is not None:
-
-        if len(channel) == 3:
-            polarization = channel[2]
-        else:
-            polarization = ['H', 'V']
-
-        fch = channel[0:2]
-
-        try:
-            frequency = frequency_dict[fch]
-        except KeyError:
-            raise SMRTError("%s channel frequency not recognized. Expected one of: %s" % (sensor_name, ", ".join(frequency_dict.keys())))
-
     if frequency is None:
+        # take default values
         frequency = sorted(set(frequency_dict.values()))
+    else:
+        # recreate the frequency dict
+        frequency_dict = {"%02i" % (freq * 1e9): freq for freq in np.atleast_1d(frequency)}
+
+    if polarization is None:
         polarization = ['H', 'V']
 
-    sensor = Sensor(frequency, None, theta, None, None, polarization, channel)
+    # create the channel map
+    channel_map = {freq + pola: dict(frequency=frequency_dict[freq], polarization=pola, theta=theta) for freq in frequency_dict for pola in polarization}
+
+    if channel is not None:
+        if isinstance(channel, str):
+            channel = [channel]
+
+        # add H and V if not present
+        new_channel = []
+        for ch in channel:
+            if ch[-1] not in 'HV':
+                new_channel += [ch + 'H', ch + 'V']
+            else:
+                new_channel += [ch]
+
+        # take into account 18=19 and 36=37
+        for ch in new_channel:
+            if '18' in ch:
+                channel_map[ch] = channel_map.pop('19' + ch[-1])
+            if '36' in ch:
+                channel_map[ch] = channel_map.pop('37' + ch[-1])
+
+        try:
+            channel_map = filter_channel_map(channel_map, new_channel)
+        except KeyError:
+            raise SMRTError("%s channel not recognized. Expected one of: %s" % (sensor_name, ", ".join(frequency_dict.keys())))
+
+    sensor = passive(channel_map=channel_map, **extract_configuration(channel_map))
 
     return sensor
 
 
-def quickscat(channel=None, theta=None, polarization=None):
+def quickscat(channel=None, theta=None):
     """ Configuration for quickscat sensor.
 
      This function can be used to simulate the 4 QUICKSCAT channels i.e. incidence angles 46° and 54° and HH and VV polarizations.
@@ -138,21 +148,26 @@ def quickscat(channel=None, theta=None, polarization=None):
 
      :returns: :py:class:`Sensor` instance
 """
+
+    channel_map = {'HH46': dict(polarization='H', polarization_inc='H', theta=46, theta_inc=46),
+                   'VV54': dict(polarization='V', polarization_inc='V', theta=54, theta_inc=54)
+                   }
+
     if channel is None:
         if theta is None:
             theta = [46, 54]
 
-        if polarization is None:
-            polarization = polarization_inc = ['V', 'H']
-        else:
-            polarization_inc = polarization[1]
-            polarization = polarization[0]
+        theta = np.atleast_1d(theta)
+        channel = []
 
-    else:
+        if 46 in theta:
+            channel.append('HH46')
+        if 54 in theta:
+            channel.append('VV54')
 
-        t, theta, polarization, polarization_inc = decompose_channel(channel, (0, 2, 2))
+    channel_map = filter_channel_map(channel_map, channel)
 
-    sensor = active(13.4e9, theta, polarization_inc=polarization_inc, polarization=polarization)
+    sensor = active(13.4e9, theta, polarization_inc=['V', 'H'], polarization=['V', 'H'], channel_map=channel_map)
 
     return sensor
 
@@ -160,7 +175,7 @@ def quickscat(channel=None, theta=None, polarization=None):
 def ascat(theta=None):
     """ Configuration for ASCAT on ENVISAT sensor.
 
-       This function return a sensor at 5.255 GHz (C-band) and VV polarization. The incidence angle can be chosen or is by defaut from 25° to 65° every 5°
+       This function returns a sensor at 5.255 GHz (C-band) and VV polarization. The incidence angle can be chosen or is by defaut from 25° to 65° every 5°
 
        :param theta: incidence angle (between 25 and 65° in principle)
        :type theta: float or sequence
@@ -170,36 +185,29 @@ def ascat(theta=None):
     if theta is None:
         theta = np.arange(25, 70, 5)
 
-    return active(5.255e9, theta, polarization_inc='V', polarization='V')
+    channel_map = {'5VV%i': dict(theta=t, theta_inc=t) % t for t in np.atleast_1d(theta)}
+
+    return active(5.255e9, theta, polarization_inc='V', polarization='V', channel_map=channel_map)
 
 
+def filter_channel_map(channel_map, channel):
+
+    if isinstance(channel, str):
+        channel = [channel]
+    channel_map = {ch: channel_map[ch] for ch in channel}
+
+    return channel_map
 
 
-def decompose_channel(channel, lengths):
+def extract_configuration(channel_map):
 
-    if isinstance(channel, Sequence) and not isinstance(channel, str):
+    keys = ['frequency', 'polarization', 'theta', 'polarization_inc', 'theta_inc']
 
-        data = [decompose_channel(ch) for ch in channel]
-        frequency, theta, polarization, polarization_inc = tuple(map(list, zip(*data)))  # transpose
+    configuration = dict()
+    for k in keys:
+        try:
+            configuration[k] = list({channel_map[ch][k] for ch in channel_map})
+        except KeyError:
+            continue
 
-    else:
-        if len(channel) !=  sum(lengths):
-            raise SMRTError("the channel has an incorrect length")
-        if lengths[0] > 0:
-            frequency = channel[0:lengths[0]]
-        else:
-            frequency = None
-
-        if lengths[1] > 0:
-            polarization = channel[lengths[0]]
-            if lengths[1] == 2:
-                polarization_inc = channel[lengths[0]+1]
-        else:
-            polarization_inc = polarization = None
-
-        if lengths[2] > 0:
-            theta = float(channel[-lengths[2]:])
-        else:
-            theta = None
-
-    return frequency, theta, polarization, polarization_inc
+    return configuration

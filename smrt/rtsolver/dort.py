@@ -171,7 +171,7 @@ class DORT(object):
             #coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola)] + coords
             coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola), ('polarization', pola)]
 
-        return make_result(sensor.mode, intensity, coords)
+        return make_result(sensor, intensity, coords)
 
     def dort(self, m_max=0, special_return=False):
         # not to be called by the user
