@@ -76,7 +76,7 @@ class GeometricalOptics(Interface):
         mu_local = -vector3.dot(n, ki)
 
         Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_local)
- 
+
         # define polarizations
         hs = vector3.from_xyz(-sin_phi, cos_phi, 0)
         vs = vector3.from_xyz(mu_s * cos_phi, mu_s * sin_phi, -sin_s)
@@ -84,12 +84,22 @@ class GeometricalOptics(Interface):
         hi = vector3.from_xyz(0, 1, 0)
         vi = vector3.from_xyz(-mu_i, 0, -sin_i)
 
-        # compute the dot products
-        hs_ki = vector3.dot(hs, ki)
-        vs_ki = vector3.dot(vs, ki)
 
-        hi_ks = vector3.dot(hi, ks)
-        vi_ks = vector3.dot(vi, ks)
+        # compute the dot products
+        cross_ki_ks_norm = vector3.cross(ki, ks).norm
+        colinear = (dphi == np.pi) & (mu_s == mu_i)
+
+        hs_ki = vector3.dot(hs, ki) / cross_ki_ks_norm
+        hs_ki[colinear] = -1
+        vs_ki = vector3.dot(vs, ki) / cross_ki_ks_norm
+        vs_ki[colinear] = 0
+
+        hi_ks = vector3.dot(hi, ks) / cross_ki_ks_norm
+        hi_ks[colinear] = 1
+
+        vi_ks = vector3.dot(vi, ks) / cross_ki_ks_norm
+        vi_ks[colinear] = 0
+
 
         fvv = abs2( hs_ki * hi_ks * Rh + vs_ki* vi_ks * Rv)   # Eqs 2.1.122 in Tsang_tomeIII
         fhh = abs2( vs_ki * vi_ks * Rh + hs_ki* hi_ks * Rv)
@@ -105,8 +115,8 @@ class GeometricalOptics(Interface):
 
         smrt_norm = 1 / (4 * np.pi)  #  divide by 4*pi because this is the norm for SMRT
 
-        coef = smrt_norm / (2 * self.mean_square_slope) / mu_i * kd.norm2**2 / (vector3.cross(ki, ks).norm2**2 * kd.z**4) * \
-                         np.exp( - (kd.x**2 + kd.y**2)/ (2 * kd.z**2 * self.mean_square_slope))  # Eq. 2.1.124 
+        coef = smrt_norm / (2 * self.mean_square_slope) / mu_i * kd.norm2**2 / kd.z**4 * \
+                         np.exp( -(kd.x**2 + kd.y**2) / (2 * kd.z**2 * self.mean_square_slope))  # Eq. 2.1.124 
 
         if self.shadow_correction:
 
@@ -115,7 +125,7 @@ class GeometricalOptics(Interface):
             zero_i = backward & higher_thetas
             zero_s = backward & ~higher_thetas
 
-            s = 1 / (1 + zero_i * shadow_function(self.mean_square_slope, mu_i/sin_i) + zero_s * shadow_function(self.mean_square_slope, mu_s/sin_s))
+            s = 1 / (1 + zero_i * shadow_function(self.mean_square_slope, mu_i / sin_i) + zero_s * shadow_function(self.mean_square_slope, mu_s/sin_s))
             coef *= s
 
         return reflection_coefficients * coef
@@ -126,6 +136,13 @@ class GeometricalOptics(Interface):
             return self.diffuse_reflection_matrix(frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol=npol)
 
         return generic_ft_even_matrix(reflection_function, m_max)
+
+    def ft_even_diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, m_max, npol):
+
+        def transmission_function(dphi):
+            return self.diffuse_transmission_matrix(frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol=npol)
+
+        return generic_ft_even_matrix(transmission_function, m_max)
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """compute the transmission coefficients for the azimuthal mode m
@@ -159,6 +176,10 @@ class GeometricalOptics(Interface):
 
         eta1_eta = n_1 / n_2  # eta1 is the impedance in medium 2 and eta in medium 1. Impedance is sqrt(permeability/permittivity)
 
+        if abs(eta1_eta - 1) < 1e-6:
+            raise NotImplementedError("the case of successive layers with identical index needs to be implemented")
+            return 1 / (4 * np.pi)   # return the identity matrix. The coef is to be checked.
+
         mu_i = np.atleast_1d(mu_i)[np.newaxis, np.newaxis, :]
         mu_t = np.atleast_1d(mu_t)[np.newaxis, :, np.newaxis]
         dphi = np.atleast_1d(dphi)[:, np.newaxis, np.newaxis]
@@ -183,7 +204,7 @@ class GeometricalOptics(Interface):
 
         n_kt = vector3.dot(n, kt)
         n_kt[mu_local < 0] = 0
- 
+
         # define polarizations
         ht = vector3.from_xyz(-sin_phi, cos_phi, 0)
         vt = vector3.from_xyz(-mu_t * cos_phi, -mu_t * sin_phi, -sin_t)
@@ -192,12 +213,19 @@ class GeometricalOptics(Interface):
         vi = vector3.from_xyz(-mu_i, 0, -sin_i)
 
         # compute the cosines
+        cross_ki_kt_norm = vector3.cross(ki, kt).norm
+        colinear = (dphi == 0) & (mu_t == mu_i)
 
-        ht_ki = vector3.dot(ht, ki)
-        vt_ki = vector3.dot(vt, ki)
+        ht_ki = vector3.dot(ht, ki) / cross_ki_kt_norm
+        ht_ki[colinear] = -1  # checked with sympy
 
-        hi_kt = vector3.dot(hi, kt)
-        vi_kt = vector3.dot(vi, kt)
+        vt_ki = vector3.dot(vt, ki) / cross_ki_kt_norm
+        vt_ki[colinear] = 0  # checked with sympy
+
+        hi_kt = vector3.dot(hi, kt) / cross_ki_kt_norm
+        hi_kt[colinear] = 1    # checked with sympy
+        vi_kt = vector3.dot(vi, kt) / cross_ki_kt_norm
+        vi_kt[colinear] = 0    # checked with sympy
 
         Wvv = abs2( ht_ki * hi_kt * (1 + Rh) + vt_ki * vi_kt * (1 + Rv) * eta1_eta)   # Eqs 2.1.130 in Tsang_tomeIII
         Whh = abs2( vt_ki * vi_kt * (1 + Rh) + ht_ki * hi_kt * (1 + Rv) * eta1_eta)
@@ -214,12 +242,11 @@ class GeometricalOptics(Interface):
 
         smrt_norm = 1 / (4 * np.pi)   # SMRT requires scattering coefficient / 4 * pi
 
-        coef = smrt_norm * 2 * eps_2 / (eta1_eta * self.mean_square_slope) / mu_i * \
-                ktd.norm2 * n_kt**2 / (vector3.cross(ki, kt).norm2**2 * ktd.z**4) * \
+        coef = smrt_norm * 2 * eps_2 / (eta1_eta * self.mean_square_slope) / mu_i * ktd.norm2 * n_kt**2 / (ktd.z**4) * \
                 np.exp(-(ktd.x**2 + ktd.y**2) / (2 * ktd.z**2 * self.mean_square_slope))   # Eq. 2.1.130   NB: k1^2 -> eps_2
 
         if self.shadow_correction:
-            s = 1 / (1 + shadow_function(self.mean_square_slope, mu_i/sin_i) + shadow_function(self.mean_square_slope, mu_t/sin_t))
+            s = 1 / (1 + shadow_function(self.mean_square_slope, mu_i / sin_i) + shadow_function(self.mean_square_slope, mu_t / sin_t))
             coef *= s
 
         return transmission_coefficients * coef.real
