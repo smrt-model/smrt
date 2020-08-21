@@ -7,7 +7,7 @@ if sys.version_info[0] == 2:
     raise RuntimeError("Pyhton 2.7 is not supported anymore")
 
 
-from .inputs.make_medium import make_snowpack, make_snow_layer, make_ice_column
+from .inputs.make_medium import make_snowpack, make_snow_layer, make_ice_column, make_interface
 from .inputs.make_soil import make_soil
 
 from .core.model import make_model, make_emmodel

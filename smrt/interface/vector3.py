@@ -6,13 +6,13 @@ class vector3(object):
 
     @staticmethod
     def from_xyz(x, y, z):
-       v = vector3()
-       v.x = x 
-       v.y = y
-       v.z = z
-       v.norm2 = v.x**2 +v.y**2 + v.z**2
-       v.norm = np.sqrt(v.norm2)
-       return v
+        v = vector3()
+        v.x = x
+        v.y = y
+        v.z = z
+        v.norm2 = v.x**2 + v.y**2 + v.z**2
+        v.norm = np.sqrt(v.norm2)
+        return v
 
     @staticmethod
     def from_angles(norm, mu, phi):
