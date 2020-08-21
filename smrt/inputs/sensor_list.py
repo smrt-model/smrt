@@ -112,7 +112,7 @@ def common_amsr(sensor_name, frequency_dict, channel=None, frequency=None, polar
         if isinstance(channel, str):
             channel = [channel]
 
-        # add H and V if not present
+        # add H and V to channel's name if not present
         new_channel = []
         for ch in channel:
             if ch[-1] not in 'HV':

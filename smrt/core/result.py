@@ -110,22 +110,34 @@ class Result(object):
 
     def return_as_dataframe(self, name, channel_axis=None, **kwargs):
 
+        def xr_to_dataframe(x, name):
+            # workaround for when the resulting array has no dims anymore
+            if x.dims:
+                return x.to_dataframe(name=name)
+            else:
+                return pd.DataFrame([float(x)], columns=[name])
+
         if channel_axis in ["column", "index"]:
             if not self.channel_map:
                 raise SMRTError("No channel information is given in the result. Unable to index the result by channel.")
 
             # concat the dataframe obtained for each channel
-            x = pd.concat([self.sel_data(channel=ch, **kwargs).to_dataframe(name=ch)
-                           for ch in self.channel_map], axis=1, join='inner')
+            x = pd.concat([xr_to_dataframe(self.sel_data(channel=ch, **kwargs), name=ch)
+                           for ch in self.channel_map],
+                          axis=1, join='inner')
 
             if channel_axis == "index":
-                x = x.stack().index.set_names('channel', level=-1)
+                droplevel = not x.index.name and len(x.index) == 1 and x.index[0] == 0  # this is our added index, remove it
+                x = x.stack()
+                x.index.set_names('channel', level=-1)
+                if droplevel:
+                    x = x.droplevel(0)
 
             return x
         elif channel_axis:
             raise SMRTError('channel_axis argument must be "column" or "index"')
         else:
-            return self.sel_data(**kwargs).to_dataframe(name)
+            return xr_to_dataframe(self.sel_data(**kwargs), name=name)
 
 
 class PassiveResult(Result):

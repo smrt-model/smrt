@@ -51,6 +51,32 @@ def passive(frequency, theta, polarization=None, channel_map=None):
     return sensor
 
 
+def channel_map_for_radar(frequency=None, polarization='HV', order='fp'):
+    """
+    return a channel_map to convert channel name to frequency and polarization. This function assumes the frequency is coded as a two-digit number
+    in GHz with leading 0 if necessary. The polarization is after the frequency if order is 'fp' and before if order is 'pf'.
+"""
+
+    if frequency is None:
+        frequency_str = ''
+    else:
+        frequency_str = ['%02i' % np.round(f / 1e9) for f in frequency]
+
+    if order == 'fp':
+        def channel_name(freq, pola_inc, pola_ref):
+            return str(freq_str) + str(pola_inc) + str(pola_refl)
+    if order == 'pf':
+        def channel_name(freq, pola_inc, pola_ref):
+            return str(pola_inc) + str(pola_refl) + str(freq_str)
+    else:
+        raise SMRTError('order must be fp or pf')
+
+    channel_map = {channel_name(freq_str, pola_inc, pola_refl): dict(frequency=freq, polarization_inc=pola_inc, polarization=pola_refl)
+                   for freq_str, freq in zip(frequency_str, frequency) for pola_inc in polarization for pola_refl in polarization}
+
+    return channel_map
+
+
 def active(frequency, theta_inc, theta=None, phi=None, polarization_inc=None, polarization=None, channel_map=None):
     """ Configuration for active microwave sensor.
 
@@ -235,3 +261,36 @@ class Sensor(SensorBase):
             sensor_subset = copy.copy(self)
             setattr(sensor_subset, axis, v)  # change the sensor values
             yield sensor_subset
+
+
+class SensorList(SensorBase):
+
+    def __init__(self, sensor_list, axis="channel"):
+        self.sensor_list = sensor_list
+        self.axis = axis
+
+        # check uniqueness of axis
+        l = [getattr(s, axis) for s in self.sensor_list]
+
+        if None in l:
+            raise SMRTError("It is required to set '%s' value for each sensor" % axis)
+        if len(set(l)) != len(l):
+            raise SMRTError("It is required to set different '%s' values for each sensor" % axis)
+
+    @property
+    def channel(self):
+        return [s.channel for s in self.sensor_list]
+
+    @property
+    def frequency(self):
+        return [s.frequency for s in self.sensor_list]
+
+    def configurations(self):
+        yield self.axis, np.array([getattr(s, self.axis) for s in self.sensor_list])
+
+    def iterate(self, axis=None):
+
+        if axis is not None and axis != self.axis:
+            raise SMRTError("SensorList is unable to iterate over a different axis than its axis")
+        yield from self.sensor_list
+
