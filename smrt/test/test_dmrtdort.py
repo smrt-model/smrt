@@ -67,11 +67,11 @@ def test_dmrt_twoconfig():
     res = m.run(radiometer, snowpack)
 
     print(res.TbV(), res.TbH())
-    assert (res.TbV(channel="37") - 202.1726891947754) < 1e-4
-    assert (res.TbH(channel="37") - 187.45835882462404) < 1e-4
+    assert (res.Tb(channel="37V") - 202.1726891947754) < 1e-4
+    assert (res.Tb(channel="37H") - 187.45835882462404) < 1e-4
 
-    assert (res.TbV(channel="19") - 242.550043) < 1e-4
-    assert (res.TbH(channel="19") - 230.118448) < 1e-4
+    assert (res.Tb(channel="19V") - 242.550043) < 1e-4
+    assert (res.Tb(channel="19H") - 230.118448) < 1e-4
 
 
 def test_less_refringent_bottom_layer():

@@ -1,4 +1,5 @@
 
+import os
 
 from collections.abc import Sequence
 import numpy as np
@@ -63,19 +64,13 @@ def len_atleast_1d(x):
 
 class smrt_diag(object):
     """Scipy.sparse is very slow for diagonal matrix and numpy has no good support for linear algebra. This diag class
+    implements simple diagonal object without numpy subclassing (but without much features).
     implements simple diagional object without numpy subclassing and without much features.
     It seems that proper subclassing numpy and overloading matmul is a very difficult problem."""
 
     __array_ufunc__ = None
 
     def __init__(self, arr):
-        self.diag = arr
-
-    # def sum(self):
-    #     return self.diag.sum()
-
-    def as_dia_matrix(self):
-        return scipy.sparse.diags(self.diag, 0)
 
     def diagonal(self):
         return self.diag
@@ -89,14 +84,52 @@ class smrt_diag(object):
         return other * self.diag[np.newaxis, :]
 
     def __matmul__(self, other):
-        self.check_type(other)
-        return other * self.diag[:, np.newaxis]
+        if isinstance(other, smrt_diag):
+            # return a diagonal object
+            return smrt_diag(other.diag * self.diag)
+        else:
+            self.check_type(other)
+            # other must be an ndarray
+            return other * self.diag[:, np.newaxis]
 
     def __rmul__(self, other):
+        assert np.isscalar(other)
         return other * self.diag
 
     def __mul__(self, other):
+        assert np.isscalar(other)
         return self.diag * other
+
+    def __add__(self, other):
+        if isinstance(other, smrt_diag):
+            return smrt_diag(other.diag + self.diag)
+        elif np.isscalar(other) and other == 0:
+            return self
+        else:
+            raise NotImplementedError
+
+    def __sub__(self, other):
+        if isinstance(other, smrt_diag):
+            return smrt_diag(other.diag - self.diag)
+        elif np.isscalar(other) and other == 0:
+            return self
+        else:
+            raise NotImplementedError
+
+    def __iadd__(self, other):
+        if isinstance(other, smrt_diag):
+            self.diag += other.diag
+            return self
+        else:
+            raise NotImplementedError
+
+    def __isub__(self, other):
+        if isinstance(other, smrt_diag):
+            self.diag -= other.diag
+            return self
+        else:
+        
+            raise NotImplementedError
 
     def __getitem__(self, key):
         try:
@@ -190,7 +223,8 @@ class smrt_matrix(object):
                 # reorder from pola_s, pola_i, m, mu_s, mu_i to  m, mu_s, pola_s, mu_i, pola_i
                 # mat = np.moveaxis(self.values, (0, 1), (2, 4)) # 0 becomes 2, 1 becomes 4
                 # merge mu_s * pola_s and mu_i * pola_i
-                #return smrt_matrix(np.reshape(mat, (mat.shape[0], mat.shape[1]*mat.shape[2], mat.shape[3]*mat.shape[4])), mtype="compressed3")
+                # return smrt_matrix(np.reshape(mat, (mat.shape[0], mat.shape[1]*mat.shape[2],
+                # mat.shape[3]*mat.shape[4])), mtype="compressed3")
 
         elif self.mtype == "dense4":
             if self.values.shape[0] == 3 and auto_reduce_npol and mode == 0:
@@ -203,7 +237,7 @@ class smrt_matrix(object):
             assert(len(mat.shape) == 4)
             mat = np.moveaxis(mat, (0, 1), (1, 3))  # 0 becomes 1, 1 becomes 3, so 2 becomes 0 and 3 becomes 2
             # merge mu_s * pola_s and mu_i * pola_i
-            return np.reshape(mat, (mat.shape[0]*mat.shape[1], mat.shape[2]*mat.shape[3]))  # return an 2x2 array !
+            return np.reshape(mat, (mat.shape[0] * mat.shape[1], mat.shape[2] * mat.shape[3]))  # return an 2x2 array !
 
         elif self.mtype == "diagonal5":
             if mode is not None:
@@ -219,17 +253,11 @@ class smrt_matrix(object):
                 mat = self.values
             # reorder from pola, mu to mu*pola and compress
             assert(len(mat.shape) == 2)
-            return smrt_diag(np.reshape(np.transpose(mat), mat.shape[0] * mat.shape[1])).as_dia_matrix()
+            return smrt_diag(np.reshape(np.transpose(mat), mat.shape[0] * mat.shape[1]))
 
         else:
             raise NotImplementedError
-        # if m_max == 0:
-        #     # active # this is a bit tricky because for m we need to go back to npol=2. This is probably unnecessary complex...
-        #     self.ft_even_phase = dict()
-        #     for m in range(m_max + 1):
-        #         pp = p[0:2, 0:2, m] if m == 0 else p[:, :, m]
-        #         pp = np.moveaxis(pp, (0, 1), (1, 3)) # 0 becomes 1, 1 becomes 3
-        #         self.ft_even_phase[m] = np.reshape(pp, (pp.shape[0]*pp.shape[1], pp.shape[2]*pp.shape[3]))
+
 
     def __rmul__(self, other):
         return smrt_matrix(other * self.values)
@@ -308,7 +336,7 @@ class smrt_matrix(object):
 def isnull(m):
     """return true if the smrt matrix is null"""
 
-    if isinstance(m, scipy.sparse.dia.dia_matrix):
+    if isinstance(m, smrt_diag):
         m = m.diagonal()
 
     return (m is 0) or \
@@ -384,8 +412,23 @@ def generic_ft_even_matrix(phase_function, m_max):
 
         # For the even matrix:
         # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
-        ft_even_p[0:2, 2, 1:] = - ft_p[0:2, 2, 1:m_max + 1].imag * delta
-        ft_even_p[2, 0:2, 1:] = ft_p[2, 0:2, 1:m_max + 1].imag * delta
+        # The sign for 0:2, 2 and 2, 0:2 have been double check with Rayleigh and Mazter 2006 formulation of the Rayeligh Matrix (p111-112)
+        ft_even_p[0:2, 2, 1:] = ft_p[0:2, 2, 1:m_max + 1].imag * delta
+        ft_even_p[2, 0:2, 1:] = - ft_p[2, 0:2, 1:m_max + 1].imag * delta
         ft_even_p[2, 2, 1:] = ft_p[2, 2, 1:m_max + 1].real * delta
 
     return ft_even_p  # order is pola_s, pola_i, m, mu_s, mu_i
+
+
+def set_max_num_threads(nthreads):
+    """set the maximum number of threads for a few known library. This is useful to disable parallel computing in 
+SMRT when using parallel computing to call multiple // SMRT runs. This avoid over-committing the CPUs and results 
+in much better performance. Inspire from joblib."""
+
+    nthreads = str(nthreads)
+    os.environ['MKL_NUM_THREADS'] = nthreads
+    os.environ['OPENBLAS_NUM_THREADS'] = nthreads
+    os.environ['OMP_NUM_THREADS'] = nthreads
+    os.environ['VECLIB_MAXIMUM_THREADS'] = nthreads
+    os.environ['NUMEXPR_NUM_THREADS'] = nthreads
+

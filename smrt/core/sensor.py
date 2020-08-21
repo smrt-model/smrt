@@ -18,7 +18,7 @@ from ..core.globalconstants import C_SPEED
 from .error import SMRTError
 
 
-def passive(frequency, theta, polarization=None, channel=None):
+def passive(frequency, theta, polarization=None, channel_map=None):
     """ Generic configuration for passive microwave sensor.
 
     Return a :py:class:`Sensor` for a microwave radiometer with given frequency, incidence angle and polarization
@@ -44,14 +44,40 @@ def passive(frequency, theta, polarization=None, channel=None):
     if polarization is None:
         polarization = ['V', 'H']
 
-    sensor = Sensor(frequency, None, theta, None, None, polarization, channel=channel)
+    sensor = Sensor(frequency, None, theta, None, None, polarization, channel_map=channel_map)
 
     sensor.basic_checks()
 
     return sensor
 
 
-def active(frequency, theta_inc, theta=None, phi=None, polarization_inc=None, polarization=None, channel=None):
+def channel_map_for_radar(frequency=None, polarization='HV', order='fp'):
+    """
+    return a channel_map to convert channel name to frequency and polarization. This function assumes the frequency is coded as a two-digit number
+    in GHz with leading 0 if necessary. The polarization is after the frequency if order is 'fp' and before if order is 'pf'.
+"""
+
+    if frequency is None:
+        frequency_str = ''
+    else:
+        frequency_str = ['%02i' % np.round(f / 1e9) for f in frequency]
+
+    if order == 'fp':
+        def channel_name(freq, pola_inc, pola_ref):
+            return str(freq_str) + str(pola_inc) + str(pola_refl)
+    if order == 'pf':
+        def channel_name(freq, pola_inc, pola_ref):
+            return str(pola_inc) + str(pola_refl) + str(freq_str)
+    else:
+        raise SMRTError('order must be fp or pf')
+
+    channel_map = {channel_name(freq_str, pola_inc, pola_refl): dict(frequency=freq, polarization_inc=pola_inc, polarization=pola_refl)
+                   for freq_str, freq in zip(frequency_str, frequency) for pola_inc in polarization for pola_refl in polarization}
+
+    return channel_map
+
+
+def active(frequency, theta_inc, theta=None, phi=None, polarization_inc=None, polarization=None, channel_map=None):
     """ Configuration for active microwave sensor.
 
     Return a :py:class:`Sensor` for a radar with given frequency, incidence and viewing angles and polarization
@@ -96,7 +122,7 @@ def active(frequency, theta_inc, theta=None, phi=None, polarization_inc=None, po
     if polarization_inc is None:
         polarization_inc = ['V', 'H']
 
-    sensor = Sensor(frequency, theta_inc, theta, phi, polarization_inc, polarization, channel=channel)
+    sensor = Sensor(frequency, theta_inc, theta, phi, polarization_inc, polarization, channel_map=channel_map)
 
     sensor.basic_checks()
 
@@ -115,7 +141,7 @@ class Sensor(SensorBase):
     """
 
     def __init__(self, frequency=None, theta_inc_deg=None, theta_deg=None, phi_deg=None,
-                    polarization_inc=None, polarization=None, channel=None, wavelength=None):
+                    polarization_inc=None, polarization=None, channel_map=None, wavelength=None):
         """ Build a Sensor. Setting theta_inc to None means passive mode
 
     :param frequency: Microwave frequency in Hz
@@ -124,7 +150,7 @@ class Sensor(SensorBase):
     :param theta_deg: zenith angle in degrees at which the observation is made
     :param phi_deg: azimuth angle at which the observation is made
     :param polarization: List of single character (H or V)
-    :param channel: name of the channel (string)
+    :param channel_map: Dict associating the name (string) of each channel to frequency, polarization configuration (or any xarray)
     :param wavelength
 
 """
@@ -138,9 +164,9 @@ class Sensor(SensorBase):
             self.frequency = frequency
 
         if isinstance(self.frequency, Sequence):
-            self.frequency = np.array(self.frequency)
+            self.frequency = np.array(self.frequency).squeeze()
 
-        self.channel = channel
+        self.channel_map = channel_map or dict()
 
         if isinstance(polarization, str):
             polarization = list(polarization)
@@ -193,7 +219,6 @@ class Sensor(SensorBase):
     @property
     def wavenumber(self):
         return 2 * np.pi / self.wavelength
-    
 
     @property
     def mode(self):
@@ -217,14 +242,12 @@ class Sensor(SensorBase):
             # Checks frequency is above 300 MHz
             raise SMRTError('Frequency not in microwave range: check units are Hz')
 
-
     def configurations(self):
 
         for axis in ["frequency", "theta_inc", "polarization_inc", "theta", "phi", "polarization"]:
             values = np.atleast_1d(getattr(self, axis))
             if len(values) > 1:
                 yield axis, values
-
 
     def iterate(self, axis):
         """Iterate over the configuration for the given axis.

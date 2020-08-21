@@ -76,19 +76,19 @@ class IBA(object):
 
     def __init__(self, sensor, layer):
 
+        # Set size of phase matrix: active needs an extended phase matrix
         if sensor.mode == 'P':
             self.npol = 2
         else:
             self.npol = 3
 
         # Bring layer and sensor properties into emmodel
-        self.layer = layer
-        self.sensor = sensor
-
+        self.frac_volume = layer.frac_volume
         self.microstructure = layer.microstructure  # Do this here, so can pass FT of correlation fn to phase function
         self.e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
         self.eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
         self.k0 = 2 * np.pi * sensor.frequency / C_SPEED  # Wavenumber in free space
+        self.inclusion_shape = layer.inclusion_shape # for assuming spherical or ellipsoidal inclusions
 
         # Calculate depolarization factors and iba_coefficient
         self.depol_xyz = depolarization_factors()
@@ -195,79 +195,60 @@ class IBA(object):
 
         dphi = np.atleast_1d(dphi)
         cos_pd = np.cos(dphi)[:, np.newaxis, np.newaxis]
+        sin_pd_sign = np.where(dphi >= np.pi, -1, 1)[:, np.newaxis, np.newaxis]
 
         # Scattering angle in the 1-2 frame
-        cosT = cos_t * cos_ti + sin_t * sin_ti * cos_pd
-        cosT = np.clip(cosT, -1.0, 1.0)  # Prevents occasional numerical error
+        cosT = np.clip(cos_t * cos_ti + sin_t * sin_ti * cos_pd, -1.0, 1.0)  # Prevents occasional numerical error
         cosT2 = cosT**2  # cos^2 (Theta)
         sinT = np.sqrt(1. - cosT2)
 
-        # Create arrays of rotation angles: without the scattering angle denominator
-        cos_i1 = cos_t * sin_ti - cos_ti * sin_t * cos_pd
-        cos_i2 = cos_ti * sin_t - cos_t * sin_ti * cos_pd
-
         # Apply non-zero scattering denominator
-        nonnullsinT = np.abs(sinT) >= 1e-6
-        cos_i1[nonnullsinT] /= sinT[nonnullsinT]
-        cos_i2[nonnullsinT] /= sinT[nonnullsinT]
+        nonnullsinT = sinT >= 1e-6
+
+        # Create arrays of rotation angles
+        cost_sinti = cos_t * sin_ti
+        costi_sint = cos_ti * sin_t
+
+        cos_i1 = cost_sinti - costi_sint * cos_pd
+        np.divide(cos_i1, sinT, where=nonnullsinT, out=cos_i1)
+        np.clip(cos_i1, -1.0, 1.0, out=cos_i1)
+
+        cos_i2 = costi_sint - cost_sinti * cos_pd
+        np.divide(cos_i2, sinT, where=nonnullsinT, out=cos_i2)
+        np.clip(cos_i2, -1.0, 1.0, out=cos_i2)
 
         # Special condition if theta and theta_i = 0 to preserve azimuth dependency
-        dege_dphi = np.broadcast_to( (np.abs(sin_t) < 1e-6) & (np.abs(sin_ti) < 1e-6), cos_i1.shape)
+        dege_dphi = np.broadcast_to((sin_t < 1e-6) & (sin_ti < 1e-6), cos_i1.shape)
         cos_i1[dege_dphi] = 1.
         cos_i2[dege_dphi] = np.broadcast_to(cos_pd, cos_i2.shape)[dege_dphi]
 
-        # Calculate rotation angles alpha, alpha_i
-        # Convention follows Matzler 2006, Thermal Microwave Radiation, p111, eqn 3.20
-        cosa = -np.clip(cos_i2, -1.0, 1.0)  # cos (pi - i2)
-        cosai = np.clip(cos_i1, -1.0, 1.0)  # cos (-i1)
+        # # See Matzler 2006 pg 111 Eq. 3.20
+        # # Calculate rotation angles alpha, alpha_i
+        # # Convention follows Matzler 2006, Thermal Microwave Radiation, p111, eqn 3.20
 
-        # Calculate arrays of rotated phase matrix elements
-        # Shorthand to make equations shorter & marginally faster to compute
-        cosa2 = cosa**2  # cos^2 (alpha)
-        cosai2 = cosai**2  # cos^2 (alpha_i)
-        sina2 = 1 - cosa2  # sin^2 (alpha)
-        sinai2 = 1 - cosai2  # sin^2 (alpha_i)
-        sin2a = - 2 * cosa * np.sqrt(sina2)  # sin(2 alpha)
-        sin2ai = 2 * cosai * np.sqrt(sinai2)  # sin(2 alpha_i)
-        cos2a = 2 * cosa2 - 1  # cos(2 alpha): needed for active only
-        cos2ai = 2 * cosai2 - 1  # cos(2 alpha_i): needed for active only
+        Li = Lmatrix(cos_i1, -sin_pd_sign, (3, npol))    # L (-i1)
 
-        # For pi < phi_diff <  2 * pi, it is necessary to change the sign of i2 and i1
-        # (see Matzler 2006 pg 113.)
-        # This will only affect the sin2a and sin2ai calculations: all others are cos and/or squared
-        change_sign = dphi >= np.pi
-        sin2a[change_sign, :, :] = -sin2a[change_sign, :, :]
-        sin2ai[change_sign, :, :] = -sin2ai[change_sign, :, :]
+        if npol == 2:
+            RLi = np.array([[cosT2 * Li[0][0], cosT2 * Li[0][1]],
+                            Li[1], [cosT * Li[2][0], cosT * Li[2][1]]])
 
+        elif npol == 3:
+            RLi = np.array([[cosT2 * Li[0][0], cosT2 * Li[0][1], cosT2 * Li[0][2]],
+                            Li[1], [cosT * Li[2][0], cosT * Li[2][1], cosT * Li[2][2]]])
+        else:
+            raise RuntimeError("invalid value of npol")
+
+        Ls = Lmatrix(-cos_i2, sin_pd_sign, (npol, 3))    # L (pi - i2)
+        p = np.einsum('ij...,jk...->ik...', Ls, RLi)   # multiply the outer dimension (=polarization)
 
         # IBA phase function = rayleigh phase function * angular part of microstructure term
-        # Calculate wavevector difference
-        k_diff = 2. * self.k0 * np.sqrt(self._effective_permittivity) * np.sqrt((1. - cosT) / 2.)
+        k_diff = 2. * self.k0 * np.sqrt(self._effective_permittivity) * np.sqrt(0.5 - 0.5 * cosT)
+
         # Calculate microstructure term
         if hasattr(self.microstructure, 'ft_autocorrelation_function'):
             ft_corr_fn = self.microstructure.ft_autocorrelation_function(k_diff)
         else:
             raise SMRTError("Fourier Transform of this microstructure model has not been defined, or there is a problem with its calculation")
-
-        p_second_term = 0.5 * sin2a * cosT * sin2ai
-        p11 = (cosa2 * cosT2 * cosai2 + sina2 * sinai2 - p_second_term)  #p11
-        p12 = (cosa2 * cosT2 * sinai2 + sina2 * cosai2 + p_second_term)  #p12
-        p21 = (sina2 * cosT2 * cosai2 + cosa2 * sinai2 + p_second_term)  #p21
-        p22 = (sina2 * cosT2 * sinai2 + cosa2 * cosai2 - p_second_term) #p22
-
-        if npol == 2:
-            p = np.array([[p11, p12],
-                          [p21, p22]])
-
-        elif npol == 3: # 3-pol
-            p = np.array([[p11, p12, 0.5 * ( cosa2 * cosT2 * sin2ai - sina2 * sin2ai + sin2a * cosT * cos2ai)], # p13
-                          [p21, p22, 0.5 * ( sina2 * cosT2 * sin2ai - cosa2 * sin2ai - sin2a * cosT * cos2ai)], # p23
-                          [(-sin2a * cosT2 * cosai2 + sin2a * sinai2 - cos2a * cosT * sin2ai),      # p31
-                           (-sin2a * cosT2 * sinai2 + sin2a * cosai2 + cos2a * cosT * sin2ai),      # p32
-                           (-0.5 * sin2a * cosT2 * sin2ai - 0.5 * sin2a * sin2ai + cos2a * cosT * cos2ai)] # p33
-                         ])
-        else:
-            raise RuntimeError("invalid value of npol")
 
         return smrt_matrix(ft_corr_fn * self.iba_coeff * p)
         
@@ -340,7 +321,6 @@ class IBA(object):
 
         return 2 * self.k0 * np.sqrt(self._effective_permittivity).imag
 
-
     def ke(self, mu):
         """ IBA extinction coefficient matrix
 
@@ -368,8 +348,8 @@ class IBA(object):
 
         """
 
-        eps = type(self).effective_permittivity_model(self.layer.frac_volume, self.e0, self.eps,
-                                                      self.depol_xyz, self.layer.inclusion_shape)
+        eps = type(self).effective_permittivity_model(
+            self.frac_volume, self.e0, self.eps, self.depol_xyz, self.inclusion_shape)
 
         if eps.imag < 0:
             raise SMRTError("the imaginary part of the permittivity must be positive, by convention, in SMRT")
@@ -387,7 +367,7 @@ class IBA_MM(IBA):
 
         # Imaginary component for effective permittivity from Wiesmann and Matzler (1999)
         y2 = self.mean_sq_field_ratio(self.e0, self.eps)
-        effective_permittivity_imag = self.layer.frac_volume * self.eps.imag * y2 * np.sqrt(self._effective_permittivity)
+        effective_permittivity_imag = self.frac_volume * self.eps.imag * y2 * np.sqrt(self._effective_permittivity)
         self._effective_permittivity = self._effective_permittivity + 1j * effective_permittivity_imag
 
         self.iba_coeff = self.compute_iba_coeff()
@@ -411,3 +391,30 @@ class IBA_MM(IBA):
         ks_int = p_mm * np.sin(theta)
 
         return ks_int.real
+
+
+def Lmatrix(cos_phi, sin_phi_sign, npol):
+
+    # Calculate arrays of rotated phase matrix elements
+    # Shorthand to make equations shorter & marginally faster to compute
+    cos2_phi = cos_phi**2  # cos^2 (phi)
+    sin2_phi = 1 - cos2_phi  # sin^2 (phi)
+
+    sin_2phi = 2 * cos_phi * np.sqrt(sin2_phi)  # sin(2 phi_i)
+    sin_2phi *= sin_phi_sign
+
+    if npol == (2, 3):
+        s05 = 0.5 * sin_2phi
+        L = [[cos2_phi, sin2_phi, s05],
+             [sin2_phi, cos2_phi, -s05]]
+    elif npol == (3, 2):
+        L = [[cos2_phi, sin2_phi],
+             [sin2_phi, cos2_phi],
+             [-sin_2phi, sin_2phi]]
+    else:  # 3 pol
+        s05 = 0.5 * sin_2phi
+        cos_2phi = 2 * cos2_phi - 1  # cos(2 alpha)
+        L = [[cos2_phi, sin2_phi, s05],
+             [sin2_phi, cos2_phi, -s05],
+             [-sin_2phi, sin_2phi, cos_2phi]]
+    return L
