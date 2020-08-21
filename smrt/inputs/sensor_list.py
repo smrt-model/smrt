@@ -192,7 +192,7 @@ def ascat(theta=None):
 def sentinel1(theta=None):
     """ Configuration for C-SAR on Sentinel 1.
 
-       This function return a sensor at 5.405 GHz (C-band). The incidence angle can be chosen or is by defaut from 20 to 46° by step of 5°
+       This function return a sensor at 5.405 GHz (C-band). The incidence angle can be chosen or is by defaut from 20 to 45° by step of 5°
 
        :param theta: incidence angle
        :type theta: float or sequence
@@ -203,6 +203,23 @@ def sentinel1(theta=None):
         theta = np.arange(20, 46, 5)
 
     return active(5.405e9, theta)
+
+
+def smos(theta=None):
+    """ Configuration for MIRAS on SMOS.
+
+       This function return a passive sensor at 1.41 GHz (L-band). The incidence angle can be chosen or is by defaut from 0 to 60° by step of 5°
+
+       :param theta: incidence angle
+       :type theta: float or sequence
+
+       :returns: :py:class:`Sensor` instance
+  """
+    if theta is None:
+        theta = np.arange(0, 61, 5)
+
+    return passive(1.41e9, theta)
+
 
 def filter_channel_map(channel_map, channel):
 
