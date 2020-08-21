@@ -71,6 +71,7 @@ class smrt_diag(object):
     __array_ufunc__ = None
 
     def __init__(self, arr):
+        self.diag = np.atleast_1d(arr)
 
     def diagonal(self):
         return self.diag
@@ -78,6 +79,9 @@ class smrt_diag(object):
     # @property
     # def shape(self):
     #     return self.values.shape
+
+    def __len__(self):
+        return len(self.diag)
 
     def __rmatmul__(self, other):
         self.check_type(other)

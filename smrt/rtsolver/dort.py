@@ -885,7 +885,7 @@ class InterfaceProperties(object):
                 npol = 3
 
             mat_diff = diff.compress(mode=m, auto_reduce_npol=True)
-            # weight is reduce to match the size of mat_diff, this is the case when we have total reflection
+            # weight is reduced to match the size of mat_diff, this is the case when we have total reflection
 
             full_weight = coef * np.repeat(weights[0:len(mat_diff) // npol], npol)
 
