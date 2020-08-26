@@ -189,6 +189,7 @@ def ascat(theta=None):
 
     return active(5.255e9, theta, polarization_inc='V', polarization='V', channel_map=channel_map)
 
+
 def sentinel1(theta=None):
     """ Configuration for C-SAR on Sentinel 1.
 
@@ -202,13 +203,14 @@ def sentinel1(theta=None):
     if theta is None:
         theta = np.arange(20, 46, 5)
 
-    return active(5.405e9, theta)
+    return active(5.405e9, theta,
+                  channel_map={channel: dict(polarization=channel[1], polarization_inc=channel[0]) for channel in ['HH', 'VV', 'HV', 'VH']})
 
 
 def smos(theta=None):
     """ Configuration for MIRAS on SMOS.
 
-       This function return a passive sensor at 1.41 GHz (L-band). The incidence angle can be chosen or is by defaut from 0 to 60° by step of 5°
+       This function returns a passive sensor at 1.41 GHz (L-band). The incidence angle can be chosen or is by defaut from 0 to 60° by step of 5°
 
        :param theta: incidence angle
        :type theta: float or sequence
@@ -219,6 +221,22 @@ def smos(theta=None):
         theta = np.arange(0, 61, 5)
 
     return passive(1.41e9, theta)
+
+
+def smap(mode, theta=40):
+    """Configuration for the passive (mode=P) and active (mode=A) sensor on smap
+
+        This function returns either a passive sensor at 1.4 GHz (L-band) sensor or an active sensor at 1.26 GHz. The incidence angle is 40°.
+
+    """
+
+    if mode == 'P':
+        return passive(1.4e9, theta=theta, channel_map={pola: dict(polarization=pola) for pola in 'HV'})
+    elif mode == 'A':
+        return active(1.26e9, theta=theta, theta_inc=theta,
+                      channel_map={channel: dict(polarization=channel[1], polarization_inc=channel[0]) for channel in ['HH', 'VV', 'HV']})
+    else:
+        raise SMRTError('mode must by A (active) or P (passive')
 
 
 def filter_channel_map(channel_map, channel):
