@@ -129,6 +129,9 @@ class Result(object):
             if channel_axis == "index":
                 droplevel = not x.index.name and len(x.index) == 1 and x.index[0] == 0  # this is our added index, remove it
                 x = x.stack()
+                if isinstance(x, pd.Series):
+                    x = pd.DataFrame(x, columns=[name])
+
                 x.index.set_names('channel', level=-1)
                 if droplevel:
                     x = x.droplevel(0)
