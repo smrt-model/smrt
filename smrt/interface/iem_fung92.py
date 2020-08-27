@@ -63,6 +63,23 @@ class IEM_Fung92(Interface):
         # Eq: 2.1.94 in Tsang 2001 Tome I
         return fresnel_reflection_matrix(eps_1, eps_2, mu1, npol) * np.exp(-4 * k2 * self.roughness_rms**2 * mu1**2)
 
+    def check_validity(self, ks, kl, eps_r):
+
+        # check validity
+        if ks > 3:
+            raise SMRTError("Warning, roughness_rms is too high for the given wavelength. Limit is ks < 3. Here ks=%g" % ks)
+
+        if ks * kl > np.sqrt(eps_r):
+            raise SMRTError("Warning, roughness_rms or correlation_length are too high for the given wavelength."
+                            " Limit is ks * kl < sqrt(eps_r). Here ks*kl=%g and sqrt(eps_r)=%g" % (ks * kl, np.sqrt(eps_r)))
+
+    def fresnel_coefficients(self, eps_1, eps_2, mu_i, ks, kl):
+        """calculate the fresnel coefficients at the angle mu_i whatever is ks and kl according to the original formulation of Fung 1992"""
+
+        Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
+        return Rv, Rh
+
+
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol, debug=False):
         """compute the reflection coefficients for an array of incident, scattered and azimuth angles
            in medium 1. Medium 2 is where the beam is transmitted.
@@ -88,25 +105,18 @@ class IEM_Fung92(Interface):
         k = vector3.from_angles(2 * np.pi * frequency / C_SPEED * np.sqrt(eps_1).real, mu, 0)
         eps_r = eps_2 / eps_1
 
-        # check validity
-        warning = None
-        ks = abs(k.norm * self.roughness_rms)
-        if ks > 3:
-            warning = "Warning, roughness_rms is too high for the given wavelength. Limit is ks < 3. Here ks=%g" % ks
+        ks = np.abs(k.norm * self.roughness_rms)
+        kl = np.abs(k.norm * self.corr_length)
 
-        kskl = abs(ks * k.norm * self.corr_length)
-        if kskl > np.sqrt(eps_r):
-            warning = "Warning, roughness_rms or correlation_length are too high for the given wavelength."
-            " Limit is ks * kl < sqrt(eps_r). Here ks*kl=%g and sqrt(eps_r)=%g" % (kskl, np.sqrt(eps_r))
-
-        if warning:
+        try:
+            self.check_validity(ks, kl, eps_r)
+        except SMRTError as e:
             if self.warning_handling == "print":
-                print(warning)
+                print(e)
             elif self.warning_handling == "nan":
                 return smrt_matrix.full((npol, len(mu_i)), np.nan)
-        # chekc validity done
 
-        Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
+        Rv, Rh = self.fresnel_coefficients(eps_1, eps_2, mu_i, ks, kl)
 
         fvv = 2 * Rv / mu  # Eq 44 in Fung et al. 1992
         fhh = -2 * Rh / mu  # Eq 45 in Fung et al. 1992
