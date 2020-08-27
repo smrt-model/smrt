@@ -23,3 +23,14 @@ def test_multifrequency():
     testpack = setup_snowpack()
 
     m.run(sensor, testpack)
+
+
+def test_joblib_parallel_run():
+
+    m = Model("dmrt_qcacp_shortrange", DORT)
+
+    sensor = amsre()
+    snowpacks = [make_snowpack([2000], StickyHardSpheres, density=[250], temperature=t, radius=0.3e-3, stickiness=0.2)
+    	for t in [200, 250, 270]]
+
+    m.run(sensor, snowpacks, parallel_computation=True)

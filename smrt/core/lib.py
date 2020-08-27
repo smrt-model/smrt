@@ -424,7 +424,7 @@ def generic_ft_even_matrix(phase_function, m_max):
     return ft_even_p  # order is pola_s, pola_i, m, mu_s, mu_i
 
 
-def set_max_num_threads(nthreads):
+def set_max_numerical_threads(nthreads):
     """set the maximum number of threads for a few known library. This is useful to disable parallel computing in 
 SMRT when using parallel computing to call multiple // SMRT runs. This avoid over-committing the CPUs and results 
 in much better performance. Inspire from joblib."""

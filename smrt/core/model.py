@@ -142,7 +142,7 @@ class Model(object):
                 raise SMRTError("options must be a dict")
             self.rtsolver_options = options  # overload the options
 
-        self.rtsolver_options.update(kwargs) # update the options
+        self.rtsolver_options.update(kwargs)  # update the options
 
     def set_emmodel_options(self, options=None, **kwargs):
         """set the options for the emmodel"""
@@ -151,55 +151,61 @@ class Model(object):
                 raise SMRTError("options must be a dict")
             self.emmodel_options = options  # overload the options
 
-        self.emmodel_options.update(kwargs) # update the options
+        self.emmodel_options.update(kwargs)  # update the options
 
-    def run(self, sensor, snowpack, atmosphere=None, snowpack_dimension=None, progressbar=False, parallel_computation=False):
+    def run(self, sensor, snowpack, atmosphere=None, snowpack_dimension=None, progressbar=False, parallel_computation=False, runner=None):
         """ Run the model for the given sensor configuration and return the results
 
             :param sensor: sensor to use for the calculation
-            :param snowpack: snowpack to use for the calculation. Can be a single snowpack, a list of snowpack, a dict of snowpack or a SensitivityStudy object.
-            :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and the values are from 1 to the number of snowpacks.
+            :param snowpack: snowpack to use for the calculation. Can be a single snowpack, a list of snowpack, a dict of snowpack or
+                a SensitivityStudy object.
+            :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack
+                is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and the values are
+                rom 1 to the number of snowpacks.
             :param progressbar: if True, display a progress bar during multi-snowpacks computation
+            :param parallel_computation: if True, use the joblib library to run the simulation in parallel.
+                Otherwise, the simulations are run sequentially. See 'runner' arguments.
+            :param runner: a 'runner' is a function (or more likely a class with a __call__ method) that takes a function and a
+                list/generator of simulations, executes the function on each simulation and returns a list of results.
+                'parallel_computation' allows to select between two default (basic) runners (sequential and joblib).
+                Use 'runner' for more advanced parallel distributed computations.
             :returns: result of the calculation(s) as a :py:class:`Results` instance
         """
+
         if not isinstance(sensor, SensorBase):
             raise SMRTError("the first argument of 'run' must be a sensor")
 
-        if parallel_computation:
-            from joblib import Parallel, delayed
-            run = delayed(self.run)  # delayed self.run
-            Runner = Parallel(n_jobs=-1, backend='loky')  # Parallel Runner
-        else:
-            run = self.run  # non-delayed self.run
+        # determine the simulations to run
+        simulations, dimensions = self.prepare_simulations(sensor, snowpack, snowpack_dimension)
 
-            if progressbar:
-                def Runner(result_generator):
-                    # sequential computation
-                    result_list = list()
-                    pb = Progress(len(snowpack))
-                    for i, res in enumerate(result_generator):
-                        result_list.append(res)
-                        pb.animate(i + 1)
-                    return result_list
+        # determine the runner
+        if runner is None:
+            if parallel_computation:
+                if progressbar:
+                    raise SMRTError("Parallel computation has no progressbar")
+                runner = JoblibParallelRunner()
             else:
-                Runner = list  # Sequential Runner
+                runner = SequentialRunner(progressbar=progressbar)
 
-        # first determine which dimension we must iterate on in this routine
-        for axis, values in sensor.configurations():
-            if axis not in getattr(self.rtsolver, "_broadcast_capability", []):
+        #  run all the simulations (with atmosphere as long as it is not depreciated), the results is a flat list of results
+        results = runner(self.run_single_simulation, ((simul, atmosphere) for simul in simulations))
 
-                result_list = Runner(run(sensor_subset, snowpack,
-                                         atmosphere=atmosphere,
-                                         snowpack_dimension=snowpack_dimension,
-                                         progressbar=progressbar,
-                                         parallel_computation=parallel_computation) for sensor_subset in sensor.iterate(axis))
+        # reshape the results but successive concatenation
+        for axis, values in reversed(dimensions):
+            n = len(values)
+            results = [concat_results(results[i: i + n], (axis, values)) for i in range(0, len(results), n)]
 
-                return concat_results(result_list, (axis, values))
+        assert len(results) == 1
+        return results[0]
 
-        # second determine if we have several snowpacks
+    def prepare_simulations(self, sensor, snowpack, snowpack_dimension):
+        # return a flat list of pairs (sensor, snowpack). Each is a unique simulation. The second returned parameter
+        # is the list of (axis, values) to be used to concatenate the results.
+
+        # determine if we have several snowpacks
         # is it a SensitivityStudy object ?
         if isinstance(snowpack, SensitivityStudy):
-            snowpack_dimension = (snowpack.variable, snowpack.values)
+            snowpack_dimension = snowpack.variable, snowpack.values
             snowpack = snowpack.snowpacks.tolist()
 
         # or is it a dict ?
@@ -210,17 +216,41 @@ class Model(object):
         # or a sequence ?
         if lib.is_sequence(snowpack):
             if snowpack_dimension is None:
-                dimension_name, dimension_values = "snowpack", None
-            else:
-                dimension_name, dimension_values = snowpack_dimension
-            if dimension_values is None:
-                dimension_values = range(len(snowpack))
+                snowpack_dimension = "snowpack", None
+            if snowpack_dimension[1] is None:
+                snowpack_dimension = snowpack_dimension[0], range(len(snowpack))
 
-            result_list = Runner(run(sensor, sp, atmosphere=atmosphere) for sp in snowpack)
-            return concat_results(result_list, (dimension_name, dimension_values))
+        # the sensor object is split in its basic sensors (config). How deep the sensor is split depends on the
+        # radiative transfer solver's broadcast capability.
+        rt_solver_broadcast_capability = getattr(self.rtsolver, "_broadcast_capability", [])
 
-        # not need to iterate anymore, either because the solver deals with the dimension or sensor config has single values.
-        # prepare to run
+        sensor_configurations = [(axis, values) for (axis, values) in sensor.configurations() if axis not in rt_solver_broadcast_capability]
+
+        def prepare_recursive(sensor, sensor_configurations):
+
+            if sensor_configurations:
+                axis, values = sensor_configurations[0]
+                for sensor_subset in sensor.iterate(axis):
+                    yield from prepare_recursive(sensor_subset, sensor_configurations[1:])
+            else: # we're at the end
+                if lib.is_sequence(snowpack):
+                    for sp in snowpack:
+                        yield (sensor, sp) 
+                else:
+                    yield (sensor, snowpack)
+
+        simulations = prepare_recursive(sensor, sensor_configurations.copy())
+
+        dimensions = sensor_configurations
+        if snowpack_dimension is not None:
+            dimensions.append(snowpack_dimension)
+
+        return simulations, dimensions
+
+
+    def run_single_simulation(self, simulation, atmosphere):
+        # run a single simulation
+        sensor, snowpack = simulation
 
         # create a list of emmodel instances (ready to run)
         emmodel_instances = list()
@@ -264,3 +294,41 @@ class Model(object):
         from .run_promise import RunPromise  # local import to avoid start time
 
         return RunPromise(self, sensor, snowpack, kwargs)
+
+
+class SequentialRunner(object):
+    """Run the simulations sequentially on a single (local) core. This is the most simple, but inefficient way to run smrt simulations."""
+
+    def __init__(self, progressbar=False):
+        pass
+
+    def __call__(self, function, argument_list):
+
+        return [function(*args) for args in argument_list]
+
+
+class JoblibParallelRunner(object):
+    """Run the simulations on the local machine using all the cores, using the joblib library."""
+
+    def __init__(self, backend='loky', n_jobs=-1, max_numerical_threads=1):
+        """Joblib is a lightweight library for embarasingly parallel task.
+
+    :param backend: see joblib documentation. The default 'loky' is the recommended backend.
+    :param n_jobs: see joblib documentation. The default is to use all the cores.
+    :param max_numerical_threads: :py:func:`~smrt.core.lib.set_max_numerical_threads`. The default avoid miximing different parallelism techniques.
+
+"""
+        self.n_jobs = n_jobs
+        self.backend = backend
+
+        if max_numerical_threads > 0:
+            # it is recommended to set max_numerical_threads to 1, to disable numerical libraries parallelism.
+            lib.set_max_numerical_threads(max_numerical_threads)
+
+    def __call__(self, function, argument_list):
+
+        from joblib import Parallel, delayed
+
+        runner = Parallel(n_jobs=self.n_jobs, backend=self.backend)  # Parallel Runner
+
+        return runner(delayed(function)(*args) for args in argument_list)
