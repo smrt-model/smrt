@@ -7,7 +7,7 @@ to choose different emmodel for each layer (for instance for a complex medium ma
 The :py:mod:`smrt.rtsolver` is responsible for propagation of the incident or emitted energy through the layers, up to the surface, and eventually 
 through the atmosphere.
 
-To build a model, use the :py:func:`make_model` function with the type of emmodel and type of rtsolver as arguments.
+To build a model, use the :py:meth:`make_model` function with the type of emmodel and type of rtsolver as arguments.
 Then call the :py:meth:`Model.run` method of the model instance by specifying the sensor (:py:class:`smrt.core.sensor.Sensor`),
 snowpack (:py:class:`smrt.core.snowpack.Snowpack`) and optionally atmosphere (see :py:mod:`smrt.atmosphere`).
 The results are returned as a :py:class:`~smrt.core.result.Result` which can then been interrogated to retrieve brightness temperature,
@@ -171,6 +171,10 @@ class Model(object):
                 Use 'runner' for more advanced parallel distributed computations.
             :returns: result of the calculation(s) as a :py:class:`Results` instance
         """
+
+        if atmosphere is not None:
+            raise DeprecationWarning("The atmosphere argument of the run method is going to be depreciated."
+                " Setting the 'atmosphere' with make_snowpack (and similar functions) is now the recommended way.")
 
         if not isinstance(sensor, SensorBase):
             raise SMRTError("the first argument of 'run' must be a sensor")
