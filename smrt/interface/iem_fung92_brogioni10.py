@@ -3,10 +3,10 @@
 """
 Implement the interface boundary condition under IEM formulation provided by Fung et al. 1992. in IEEE TGRS 
 with an extended domain of validity (for large roughness or correlation length) by switching the Fresnel 
-coefficients according to Briogoni et al. 2010, IJRS. A better but more complex approach is given by Wu et al. 2003 (to be implemented)
+coefficients according to Brogioni et al. 2010, IJRS (doi: 10.1080/01431160903232808). A better but more
+complex approach is given by Wu et al. 2003 (to be implemented).
 
-
-Use of this code requires special attention
+Use of this code requires special attention.
 
 """
 
