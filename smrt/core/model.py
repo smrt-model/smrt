@@ -191,6 +191,8 @@ class Model(object):
             else:
                 runner = SequentialRunner(progressbar=progressbar)
 
+        simulations = list(simulations)
+        print("nsim=", len(simulations))
         #  run all the simulations (with atmosphere as long as it is not depreciated), the results is a flat list of results
         results = runner(self.run_single_simulation, ((simul, atmosphere) for simul in simulations))
 
@@ -336,3 +338,22 @@ class JoblibParallelRunner(object):
         runner = Parallel(n_jobs=self.n_jobs, backend=self.backend)  # Parallel Runner
 
         return runner(delayed(function)(*args) for args in argument_list)
+
+
+class DaskParallelRunner(object):
+
+    def __init__(self):
+        pass
+
+    def __call__(self, function, argument_list):
+
+        from dask import delayed, compute
+
+        def function_with_single_numerical_threads(*args):
+            lib.set_max_numerical_threads(1)
+            return function(*args)
+
+        lazy_results = [delayed(function_with_single_numerical_threads)(*args) for args in argument_list]
+
+        results = compute(*lazy_results)
+        return results
