@@ -191,8 +191,6 @@ class Model(object):
             else:
                 runner = SequentialRunner(progressbar=progressbar)
 
-        simulations = list(simulations)
-        print("nsim=", len(simulations))
         #  run all the simulations (with atmosphere as long as it is not depreciated), the results is a flat list of results
         results = runner(self.run_single_simulation, ((simul, atmosphere) for simul in simulations))
 
