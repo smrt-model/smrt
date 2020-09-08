@@ -339,19 +339,38 @@ class JoblibParallelRunner(object):
 
 
 class DaskParallelRunner(object):
+    """Run the simulations using dask.distributed on a cluster. This requires some set up on the cluster
+    (see the dask.distributed documentation).
 
-    def __init__(self):
-        pass
+    TO BE DOCUMENTED.
+    """
+
+    def __init__(self, client, chunk=10):
+
+        if isinstance(client, str):
+            from dask.distributed import Client
+            self.client = Client(client)
+        else:
+            self.client = client
+        self.chunk = chunk
 
     def __call__(self, function, argument_list):
 
-        from dask import delayed, compute
-
-        def function_with_single_numerical_threads(*args):
+        def function_with_single_numerical_threads(args):
             lib.set_max_numerical_threads(1)
             return function(*args)
 
-        lazy_results = [delayed(function_with_single_numerical_threads)(*args) for args in argument_list]
+        # make a bag
+        argument_list = list(argument_list)
+        n = self.chunk
 
-        results = compute(*lazy_results)
+        futures = []
+        for i in range(0, len(argument_list), n):
+            args = argument_list[i: i + n]
+            future = self.client.map(function_with_single_numerical_threads, list(args))
+            futures += future
+
+        results = self.client.gather(futures, direct=False)
+
         return results
+
