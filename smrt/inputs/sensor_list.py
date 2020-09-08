@@ -53,7 +53,7 @@ def amsre(channel=None, frequency=None, polarization=None, theta=55):
         '37': 36.5e9,
         '89': 89e9}
 
-    return common_amsr("AMSR-E", amsre_frequency_dict, channel=channel, frequency=frequency, theta=theta)
+    return common_amsr("AMSR-E", amsre_frequency_dict, channel=channel, frequency=frequency, theta=theta, name='amsre')
 
 
 def amsr2(channel=None, frequency=None, polarization=None, theta=55):
@@ -90,10 +90,10 @@ def amsr2(channel=None, frequency=None, polarization=None, theta=55):
         '37': 36.5e9,
         '89': 89e9}
 
-    return common_amsr("AMSR2", amsr2_frequency_dict, channel=channel, frequency=frequency, theta=theta)
+    return common_amsr("AMSR2", amsr2_frequency_dict, channel=channel, frequency=frequency, theta=theta, name='asmr2')
 
 
-def common_amsr(sensor_name, frequency_dict, channel=None, frequency=None, polarization=None, theta=55):
+def common_amsr(sensor_name, frequency_dict, channel=None, frequency=None, polarization=None, theta=55, name=None):
 
     if frequency is None:
         # take default values
@@ -132,7 +132,7 @@ def common_amsr(sensor_name, frequency_dict, channel=None, frequency=None, polar
         except KeyError:
             raise SMRTError("%s channel not recognized. Expected one of: %s" % (sensor_name, ", ".join(frequency_dict.keys())))
 
-    sensor = passive(channel_map=channel_map, **extract_configuration(channel_map))
+    sensor = passive(channel_map=channel_map, **extract_configuration(channel_map), name=name)
 
     return sensor
 
@@ -167,7 +167,9 @@ def quickscat(channel=None, theta=None):
 
     channel_map = filter_channel_map(channel_map, channel)
 
-    sensor = active(13.4e9, theta, polarization_inc=['V', 'H'], polarization=['V', 'H'], channel_map=channel_map)
+    sensor = active(13.4e9, theta,
+                    polarization_inc=['V', 'H'], polarization=['V', 'H'],
+                    channel_map=channel_map, name='quickscat')
 
     return sensor
 
@@ -185,9 +187,11 @@ def ascat(theta=None):
     if theta is None:
         theta = np.arange(25, 70, 5)
 
-    channel_map = {'5VV%i': dict(theta=t, theta_inc=t) % t for t in np.atleast_1d(theta)}
+    channel_map = {('VV%i' % t): dict(polarization_inc='V', polarization='V', theta=t, theta_inc=t) for t in np.atleast_1d(theta)}
 
-    return active(5.255e9, theta, polarization_inc='V', polarization='V', channel_map=channel_map)
+    return active(5.255e9, theta,
+                  polarization_inc='V', polarization='V',
+                  channel_map=channel_map, name='ascat')
 
 
 def sentinel1(theta=None):
@@ -204,7 +208,8 @@ def sentinel1(theta=None):
         theta = np.arange(20, 46, 5)
 
     return active(5.405e9, theta,
-                  channel_map={channel: dict(polarization=channel[1], polarization_inc=channel[0]) for channel in ['HH', 'VV', 'HV', 'VH']})
+                  channel_map={channel: dict(polarization=channel[1], polarization_inc=channel[0]) for channel in ['HH', 'VV', 'HV', 'VH']},
+                  name='sentinel1')
 
 
 def smos(theta=None):
@@ -220,7 +225,7 @@ def smos(theta=None):
     if theta is None:
         theta = np.arange(0, 61, 5)
 
-    return passive(1.41e9, theta)
+    return passive(1.41e9, theta, name='smos')
 
 
 def smap(mode, theta=40):
@@ -231,10 +236,11 @@ def smap(mode, theta=40):
     """
 
     if mode == 'P':
-        return passive(1.4e9, theta=theta, channel_map={pola: dict(polarization=pola) for pola in 'HV'})
+        return passive(1.4e9, theta=theta, channel_map={pola: dict(polarization=pola) for pola in 'HV'}, name='smap')
     elif mode == 'A':
         return active(1.26e9, theta=theta, theta_inc=theta,
-                      channel_map={channel: dict(polarization=channel[1], polarization_inc=channel[0]) for channel in ['HH', 'VV', 'HV']})
+                      channel_map={channel: dict(polarization=channel[1], polarization_inc=channel[0]) for channel in ['HH', 'VV', 'HV']},
+                      name='smap')
     else:
         raise SMRTError('mode must by A (active) or P (passive')
 
