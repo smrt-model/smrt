@@ -97,6 +97,20 @@ It provides calculation of the permittivity constant for soil case. Argument han
         else:
             return self.permittivity_model(frequency, self.temperature)
 
+    def __add__(self, other):
+
+        raise SMRTError("Adding to a substrate is not valid. Only adding a snowpack and a substrate (in that order) is valid")
+
+        return Snowpack(layers=other.layers,
+                        interfaces=other.interfaces,
+                        substrate=other.substrate,
+                        atmosphere=self)
+
+    def __iadd__(self, other):
+        raise SMRTError("Inplace addition with a substrate is not a valid operation.")
+
+
+
 
 def substrate_from_interface(interface_cls):
     """this decorator transform an interface class into a substrate class with automatic method"""
