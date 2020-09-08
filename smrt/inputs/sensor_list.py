@@ -137,10 +137,10 @@ def common_amsr(sensor_name, frequency_dict, channel=None, frequency=None, polar
     return sensor
 
 
-def quickscat(channel=None, theta=None):
-    """ Configuration for quickscat sensor.
+def quikscat(channel=None, theta=None):
+    """ Configuration for quikscat sensor.
 
-     This function can be used to simulate the 4 QUICKSCAT channels i.e. incidence angles 46° and 54° and HH and VV polarizations.
+     This function can be used to simulate the 4 QUIKSCAT channels i.e. incidence angles 46° and 54° and HH and VV polarizations.
      Alternatively a subset of these channels can be specified with 4-character identifiers with polarization first .e.g. HH46, VV54
 
      :param channel: single channel identifier
@@ -169,7 +169,7 @@ def quickscat(channel=None, theta=None):
 
     sensor = active(13.4e9, theta,
                     polarization_inc=['V', 'H'], polarization=['V', 'H'],
-                    channel_map=channel_map, name='quickscat')
+                    channel_map=channel_map, name='quikscat')
 
     return sensor
 
