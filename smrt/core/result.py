@@ -37,6 +37,7 @@ import xarray as xr
 import pandas as pd
 from smrt.utils import dB
 from smrt.core.error import SMRTError
+from smrt.core import lib
 
 
 def open_result(filename):
@@ -213,18 +214,36 @@ class ActiveResult(Result):
             kwargs.update({k: v for k, v in self.channel_map[channel].items() if k in self.data.dims})
 
         if return_backscatter:
-            if 'theta' in kwargs:
-                theta = xr.DataArray(np.atleast_1d(kwargs.pop('theta')), dims=['theta'])
-            else:
+            # get theta
+            theta = kwargs.pop('theta', None)
+            theta_inc = kwargs.pop('theta_inc', None)
+
+            if theta is not None and theta_inc is not None:
+                if not np.all(theta_inc == theta):
+                    raise SMRTError('theta and theta_inc must be the same when returning backscatter')
+
+            if theta is None:
+                theta = theta_inc
+
+            if theta is None:
                 theta = self.data.theta_inc
 
-            if 'theta' in self.data.coords:
-                kwargs.update(dict(theta_inc=theta, theta=theta))
-            else:
-                # data are backscatter only
-                kwargs.update(dict(theta_inc=theta))
+            def select_theta(x, theta, **kwargs):
+                # select by theta and deal with cases where theta is in the coords or not
+                if 'theta' in x.coords:
+                    return x.sel(theta=theta, theta_inc=theta, **kwargs)
+                else:
+                    return x.sel(theta_inc=theta, **kwargs)
 
-        x = self.data.sel(drop=True, **kwargs)
+            if lib.is_sequence(theta):
+                # now select all the theta if it is a sequence
+                x = xr.concat([select_theta(self.data, t, drop=True, **kwargs) for t in theta],
+                              pd.Index(theta, 'theta_inc'))
+            else:
+                x = select_theta(self.data, theta, drop=True, **kwargs)
+
+        else:
+            x = self.data.sel(drop=True, **kwargs)
 
         if return_backscatter:
             x = (4 * np.pi * np.cos(np.deg2rad(theta))) * x
@@ -399,8 +418,16 @@ def concat_results(result_list, coord):
     if not all([type(result) == ResultClass for result in result_list]):
         raise SMRTError("The results are not all of the same type")
 
+    # channel_map ?
+    if any((res.channel_map != result_list[0].channel_map for res in result_list)):
+        # different channel maps, it means we have different sensors. Merge de sensor maps.
+        channel_map = {ch: dict(**r.channel_map[ch], **{dim_name: dv}) for r, dv in zip(result_list, dim_value) for ch in r.channel_map}
+    else:
+        # all the channel maps are the same
+        channel_map = result_list[0].channel_map
+
     return ResultClass(xr.concat([result.data for result in result_list], pd.Index(dim_value, name=dim_name)),
-                       channel_map=result_list[0].channel_map)  # use the first channel_map. Assume all the results have the same channel_map...
+                       channel_map=channel_map)
 
 
 def _strongsqueeze(x):
