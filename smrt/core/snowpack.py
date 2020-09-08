@@ -20,11 +20,15 @@ Example::
 
 import copy
 import numpy as np
+import warnings
+import functools
 
 from .error import SMRTError
 from ..interface.flat import Flat  # core should not depend on something defined in interface...
 from .layer import Layer
 from .interface import SubstrateBase
+
+cached_property = getattr(functools, "cached_property", property)  # use cached_propertity if it exists... otherwise, use property
 
 
 class Snowpack(object):
@@ -46,7 +50,7 @@ class Snowpack(object):
 """
         return len(self.layers)
 
-    @property
+    @cached_property
     def layer_thicknesses(self):
         """return the thickness of each layer
 """
@@ -57,9 +61,34 @@ class Snowpack(object):
         """return the depth of the bottom of each layer
 
 """
-        return np.cumsum(self.layer_thicknesses)  # TODO Ghi: caching
+        warnings.warn("layer_depths is ambiguous, use bottom_layer_depths, top_layer_depths or mid_layer_depths instead."
+                      "This function will be removed in a next version",
+                      DeprecationWarning)
+        return np.cumsum(self.layer_thicknesses)
+
+    @cached_property
+    def bottom_layer_depths(self):
+        """return the depth of the bottom of each layer
+
+"""
+        return np.cumsum(self.profile('thickness'))  # TODO Ghi: caching
 
     @property
+    def top_layer_depths(self):
+        """return the depth of the bottom of each layer
+
+"""
+        return self.z[:-1]
+
+    @cached_property
+    def mid_layer_depths(self):
+        """return the depth of the bottom of each layer
+
+"""
+        ld = self.z
+        return (ld[1:] + ld[:-1]) / 2
+
+    @cached_property
     def z(self):
         """return the depth of each interface, that is, 0 and the depth of the bottom of each layer
 
@@ -70,7 +99,22 @@ class Snowpack(object):
     def layer_densities(self):
         """return the density of each layer
 """
+        warnings.warn("layer_densities is ambiguous, use the profile('density') instead. This function will be removed in a next version",
+                      DeprecationWarning)
         return [lay.density for lay in self.layers]  # TODO Ghi: caching
+
+    @functools.lru_cache()
+    def profile(self, property_name):
+        """return the property of each layer as a list
+"""
+        if property_name == "bottom_layer_depths":
+            return self.bottom_layer_depths
+        elif property_name == "top_layer_depths":
+            return self.top_layer_depths
+        elif property_name == "mid_layer_depths":
+            return self.mid_layer_depths
+        else:
+            return [getattr(lay, property_name) for lay in self.layers]  # TODO Ghi: caching
 
     def append(self, layer, interface=None):
         """append a new layer at the bottom of the stack of layers. The interface is that at the top of the appended layer.
@@ -102,12 +146,17 @@ class Snowpack(object):
     def copy(self):
         """make a shallow copy of a snowpack by copying the list of layers and interfaces but not the layers and interfaces themselves which are still shared with the original snowpacl.
         This method allows the user to create a new snowpack and remove, append or replace some layers or interfaces afterward. It does not allow to alter the layers or interfaces without 
-        changing the original snowpack. In this latter case, use copy.deepcopy.
+        changing the original snowpack. See py:meth:~deepcopy.
 """
         new_sp = copy.copy(self)
         new_sp.layers = copy.copy(self.layers)
         new_sp.interfaces = copy.copy(self.interfaces)
         return new_sp
+
+    def deepcopy(self):
+        """make a deep copy of a snowpack.
+"""
+        return copy.deepcopy(self)
 
     def basic_check(self):
 

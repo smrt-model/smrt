@@ -1,12 +1,24 @@
 
 
 import pytest
+import numpy as np
 
 from ..inputs.make_medium import make_snowpack
 from .error import SMRTError
 from .interface import Substrate
 from .atmosphere import AtmosphereBase
 
+
+def test_profile():
+
+    sp = make_snowpack([0.1, 0.2, 0.3], "exponential", density=[100, 200, 300], corr_length=200e-6)
+
+
+    assert np.allclose(sp.z, [0, 0.1, 0.3, 0.6])
+    assert np.allclose(sp.bottom_layer_depths, [0.1, 0.3, 0.6])
+    assert np.allclose(sp.top_layer_depths, [0.0, 0.1, 0.3])
+    assert np.allclose(sp.mid_layer_depths, [0.05, 0.2, 0.45])
+    assert np.allclose(sp.profile('density'), [100, 200, 300])
 
 def test_addition():
 
