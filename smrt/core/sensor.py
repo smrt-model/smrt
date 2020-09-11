@@ -289,25 +289,33 @@ class SensorList(SensorBase):
         self.axis = axis
 
         # check uniqueness of axis
-        a = [getattr(s, axis) for s in self.sensor_list]
+        if axis == 'channel':
+            self.channel_list = [ch for s in self.sensor_list for ch in s.channel_map]
+            a = self.channel_list
+            self.channel_map = {ch: s.channel_map[ch] for s in self.sensor_list for ch in s.channel_map}
+        else:
+            a = [getattr(s, axis) for s in self.sensor_list]
+            self.channel_map = {ch: dict(**s.channel_map[ch], **{axis: getattr(s, axis)}) for s in sensor_list for ch in s.channel_map}
 
         if None in a:
             raise SMRTError("It is required to set '%s' value for each sensor" % axis)
         if len(set(a)) != len(a):
             raise SMRTError("It is required to set different '%s' values for each sensor" % axis)
 
-        self.channel_map = {ch: dict(**s.channel_map[ch], **{axis: getattr(s, axis)}) for s in sensor_list for ch in s.channel_map}
 
     @property
     def channel(self):
-        return [s.channel for s in self.sensor_list]
+        return [ch for ch in s.channel_map for s in self.sensor_list]
 
     @property
     def frequency(self):
         return [s.frequency for s in self.sensor_list]
 
     def configurations(self):
-        yield self.axis, np.array([getattr(s, self.axis) for s in self.sensor_list])
+        if self.axis == "channel":
+            yield self.axis, np.array(self.channel_list)
+        else:
+            yield self.axis, np.array([getattr(s, self.axis) for s in self.sensor_list])
 
     def iterate(self, axis=None):
 
