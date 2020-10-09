@@ -145,6 +145,22 @@ def active(frequency, theta_inc, theta=None, phi=None, polarization_inc=None, po
     return sensor
 
 
+def altimeter(channel, **kwargs):
+
+    return Altimeter(channel=channel, **kwargs)
+
+
+def make_multi_channel_altimeter(config, channel):
+    # helper function to make a single or multi channel altimter sensor object from a config in dict format
+    if isinstance(channel, str):
+        return altimeter(channel, **config[channel])
+    else:
+        if channel is None:
+            channel = config.keys()
+        return SensorList([altimeter(c, **config[c]) for c in channel])
+
+
+
 class SensorBase(object):
     pass
 
@@ -322,3 +338,28 @@ class SensorList(SensorBase):
         if axis is not None and axis != self.axis:
             raise SMRTError("SensorList is unable to iterate over a different axis than its axis")
         yield from self.sensor_list
+
+
+class Altimeter(Sensor):
+    """ Configuration for altimeter.
+        Use of the functions :py:func:`altimeter`, or the sensor specific functions
+        e.g. :py:func:`envisat_ra2` are recommended to access this class.
+
+    """
+
+    def __init__(self, frequency, altitude, beamwidth, pulse_bandwidth, sigma_p=None, off_nadir_angle=0, beam_asymmetry=0,
+                 ngate=1024, nominal_gate=40, theta_inc_deg=0., polarization_inc=None, polarization=None, channel=None):
+
+        channel_map = {channel: dict()} if channel is not None else dict()
+
+        super().__init__(frequency=frequency, theta_inc_deg=theta_inc_deg, theta_deg=theta_inc_deg,
+                         polarization_inc=polarization_inc, polarization=polarization, channel_map=channel_map)
+
+        self.altitude = altitude
+        self.beamwidth = beamwidth
+        self.ngate = ngate
+        self.pulse_bandwidth = pulse_bandwidth
+        self.pulse_sigma = sigma_p if sigma_p is not None else 0.513 / pulse_bandwidth
+        self.nominal_gate = nominal_gate
+        self.off_nadir_angle = off_nadir_angle
+        self.beam_asymmetry = beam_asymmetry
