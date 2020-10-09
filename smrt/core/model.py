@@ -49,6 +49,7 @@ import inspect
 import copy
 
 import numpy as np
+import pandas as pd
 
 from .error import SMRTError
 from .result import concat_results
@@ -194,10 +195,10 @@ class Model(object):
         #  run all the simulations (with atmosphere as long as it is not depreciated), the results is a flat list of results
         results = runner(self.run_single_simulation, ((simul, atmosphere) for simul in simulations))
 
-        # reshape the results but successive concatenation
-        for axis, values in reversed(dimensions):
-            n = len(values)
-            results = [concat_results(results[i: i + n], (axis, values)) for i in range(0, len(results), n)]
+        # reshape the results with successive concatenations
+        for dimension in reversed(dimensions):
+            n = len(dimension[1]) if isinstance(dimension, tuple) else len(dimension)
+            results = [concat_results(results[i: i + n], dimension) for i in range(0, len(results), n)]
 
         assert len(results) == 1
         return results[0]
@@ -217,12 +218,20 @@ class Model(object):
             snowpack_dimension = "snowpack", list(snowpack.keys())
             snowpack = list(snowpack.values())
 
+        # or is it a pandas Series ?
+        if isinstance(snowpack, pd.Series):
+            snowpack_dimension = snowpack.index
+            snowpack = snowpack.tolist()
+
         # or a sequence ?
         if lib.is_sequence(snowpack):
             if snowpack_dimension is None:
                 snowpack_dimension = "snowpack", None
             if snowpack_dimension[1] is None:
                 snowpack_dimension = snowpack_dimension[0], range(len(snowpack))
+
+        if isinstance(snowpack_dimension, tuple) and not isinstance(snowpack_dimension[0], str):
+            raise SMRTError("When the 'snowpack_dimension' argument is a tuple, the first argument must be a string")
 
         # the sensor object is split in its basic sensors (config). How deep the sensor is split depends on the
         # radiative transfer solver's broadcast capability.
@@ -239,7 +248,7 @@ class Model(object):
             else: # we're at the end
                 if lib.is_sequence(snowpack):
                     for sp in snowpack:
-                        yield (sensor, sp) 
+                        yield (sensor, sp)
                 else:
                     yield (sensor, snowpack)
 

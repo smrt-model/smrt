@@ -261,7 +261,7 @@ class ActiveResult(Result):
 
         return _strongsqueeze(self.sel_data(channel=channel, return_backscatter="natural", **kwargs))
 
-    def sigma_dB(self, **kwargs):
+    def sigma_dB(self, channel=None, **kwargs):
         """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V').
          See xarray slicing with sel method (to document)"""
 
@@ -411,22 +411,29 @@ def concat_results(result_list, coord):
 
     """
 
-    dim_name, dim_value = coord
+    if isinstance(coord, tuple):
+        dim_name, dim_value = coord
+
+        index = pd.Index(dim_value, name=dim_name)
+    elif isinstance(coord, pd.Index):
+        index = coord
+    else:
+        raise SMRTError('unknown type for the coord argument')
 
     ResultClass = type(result_list[0])
-
     if not all([type(result) == ResultClass for result in result_list]):
         raise SMRTError("The results are not all of the same type")
 
     # channel_map ?
     if any((res.channel_map != result_list[0].channel_map for res in result_list)):
+        assert isinstance(coord, tuple)
         # different channel maps, it means we have different sensors. Merge de sensor maps.
-        channel_map = {ch: dict(**r.channel_map[ch], **{dim_name: dv}) for r, dv in zip(result_list, dim_value) for ch in r.channel_map}
+        channel_map = {ch: dict(**r.channel_map[ch], dim_name=dv) for r, dv in zip(result_list, dim_value) for ch in r.channel_map}
     else:
         # all the channel maps are the same
         channel_map = result_list[0].channel_map
 
-    return ResultClass(xr.concat([result.data for result in result_list], pd.Index(dim_value, name=dim_name)),
+    return ResultClass(xr.concat([result.data for result in result_list], index),
                        channel_map=channel_map)
 
 
