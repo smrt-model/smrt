@@ -65,7 +65,6 @@ def len_atleast_1d(x):
 class smrt_diag(object):
     """Scipy.sparse is very slow for diagonal matrix and numpy has no good support for linear algebra. This diag class
     implements simple diagonal object without numpy subclassing (but without much features).
-    implements simple diagional object without numpy subclassing and without much features.
     It seems that proper subclassing numpy and overloading matmul is a very difficult problem."""
 
     __array_ufunc__ = None
@@ -73,24 +72,28 @@ class smrt_diag(object):
     def __init__(self, arr):
         self.diag = np.atleast_1d(arr)
 
+        # self.shape = shape if shape is not None else (len(self.diag), len(self.diag))
+
     def diagonal(self):
         return self.diag
 
-    # @property
-    # def shape(self):
-    #     return self.values.shape
+    @property
+    def shape(self):
+        return (len(self.diag), len(self.diag))
 
     def __len__(self):
         return len(self.diag)
 
     def __rmatmul__(self, other):
         self.check_type(other)
+        # assert other.shape[1] == self.shape[0]
         return other * self.diag[np.newaxis, :]
 
     def __matmul__(self, other):
+        # assert self.shape[1] == other.shape[0]
         if isinstance(other, smrt_diag):
             # return a diagonal object
-            return smrt_diag(other.diag * self.diag)
+            return smrt_diag(other.diag * self.diag)  # , shape=(self.shape[0], other.shape[1]))
         else:
             self.check_type(other)
             # other must be an ndarray
@@ -98,19 +101,27 @@ class smrt_diag(object):
 
     def __rmul__(self, other):
         assert np.isscalar(other)
-        return other * self.diag
+        return smrt_diag(other * self.diag)
 
     def __mul__(self, other):
         assert np.isscalar(other)
-        return self.diag * other
+        return smrt_diag(self.diag * other)
 
     def __add__(self, other):
         if isinstance(other, smrt_diag):
             return smrt_diag(other.diag + self.diag)
         elif np.isscalar(other) and other == 0:
             return self
+        elif isinstance(other, np.ndarray):
+            assert other.shape == self.shape  # we do not allow broadcasting (not yet)...
+            other = other.copy()
+            other[np.diag_indices_from[other]] += self.diag
+            return other
         else:
             raise NotImplementedError
+
+    def __radd__(self, other):
+        return self.__add__(other)
 
     def __sub__(self, other):
         if isinstance(other, smrt_diag):
@@ -262,7 +273,6 @@ class smrt_matrix(object):
         else:
             raise NotImplementedError
 
-
     def __rmul__(self, other):
         return smrt_matrix(other * self.values)
 
@@ -352,7 +362,7 @@ def abs2(c):
     return c.real**2 + c.imag**2
 
 
-def generic_ft_even_matrix(phase_function, m_max):
+def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
     """ Calculation of the Fourier decomposed of the phase or reflection or transmission matrix provided by the function.
 
     This method calculates the Fourier decomposition modes and return the output.
@@ -376,7 +386,10 @@ def generic_ft_even_matrix(phase_function, m_max):
     """
 
     # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
-    nsamples = 2**np.ceil(3 + np.log(m_max + 1) / np.log(2))
+    if nsamples is None:
+        nsamples = 2**np.ceil(3 + np.log(m_max + 1) / np.log(2))
+
+    assert nsamples > 2 * m_max
 
     # dphi must be evenly spaced from 0 to 2 * np.pi (but not including period), but we can use the symmetry of the phase function
     # to reduce the computation to 0 to pi (including 0 and pi) and mirroring for pi to 2*pi (excluding both)
@@ -389,8 +402,9 @@ def generic_ft_even_matrix(phase_function, m_max):
     npol = p.npol
 
     # mirror the phase function
+    assert len(p.values.shape) == 5
     p_mirror = p.values[:, :, -2:0:-1, :, :].copy()
-    if npol >= 3 :
+    if npol >= 3:
         p_mirror[0:2, 2] = -p_mirror[0:2, 2]
         p_mirror[2, 0:2] = -p_mirror[2, 0:2]
 
@@ -408,6 +422,7 @@ def generic_ft_even_matrix(phase_function, m_max):
 
     # m>=1 modes
     if npol == 2:
+        # the factor 2 comes from the change exp -> cos, i.e. exp(-ix) + exp(+ix)= 2 cos(x)
         ft_even_p[:, :, 1:] = ft_p[:, :, 1:m_max + 1].real * (2.0 / nsamples)
 
     else:

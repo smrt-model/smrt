@@ -67,9 +67,7 @@ def test_iba_oneconfig_active():
 
     print(res.sigmaVV_dB(), res.sigmaHH_dB(), res.sigmaHV_dB())
 
-    #assert abs(res.sigmaVV_dB() - (-24.04497237)) < 1e-4
-    #assert abs(res.sigmaHH_dB() - (-24.41628343)) < 1e-4
-    #assert abs(res.sigmaHV_dB() - (-51.53673914)) < 1e-4
-    assert abs(res.sigmaVV_dB() - (-25.784531777404144)) < 1e-4
-    assert abs(res.sigmaHH_dB() - (-25.661186004429812)) < 1e-4
-    assert abs(res.sigmaHV_dB() - (-32.33796852861883)) < 1e-4
+    assert abs(res.sigmaVV_dB() - (-24.04497237)) < 1e-3
+    assert abs(res.sigmaHH_dB() - (-24.41628343)) < 1e-3
+    assert abs(res.sigmaHV_dB() - (-51.53673914)) < 1e-3
+

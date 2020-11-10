@@ -44,5 +44,6 @@ def test_geometrical_optics():
 
     print(res.sigmaVV_dB(), res.sigmaHH_dB())
 
-    assert abs(res.sigmaVV_dB() - -29.098930693890576) < 1e-4
-    assert abs(res.sigmaHH_dB() - -28.974976041582334) < 1e-4
+    assert abs(res.sigmaVV_dB() - -27.35490756934666) < 1e-4
+    assert abs(res.sigmaHH_dB() - -27.727715758558222) < 1e-4
+ 

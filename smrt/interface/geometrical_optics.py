@@ -15,8 +15,9 @@ This implementation is largely based on Tsang and Kong, Scattering of Electromag
 
 import numpy as np
 import scipy.special
+import scipy.integrate
 
-from smrt.core.fresnel import fresnel_transmission_matrix, fresnel_coefficients  # a modifier quand on fusionne
+from smrt.core.fresnel import fresnel_coefficients
 from smrt.core.lib import smrt_matrix, abs2, generic_ft_even_matrix
 from smrt.interface.vector3 import vector3
 from smrt.core.interface import Interface
@@ -29,6 +30,9 @@ class GeometricalOptics(Interface):
     args = ["mean_square_slope"]
     optional_args = {"shadow_correction": True}
 
+    def clip_mu(self, mu):
+        # avoid large zenith angles that causes many troubles
+        return np.clip(mu, 0.1, 1)
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """compute the reflection coefficients for an array of incidence angles (given by their cosine)
@@ -55,8 +59,8 @@ class GeometricalOptics(Interface):
 
         :return: the reflection matrix
 """
-        mu_i = np.atleast_1d(mu_i)[np.newaxis, np.newaxis, :]
-        mu_s = np.atleast_1d(mu_s)[np.newaxis, :, np.newaxis]
+        mu_i = np.atleast_1d(self.clip_mu(mu_i))[np.newaxis, np.newaxis, :]
+        mu_s = np.atleast_1d(self.clip_mu(mu_s))[np.newaxis, :, np.newaxis]
         dphi = np.atleast_1d(dphi)[:, np.newaxis, np.newaxis]
 
         sin_i = np.sqrt(1 - mu_i**2)
@@ -71,11 +75,12 @@ class GeometricalOptics(Interface):
         # compute the local reflection Fresnel coefficient
         kd = ki - ks   # in principe: *sqrt(eps_1), but in the following it appears everywhere as a ratio
 
-        n = kd / (np.sign(kd.z) * kd.norm)  # EQ 2.1.223 #equivalent to np.vector3(kd_x / kd_z, kd_y / kd_z, 1)
+        n = kd / (np.sign(kd.z) * kd.norm)  # EQ 2.1.123 #equivalent to np.vector3(kd_x / kd_z, kd_y / kd_z, 1)
 
         mu_local = -vector3.dot(n, ki)
-
-        Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_local)
+        assert(np.all(mu_local >= 0))
+        assert(np.all(mu_local <= 1.0001))  # compare with some tolerance
+        Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, self.clip_mu(mu_local))
 
         # define polarizations
         hs = vector3.from_xyz(-sin_phi, cos_phi, 0)
@@ -84,10 +89,11 @@ class GeometricalOptics(Interface):
         hi = vector3.from_xyz(0, 1, 0)
         vi = vector3.from_xyz(-mu_i, 0, -sin_i)
 
-
         # compute the dot products
         cross_ki_ks_norm = vector3.cross(ki, ks).norm
-        colinear = (dphi == np.pi) & (mu_s == mu_i)
+        colinear = cross_ki_ks_norm < 1e-4
+        # avoid warning due to divide error, the colinear case is solved independantly:
+        cross_ki_ks_norm[colinear] = 1
 
         hs_ki = vector3.dot(hs, ki) / cross_ki_ks_norm
         hs_ki[colinear] = -1
@@ -100,32 +106,35 @@ class GeometricalOptics(Interface):
         vi_ks = vector3.dot(vi, ks) / cross_ki_ks_norm
         vi_ks[colinear] = 0
 
+        fvv = abs2(hs_ki * hi_ks * Rh + vs_ki * vi_ks * Rv)   # Eqs 2.1.122 in Tsang_tomeIII
+        fhh = abs2(vs_ki * vi_ks * Rh + hs_ki * hi_ks * Rv)
 
-        fvv = abs2( hs_ki * hi_ks * Rh + vs_ki* vi_ks * Rv)   # Eqs 2.1.122 in Tsang_tomeIII
-        fhh = abs2( vs_ki * vi_ks * Rh + hs_ki* hi_ks * Rv)
+        fhv = abs2(vs_ki * hi_ks * Rh - hs_ki * vi_ks * Rv)
+        fvh = abs2(hs_ki * vi_ks * Rh - vs_ki * hi_ks * Rv)
 
-        fhv = abs2( vs_ki * hi_ks * Rh - hs_ki* vi_ks * Rv)
-        fvh = abs2( hs_ki * vi_ks * Rh + vs_ki* hi_ks * Rv)
-        
         reflection_coefficients = smrt_matrix.zeros((npol, npol, dphi.shape[0], mu_s.shape[1], mu_i.shape[2]))
         reflection_coefficients[0, 0] = fvv
         reflection_coefficients[0, 1] = fvh
         reflection_coefficients[1, 0] = fhv
         reflection_coefficients[1, 1] = fhh
 
-        smrt_norm = 1 / (4 * np.pi)  #  divide by 4*pi because this is the norm for SMRT
+        smrt_norm = 1 / (4 * np.pi)  # divide by 4*pi because this is the norm for SMRT
 
         coef = smrt_norm / (2 * self.mean_square_slope) / mu_i * kd.norm2**2 / kd.z**4 * \
-                         np.exp( -(kd.x**2 + kd.y**2) / (2 * kd.z**2 * self.mean_square_slope))  # Eq. 2.1.124 
+            np.exp(-(kd.x**2 + kd.y**2) / (2 * kd.z**2 * self.mean_square_slope))  # Eq. 2.1.124
+
 
         if self.shadow_correction:
-
             backward = dphi == np.pi
             higher_thetas = mu_s <= mu_i
             zero_i = backward & higher_thetas
             zero_s = backward & ~higher_thetas
+            # this hack to avoid division-by-zero is safe, because the shadow_function is only important for large angles
+            sin_i[sin_i < 1e-3] = 1e-3
+            sin_s[sin_s < 1e-3] = 1e-3
 
-            s = 1 / (1 + zero_i * shadow_function(self.mean_square_slope, mu_i / sin_i) + zero_s * shadow_function(self.mean_square_slope, mu_s/sin_s))
+            s = 1 / (1 + (~zero_i) * shadow_function(self.mean_square_slope, mu_i / sin_i) +
+                     (~zero_s) * shadow_function(self.mean_square_slope, mu_s / sin_s))
             coef *= s
 
         return reflection_coefficients * coef
@@ -135,14 +144,16 @@ class GeometricalOptics(Interface):
         def reflection_function(dphi):
             return self.diffuse_reflection_matrix(frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol=npol)
 
-        return generic_ft_even_matrix(reflection_function, m_max)
+        print("to be optimised")
+        return generic_ft_even_matrix(reflection_function, m_max, nsamples=256)
 
     def ft_even_diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, m_max, npol):
 
         def transmission_function(dphi):
             return self.diffuse_transmission_matrix(frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol=npol)
 
-        return generic_ft_even_matrix(transmission_function, m_max)
+        print("to be optimised")
+        return generic_ft_even_matrix(transmission_function, m_max, nsamples=256)
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """compute the transmission coefficients for the azimuthal mode m
@@ -160,7 +171,7 @@ class GeometricalOptics(Interface):
         return smrt_matrix(0)
 
     def diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_t, mu_i, dphi, npol):
-        """compute the transmission coefficients for an array of incident, scattered and azimuth angles 
+        """compute the transmission coefficients for an array of incident, scattered and azimuth angles
            in medium 1. Medium 2 is where the beam is transmitted.
 
         :param eps_1: permittivity of the medium where the incident beam is propagating.
@@ -177,11 +188,11 @@ class GeometricalOptics(Interface):
         eta1_eta = n_1 / n_2  # eta1 is the impedance in medium 2 and eta in medium 1. Impedance is sqrt(permeability/permittivity)
 
         if abs(eta1_eta - 1) < 1e-6:
-            raise NotImplementedError("the case of successive layers with identical index needs to be implemented")
+            raise NotImplementedError("the case of successive layers with identical index (%g) is not implemented" % n_2)
             return 1 / (4 * np.pi)   # return the identity matrix. The coef is to be checked.
 
-        mu_i = np.atleast_1d(mu_i)[np.newaxis, np.newaxis, :]
-        mu_t = np.atleast_1d(mu_t)[np.newaxis, :, np.newaxis]
+        mu_i = np.atleast_1d(self.clip_mu(mu_i))[np.newaxis, np.newaxis, :]
+        mu_t = np.atleast_1d(self.clip_mu(mu_t))[np.newaxis, :, np.newaxis]
         dphi = np.atleast_1d(dphi)[:, np.newaxis, np.newaxis]
 
         sin_i = np.sqrt(1 - mu_i**2)
@@ -194,16 +205,21 @@ class GeometricalOptics(Interface):
         kt = vector3.from_xyz(sin_t * cos_phi, sin_t * sin_phi, -mu_t)
 
         # compute the local transmission Fresnel coefficient
-        ktd = n_1.real * ki - n_2.real * kt   # Eq 2.1.87
+        ktd = ki * n_1.real - kt * n_2.real   # Eq 2.1.87
 
         n = ktd / (np.sign(ktd.z) * ktd.norm)  # Eq 2.1.128
 
-        mu_local = -vector3.dot(n, ki)
+        n_kt = -vector3.dot(n, kt)
+        n_ki = -vector3.dot(n, ki)
 
-        Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_local)
+        # compute Fresnel coefficients at stationary point
+        Rh = (n_1.real * n_ki - n_2.real * n_kt) / (n_1.real * n_ki + n_2.real * n_kt)  # Eq. 2.1.132a
+        Rv = (n_2.real * n_ki - n_1.real * n_kt) / (n_2.real * n_ki + n_1.real * n_kt)  # Eq. 2.1.132b
 
-        n_kt = vector3.dot(n, kt)
-        n_kt[mu_local < 0] = 0
+        no_compatible_slopes = (n_kt < 0) | (n_ki < 0)
+
+        Rh[no_compatible_slopes] = -1
+        Rv[no_compatible_slopes] = -1
 
         # define polarizations
         ht = vector3.from_xyz(-sin_phi, cos_phi, 0)
@@ -214,7 +230,9 @@ class GeometricalOptics(Interface):
 
         # compute the cosines
         cross_ki_kt_norm = vector3.cross(ki, kt).norm
-        colinear = (dphi == 0) & (mu_t == mu_i)
+        colinear = cross_ki_kt_norm < 1e-4
+        # avoid warning due to divide error, the colinear case is solved independantly:
+        cross_ki_kt_norm[colinear] = 1
 
         ht_ki = vector3.dot(ht, ki) / cross_ki_kt_norm
         ht_ki[colinear] = -1  # checked with sympy
@@ -227,12 +245,12 @@ class GeometricalOptics(Interface):
         vi_kt = vector3.dot(vi, kt) / cross_ki_kt_norm
         vi_kt[colinear] = 0    # checked with sympy
 
-        Wvv = abs2( ht_ki * hi_kt * (1 + Rh) + vt_ki * vi_kt * (1 + Rv) * eta1_eta)   # Eqs 2.1.130 in Tsang_tomeIII
-        Whh = abs2( vt_ki * vi_kt * (1 + Rh) + ht_ki * hi_kt * (1 + Rv) * eta1_eta)
+        Wvv = abs2(ht_ki * hi_kt * (1 + Rh) + vt_ki * vi_kt * (1 + Rv) * eta1_eta)   # Eqs 2.1.130 in Tsang_tomeIII
+        Whh = abs2(vt_ki * vi_kt * (1 + Rh) + ht_ki * hi_kt * (1 + Rv) * eta1_eta)
 
         Whv = abs2(-vt_ki * hi_kt * (1 + Rh) + ht_ki * vi_kt * (1 + Rv) * eta1_eta)
-        Wvh = abs2( ht_ki * vi_kt * (1 + Rh) - vt_ki * hi_kt * (1 + Rv) * eta1_eta)
-        
+        Wvh = abs2(ht_ki * vi_kt * (1 + Rh) - vt_ki * hi_kt * (1 + Rv) * eta1_eta)
+
         transmission_coefficients = smrt_matrix.zeros((npol, npol, dphi.shape[0], mu_t.shape[1], mu_i.shape[2]))
 
         transmission_coefficients[0, 0] = Wvv
@@ -242,10 +260,13 @@ class GeometricalOptics(Interface):
 
         smrt_norm = 1 / (4 * np.pi)   # SMRT requires scattering coefficient / 4 * pi
 
-        coef = smrt_norm * 2 * eps_2 / (eta1_eta * self.mean_square_slope) / mu_i * ktd.norm2 * n_kt**2 / (ktd.z**4) * \
-                np.exp(-(ktd.x**2 + ktd.y**2) / (2 * ktd.z**2 * self.mean_square_slope))   # Eq. 2.1.130   NB: k1^2 -> eps_2
+        coef = smrt_norm * 2 * eps_2 * ktd.norm2 * n_kt**2 / (eta1_eta * self.mean_square_slope * mu_i * ktd.z**4) * \
+            np.exp(-(ktd.x**2 + ktd.y**2) / (2 * ktd.z**2 * self.mean_square_slope))   # Eq. 2.1.130   NB: k1^2 -> eps_2
 
         if self.shadow_correction:
+            # this hack to avoid division-by-zero is safe, because the shadow_function is only important for large angles
+            sin_i[sin_i < 1e-3] = 1e-3
+            sin_t[sin_t < 1e-3] = 1e-3
             s = 1 / (1 + shadow_function(self.mean_square_slope, mu_i / sin_i) + shadow_function(self.mean_square_slope, mu_t / sin_t))
             coef *= s
 
@@ -254,8 +275,8 @@ class GeometricalOptics(Interface):
     def reflection_integrand_for_energy_conservation_test(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi):
         """function relevant to compute energy conservation. See p87 in Tsang_tomeIII.
 """
-        mu_i = np.atleast_1d(mu_i)[np.newaxis, np.newaxis, :]
-        mu_s = np.atleast_1d(mu_s)[np.newaxis, :, np.newaxis]
+        mu_i = np.atleast_1d(self.clip_mu(mu_i))[np.newaxis, np.newaxis, :]
+        mu_s = np.atleast_1d(self.clip_mu(mu_s))[np.newaxis, :, np.newaxis]
         dphi = np.atleast_1d(dphi)[:, np.newaxis, np.newaxis]
 
         sin_i = np.sqrt(1 - mu_i**2)
@@ -275,30 +296,19 @@ class GeometricalOptics(Interface):
         mu_local = -vector3.dot(n, ki)
 
         Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_local)
- 
+
         # define polarizations
-        hs = vector3.from_xyz(-sin_phi, cos_phi, 0)
-        vs = vector3.from_xyz(mu_s * cos_phi, mu_s * sin_phi, -sin_s)
-
-        #print(vector3.cross(vs, hs), ks)
-
         hi = vector3.from_xyz(0, 1, 0)
         vi = vector3.from_xyz(-mu_i, 0, -sin_i)
-
-        #print(vector3.cross(vi, hi), ki)
-
-        hs_ki = vector3.dot(hs, ki)
-        vs_ki = vector3.dot(vs, ki)
 
         hi_ks = vector3.dot(hi, ks)
         vi_ks = vector3.dot(vi, ks)
 
-        coef = 1/(2 * np.pi * self.mean_square_slope) * kd.norm2**2 / (4 * mu_i * vector3.cross(ki, ks).norm2 * kd.z**4) * \
-                         np.exp( - (kd.x**2 + kd.y**2)/ (2 * kd.z**2 * self.mean_square_slope))  # Eq. 2.1.124 
+        coef = 1 / (2 * np.pi * self.mean_square_slope) * kd.norm2**2 / (4 * mu_i * vector3.cross(ki, ks).norm2 * kd.z**4) * \
+            np.exp(- (kd.x**2 + kd.y**2) / (2 * kd.z**2 * self.mean_square_slope))  # Eq. 2.1.124
 
         return coef * (hi_ks**2 * abs2(Rh) + vi_ks**2 * abs2(Rv)), \
-               coef * (vi_ks**2 * abs2(Rh) + hi_ks**2 * abs2(Rv)) 
-
+            coef * (vi_ks**2 * abs2(Rh) + hi_ks**2 * abs2(Rv))
 
     def transmission_integrand_for_energy_conservation_test(self, frequency, eps_1, eps_2, mu_t, mu_i, dphi):
         """function relevant to compute energy conservation. See p87 in Tsang_tomeIII.
@@ -306,8 +316,8 @@ class GeometricalOptics(Interface):
         n_2 = np.sqrt(eps_2)
         n_1 = np.sqrt(eps_1)
 
-        mu_i = np.atleast_1d(mu_i)[np.newaxis, np.newaxis, :]
-        mu_t = np.atleast_1d(mu_t)[np.newaxis, :, np.newaxis]
+        mu_i = np.atleast_1d(self.clip_mu(mu_i))[np.newaxis, np.newaxis, :]
+        mu_t = np.atleast_1d(self.clip_mu(mu_t))[np.newaxis, :, np.newaxis]
         dphi = np.atleast_1d(dphi)[:, np.newaxis, np.newaxis]
 
         sin_i = np.sqrt(1 - mu_i**2)
@@ -324,75 +334,78 @@ class GeometricalOptics(Interface):
 
         n = ktd / (np.sign(ktd.z) * ktd.norm)  # Eq 2.1.128
 
-        mu_local = -vector3.dot(n, ki)
+        # compute Fresnel coefficients at stationary point
+        n_kt = -vector3.dot(n, kt)
+        n_ki = -vector3.dot(n, ki)
 
-        Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_local)
- 
+        Rh = (n_1.real * n_ki - n_2.real * n_kt) / (n_1.real * n_ki + n_2.real * n_kt)  # Eq. 2.1.132a
+        Rv = (n_2.real * n_ki - n_1.real * n_kt) / (n_2.real * n_ki + n_1.real * n_kt)  # Eq. 2.1.132b
+
+        no_compatible_slopes = (n_kt < 0) | (n_ki < 0)
+
+        Rh[no_compatible_slopes] = -1
+        Rv[no_compatible_slopes] = -1
+
         # define polarizations
-        ht = vector3.from_xyz(-sin_phi, cos_phi, 0)
-        vt = vector3.from_xyz(-mu_t * cos_phi, -mu_t * sin_phi, -sin_t)
-
-        #print(vector3.cross(vt, ht), kt)
 
         hi = vector3.from_xyz(0, 1, 0)
         vi = vector3.from_xyz(-mu_i, 0, -sin_i)
 
-        #print(vector3.cross(vi, hi), ki)
-
-        ht_ki = vector3.dot(ht, ki)
-        vt_ki = vector3.dot(vt, ki)
-
         hi_kt = vector3.dot(hi, kt)
         vi_kt = vector3.dot(vi, kt)
 
-        Tv =  (hi_kt**2) * (1-abs2(Rh)) + (vi_kt**2) * (1-abs2(Rv))
-        Th =  (vi_kt**2) * (1-abs2(Rh)) + (hi_kt**2) * (1-abs2(Rv))
+        Tv = (hi_kt**2) * (1 - abs2(Rh)) + (vi_kt**2) * (1 - abs2(Rv))
+        Th = (vi_kt**2) * (1 - abs2(Rh)) + (hi_kt**2) * (1 - abs2(Rv))
 
-        coef = 1/(2 * np.pi * self.mean_square_slope) * eps_2 * ktd.norm2 * vector3.dot(n, kt) * vector3.dot(n, ki)  \
-                / (mu_i * vector3.cross(ki, kt).norm2 * ktd.z**4 ) * \
-                np.exp(-(ktd.x**2 + ktd.y**2) / (2 * ktd.z**2 * self.mean_square_slope))   # Eq. 2.1.130   NB: k1^2 -> eps_2
+        coef = eps_2 / (2 * np.pi * self.mean_square_slope) * ktd.norm2 * n_kt * n_ki  \
+            / (mu_i * vector3.cross(ki, kt).norm2 * ktd.z**4) * \
+            np.exp(- (ktd.x**2 + ktd.y**2) / (2 * ktd.z**2 * self.mean_square_slope))   # Eq. 2.1.130 NB: k1^2 -> eps_2
 
-        #return Tv, Th  #
-        return coef*Tv, coef*Th
+        if self.shadow_correction:
+            sin_i[sin_i < 1e-3] = 1e-3
+            sin_t[sin_t < 1e-3] = 1e-3
+            s = 1 / (1 + shadow_function(self.mean_square_slope, mu_i / sin_i) + shadow_function(self.mean_square_slope, mu_t / sin_t))
+            coef *= s
+
+        return coef * Tv, coef * Th
 
     def reflection_coefficients(self, frequency, eps_1, eps_2, mu_i):
         # for debugging only at this stage
-        n = 100
-        mu = np.linspace(1e-7, 1, n, endpoint=False)
-        dphi = np.linspace(0, 2*np.pi, n, endpoint=False)
-        norm = (mu[1]-mu[0])  * (dphi[1]-dphi[0])
-        
+        n_mu = 512 + 1
+        n_phi = 128
+
+        mu = np.linspace(1e-7, 1, n_mu, endpoint=True)
+        dphi = np.linspace(0, 2 * np.pi, n_phi, endpoint=False)
+
         R = self.diffuse_reflection_matrix(10e9, eps_1, eps_2, mu, mu_i, dphi, 2)
 
-        # Rv_bis, Rh_bis = go.reflection_integrand_for_energy_conservation_test(10e9, eps_1, eps_2, mu, mu_i, dphi)
-        # Rv_bis = Rv_bis.sum() * norm
-        # Rh_bis = Rh_bis.sum() * norm
         return self._integrate_coefficients(mu, dphi, R)
 
     def transmission_coefficients(self, frequency, eps_1, eps_2, mu_i):
         # for debugging only at this stage
-        n = 100
-        mu = np.linspace(1e-7, 1, n, endpoint=False)
-        dphi = np.linspace(0, np.pi, n, endpoint=True)
-        
-        T = self.diffuse_transmission_matrix(10e9, eps_1, eps_2, mu, mu_i, dphi, 2)
+        n_mu = 512 + 1
+        n_phi = 128
 
-        #Tv_bis, Th_bis = go.transmission_integrand_for_energy_conservation_test(10e9, eps_1, eps_2, mu, mu_i, dphi)
-        # Tv_bis = Tv_bis.sum() * norm
-        # Th_bis = Th_bis.sum() * norm
+        mu = np.linspace(1e-7, 1, n_mu, endpoint=True)
+        dphi = np.linspace(0, 2 * np.pi, n_phi, endpoint=False)
+
+        T = self.diffuse_transmission_matrix(10e9, eps_1, eps_2, mu, mu_i, dphi, 2)
 
         return self._integrate_coefficients(mu, dphi, T)
 
-    def _integrate_coefficients(self, mu, dphi, T):
+    def _integrate_coefficients(self, mu, dphi, x):
 
-        T = T.values.sum(axis=3).sum(axis=2).sum(axis=0)   # sum the mu axis, then on the phi axis and then the pola
+        # integrate the pola first, then the azimuth and last the mu
+        x = x.values.sum(axis=(0, 2))
 
-        norm = (mu[1]-mu[0])  * (dphi[1]-dphi[0])
-        return T * norm
+        # x is not pola_inc, mu_inc
+        # return scipy.integrate.simps(x, mu, axis=0) * (dphi[1] - dphi[0])  # use simpson method if n_mu is not 2**n + 1
+        return scipy.integrate.romb(x, dx=mu[1] - mu[0], axis=1) * (dphi[1] - dphi[0])
+
 
 def shadow_function(mean_square_slope, cotan):
 
     # sqrt(1/pi) = 0.5641895835477563
 
-    rel_cotan= cotan / (1.4142135623730951 * np.sqrt(mean_square_slope))  # sqrt(2)*s / mu, Eq. 2.1.154
+    rel_cotan = cotan / (1.4142135623730951 * np.sqrt(mean_square_slope))  # sqrt(2)*s / mu, Eq. 2.1.154
     return 0.5 * (0.5641895835477563 / rel_cotan * np.exp(-rel_cotan**2) - scipy.special.erfc(rel_cotan))

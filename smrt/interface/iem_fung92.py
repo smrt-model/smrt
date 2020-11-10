@@ -189,7 +189,7 @@ class IEM_Fung92(Interface):
                 coef = -1.0
             else:
                 coef = 1.0
-            coef /= 0.5 * (m_max + 1)  # ad hoc normalization to get the right backscatter. This is a trick to deal with the dirac.
+            coef /= m_max + 0.5  # ad hoc normalization to get the right backscatter. This is a trick to deal with the dirac.
 
             diffuse_refl_coeff[:, m, :] = coef * gamma[:, :]
 

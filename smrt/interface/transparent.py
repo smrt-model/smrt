@@ -41,3 +41,6 @@ class Transparent(object):
         :return: the transmission matrix
 """
         return smrt_matrix.ones((npol, len_atleast_1d(mu1)))
+
+    def diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
+        return smrt_matrix(0)

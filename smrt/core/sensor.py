@@ -138,7 +138,9 @@ def active(frequency, theta_inc, theta=None, phi=None, polarization_inc=None, po
     if polarization_inc is None:
         polarization_inc = ['V', 'H']
 
-    sensor = Sensor(frequency, theta_inc, theta, phi, polarization_inc, polarization, channel_map=channel_map, name=name)
+    sensor = Sensor(frequency, theta_inc_deg=theta_inc, theta_deg=theta, phi_deg=phi,
+                    polarization_inc=polarization_inc, polarization=polarization,
+                    channel_map=channel_map, name=name)
 
     sensor.basic_checks()
 

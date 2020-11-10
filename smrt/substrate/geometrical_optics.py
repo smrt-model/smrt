@@ -14,5 +14,3 @@ from smrt.core.interface import substrate_from_interface
 @substrate_from_interface(iGeometricalOptics)
 class GeometricalOptics:
     pass
-
-

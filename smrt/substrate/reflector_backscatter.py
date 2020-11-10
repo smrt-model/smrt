@@ -85,9 +85,9 @@ class Reflector(Substrate):
                     coef = -1.0
                 else:
                     coef = 1.0
-                coef /= 4 * np.pi * mu_i
+                coef /= 4 * np.pi * mu_i    # SMRT requires scattering coefficient / 4 * pi
 
-                coef /= 0.5 * (m_max + 1)  # ad hoc normalization to get the right backscatter. This is a trick to deal with the dirac.
+                coef /= m_max + 0.5  # ad hoc normalization to get the right backscatter. This is a trick to deal with the dirac.
 
                 diffuse_refl_coeff[0, m, :] += coef * self._get_refl(self.backscattering_coefficient['VV'], mu_i)
                 diffuse_refl_coeff[1, m, :] += coef * self._get_refl(self.backscattering_coefficient['HH'], mu_i)
@@ -95,7 +95,7 @@ class Reflector(Substrate):
         elif self.backscattering_coefficient is not None:
             raise SMRTError("backscattering_coefficient must be a dictionary with keys VV and HH")
         else:
-            return 0
+            return smrt_matrix(0)
 
         return diffuse_refl_coeff
 

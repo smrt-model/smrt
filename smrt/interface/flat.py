@@ -47,3 +47,5 @@ class Flat(Interface):
 
         return fresnel_transmission_matrix(eps_1, eps_2, mu1, npol)
 
+    def diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
+        return smrt_matrix(0)

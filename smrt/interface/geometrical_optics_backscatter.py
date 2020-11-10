@@ -60,12 +60,11 @@ class GeometricalOpticsBackscatter(Interface):
         if len(np.atleast_1d(dphi)) != 1:
             raise NotImplementedError("Only the backscattering coefficient is implemented at this stage. ")
 
-
         R_normal, _, _ = fresnel_coefficients(eps_1, eps_2, np.ones(1))
 
         tantheta_i2 = 1 / mu_i ** 2 - 1
 
-        smrt_norm = 1 / (4*np.pi)
+        smrt_norm = 1 / (4 * np.pi)
 
         gamma = smrt_norm / (2 * self.mean_square_slope) * np.abs(R_normal)**2 / mu_i**5 * np.exp(- tantheta_i2 / (2 * self.mean_square_slope))
 
@@ -79,7 +78,6 @@ class GeometricalOpticsBackscatter(Interface):
         return reflection_coefficients
 
     def ft_even_diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, m_max, npol):
-
         assert mu_s is mu_i
 
         diffuse_refl_coeff = smrt_matrix.zeros((npol, m_max + 1, len(mu_i)))
@@ -93,7 +91,8 @@ class GeometricalOpticsBackscatter(Interface):
                 coef = -1.0
             else:
                 coef = 1.0
-            coef /= (m_max + 0.5) # ad hoc normalization to get the right backscatter. This is a trick to deal with the dirac.
+
+            coef /= m_max + 0.5  # ad hoc normalization to get the right backscatter. This is a trick to deal with the dirac.
 
             diffuse_refl_coeff[:, m, :] = coef * gamma[:, :]
 

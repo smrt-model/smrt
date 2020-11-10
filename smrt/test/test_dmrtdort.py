@@ -82,8 +82,9 @@ def test_less_refringent_bottom_layer():
     scat = active(10e9, 45)
     res = m.run(scat, snowpack)
     print(res.sigmaVV_dB(), res.sigmaHH_dB())
-    assert abs(res.sigmaVV_dB() - -52.01373960728898) < 1e-1
-    assert abs(res.sigmaHH_dB() - -51.776918861699706) < 1e-1
+    assert abs(res.sigmaVV_dB() - -50.25547167709486) < 1e-1
+    assert abs(res.sigmaHH_dB() - -50.52755576862734) < 1e-1
+
 
 
 # The following test fails

@@ -10,6 +10,7 @@ import numpy as np
 from smrt.core.globalconstants import C_SPEED
 from smrt.core.lib import smrt_matrix, abs2
 from smrt.core.fresnel import fresnel_coefficients
+from smrt.core.error import SMRTError
 
 
 def process_coherent_layers(snowpack, emmodel_list, sensor):
@@ -21,7 +22,7 @@ def process_coherent_layers(snowpack, emmodel_list, sensor):
 
     if not np.any(coherent_layers):
         return snowpack, emmodel_list
-    
+
     snowpack = snowpack.copy()
 
     if coherent_layers[-1]:
@@ -31,16 +32,16 @@ def process_coherent_layers(snowpack, emmodel_list, sensor):
 
     for l in np.flatnonzero(coherent_layers[:-1])[::-1]:  # reverse the processing to safely delete the snowpack layer and interface
         print("coherent layer:", l)
-        if coherent_layers[l-1]:
+        if coherent_layers[l - 1]:
             raise SMRTError("Two sucessive layers are coherent, this is not yet supported")
         # create a coherent interface
-        coherent_interface = CoherentFlat(snowpack.interfaces[l:l+2], snowpack.layers[l], effective_permittivity[l])
+        coherent_interface = CoherentFlat(snowpack.interfaces[l:l + 2], snowpack.layers[l], effective_permittivity[l])
         # set the next interface to coherent
         snowpack.interfaces[l + 1] = coherent_interface
         # delete the layer to be deleted
         snowpack.delete(l)  # delete layer and interface l
         emmodel_list.pop(l)
-           
+
     return snowpack, emmodel_list
 
 
@@ -78,7 +79,7 @@ class CoherentFlat(object):
         reflection_coefficients[1] = abs2(R_h)
 
         if npol >= 3:
-            reflection_coefficients[2] = (R_v*np.conj(R_h)).real   # TsangI  Eq 7.2.93
+            reflection_coefficients[2] = (R_v * np.conj(R_h)).real   # TsangI  Eq 7.2.93
 
         return reflection_coefficients
 
@@ -105,23 +106,22 @@ class CoherentFlat(object):
 
         transmission_coefficients = smrt_matrix.ones((npol, len(mu1)))
 
-        nt = np.sqrt(eps_2/eps_1).real
-        transmission_coefficients[0] = abs2(T_v) * mu_t/mu1 / nt  # for the coef see TsangIII 2.1.140b
-        transmission_coefficients[1] = abs2(T_h) * mu_t/mu1 * nt  # for the coef see TsangIII 2.1.140a
+        nt = np.sqrt(eps_2 / eps_1).real
+        transmission_coefficients[0] = abs2(T_v) * mu_t / mu1 / nt  # for the coef see TsangIII 2.1.140b
+        transmission_coefficients[1] = abs2(T_h) * mu_t / mu1 * nt  # for the coef see TsangIII 2.1.140a
 
         if npol >= 3:
             # this part is to be confirmed.
             R_v = (R01_v + R1t_v * exp_2kd) / (1 + R01_v * R1t_v * exp_2kd)
             R_h = (R01_h + R1t_h * exp_2kd) / (1 + R01_h * R1t_h * exp_2kd)
 
-            transmission_coefficients[2] = mu_t / mu1 * ((1+R_v)*np.conj(1+R_h)).real  # TsangI  Eq 7.2.95
+            transmission_coefficients[2] = mu_t / mu1 * ((1 + R_v) * np.conj(1 + R_h)).real  # TsangI  Eq 7.2.95
 
         return transmission_coefficients
 
-
     def _prepare_computation(self, frequency, eps_1, eps_2, mu1):
 
-            # convert to Tsang's notation. See TsangI, pages 207, Eq. 5.2.14
+        # convert to Tsang's notation. See TsangI, pages 207, Eq. 5.2.14
         eps_0 = eps_1
         eps_1 = self.permittivity
         eps_t = eps_2
@@ -133,13 +133,16 @@ class CoherentFlat(object):
         k_1 = 2 * np.pi / C_SPEED * frequency * np.sqrt(eps_1)
 
         phase = k_1 * mu_1 * self.layer.thickness
-        assert np.all(phase.imag >=0)
+        assert np.all(phase.imag >= 0)
 
         incoherent = phase.real > 3 * np.pi / 4  # we consider coherency up to 3 pi / 2 like in MEMLS
 
         phase[incoherent].real = 0
 
-        exp_kd = np.exp(1j  * phase)
-        exp_2kd = np.exp(2j  * phase)
+        exp_kd = np.exp(1j * phase)
+        exp_2kd = np.exp(2j * phase)
 
         return R01_v, R01_h, R1t_v, R1t_h, exp_kd, exp_2kd, mu_t
+
+    def diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
+        return smrt_matrix(0)
