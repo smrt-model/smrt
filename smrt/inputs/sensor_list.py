@@ -167,6 +167,9 @@ def quikscat(channel=None, theta=None):
 
     channel_map = filter_channel_map(channel_map, channel)
 
+    if theta is None:
+        theta = list({channel_map[ch]['theta'] for ch in channel_map})
+
     sensor = active(13.4e9, theta,
                     polarization_inc=['V', 'H'], polarization=['V', 'H'],
                     channel_map=channel_map, name='quikscat')
