@@ -102,25 +102,21 @@ class NadirLRMAltimetry(object):
         if backscatter.shape[-1] < len(t_gate):
             backscatter = np.append(backscatter, np.zeros(backscatter.shape[:-1] + (len(t_gate) - backscatter.shape[-1],)), axis=-1)
 
-        print("backscatter", backscatter.shape, len(t_gate))
         # compute the convolution with pfs and ptr if requested
         if self.skip_pfs_convolution or (self.waveform_model is None):
             waveform = backscatter
         else:
             waveform = self.convolve_with_PFS_PTR_PDF(t_gate, backscatter, t_inc_sample)
 
-        print("waveform", waveform.shape)
         # limit the waveform to the number of gates
         if waveform.shape[-1] > len(t_gate):
             waveform = waveform[..., :len(t_gate)]
-        print("waveform", waveform.shape, len(t_gate))
 
         # downsample
         if self.oversampling > 1 and not self.return_oversampled:
             t_gate = t_gate[::self.oversampling]
             newshape = list(waveform.shape[0:-1]) + [-1, self.oversampling]  # split the last dimension into two, to agregate the subgates
             waveform = np.mean(waveform.reshape(newshape), axis=-1)
-        print("waveform", waveform.shape, len(t_gate))
 
         # prepare the output in the Result object
         theta_inc_deg = np.atleast_1d(np.rad2deg(np.arccos(mu_i))) if self.return_theta_inc_sampling else [0]
