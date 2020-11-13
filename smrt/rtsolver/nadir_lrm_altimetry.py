@@ -225,15 +225,16 @@ class NadirLRMAltimetry(object):
         if eps is None:
             eps = [em.effective_permittivity().real for em in self.emmodels]
 
-        c_lay = C_SPEED / np.sqrt(eps)
+        c_lay = C_SPEED / np.sqrt(eps).real
         t_lay = 2 * np.cumsum(self.snowpack.layer_thicknesses / c_lay)
         t_lay = np.insert(t_lay, 0, 0)
 
         # regular sampling in time to cover the whole snowpack
-        ngate = max(np.ceil(t_lay[-1] * self.sensor.pulse_bandwidth * self.oversampling), 1)
+        ngate = max(np.ceil(t_lay[-1] * (self.sensor.pulse_bandwidth * self.oversampling)), 1)
         t_gate = np.arange(0, ngate + 1) / (self.sensor.pulse_bandwidth * self.oversampling)
         # position of the gates in the snow, accounting for the wave speed.
-        z_gate = np.interp(t_gate, t_lay, np.insert(c_lay, 0, 0) * t_lay / 2)
+        z_gate = np.interp(t_gate, t_lay, self.snowpack.z)
+
         z_gate[-1] += 0.01 * (z_gate[-1] - z_gate[-2])  # slightly increase the last gate to guarantee that it is after the substrate
         return z_gate, t_gate
 
@@ -247,7 +248,7 @@ class NadirLRMAltimetry(object):
         i = np.argsort(z)
         z = z[i]
 
-        # bool array where interafces, gates and layers are
+        # bool array where interfaces, gates and layers are
         b_interface = np.concatenate((np.ones_like(z_lay, dtype=bool), np.zeros_like(self.z_gate, dtype=bool)))[i]
         b_gate = ~b_interface
 
@@ -319,8 +320,9 @@ class NadirLRMAltimetry(object):
 
         if self.snowpack.substrate is not None:
             mu2 = np.sqrt(1 - (1 - mu_i) / eps[-1]).real
-            layer_echo += [self.snowpack.substrate.diffuse_reflection_matrix(self.sensor.frequency, eps[-1],
-                                                                             mu_s=mu2, mu_i=mu2, dphi=np.pi, npol=2).diagonal[0].squeeze()]
+            layer_echo += [self.snowpack.substrate.diffuse_reflection_matrix(
+                self.sensor.frequency, eps[-1],
+                mu_s=mu2, mu_i=mu2, dphi=np.pi, npol=2).diagonal[0].squeeze() / eps[-1].real]
         else:
             # not echo from the bottom
             layer_echo += [np.zeros_like(layer_echo[-1])]
