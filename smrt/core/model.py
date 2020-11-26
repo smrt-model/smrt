@@ -187,7 +187,7 @@ class Model(object):
         if runner is None:
             if parallel_computation:
                 if progressbar:
-                    raise SMRTError("Parallel computation has no progressbar")
+                    raise SMRTError("Parallel computation is incompatible with progressbar")
                 runner = JoblibParallelRunner()
             else:
                 runner = SequentialRunner(progressbar=progressbar)
@@ -229,6 +229,9 @@ class Model(object):
                 snowpack_dimension = "snowpack", None
             if snowpack_dimension[1] is None:
                 snowpack_dimension = snowpack_dimension[0], range(len(snowpack))
+
+        if len(snowpack) != len(snowpack_dimension[1]):
+            raise SMRTError("The list of snowpacks must have the same length as the snowpack_dimension")
 
         if isinstance(snowpack_dimension, tuple) and not isinstance(snowpack_dimension[0], str):
             raise SMRTError("When the 'snowpack_dimension' argument is a tuple, the first argument must be a string")
