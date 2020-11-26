@@ -103,7 +103,7 @@ class Snowpack(object):
                       DeprecationWarning)
         return [lay.density for lay in self.layers]  # TODO Ghi: caching
 
-    @functools.lru_cache()
+    #@functools.lru_cache()  # this has side effect when layers are changed after calling this function
     def profile(self, property_name):
         """return the property of each layer as a list
 """
@@ -114,7 +114,7 @@ class Snowpack(object):
         elif property_name == "mid_layer_depths":
             return self.mid_layer_depths
         else:
-            return [getattr(lay, property_name) for lay in self.layers]  # TODO Ghi: caching
+            return [getattr(lay, property_name) for lay in self.layers]
 
     def append(self, layer, interface=None):
         """append a new layer at the bottom of the stack of layers. The interface is that at the top of the appended layer.
