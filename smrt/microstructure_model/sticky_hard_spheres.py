@@ -112,7 +112,7 @@ class StickyHardSpheres(Autocorrelation):
         # set limit value at k=0 manually, Eq. 33, LP2015
         # zerok = np.isclose(X, 0)
         # Ctilde[zerok] = (n * vd**2 / (phi_2 / (1-phi_2) * ((1 - t*phi_2 + 3 * phi_2 / (1 - phi_2)) + (3 - t * (1 - phi_2))) + 1)**2)
-        Ctilde[zerok] = (phi_2 * vd / (phi_2 / (1-phi_2) * ((1 - t*phi_2 + 3 * phi_2 / (1 - phi_2)) + (3 - t * (1 - phi_2))) + 1)**2)
+        Ctilde[zerok] = (phi_2 * vd / (phi_2 / (1 - phi_2) * ((1 - t * phi_2 + 3 * phi_2 / (1 - phi_2)) + (3 - t * (1 - phi_2))) + 1)**2)
 
         return Ctilde
 
@@ -133,8 +133,7 @@ class StickyHardSpheres(Autocorrelation):
         c = (1 + f / 2) / (1 - f)**2
 
         discr2 = b**2 - 4 * a * c
-        # TODO Ghi: convert the conditions to be numpy friendly. Currently, only work with scalar
-        if discr2 < 0:
+        if np.any(discr2 < 0):
             raise SMRTError("negative discriminant")
 
         discr = np.sqrt(discr2)

@@ -230,7 +230,7 @@ class Model(object):
             if snowpack_dimension[1] is None:
                 snowpack_dimension = snowpack_dimension[0], range(len(snowpack))
 
-        if len(snowpack) != len(snowpack_dimension[1]):
+        if (snowpack_dimension is not None) and (len(snowpack) != len(snowpack_dimension[1])):
             raise SMRTError("The list of snowpacks must have the same length as the snowpack_dimension")
 
         if isinstance(snowpack_dimension, tuple) and not isinstance(snowpack_dimension[0], str):
