@@ -18,6 +18,7 @@ Note that `make_snowpack` is directly imported from `smrt` instead of `smrt.inpu
 
 import itertools
 import collections
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -25,7 +26,7 @@ import pandas as pd
 from smrt.core.snowpack import Snowpack
 from smrt.core.interface import make_interface
 from smrt.core.plugin import import_class
-from smrt.core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE, PERMITTIVITY_OF_AIR, PSU
+from smrt.core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE, DENSITY_OF_WATER, PERMITTIVITY_OF_AIR, PSU
 from smrt.core.layer import get_microstructure_model, Layer
 from smrt.core.error import SMRTError
 from smrt.core import lib
@@ -164,7 +165,7 @@ def make_snow_layer(layer_thickness, microstructure_model,
     :param density: density of snow layer in kg m :sup:`-3`
     :param temperature: temperature of layer in K
     :param ice_permittivity_model: permittivity formulation (default is ice_permittivity_matzler87)
-    :param liquid_water: volume of liquid water with respect to ice volume (default=0)
+    :param liquid_water: volume of liquid water with respect to ice+water volume (default=0). liquid_water = water_volume / (ice_volume + water_volume)
     :param salinity: salinity in kg/kg, for using PSU as unit see PSU constant in smrt module (default = 0)
     :param kwargs: other microstructure parameters are given as optional arguments (in Python words) but may be required (in SMRT words).
     See the documentation of the microstructure model.
@@ -182,7 +183,11 @@ def make_snow_layer(layer_thickness, microstructure_model,
 
     # ice in air background. Note that the emmodel might inverse the medium or use other technique for mid-range densities.
     # This is the case of DMRT_Shortrange for instance.
-    frac_volume = float(density) / DENSITY_OF_ICE
+    if (liquid_water > 0.5) and (float(density) < DENSITY_OF_ICE):
+        warnings.warn("You set a high value of liquid_water (%f). Be warned that liquid_water defines the "
+            "volume ratio of water with respect to ice + water. It does not control the air content." % liquid_water)
+    frac_volume = float(density) / (DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water)
+    assert 0 <= frac_volume <= 1
     eps_1 = background_permittivity_model
     eps_2 = ice_permittivity_model
 

@@ -12,7 +12,7 @@ def wetsnow_permittivity(frequency, temperature, liquid_water):
 
     :param frequency: frequency in Hz
     :param temperature: temperature in K
-    :param liquid_water (fractional volume of water with respect to ice)
+    :param liquid_water (fractional volume of water with respect to ice+water volume)
     :returns: Complex permittivity of pure ice
 
     """
