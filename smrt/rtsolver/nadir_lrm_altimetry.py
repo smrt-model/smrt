@@ -115,6 +115,7 @@ class NadirLRMAltimetry(object):
         # downsample
         if self.oversampling > 1 and not self.return_oversampled:
             t_gate = t_gate[::self.oversampling]
+            self.z_gate = self.z_gate[::self.oversampling]
             newshape = list(waveform.shape[0:-1]) + [-1, self.oversampling]  # split the last dimension into two, to agregate the subgates
             waveform = np.mean(waveform.reshape(newshape), axis=-1)
 
@@ -125,6 +126,7 @@ class NadirLRMAltimetry(object):
         if self.return_contributions:
             if self.return_theta_inc_sampling:
                 # we still have all the incident angles
+                nmu = len(t_inc_sample)
                 surface_vs_incidence = waveform[0:nmu]
                 interfaces_vs_incidence = waveform[nmu:2 * nmu]
                 volume = waveform[-1]
