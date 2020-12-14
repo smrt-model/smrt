@@ -110,7 +110,6 @@ def make_snowpack(thickness, microstructure_model, density,
                   substrate=None,
                   atmosphere=None,
                   **kwargs):
-
     """
     build a multi-layered snowpack. Each parameter can be an array, list or a constant value.
 
@@ -155,7 +154,6 @@ def make_snow_layer(layer_thickness, microstructure_model,
                     background_permittivity_model=PERMITTIVITY_OF_AIR,
                     liquid_water=0, salinity=0,
                     **kwargs):
-
     """Make a snow layer for a given microstructure_model (see also :py:func:`~smrt.inputs.make_medium.make_snowpack` to create many layers).
     The microstructural parameters depend on the microstructural model and should be given as additional arguments to this function. To know which parameters are required or optional,
     refer to the documentation of the specific microstructure model used.
@@ -185,8 +183,9 @@ def make_snow_layer(layer_thickness, microstructure_model,
     # This is the case of DMRT_Shortrange for instance.
     if (liquid_water > 0.5) and (float(density) < DENSITY_OF_ICE):
         warnings.warn("You set a high value of liquid_water (%f). Be warned that liquid_water defines the "
-            "volume ratio of water with respect to ice + water. It does not control the air content." % liquid_water)
+                      "volume ratio of water with respect to ice + water. It does not control the air content." % liquid_water)
     frac_volume = float(density) / (DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water)
+
     assert 0 <= frac_volume <= 1
     eps_1 = background_permittivity_model
     eps_2 = ice_permittivity_model
@@ -256,7 +255,7 @@ def make_ice_column(ice_type,
         wp = water_parameters(ice_type, **kwargs)
 
         # create a permittivity_function that depends only on frequency and temperature by setting other arguments
-        permittivity_model = lambda f, t: wp.water_permittivity_model(f, t, wp.water_salinity)
+        def permittivity_model(f, t): return wp.water_permittivity_model(f, t, wp.water_salinity)
         substrate = Flat(temperature=wp.water_temperature, permittivity_model=permittivity_model)
     else:
         substrate = substrate
@@ -264,13 +263,13 @@ def make_ice_column(ice_type,
     sp = Snowpack(substrate=substrate, atmosphere=atmosphere)
 
     n = len(thickness)
-    for name in ["temperature", "salinity", "microstructure_model", "brine_inclusion_shape", "brine_volume_fraction", 
-                "porosity", "density", "brine_permittivity_model", "ice_permittivity_model", "saline_ice_permittivity_model",
-                "interface", "kwargs"]:
+    for name in ["temperature", "salinity", "microstructure_model", "brine_inclusion_shape", "brine_volume_fraction",
+                 "porosity", "density", "brine_permittivity_model", "ice_permittivity_model", "saline_ice_permittivity_model",
+                 "interface", "kwargs"]:
         lib.check_argument_size(locals()[name], n)
 
     for i, dz in enumerate(thickness):
-        layer = make_ice_layer(ice_type, 
+        layer = make_ice_layer(ice_type,
                                dz, temperature=lib.get(temperature, i),
                                salinity=lib.get(salinity, i),
                                microstructure_model=lib.get(microstructure_model, i),
@@ -300,7 +299,6 @@ def make_ice_layer(ice_type,
                    ice_permittivity_model=None,
                    saline_ice_permittivity_model=None,
                    **kwargs):
-    
     """Make an ice layer for a given microstructure_model (see also :py:func:`~smrt.inputs.make_medium.make_ice_column` to create many layers).
     The microstructural parameters depend on the microstructural model and should be given as additional arguments to this function. To know which parameters are required or optional,
     refer to the documentation of the specific microstructure model used.
@@ -329,7 +327,7 @@ def make_ice_layer(ice_type,
             brine_volume_fraction = brine_volume(temperature, salinity)
 
         if brine_permittivity_model is None:
-            brine_permittivity_model = brine_permittivity_stogryn85 # default brine permittivity model
+            brine_permittivity_model = brine_permittivity_stogryn85  # default brine permittivity model
 
     if density is None:
         density = bulk_ice_density(temperature, salinity, porosity)
@@ -495,7 +493,6 @@ def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permitt
                        interface=None,
                        substrate=None,
                        atmosphere=None):
-
     """
     build a multi-layered medium with prescribed scattering and absorption coefficients and effective permittivity. Must be used with presribed_kskaeps emmodel.
 
@@ -511,13 +508,12 @@ def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permitt
 #
 #        sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
 #
-#"""
+# """
 
     sp = Snowpack(substrate=substrate, atmosphere=atmosphere)
 
     if not isinstance(thickness, collections.abc.Iterable):
         raise SMRTError("The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame.")
-
 
     for i, dz in enumerate(thickness):
         layer = make_generic_layer(dz,
@@ -525,7 +521,7 @@ def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permitt
                                    ka=lib.get(ka, i, "ka"),
                                    effective_permittivity=lib.get(effective_permittivity, i, "effective_permittivity"),
                                    temperature=lib.get(temperature, i, "temperature")
-                                  )
+                                   )
 
         sp.append(layer, lib.get(interface, i))
 
@@ -554,7 +550,6 @@ def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, te
 
 
 def make_atmosphere(atmosphere_model, **kwargs):
-
     """
     make a atmospheric single-layer using the prescribed atmosphere model.
     Warning: this function is subject to change in the future when refactoring how SMRT deals with atmosphere.
@@ -567,7 +562,6 @@ def make_atmosphere(atmosphere_model, **kwargs):
     atmosphere_class = import_class("atmosphere", atmosphere_model)
 
     return atmosphere_class(**kwargs)
-
 
 
 def compute_thickness_from_z(z):
@@ -604,7 +598,7 @@ Because z indicate the top or the bottom of a layer depending whether z=0 is the
         else:
             # this is unusual
             raise SMRTError("z is ascending and has negative values, which an ambiguous situation")
-               
+
     else:
         raise SMRTError("The z argument is not sorted")
 
