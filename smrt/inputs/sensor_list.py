@@ -228,7 +228,11 @@ def smos(theta=None):
     if theta is None:
         theta = np.arange(0, 61, 5)
 
-    return passive(1.41e9, theta, name='smos')
+    channel_map = {'01H': dict(polarization='H', theta=55),
+                   '01V': dict(polarization='V', theta=55)
+    }
+
+    return passive(1.41e9, theta, name='smos', channel_map=channel_map)
 
 
 def smap(mode, theta=40):
