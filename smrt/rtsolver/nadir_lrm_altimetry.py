@@ -148,7 +148,7 @@ class NadirLRMAltimetry(object):
             self.z_gate = np.append(self.z_gate, np.full(len(t_gate) - len(self.z_gate), np.nan))
 
         # that's a hack... we should make an AltimetryResult class
-        res.z_gate = xr.DataArray(self.z_gate, coords=[('t_gate', t_gate)])
+        res.z_gate = xr.DataArray(self.z_gate, coords=[('t_gate', t_gate + self.sensor.nominal_gate / self.sensor.pulse_bandwidth)])
 
         return res
 
