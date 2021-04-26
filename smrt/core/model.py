@@ -361,7 +361,7 @@ class DaskParallelRunner(object):
 
         if isinstance(client, str):
             from dask.distributed import Client
-            self.client = Client(client)
+            self.client = Client(client, set_as_default=False)
         else:
             self.client = client
         self.chunk = chunk
