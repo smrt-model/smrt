@@ -38,7 +38,7 @@ class StickyHardSpheres(Autocorrelation):
 
     def basic_check(self):
         """check consistency between the parameters"""
-        if( self.stickiness < self.tau_min(self.frac_volume)):
+        if(self.stickiness < self.tau_min(self.frac_volume)):
             raise SMRTError("For volume fraction " + str(self.frac_volume)
                             + " the stickiness must be greater than "
                             + str(self.tau_min(self.frac_volume)))
@@ -75,44 +75,44 @@ class StickyHardSpheres(Autocorrelation):
         # solution of the quadratic equation, Eq. 32, LP2015
         if np.isfinite(tau):
             t = ((6 * tau * phi_2 - 6 * phi_2 - 6 * tau + (36 * tau**2 * phi_2**2 - 72 * tau * phi_2**2
-                - 72 * tau**2 * phi_2 + 30 * phi_2**2 + 72 * tau * phi_2 + 36 * tau**2 - 12 * phi_2)**0.5) / (phi_2 * (-1 + phi_2)))
+                                                           - 72 * tau**2 * phi_2 + 30 * phi_2**2 + 72 * tau * phi_2 + 36 * tau**2 - 12 * phi_2)**0.5) / (phi_2 * (-1 + phi_2)))
         else:
             t = 0
         # sphere volume
         vd = 4.0 / 3 * np.pi * (d / 2.0)**3
 
-        # number density
-        n = phi_2 / vd
-
         # intersection volume, Eq. 27, LP2015
-        sqrt_vint = np.empty_like(X)
+        sqrt_vint__vd = np.empty_like(X)
         zerok = np.isclose(X, 0, atol=1e-03)
         nzerok = ~zerok
-        sqrt_vint[nzerok] = vd * 3 * (np.sinc(X[nzerok] / np.pi) - np.cos(X[nzerok])) / X[nzerok]**2  # sqrt(intersection volume )* X²
-        sqrt_vint[zerok] = vd
+        # sqrt(intersection volume ) / X² per vd
+        sqrt_vint__vd[nzerok] = 3 * (np.sinc(X[nzerok] / np.pi) - np.cos(X[nzerok])) / X[nzerok]**2
+        sqrt_vint__vd[zerok] = 1
 
         # Ghislain says: the following quantities are already multiplied by the sqrt_vint_X2 to avoid singularity in 0.
         # this differs from the original equations where the vint is multiplied at the end.
 
         # auxiliary quantities defined in Tsang II Eq.8.4.19-8.4.22
-        Psi_tsang_vol = np.sinc(X / np.pi) / sqrt_vint
-        Phi_tsang_vol = 1.0 / vd  # Ghislain says: after simple math, vint sqrt_vint_X2 simplifies
+        Psi_tsang_vol_vd = np.sinc(X / np.pi) / sqrt_vint__vd
+        Phi_tsang_vol_vd = 1.0  # Ghislain says: after simple math, vint sqrt_vint_X2 simplifies
 
         # auxiliary quantities Eq 31, LP2015
-        A_tsang_vol = (phi_2 / (1 - phi_2) * ((1 - t * phi_2 + 3 * phi_2 / (1 - phi_2)) * Phi_tsang_vol +
-                      (3 - t * (1 - phi_2)) * Psi_tsang_vol) + np.cos(X) / sqrt_vint)
-        B_tsang_vol = phi_2 / (1 - phi_2) * X * Phi_tsang_vol + np.sin(X) / sqrt_vint
+        A_tsang_vol_vd = phi_2 / (1 - phi_2) * (
+            (1 - t * phi_2 + 3 * phi_2 / (1 - phi_2)) * Phi_tsang_vol_vd
+            + (3 - t * (1 - phi_2)) * Psi_tsang_vol_vd) + np.cos(X) / sqrt_vint__vd
+
+        B_tsang_vol_vd = phi_2 / (1 - phi_2) * X * Phi_tsang_vol_vd + np.sin(X) / sqrt_vint__vd
 
         # structure factor Eq 31, LP2015
-        S_tsang_vol = 1 / (A_tsang_vol**2 + B_tsang_vol**2)
+        S_tsang_vol__vd2 = 1 / (A_tsang_vol_vd**2 + B_tsang_vol_vd**2)
 
         # FT correlation function, Eq. 25, LP2015
-        Ctilde = n * S_tsang_vol
+        Ctilde = phi_2 * vd * S_tsang_vol__vd2
 
         # set limit value at k=0 manually, Eq. 33, LP2015
         # zerok = np.isclose(X, 0)
         # Ctilde[zerok] = (n * vd**2 / (phi_2 / (1-phi_2) * ((1 - t*phi_2 + 3 * phi_2 / (1 - phi_2)) + (3 - t * (1 - phi_2))) + 1)**2)
-        Ctilde[zerok] = (phi_2 * vd / (phi_2 / (1 - phi_2) * ((1 - t * phi_2 + 3 * phi_2 / (1 - phi_2)) + (3 - t * (1 - phi_2))) + 1)**2)
+        Ctilde[zerok] = phi_2 * vd / (phi_2 / (1 - phi_2) * ((1 - t * phi_2 + 3 * phi_2 / (1 - phi_2)) + (3 - t * (1 - phi_2))) + 1)**2
 
         return Ctilde
 
