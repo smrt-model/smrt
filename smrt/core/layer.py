@@ -75,7 +75,6 @@ class Layer(object):
         # make an instance of the micro-structure model
         if microstructure_model is not None:
             self.microstructure = microstructure_model(params)  # do that now, but could be delayed (lazy evaluation)
-            self.frac_volume = self.microstructure.frac_volume  # get the frac_volume back from the microstructure for _convenience_
 
         # other params
         for k in kwargs:
@@ -92,6 +91,15 @@ class Layer(object):
         if not hasattr(self, '_ssa') or self._ssa is None:
             self._ssa = self.microstructure.compute_ssa()
         return self._ssa
+
+    @property
+    def frac_volume(self):
+        return self.microstructure.frac_volume  # get the frac_volume back from the microstructure
+
+    @frac_volume.setter
+    def frac_volume(self, f):
+        self.microstructure.frac_volume = f  # get the frac_volume back from the microstructure
+
 
     def permittivity(self, i, frequency):
         """return the permittivity of the i-th medium depending on the frequency and internal layer properties. Usually i=0 is air and i=1 is ice for dry snow with a low or moderate density.
@@ -161,7 +169,6 @@ class Layer(object):
 
         obj.microstructure = self.microstructure.inverted_medium()
         obj.permittivity_model = tuple(reversed(self.permittivity_model))
-        obj.frac_volume = obj.microstructure.frac_volume  # get it from the microstructure... this is a bit contrary to the fact that layer has the responsability for this parameter
         return obj
 
 
