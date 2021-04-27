@@ -19,7 +19,6 @@ from smrt.core.error import SMRTError
 from smrt.core.sensor import passive, active  # import so they are available from this module
 
 
-
 def amsre(channel=None, frequency=None, polarization=None, theta=55):
     """ Configuration for AMSR-E sensor.
 
@@ -53,7 +52,7 @@ def amsre(channel=None, frequency=None, polarization=None, theta=55):
         '37': 36.5e9,
         '89': 89e9}
 
-    return common_amsr("AMSR-E", amsre_frequency_dict, channel=channel, frequency=frequency, theta=theta, name='amsre')
+    return common_conical_pmw("AMSR-E", amsre_frequency_dict, channel=channel, frequency=frequency, theta=theta, name='amsre')
 
 
 def amsr2(channel=None, frequency=None, polarization=None, theta=55):
@@ -90,10 +89,35 @@ def amsr2(channel=None, frequency=None, polarization=None, theta=55):
         '37': 36.5e9,
         '89': 89e9}
 
-    return common_amsr("AMSR2", amsr2_frequency_dict, channel=channel, frequency=frequency, theta=theta, name='asmr2')
+    return common_conical_pmw("AMSR2", amsr2_frequency_dict, channel=channel, frequency=frequency, theta=theta, name='asmr2')
 
 
-def common_amsr(sensor_name, frequency_dict, channel=None, frequency=None, polarization=None, theta=55, name=None):
+def cimr(channel=None, frequency=None, polarization=None, theta=55):
+    """ Configuration for AMSR-2 sensor.
+
+    This function can be used to simulate all 10 CIMR channels i.e. frequencies of 1.4, 6.9, 10.6, 18.7, 36.5 GHz
+    at both polarizations H and V. Alternatively single channels can be specified with 3-character identifiers. 18 and 19 GHz can
+    be used interchangably to represent 18.7 GHz, similarly either 36 and 37 can be used to represent the 36.5 GHz channel.
+    Note that if you need both H and V polarization (at 37 GHz for instance), use channel="37" instead of channel=["37V", "37H"] 
+    as this will result in a more efficient simulation, because most rtsolvers anyway compute both polarizations in one shot.
+
+    :param channel: single channel identifier
+    :type channel: 3-character string
+
+    :returns: :py:class:`Sensor` instance
+"""
+
+    cimr_frequency_dict = {
+        '01': 1.4135e9,
+        '06': 6.925e9,
+        '10': 10.65e9,
+        '19': 18.7e9,
+        '37': 36.5e9
+    }
+    return common_conical_pmw("CIMR", cimr_frequency_dict, channel=channel, frequency=frequency, theta=theta, name='cimr')
+
+
+def common_conical_pmw(sensor_name, frequency_dict, channel=None, frequency=None, polarization=None, theta=55, name=None):
 
     if frequency is None:
         # take default values
@@ -106,7 +130,8 @@ def common_amsr(sensor_name, frequency_dict, channel=None, frequency=None, polar
         polarization = ['H', 'V']
 
     # create the channel map
-    channel_map = {freq + pola: dict(frequency=frequency_dict[freq], polarization=pola, theta=theta) for freq in frequency_dict for pola in polarization}
+    channel_map = {freq + pola: dict(frequency=frequency_dict[freq], polarization=pola, theta=theta)
+                   for freq in frequency_dict for pola in polarization}
 
     if channel is not None:
         if isinstance(channel, str):
@@ -230,7 +255,7 @@ def smos(theta=None):
 
     channel_map = {'01H': dict(polarization='H', theta=55),
                    '01V': dict(polarization='V', theta=55)
-    }
+                   }
 
     return passive(1.41e9, theta, name='smos', channel_map=channel_map)
 
