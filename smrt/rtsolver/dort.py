@@ -527,7 +527,7 @@ def muleye(x):
         return np.atleast_1d(x)
     else:
         assert len(x.shape) == 2
-        return np.sum(x, axis=0)
+        return np.sum(x, axis=1)
 
 
 def matmul(a, b, *args):
