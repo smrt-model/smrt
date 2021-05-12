@@ -103,7 +103,7 @@ class Snowpack(object):
                       DeprecationWarning)
         return [lay.density for lay in self.layers]  # TODO Ghi: caching
 
-    #@functools.lru_cache()  # this has side effect when layers are changed after calling this function
+    # @functools.lru_cache()  # this has side effect when layers are changed after calling this function
     def profile(self, property_name):
         """return the property of each layer as a list
 """
@@ -168,7 +168,10 @@ class Snowpack(object):
         # import here to avoid circular reference
         from .atmosphere import AtmosphereBase
 
-        if isinstance(other, SubstrateBase):
+        if isinstance(other, Layer):
+            # this is valid, pass
+            pass
+        elif isinstance(other, SubstrateBase):
             if self.substrate is not None:
                 raise SMRTError("Adding a substrate to a snowpack that already has a substrate set is not valid."
                                 " Unset the substrate first.")
@@ -190,10 +193,18 @@ class Snowpack(object):
             self.layers[i].number = i
 
     def __add__(self, other):
-        """Return a new snowpack made of the first snowpack stacked on top of the second one.
+        """Return a new snowpack made of the first snowpack (or layer) stacked on top of the second snowpack (or layer or substrate).
 
-        :param other: the snowpack or substrate to add to the first argument."""
+        .. note:: if a layer is added on top (at bottom), the top (bottom) interface is duplicated.
 
+        :param other: the snowpack, a layer or a substrate to add to the first argument.
+
+        :Example:
+
+        # duplicate the top layer:    
+        newsp = sp.layers[0] + wetsp
+
+"""
         self.check_addition_validity(other)
 
         if isinstance(other, SubstrateBase):
@@ -201,6 +212,10 @@ class Snowpack(object):
                             interfaces=self.interfaces,
                             atmosphere=self.atmosphere,
                             substrate=other)
+        elif isinstance(other, Layer):
+            newsp = copy.deepcopy(self)
+            newsp += copy.deepcopy(other)
+            return newsp
         else:
             return Snowpack(layers=self.layers + other.layers,
                             interfaces=self.interfaces + other.interfaces,
@@ -211,6 +226,13 @@ class Snowpack(object):
 
         if other is 0:
             return self
+        elif isinstance(other, Layer):
+
+            newsp = copy.deepcopy(self)
+            newsp.layers.insert(0, copy.deepcopy(other))
+            newsp.interfaces.insert(0, copy.deepcopy(self.interfaces[0]))  # duplicate the upper interface
+            newsp.update_layer_number()
+            return newsp
         else:
             # should never be called
             raise SMRTError("The addition operator is not commutative for snowpacks")
@@ -224,6 +246,10 @@ class Snowpack(object):
 
         if isinstance(other, SubstrateBase):
             self.substrate = other
+        elif isinstance(other, Layer):
+            self.layers.append(copy.deepcopy(other))
+            self.interfaces.append(copy.deepcopy(self.interfaces[-1]))  # duplicate the bottomost layer
+            self.update_layer_number()
         else:
             self.layers += other.layers
             self.interfaces += other.interfaces
