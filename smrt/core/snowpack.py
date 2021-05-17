@@ -20,6 +20,7 @@ Example::
 
 import copy
 import numpy as np
+import pandas as pd
 import warnings
 import functools
 
@@ -103,9 +104,12 @@ class Snowpack(object):
                       DeprecationWarning)
         return [lay.density for lay in self.layers]  # TODO Ghi: caching
 
-    # @functools.lru_cache()  # this has side effect when layers are changed after calling this function
-    def profile(self, property_name):
-        """return the property of each layer as a list
+    def profile(self, property_name, where="all", raise_attributeerror=False):
+        """return the vertical profile of property_name. The property is searched either in the layer, microstructure or interface.
+
+        :param property_name: name of the property
+        :param where: where to search the property. Can be 'all', 'layer', 'microstructure', or 'interface' 
+        :param raise_attributeerror: raise an attribute error if the attribute is not found
 """
         if property_name == "bottom_layer_depths":
             return self.bottom_layer_depths
@@ -113,8 +117,25 @@ class Snowpack(object):
             return self.top_layer_depths
         elif property_name == "mid_layer_depths":
             return self.mid_layer_depths
+
+        if where == "layer":
+            prof = [getattr(lay, property_name, None) for lay in self.layers]
+        elif where == "microstructure":
+            prof = [getattr(lay.microstructure, property_name, None) for lay in self.layers]
+        elif where == "interface":
+            prof = [getattr(i, property_name, None) for i in self.interfaces]
+        elif where == "all":
+            assert len(self.layers) == len(self.interfaces)
+            prof = [getattr(self.layers[i], property_name) if hasattr(self.layers[i], property_name) else
+                    getattr(self.layers[i].microstructure, property_name) if hasattr(self.layers[i].microstructure, property_name) else
+                    getattr(self.interfaces[i], property_name, None) for i in range(len(self.layers))]
         else:
-            return [getattr(lay, property_name) for lay in self.layers]
+            raise ValueError("invalid value for 'where' argument")
+
+        if raise_attributeerror and all((p is None for p in prof)):
+            raise AttributeError('The attribute %s can not be found' % property_name)
+
+        return prof
 
     def append(self, layer, interface=None):
         """append a new layer at the bottom of the stack of layers. The interface is that at the top of the appended layer.
@@ -257,3 +278,63 @@ class Snowpack(object):
             self.update_layer_number()
 
         return self
+
+    def to_dataframe(self, default_columns=True, other_columns=None):
+
+        columns = ['thickness', 'microstructure_model', 'density', 'temperature', 'liquid_water', 'salinity', 'ice_type']
+
+        def multi_index(index1, index2):
+            return {(index1, i2): 1 for i2 in index2}  # use order in dict (Python >3.7) as a ordered set
+
+        columns = multi_index('layer', columns)
+
+        # add microstructure parameters
+        for lay in self.layers:
+            columns.update(multi_index('microstructure', lay.microstructure.args))
+            columns.update(multi_index('microstructure', lay.microstructure.optional_args))
+
+        # add interface parameters
+        columns.update({('interface', 'name'): 1})
+        for i in self.interfaces:
+            columns.update(multi_index('interface', i.args))
+            columns.update(multi_index('interface', i.optional_args))
+
+        df = pd.DataFrame()
+
+        # add layer attribute
+        for c in columns:
+            if c == ('interface', 'name'):
+                df[c] = [type(i) for i in self.interfaces]
+            else:
+                df[c] = self.profile(c[1], where=c[0])
+
+        if self.substrate is not None:
+            substrate = {('substrate', 'name'): type(self.substrate)}
+            for args in self.substrate.args:
+                substrate[('substrate', args)] = [getattr(self.substrate, args)]
+            for args in self.substrate.optional_args:
+                substrate[('substrate', args)] = [getattr(self.substrate, args)]
+
+            df = df.append(pd.DataFrame(substrate, index=['s']), sort=False, verify_integrity=True)
+            # reorder
+            df = df[list(columns.keys()) + list(substrate.keys())]
+
+        # convert class in class name
+        df = df.applymap(lambda x: x.__name__ if isinstance(x, type) else x)
+
+        # use multi index
+        df.columns = pd.MultiIndex.from_tuples(df.columns)
+
+        # remove na column
+
+        return df.dropna(axis=1, how='all')
+
+    def __repr__(self):
+
+        return repr(self.to_dataframe())
+
+    def _repr_html_(self):
+        """use by IPython notebook to display a snowpack in a pretty format"""
+
+        return self.to_dataframe().to_html(notebook=True, na_rep='--', justify='start')
+
