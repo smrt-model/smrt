@@ -67,3 +67,22 @@ def saral_altika():
                   beamwidth=0.605,
                   )
     return altimeter(channel='Ka', **params)
+
+
+def cryosat2_lrm():
+    """ Return an altimeter instance for CryoSat-2
+
+    Parameters from https://earth.esa.int/web/eoportal/satellite-missions/c-missions/cryosat-2
+    Altitude from https://doi.org/10.1016/j.asr.2018.04.014
+    Beam width is 1.08 along track and 1.2 across track
+    
+    """    
+
+    params = dict(frequency=13.575e9,
+              altitude=720e3,
+              pulse_bandwidth=320e6,
+              nominal_gate=50,  # Estimate - needs better definition
+              ngate=128,
+              beamwidth=1.2,
+              )
+    return altimeter(channel='Ku', **params)
