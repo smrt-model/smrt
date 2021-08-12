@@ -13,9 +13,11 @@ from ..core.globalconstants import C_SPEED
 from .effective_permittivity import polder_van_santen
 from .rayleigh import Rayleigh
 
+
 class SFT_Rayleigh(Rayleigh):
     """
     """
+
     def __init__(self, sensor, layer):
 
         # check here the limit of the Rayleigh model
@@ -33,19 +35,18 @@ class SFT_Rayleigh(Rayleigh):
 
         self._effective_permittivity = polder_van_santen(f, eb, es)
         eg = self._effective_permittivity  # short
-        kg = k0 * np.sqrt(eg/e0)
+        kg = k0 * np.sqrt(eg / e0)
 
-        delta = 9 * eg**2/e0**2 * (f * ((es-eg)/(es+2*eg))**2 + (1-f) * ((eb-eg)/(eb+2*eg))**2 )
+        delta = 9 * eg**2 / e0**2 * (f * ((es - eg) / (es + 2 * eg))**2 + (1 - f) * ((eb - eg) / (eb + 2 * eg))**2)
 
-        beta = 1/corr_length - 1j * kg
+        beta = 1 / corr_length - 1j * kg
 
-        I1 = 1/(beta**2 + kg**2)
-        I2 = -3.0/2*beta/kg**2 + 1.0/(2*kg)*(3*beta**2 / kg**2+1) * np.arctan(kg/beta)
-        I3 = 3/kg**2 - 1/(beta**2+kg**2) - 3*beta / kg**3 * np.arctan(kg/beta)
-        I4 = 1.0/3 + beta**2/(2*kg**2) - beta/(2*kg) * (beta**2/kg**2 + 1) * np.arctan(kg/beta)
+        I1 = 1 / (beta**2 + kg**2)
+        I2 = -3.0 / 2 * beta / kg**2 + 1.0 / (2 * kg) * (3 * beta**2 / kg**2 + 1) * np.arctan(kg / beta)
+        I3 = 3 / kg**2 - 1 / (beta**2 + kg**2) - 3 * beta / kg**3 * np.arctan(kg / beta)
+        I4 = 1.0 / 3 + beta**2 / (2 * kg**2) - beta / (2 * kg) * (beta**2 / kg**2 + 1) * np.arctan(kg / beta)
 
-        Eeff = eg + k0**2 * delta * (2*I1/3 - 1j*I2/kg - I3/3 + I4/(k0**2 * eg))
+        Eeff = eg + k0**2 * delta * (2 * I1 / 3 - 1j * I2 / kg - I3 / 3 + I4 / (k0**2 * eg))
 
         self.ka = 2 * k0 * np.sqrt(eg).imag
         self.ks = 2 * k0 * np.sqrt(Eeff).imag - self.ka
-
