@@ -586,7 +586,7 @@ def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, te
     :returns: :py:class:`Layer` instance
 """
 
-    lay = Layer(layer_thickness, frac_volume=1, temperature=temperature)
+    lay = Layer(layer_thickness, temperature=temperature)
 
     lay.temperature = float(temperature)
     lay.effective_permittivity = effective_permittivity
