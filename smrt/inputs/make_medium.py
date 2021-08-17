@@ -196,8 +196,8 @@ def make_snow_layer(layer_thickness, microstructure_model,
     if ice_permittivity_model is None:
         # must import this here instead of the top of the file because of cross-dependencies
         # default ice permittivity model, use ice_permittivity_maetzler06 for dry snow and add support for wet snow
-        from ..permittivity.wetsnow import wetsnow_permittivity
-        ice_permittivity_model = wetsnow_permittivity
+        from ..permittivity.wetice import wetice_permittivity
+        ice_permittivity_model = wetice_permittivity
 
     # ice in air background. Note that the emmodel might inverse the medium or use other technique for mid-range densities.
     # This is the case of DMRT_Shortrange for instance.
