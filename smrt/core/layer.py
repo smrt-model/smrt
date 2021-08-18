@@ -29,7 +29,7 @@ from .globalconstants import FREEZING_POINT
 
 
 class Layer(object):
-    """ Contains the properties for a single snow layer including the microstructure attribute which holds the microstructure properties.
+    """ Contains the properties for a single layer including the microstructure attribute which holds the microstructure properties.
 
     To create layer, it is recommended to use of the functions :py:meth:`make_snow_layer` and similar
 
@@ -74,7 +74,7 @@ class Layer(object):
 
         # make an instance of the micro-structure model
         if microstructure_model is not None:
-            self.microstructure = microstructure_model(params)  # do that now, but could be delayed (lazy evaluation)
+            self.microstructure = microstructure_model(params)
 
         # other params
         for k in kwargs:
@@ -98,8 +98,7 @@ class Layer(object):
 
     @frac_volume.setter
     def frac_volume(self, f):
-        self.microstructure.frac_volume = f  # get the frac_volume back from the microstructure
-
+        self.microstructure.frac_volume = f  # set the frac_volume in the microstructure
 
     def permittivity(self, i, frequency):
         """return the permittivity of the i-th medium depending on the frequency and internal layer properties. Usually i=0 is air and i=1 is ice for dry snow with a low or moderate density.
