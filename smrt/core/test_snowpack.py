@@ -34,7 +34,7 @@ def test_addition():
     sp = sp1 + sp2
 
     assert len(sp.layers) == 2
-    assert sp.layer_depths[-1] == 0.6
+    assert sp.bottom_layer_depths[-1] == 0.6
     assert sp.layers[0].density == 300
 
 
@@ -45,13 +45,13 @@ def test_layer_addition():
     sp = sp1 + sp2.layers[0]
 
     assert len(sp.layers) == 2
-    assert sp.layer_depths[-1] == 0.6
+    assert sp.bottom_layer_depths[-1] == 0.6
     assert sp.layers[0].density == 300
 
     sp = sp1.layers[0] + sp2
 
     assert len(sp.layers) == 2
-    assert sp.layer_depths[-1] == 0.6
+    assert sp.bottom_layer_depths[-1] == 0.6
     assert sp.layers[0].density == 300
 
 
@@ -62,7 +62,7 @@ def test_inplace_addition():
     sp1 += sp2
 
     assert len(sp1.layers) == 2
-    assert sp1.layer_depths[-1] == 0.6
+    assert sp1.bottom_layer_depths[-1] == 0.6
     assert sp1.layers[0].density == 300
 
 def test_inplace_layer_addition():
@@ -72,7 +72,7 @@ def test_inplace_layer_addition():
     sp1 += sp2.layers[0]
 
     assert len(sp1.layers) == 2
-    assert sp1.layer_depths[-1] == 0.6
+    assert sp1.bottom_layer_depths[-1] == 0.6
     assert sp1.layers[0].density == 300
 
 

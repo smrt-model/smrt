@@ -94,7 +94,7 @@ class Snowpack(object):
         """return the depth of each interface, that is, 0 and the depth of the bottom of each layer
 
 """
-        return np.insert(self.layer_depths, 0, 0)
+        return np.insert(self.bottom_layer_depths, 0, 0)
 
     @property
     def layer_densities(self):
