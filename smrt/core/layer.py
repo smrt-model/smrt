@@ -170,6 +170,15 @@ class Layer(object):
         obj.permittivity_model = tuple(reversed(self.permittivity_model))
         return obj
 
+    def __setattr__(self, name, value):
+
+        if not hasattr(self, "read_only_attributes"):
+            super().__setattr__("read_only_attributes", set())
+
+        if name in self.read_only_attributes:
+            raise AttributeError("The attribute '%s' is read-only, setting its value would be subject to side effect. You need to create a new layer." % name)
+        super().__setattr__(name, value)
+
 
 def get_microstructure_model(modulename, classname=None):
     """return the class corresponding to the microstructure_model defined in modulename.

@@ -199,6 +199,36 @@ def make_snow_layer(layer_thickness, microstructure_model,
         from ..permittivity.wetice import wetice_permittivity
         ice_permittivity_model = wetice_permittivity
 
+    eps_1 = background_permittivity_model
+    eps_2 = ice_permittivity_model
+
+    if isinstance(microstructure_model, str):
+        microstructure_model = get_microstructure_model(microstructure_model)
+
+    lay = Layer(layer_thickness, microstructure_model,
+                frac_volume=snow_frac_volume(density, liquid_water),
+                temperature=float(temperature),
+                permittivity_model=(eps_1, eps_2), **kwargs)
+
+    lay.liquid_water = float(liquid_water)  # read-only
+    lay.salinity = float(salinity)
+    lay.density = float(density)  # read-only
+
+    # they are read-only because the frac_volume needs to be recomputed if they are changed
+    # the only way to change these properties is to create a new Layer
+    # we might introduce auto-recomputation in the future, but it may be more confusing than useful
+    lay.read_only_attributes.update(['liquid_water', 'density'])
+
+    return lay
+
+
+def snow_frac_volume(density, liquid_water):
+    """computes the fractional volume in snow. Account for wet snow
+
+    :param density: density of snow layer in kg m :sup:`-3`.
+    :param liquid_water: volume of liquid water with respect to ice+water volume (default=0).
+"""
+
     # ice in air background. Note that the emmodel might inverse the medium or use other technique for mid-range densities.
     # This is the case of DMRT_Shortrange for instance.
     if (liquid_water > 0.5) and (float(density) < DENSITY_OF_ICE):
@@ -207,22 +237,8 @@ def make_snow_layer(layer_thickness, microstructure_model,
     frac_volume = float(density) / (DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water)
 
     assert 0 <= frac_volume <= 1
-    eps_1 = background_permittivity_model
-    eps_2 = ice_permittivity_model
 
-    if isinstance(microstructure_model, str):
-        microstructure_model = get_microstructure_model(microstructure_model)
-
-    lay = Layer(layer_thickness, microstructure_model,
-                frac_volume=float(frac_volume),
-                temperature=float(temperature),
-                permittivity_model=(eps_1, eps_2), **kwargs)
-
-    lay.liquid_water = float(liquid_water)
-    lay.salinity = float(salinity)
-    lay.density = float(density)  # just for information
-
-    return lay
+    return frac_volume
 
 
 def make_ice_column(ice_type,
@@ -455,10 +471,12 @@ def make_ice_layer(ice_type,
     if brine_volume_fraction is not None:
         lay.brine_volume_fraction = float(brine_volume_fraction)
         lay.brine_inclusion_shape = brine_inclusion_shape
-    lay.density = float(density)  # just for information
-    lay.porosity = float(porosity)  # just for information
+    lay.density = float(density)  # just for information, read-only
+    lay.porosity = float(porosity)  # just for information, read-only
     lay.inclusion_shape = inclusion_shape  # shape of inclusions (air or brine depending on ice_type)
-    lay.ice_type = ice_type  # just for information
+    lay.ice_type = ice_type  # just for information, read-only
+
+    lay.read_only_attributes.update(['ice_type', 'density', 'porosity'])
 
     return lay
 
