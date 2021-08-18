@@ -21,6 +21,11 @@ class TeubnerStrey(Autocorrelation):
 
         super(TeubnerStrey, self).__init__(params)  # don't forget this line in our classes!
 
+    @property
+    def corr_func_at_origin(self):
+        # value of the correlation function at the origin
+        return self.frac_volume * (1.0 - self.frac_volume)
+
     def basic_check(self):
         """check consistency between the parameters"""
         pass
@@ -37,9 +42,7 @@ class TeubnerStrey(Autocorrelation):
 
         acf = np.exp(-r / self.corr_length) * np.sinc(2 * r / self.repeat_distance)
 
-        corr_func_at_origin = self.frac_volume * (1.0 - self.frac_volume)
-
-        return corr_func_at_origin * acf
+        return self.corr_func_at_origin * acf
 
     def ft_autocorrelation_function(self, k):
         """Compute the 3D Fourier transform of the isotropic correlation
@@ -52,6 +55,4 @@ class TeubnerStrey(Autocorrelation):
         Y = (2 * np.pi * self.corr_length / self.repeat_distance)**2
         ft_acf_normalized = 8 * np.pi * self.corr_length**3 / ((1 + Y)**2 + 2 * (1 - Y) * X + X**2)
 
-        corr_func_at_origin = self.frac_volume * (1.0 - self.frac_volume)
-
-        return corr_func_at_origin * ft_acf_normalized
+        return self.corr_func_at_origin * ft_acf_normalized

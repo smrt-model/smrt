@@ -27,11 +27,15 @@ class Exponential(Autocorrelation):
 
         super(Exponential, self).__init__(params)  # don't forget this line in our classes!
 
+    @property
+    def corr_func_at_origin(self):
         # value of the correlation function at the origin
-        self.corr_func_at_origin = self.frac_volume * (1.0 - self.frac_volume)
+        return self.frac_volume * (1.0 - self.frac_volume)
 
+    @property
+    def inv_slope_at_origin(self):
         # inverse slope of the normalized correlation function at the origin
-        self.inv_slope_at_origin = self.corr_length
+        return self.corr_length
 
     def basic_check(self):
         """check consistency between the parameters"""

@@ -29,7 +29,11 @@ class SampledAutocorrelation(Autocorrelation):
     def __init__(self, params):
 
         super(SampledAutocorrelation, self).__init__(params)  # don't forget this line in our classes!
-        self.corr_func_at_origin = self.frac_volume * (1.0 - self.frac_volume)
+
+    @property
+    def corr_func_at_origin(self):
+        # value of the correlation function at the origin
+        return self.frac_volume * (1.0 - self.frac_volume)
 
     def basic_check(self):
         """check consistency between the parameters"""

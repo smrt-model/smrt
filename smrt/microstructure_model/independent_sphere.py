@@ -22,14 +22,15 @@ class IndependentSphere(Autocorrelation):
 
         super(IndependentSphere, self).__init__(params)  # don't forget this line in our classes!
 
+    @property
+    def corr_func_at_origin(self):
         # value of the correlation function at the origin
-        self.corr_func_at_origin = self.frac_volume * (1.0 - self.frac_volume)
+        return self.frac_volume * (1.0 - self.frac_volume)
 
+    @property
+    def inv_slope_at_origin(self):
         # inverse slope of the normalized correlation function at the origin
-        self.inv_slope_at_origin = 4.0 / 3 * self.radius
-
-        # at the end of __init__, the microstructure 'self' should have all the parameters required
-        # to compute the autocorrelation_function and/or its FFT.
+        return 4.0 / 3 * self.radius
 
     def basic_check(self):
         """check consistency between the parameters"""

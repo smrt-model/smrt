@@ -28,17 +28,21 @@ class StickyHardSpheres(Autocorrelation):
     def __init__(self, params):
 
         super(StickyHardSpheres, self).__init__(params)  # don't forget this line in our classes!
-        self.basic_check()
+        # self.basic_check()
 
+    @property
+    def corr_func_at_origin(self):
         # value of the correlation function at the origin
-        self.corr_func_at_origin = self.frac_volume * (1.0 - self.frac_volume)
+        return self.frac_volume * (1.0 - self.frac_volume)
 
+    @property
+    def inv_slope_at_origin(self):
         # inverse slope of the normalized correlation function at the origin
-        self.inv_slope_at_origin = 4.0 / 3 * self.radius * (1 - self.frac_volume)
+        return 4.0 / 3 * self.radius * (1 - self.frac_volume)
 
     def basic_check(self):
         """check consistency between the parameters"""
-        if(self.stickiness < self.tau_min(self.frac_volume)):
+        if (self.stickiness < self.tau_min(self.frac_volume)):
             raise SMRTError("For volume fraction " + str(self.frac_volume)
                             + " the stickiness must be greater than "
                             + str(self.tau_min(self.frac_volume)))

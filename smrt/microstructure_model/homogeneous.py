@@ -14,13 +14,22 @@ from .autocorrelation import Autocorrelation
 
 class Homogeneous(Autocorrelation):
 
-    args = []
+    args = ['frac_volume']
     optional_args = {}
 
     def __init__(self, params):
 
         super(Homogeneous, self).__init__(params)  # don't forget this line in our classes!
-        self.frac_volume = 0
+
+    @property
+    def corr_func_at_origin(self):
+        # value of the correlation function at the origin
+        return self.frac_volume * (1.0 - self.frac_volume)
+
+    @property
+    def inv_slope_at_origin(self):
+        # inverse slope of the normalized correlation function at the origin
+        return 0
 
     def basic_check(self):
         """check consistency between the parameters"""
