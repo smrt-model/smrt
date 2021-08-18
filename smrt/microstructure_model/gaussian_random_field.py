@@ -23,15 +23,19 @@ class GaussianRandomField(Autocorrelation):
 
         super(GaussianRandomField, self).__init__(params)  # don't forget this line in our classes!
 
+    @property
+    def corr_func_at_origin(self):
         # value of the correlation function at the origin
-        self.corr_func_at_origin = self.frac_volume * (1.0 - self.frac_volume)
+        return self.frac_volume * (1.0 - self.frac_volume)
 
+    @property
+    def inv_slope_at_origin(self):
         # inverse slope of the normalized correlation function at the origin
-        beta = np.sqrt(2) * erfinv(2 * (1-self.frac_volume) - 1)
+        beta = np.sqrt(2) * erfinv(2 * (1 - self.frac_volume) - 1)
         # second derivative of the field acf at the origin
-        acf_psi_doubleprime = -1.0 / 2 * ( (1.0/self.corr_length)**2 + 1.0 / 3 * (2 * np.pi / self.repeat_distance)**2 )
-        SSA_tilde = 2.0 / np.pi * np.exp( - beta**2 / 2) * np.sqrt( -acf_psi_doubleprime ) / self.frac_volume
-        self.inv_slope_at_origin = 4.0 * (1 - self.frac_volume) / SSA_tilde
+        acf_psi_doubleprime = -1.0 / 2 * ((1.0 / self.corr_length)**2 + 1.0 / 3 * (2 * np.pi / self.repeat_distance)**2)
+        SSA_tilde = 2.0 / np.pi * np.exp(- beta**2 / 2) * np.sqrt(-acf_psi_doubleprime) / self.frac_volume
+        return 4.0 * (1 - self.frac_volume) / SSA_tilde
 
     def basic_check(self):
         """check consistency between the parameters"""
@@ -63,7 +67,7 @@ class GaussianRandomField(Autocorrelation):
         # compared to the wp-2 docu, to enable array-based computation
         t_gridded, acf_psi_gridded = np.meshgrid(t, acf_psi)
         integrand_gridded = (acf_psi_gridded / np.sqrt(1 - (t_gridded * acf_psi_gridded)**2)
-                             * np.exp( - beta**2 / (1 + t_gridded * acf_psi_gridded)))
+                             * np.exp(- beta**2 / (1 + t_gridded * acf_psi_gridded)))
 
         acf = 1.0 / (2 * np.pi) * np.trapz(integrand_gridded, x=t_gridded)
 
