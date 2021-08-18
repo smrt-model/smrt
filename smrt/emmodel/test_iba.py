@@ -11,7 +11,8 @@ from smrt.core.error import SMRTError
 from smrt.core.sensor import active
 from smrt.inputs.sensor_list import amsre
 from smrt import make_snow_layer
-from smrt.emmodel import commontest, effective_permittivity
+from smrt.emmodel import commontest
+from smrt.permittivity.generic_mixing_formula import maxwell_garnett
 
 # import the microstructure
 from smrt.microstructure_model.exponential import Exponential
@@ -223,7 +224,7 @@ def test_iba_vs_rayleigh_active_m2():
 
 def test_permittivity_model():
 
-    new_iba = derived_IBA(effective_permittivity_model=effective_permittivity.maxwell_garnett)
+    new_iba = derived_IBA(effective_permittivity_model=maxwell_garnett)
     layer = setup_func_pc(0.3e-3)
     sensor = amsre('37V')
     new_iba(sensor, layer)

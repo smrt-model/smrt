@@ -151,7 +151,7 @@ def ice_permittivity_tiuri84(frequency, temperature):
     temp_degC = temperature - 273.15
 
     # Eq (1) - Real part
-    Ereal = 1 + 1.7*density_gm3 + 0.7*density_gm3**2
+    Ereal = 1 + 1.7 * density_gm3 + 0.7 * density_gm3**2
 
     # Eq (6) - Imaginary part
     Eimag = 1.59e6 * \

@@ -9,6 +9,7 @@ may be performed. All properties relate to a single layer.
 """
 
 # Stdlib import
+import inspect
 
 # other import
 import numpy as np
@@ -18,7 +19,7 @@ import scipy.fftpack
 # local import
 from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
-from .effective_permittivity import depolarization_factors, polder_van_santen
+from ..permittivity.generic_mixing_formula import polder_van_santen, depolarization_factors
 from ..core.lib import smrt_matrix, generic_ft_even_matrix, len_atleast_1d
 
 #
@@ -37,7 +38,7 @@ def derived_IBA(effective_permittivity_model=polder_van_santen):  # , absorption
     """
     new_class_name = "IBA_%s" % (effective_permittivity_model.__name__)  # , absorption_calculation)
 
-    return type(new_class_name, (IBA, ), {'effective_permittivity_model' : staticmethod(effective_permittivity_model)})
+    return type(new_class_name, (IBA, ), {'effective_permittivity_model': staticmethod(effective_permittivity_model)})
 
 
 class IBA(object):
@@ -73,7 +74,6 @@ class IBA(object):
     # default effective_permittivity_model is polder_van_santen in Matzler 1998 and Matzler&Wiesman 1999
     effective_permittivity_model = staticmethod(polder_van_santen)
 
-
     def __init__(self, sensor, layer):
 
         # Set size of phase matrix: active needs an extended phase matrix
@@ -83,15 +83,17 @@ class IBA(object):
             self.npol = 3
 
         # Bring layer and sensor properties into emmodel
+        self.layer = layer
         self.frac_volume = layer.frac_volume
         self.microstructure = layer.microstructure  # Do this here, so can pass FT of correlation fn to phase function
         self.e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
         self.eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
+        self.frequency = sensor.frequency
         self.k0 = 2 * np.pi * sensor.frequency / C_SPEED  # Wavenumber in free space
-        self.inclusion_shape = layer.inclusion_shape # for assuming spherical or ellipsoidal inclusions
+        self.inclusion_shape = layer.inclusion_shape  # for assuming spherical or ellipsoidal inclusions
 
         # Calculate depolarization factors and iba_coefficient
-        self.depol_xyz = depolarization_factors()
+        self.depol_xyz = depolarization_factors(getattr(layer, "length_ratio", 1))
         self._effective_permittivity = self.effective_permittivity()
         self.iba_coeff = self.compute_iba_coeff()
 
@@ -251,7 +253,7 @@ class IBA(object):
             raise SMRTError("Fourier Transform of this microstructure model has not been defined, or there is a problem with its calculation")
 
         return smrt_matrix(ft_corr_fn * self.iba_coeff * p)
-        
+
     def ft_even_phase(self, mu_s, mu_i, m_max, npol=None):
         """ Calculation of the Fourier decomposed IBA phase function.
 
@@ -348,8 +350,17 @@ class IBA(object):
 
         """
 
-        eps = type(self).effective_permittivity_model(
-            self.frac_volume, self.e0, self.eps, self.depol_xyz, self.inclusion_shape)
+        # eps = type(self).effective_permittivity_model(
+        #    self.frac_volume, self.e0, self.eps, self.depol_xyz, self.inclusion_shape)
+
+        effective_permittivity_model = type(self).effective_permittivity_model
+
+        # inspect the signature of the effective_permittivity_model
+        signature = inspect.signature(effective_permittivity_model).parameters
+        args = dict(e0=self.e0, eps=self.eps, frequency=self.frequency)
+        args = {k: v for k, v in args.items() if k in signature}  # filter the arguments needed by the function
+
+        eps = type(self).effective_permittivity_model(layer_to_inject=self.layer, **args)
 
         if eps.imag < 0:
             raise SMRTError("the imaginary part of the permittivity must be positive, by convention, in SMRT")
@@ -363,7 +374,7 @@ class IBA_MM(IBA):
         # Gives all IBA parameters. Some need to be recalculated (effective permittivity, scattering and absorption coefficients):
         IBA.__init__(self, sensor, layer)
 
-        self._effective_permittivity = polder_van_santen(self.frac_volume)
+        self._effective_permittivity = polder_van_santen(self.frac_volume, e0=1, eps=3.185)
 
         # Imaginary component for effective permittivity from Wiesmann and Matzler (1999)
         y2 = self.mean_sq_field_ratio(self.e0, self.eps)

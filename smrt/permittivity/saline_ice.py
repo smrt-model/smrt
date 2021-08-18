@@ -5,7 +5,7 @@ import numpy as np
 from smrt.core.globalconstants import FREEZING_POINT, GHz
 from smrt.permittivity.ice import ice_permittivity_maetzler06
 from smrt.permittivity.saline_water import brine_permittivity_stogryn85
-from smrt.emmodel.effective_permittivity import polder_van_santen
+from smrt.permittivity.generic_mixing_formula import polder_van_santen
 from smrt.core.layer import layer_properties
 
 

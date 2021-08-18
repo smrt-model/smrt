@@ -17,7 +17,7 @@ def test_make_snowpack():
     assert sp.layers[0].thickness == 1
     assert sp.layers[0].density == 300
     assert sp.layers[0].microstructure.corr_length == 200e-6 and sp.layers[1].microstructure.corr_length == 200e-6
-    assert sp.layer_depths[-1] == 3
+    assert sp.bottom_layer_depths[-1] == 3
 
 
 def test_make_snowpack_surface_interface():

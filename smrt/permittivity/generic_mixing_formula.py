@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-This module contains functions that are not specific to a particular electromagnetic model
+This module contains functions that are not tied to a particular electromagnetic model
 and are available to be imported by any electromagnetic model. It is the responsibility of the
 developer to ensure these functions, if used, are appropriate and consistent with the physics of the electromagnetic model.
 """
@@ -10,6 +10,7 @@ developer to ensure these functions, if used, are appropriate and consistent wit
 import numpy as np
 from smrt.core.error import SMRTError
 from smrt.core.globalconstants import DENSITY_OF_ICE
+from smrt.core.layer import layer_properties
 
 
 def depolarization_factors(length_ratio=None):
@@ -53,13 +54,16 @@ def depolarization_factors(length_ratio=None):
     return np.array([anisotropy_q, anisotropy_q, (1. - 2. * anisotropy_q)])
 
 
-def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_shape=None, mixing_ratio=1):
+@layer_properties('frac_volume', optional_arguments=('inclusion_shape', 'depol_xyz', 'length_ratio', 'mixing_ratio'))
+def polder_van_santen(frac_volume, e0=1, eps=3.185, depol_xyz=None, length_ratio=None,
+                      inclusion_shape=None, mixing_ratio=1):
     """ Calculates effective permittivity of snow by solution of quadratic Polder Van Santen equation for spherical inclusion.
 
     :param frac_volume: Fractional volume of inclusions
     :param e0: Permittivity of background (default is 1)
     :param eps: Permittivity of scattering material (default is 3.185 to compare with MEMLS)
     :param depol_xyz: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into account here.
+    :param length_ratio: Length_ratio. Used to estimate depolarization factors when they are not given.
     :param inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape, or a list/tuple/dict of strings for mixture of shapes. So far, we have the following shapes: "spheres" and "random_needles" (i.e. randomly-oriented elongated ellipsoidal inclusions). 
             If the argument is a dict, the keys are the shapes and the values are the mixing ratio. If it is a list, the mixing_ratio argument is required.
     :param mixing_ratio: The mixing ratio of the shapes. This is only relevant when inclusion_shape is a list/tuple. Mixing ratio must be a sequence with length len(inclusion_shape)-1. The mixing ratio of the last shapes is deduced as the sum of the ratios must equal to 1.
@@ -85,7 +89,7 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
 
     if inclusion_shape is not None and not isinstance(inclusion_shape, str):
         # then it is a sequence or dict
-        if  isinstance(inclusion_shape, dict):
+        if isinstance(inclusion_shape, dict):
 
             mixing_ratio = inclusion_shape.values()
             inclusion_shape = inclusion_shape.keys()
@@ -95,7 +99,7 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
 
             try:
                 len(mixing_ratio)
-            except:
+            except TypeError:
                 # here -> we must have a number, let's make a tuple with length 1
                 mixing_ratio = (float(mixing_ratio),)
 
@@ -104,13 +108,14 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
             elif len(mixing_ratio) != len(inclusion_shape):
                 raise SMRTError("The length of inclusion_shape and mixing_ratio are incompatible. See the documentation.")
 
-        return sum((mixing * polder_van_santen(frac_volume, e0=e0, eps=eps, depol_xyz=depol_xyz, inclusion_shape=shape) for shape, mixing in zip(inclusion_shape, mixing_ratio)))
+        return sum((mixing * polder_van_santen(frac_volume, e0=e0, eps=eps,
+                                               depol_xyz=depol_xyz, inclusion_shape=shape)
+                    for shape, mixing in zip(inclusion_shape, mixing_ratio)))
 
-    if e0 is None:
-        e0 = 1.
+    assert frac_volume <= 1
 
-    if eps is None:
-        eps = 3.185  # MEMLS default for PVS calculation
+    if depol_xyz is None:
+        depol_xyz = depolarization_factors(length_ratio)
 
     # Polder Van Santen / de Loor / Böttcher / Bruggeman formula
     # Solution of quadratic equation arising from eqn 9.2. in Sihvola: Electromagnetic Mixing Formulas and Applications
@@ -128,7 +133,7 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
 
     else:
         raise SMRTError("inclusion_shape must be one of (or a list of) the following: 'spheres' (default) or 'random_needles'.")
-   
+
     return (-b_quad + np.sqrt(b_quad**2 - 4. * a_quad * c_quad)) / (2. * a_quad)
 
 
@@ -136,14 +141,18 @@ def polder_van_santen(frac_volume, e0=None, eps=None, depol_xyz=None, inclusion_
 bruggeman = polder_van_santen
 
 
-def maxwell_garnett(frac_volume, e0, eps, depol_xyz=None, inclusion_shape=None):
+@layer_properties('frac_volume', optional_arguments=('inclusion_shape', 'depol_xyz', 'length_ratio'))
+def maxwell_garnett(frac_volume, e0, eps, depol_xyz=None, inclusion_shape=None, length_ratio=None):
     """ Calculates effective permittivity of snow by solution of Maxwell-Garnett equation.
 
     :param frac_volume: Fractional volume of snow
     :param e0: Permittivity of background (no default, must be provided)
     :param eps: Permittivity of scattering material (no default, must be provided)
-    :param depol_xyz: [Optional] Depolarization factors, spherical isotropy is default
-    :added **kwargs to enable same structure of calling maxwell_garnett() and polder_van_santen() as effective_permittivity_model...
+    :param depol_xyz: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into account here.
+    :param length_ratio: Length_ratio. Used to estimate depolarization factors when they are not given.
+    :param inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape, or a list/tuple/dict of strings for mixture of shapes. So far, we have the following shapes: "spheres" and "random_needles" (i.e. randomly-oriented elongated ellipsoidal inclusions). 
+            If the argument is a dict, the keys are the shapes and the values are the mixing ratio. If it is a list, the mixing_ratio argument is required.
+
     :returns: random orientation effective permittivity
 
     **Usage example:**
@@ -162,11 +171,13 @@ def maxwell_garnett(frac_volume, e0, eps, depol_xyz=None, inclusion_shape=None):
 
     """
 
+    assert frac_volume <= 1
+
     if inclusion_shape is not None and inclusion_shape != "spheres":
         raise SMRTError("inclusion_shape must be set to 'spheres'")
 
     if depol_xyz is None:
-        depol_xyz = np.array([1. / 3.] * 3)
+        depol_xyz = depolarization_factors(length_ratio)
 
     # Calculate x, y, z components of effective permittivity from Maxwell-Garnett theory
     effective_permittivity_xyz = e0 + e0 * frac_volume * (eps - e0) / (e0 + (1. - frac_volume) * depol_xyz * (eps - e0))

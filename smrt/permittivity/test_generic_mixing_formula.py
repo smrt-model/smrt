@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from smrt.emmodel.effective_permittivity import depolarization_factors, maxwell_garnett, polder_van_santen
-from smrt.core.globalconstants import DENSITY_OF_ICE
+from .generic_mixing_formula import depolarization_factors, maxwell_garnett, polder_van_santen
+from ..core.globalconstants import DENSITY_OF_ICE
 
 
 high_tolerance = 1e-8

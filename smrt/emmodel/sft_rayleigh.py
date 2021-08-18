@@ -10,7 +10,7 @@ import numpy as np
 
 from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
-from .effective_permittivity import polder_van_santen
+from ..permittivity.generic_mixing_formula import polder_van_santen
 from .rayleigh import Rayleigh
 
 

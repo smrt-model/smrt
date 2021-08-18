@@ -124,7 +124,7 @@ class Layer(object):
 
             # the chosen approach is based on the decorator required_layer_properties. See below. It allows the permittivity model to
             # be called with the layer argument, but the initial permittivity_model function never heard about layers
-            return self.permittivity_model[i](frequency, self)
+            return self.permittivity_model[i](frequency, layer_to_inject=self)
 
 
         else:  # assume it is independent of the frequency.
@@ -220,34 +220,29 @@ To import the StickyHardSpheres class with spheres radius of 1mm, stickiness of 
     return cls(kwargs)  # sent as an array as need by the constructor.
 
 
-
-def layer_properties(*required_arguments, **kwargs):   #### requires pyhton 3: , optional_arguments=None):
-    """This decorator is used for the permittivity functions. It declares the layer properties needed to call
-the function and the optiona once. This allows permittivity functions to use any properties of the layer, as long as it is defined. """
-
-    optional_arguments = kwargs.get('optional_arguments', None)
+def layer_properties(*required_arguments, optional_arguments=None, **kwargs):
+    """This decorator is used for the permittivity functions (or any other functions) to inject layer's attributes as arguments.
+The decorator declares the layer properties needed to call the function and the optional ones.
+This allows permittivity functions to use any property of the layer, as long as it is defined. """
 
     def wrapper(f):
         @wraps(f)
-        def newf(frequency, *args, **kwargs):
-            if len(args) == 1 and isinstance(args[0], Layer):
-                layer = args[0]
-                newargs = []
-                if kwargs:
-                    warm("calling this function with a Layer object and optional arguments is not supported. Optional arguments are discarded")
-                kwargs = {}
+        def newf(*args, layer_to_inject=None, **kwargs):
+
+            if layer_to_inject is not None:
+                args = list(args)  # make it mutable
+                assert isinstance(layer_to_inject, Layer)  # this is not stricly required
+
                 for ra in required_arguments:
-                    if hasattr(layer, ra):
-                        newargs.append(getattr(layer, ra))
+                    if hasattr(layer_to_inject, ra):
+                        args.append(getattr(layer_to_inject, ra))  # add the layer's attributes at the end of args
                     else:
                         raise Exception("The layer must have the '%s' attribute to call the function %s " % (ra, str(f)))
                 if optional_arguments:
                     for ra in optional_arguments:
-                        if hasattr(layer, ra):
-                            kwargs[ra] = getattr(layer, ra)
+                        if hasattr(layer_to_inject, ra):
+                            kwargs[ra] = getattr(layer_to_inject, ra)  # add the layer's over the eventual default arguments
 
-                return f(frequency, *newargs, **kwargs)
-            else:
-                return f(frequency, *args, **kwargs)
+            return f(*args, **kwargs)
         return newf
     return wrapper

@@ -3,7 +3,6 @@
 import pytest
 
 import numpy as np
-import scipy.integrate
 
 from smrt.emmodel.iba_original import IBA_original
 from smrt.emmodel.rayleigh import Rayleigh
@@ -11,7 +10,7 @@ from smrt.core.error import SMRTError
 from smrt.core.sensor import active
 from smrt.inputs.sensor_list import amsre
 from smrt import make_snow_layer
-from smrt.emmodel import commontest, effective_permittivity
+from smrt.emmodel import commontest
 
 # import the microstructure
 from smrt.microstructure_model.exponential import Exponential

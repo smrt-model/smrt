@@ -5,12 +5,10 @@ from ..core.layer import layer_properties
 from .ice import ice_permittivity_maetzler06
 from .water import water_permittivity
 
-import warnings
-
 
 @layer_properties("temperature", "liquid_water")
-def wetice_permittivity(frequency, temperature, liquid_water):
-    """ calculate the dielectric constant of wet particule of ice using Bohren and Huffman 1983 according to Ya Qi Jin, eq 8-69, 1996 p282
+def wetice_permittivity_bohren83(frequency, temperature, liquid_water):
+    """ calculate the dielectric constant of wet particules of ice using Bohren and Huffman 1983 according to Ya Qi Jin, eq 8-69, 1996 p282
 
     :param frequency: frequency in Hz
     :param temperature: temperature in K
