@@ -15,6 +15,8 @@ class Flat(Interface):
     """A flat surface. The reflection is in the specular direction and the coefficient is calculated with the Fresnel coefficients
 
 """
+    args = []
+    optional_args = {}
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """compute the reflection coefficients for an array of incidence angles (given by their cosine)

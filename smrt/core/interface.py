@@ -159,6 +159,8 @@ def substrate_from_interface(interface_cls):
             '__init__': __init__,
             '__doc__': cls.__doc__,
             '__module__': cls.__module__,
+            'args': interface_cls.args,  # interface must define args and optional_args
+            'optional_args': interface_cls.optional_args,
         }
         auto_add(emissivity_matrix, 'coherent_transmission_matrix')
         auto_add(specular_reflection_matrix, 'specular_reflection_matrix')

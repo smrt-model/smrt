@@ -49,6 +49,8 @@ class CoherentFlat(object):
     """A flat surface. The reflection is in the specular direction and the coefficient is calculated with the Fresnel coefficients
 
 """
+    args = []
+    optional_args = {}
 
     def __init__(self, interfaces, layer, permittivity):
 

@@ -2,12 +2,13 @@
 
 """
 
-import numpy as np
-import scipy.sparse
 from smrt.core.lib import smrt_matrix, len_atleast_1d
 
 
 class Transparent(object):
+
+    args = []
+    optional_args = {}
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
 
