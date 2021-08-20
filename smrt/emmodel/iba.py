@@ -362,7 +362,8 @@ class IBA(object):
 
         eps = type(self).effective_permittivity_model(layer_to_inject=self.layer, **args)
 
-        if eps.imag < 0:
+        if eps.imag < -1e-10:
+            print(eps)
             raise SMRTError("the imaginary part of the permittivity must be positive, by convention, in SMRT")
         return eps
 
