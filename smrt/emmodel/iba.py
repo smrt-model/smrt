@@ -131,8 +131,8 @@ class IBA(object):
             :param eps: scattering constituent relative permittivity
 
         """
-        quasi_permittivity = (2. * self._effective_permittivity + e0) / 3.
-        y2 = (1. / 3.) * np.sum(np.absolute(quasi_permittivity / (quasi_permittivity + (eps - e0) * self.depol_xyz))**2.)
+        apparent_permittivity = self._effective_permittivity * (1 - self.depol_xyz) + e0 * self.depol_xyz
+        y2 = (1. / 3.) * np.sum(np.absolute(apparent_permittivity / (apparent_permittivity + (eps - e0) * self.depol_xyz))**2.)
         return y2
 
     def basic_check(self):
