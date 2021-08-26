@@ -165,7 +165,7 @@ class Snowpack(object):
         self.interfaces.pop(ilayer)
 
     def copy(self):
-        """make a shallow copy of a snowpack by copying the list of layers and interfaces but not the layers and interfaces themselves which are still shared with the original snowpacl.
+        """make a shallow copy of a snowpack by copying the list of layers and interfaces but not the layers and interfaces themselves which are still shared with the original snowpack.
         This method allows the user to create a new snowpack and remove, append or replace some layers or interfaces afterward. It does not allow to alter the layers or interfaces without 
         changing the original snowpack. See py:meth:~deepcopy.
 """
