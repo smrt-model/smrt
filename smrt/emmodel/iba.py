@@ -21,6 +21,7 @@ from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
 from ..permittivity.generic_mixing_formula import polder_van_santen, depolarization_factors
 from ..core.lib import smrt_matrix, generic_ft_even_matrix, len_atleast_1d
+from .common import rayleigh_scattering_matrix_and_angle
 
 #
 # For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
@@ -93,7 +94,15 @@ class IBA(object):
         self.inclusion_shape = layer.inclusion_shape  # for assuming spherical or ellipsoidal inclusions
 
         # Calculate depolarization factors and iba_coefficient
-        self.depol_xyz = depolarization_factors(getattr(layer, "length_ratio", 1))
+        if getattr(layer, "depolarization_factors", None) is not None:
+            if callable(layer.depolarization_factors):
+                self.depol_xyz = layer.depolarization_factors(layer_to_inject=layer)
+            else:
+                self.depol_xyz = layer.depolarization_factors
+        else:
+            self.depol_xyz = depolarization_factors(getattr(layer, "length_ratio", 1))
+        # default depol_xyz is spheres
+
         self._effective_permittivity = self.effective_permittivity()
         self.iba_coeff = self.compute_iba_coeff()
 
@@ -188,63 +197,10 @@ class IBA(object):
         """ IBA Phase function (not decomposed).
 
 """
-        # cos and sin of scattering and incident angles in the main frame
-        cos_ti = np.atleast_1d(mu_i)[np.newaxis, np.newaxis, :]
-        sin_ti = np.sqrt(1. - cos_ti**2)
-
-        cos_t = np.atleast_1d(mu_s)[np.newaxis, :, np.newaxis]
-        sin_t = np.sqrt(1. - cos_t**2)
-
-        dphi = np.atleast_1d(dphi)
-        cos_pd = np.cos(dphi)[:, np.newaxis, np.newaxis]
-        sin_pd_sign = np.where(dphi >= np.pi, -1, 1)[:, np.newaxis, np.newaxis]
-
-        # Scattering angle in the 1-2 frame
-        cosT = np.clip(cos_t * cos_ti + sin_t * sin_ti * cos_pd, -1.0, 1.0)  # Prevents occasional numerical error
-        cosT2 = cosT**2  # cos^2 (Theta)
-        sinT = np.sqrt(1. - cosT2)
-
-        # Apply non-zero scattering denominator
-        nonnullsinT = sinT >= 1e-6
-
-        # Create arrays of rotation angles
-        cost_sinti = cos_t * sin_ti
-        costi_sint = cos_ti * sin_t
-
-        cos_i1 = cost_sinti - costi_sint * cos_pd
-        np.divide(cos_i1, sinT, where=nonnullsinT, out=cos_i1)
-        np.clip(cos_i1, -1.0, 1.0, out=cos_i1)
-
-        cos_i2 = costi_sint - cost_sinti * cos_pd
-        np.divide(cos_i2, sinT, where=nonnullsinT, out=cos_i2)
-        np.clip(cos_i2, -1.0, 1.0, out=cos_i2)
-
-        # Special condition if theta and theta_i = 0 to preserve azimuth dependency
-        dege_dphi = np.broadcast_to((sin_t < 1e-6) & (sin_ti < 1e-6), cos_i1.shape)
-        cos_i1[dege_dphi] = 1.
-        cos_i2[dege_dphi] = np.broadcast_to(cos_pd, cos_i2.shape)[dege_dphi]
-
-        # # See Matzler 2006 pg 111 Eq. 3.20
-        # # Calculate rotation angles alpha, alpha_i
-        # # Convention follows Matzler 2006, Thermal Microwave Radiation, p111, eqn 3.20
-
-        Li = Lmatrix(cos_i1, -sin_pd_sign, (3, npol))    # L (-i1)
-
-        if npol == 2:
-            RLi = np.array([[cosT2 * Li[0][0], cosT2 * Li[0][1]],
-                            Li[1], [cosT * Li[2][0], cosT * Li[2][1]]])
-
-        elif npol == 3:
-            RLi = np.array([[cosT2 * Li[0][0], cosT2 * Li[0][1], cosT2 * Li[0][2]],
-                            Li[1], [cosT * Li[2][0], cosT * Li[2][1], cosT * Li[2][2]]])
-        else:
-            raise RuntimeError("invalid value of npol")
-
-        Ls = Lmatrix(-cos_i2, sin_pd_sign, (npol, 3))    # L (pi - i2)
-        p = np.einsum('ij...,jk...->ik...', Ls, RLi)   # multiply the outer dimension (=polarization)
+        p, sin_half_scatt = rayleigh_scattering_matrix_and_angle(mu_s, mu_i, dphi, npol)
 
         # IBA phase function = rayleigh phase function * angular part of microstructure term
-        k_diff = 2. * self.k0 * np.sqrt(self._effective_permittivity) * np.sqrt(0.5 - 0.5 * cosT)
+        k_diff = 2. * self.k0 * np.sqrt(self._effective_permittivity) * sin_half_scatt
 
         # Calculate microstructure term
         if hasattr(self.microstructure, 'ft_autocorrelation_function'):
@@ -404,29 +360,3 @@ class IBA_MM(IBA):
 
         return ks_int.real
 
-
-def Lmatrix(cos_phi, sin_phi_sign, npol):
-
-    # Calculate arrays of rotated phase matrix elements
-    # Shorthand to make equations shorter & marginally faster to compute
-    cos2_phi = cos_phi**2  # cos^2 (phi)
-    sin2_phi = 1 - cos2_phi  # sin^2 (phi)
-
-    sin_2phi = 2 * cos_phi * np.sqrt(sin2_phi)  # sin(2 phi_i)
-    sin_2phi *= sin_phi_sign
-
-    if npol == (2, 3):
-        s05 = 0.5 * sin_2phi
-        L = [[cos2_phi, sin2_phi, s05],
-             [sin2_phi, cos2_phi, -s05]]
-    elif npol == (3, 2):
-        L = [[cos2_phi, sin2_phi],
-             [sin2_phi, cos2_phi],
-             [-sin_2phi, sin_2phi]]
-    else:  # 3 pol
-        s05 = 0.5 * sin_2phi
-        cos_2phi = 2 * cos2_phi - 1  # cos(2 alpha)
-        L = [[cos2_phi, sin2_phi, s05],
-             [sin2_phi, cos2_phi, -s05],
-             [-sin_2phi, sin_2phi, cos_2phi]]
-    return L

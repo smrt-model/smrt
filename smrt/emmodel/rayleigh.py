@@ -12,6 +12,7 @@ import numpy as np
 from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
 from ..core.lib import smrt_matrix
+from .common import rayleigh_scattering_matrix_and_angle
 
 
 class Rayleigh(object):
@@ -318,37 +319,10 @@ class Rayleigh(object):
 
 
     def phase(self, mu_s, mu_i, dphi, npol=2):
-        # Tsang theory and application p271 Eq 7.2.16
 
-        mu_s = np.atleast_1d(mu_s)[np.newaxis, :, np.newaxis]
-        mu_i = np.atleast_1d(mu_i)[np.newaxis, np.newaxis, :]
+        p, sin_half_scatt = rayleigh_scattering_matrix_and_angle(mu_s, mu_i, dphi, npol)
 
-        dphi = np.atleast_1d(dphi)
-        sinphi = np.sin(dphi)[:, np.newaxis, np.newaxis]
-        cosphi = np.cos(dphi)[:, np.newaxis, np.newaxis]
-
-        # Tsang theory and application p127 Eq 3.2.47
-        fvv = cosphi * mu_s * mu_i + np.sqrt(1 - mu_s**2) * np.sqrt(1 - mu_i**2)
-        fhv = - sinphi * mu_i   # there is an error in Tsang book. By symmetry of the equation fvh has sin(phi_s-phi_i) and fhv has sin(phi_i-phi_s)
-        fhh = cosphi
-        fvh = sinphi * mu_s
-
-        if npol == 2:
-            p = [[fvv * fvv, fvh * fvh],
-                 [fhv * fhv, fhh * fhh]]
-
-        elif npol == 3:
-            p = [[fvv * fvv, fvh * fvh, fvh * fvv],
-                 [fhv * fhv, fhh * fhh, fhv * fhh],
-                 [2 * fvv * fhv, 2 * fvh * fhh, fvv * fhh + fvh * fhv]]
-        else:
-            raise RuntimeError("invalid number of polarisation")
-
-        # broadcast, it is not automatic (anymore?)
-        shape = dphi.size, mu_s.size, mu_i.size
-        p = [[np.broadcast_to(ppp, shape) for ppp in pp] for pp in p]
-
-        return smrt_matrix(1.5 * self.ks * np.array(p))
+        return smrt_matrix(1.5 * self.ks * p)
 
     def ke(self, mu):
         """return the extinction coefficient"""
