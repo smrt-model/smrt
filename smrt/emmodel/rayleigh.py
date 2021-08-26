@@ -28,9 +28,6 @@ class Rayleigh(object):
 
         self._effective_permittivity = e0  # Rayleigh is for sparse medium only
 
-        if abs(e0) > abs(eps):
-            raise SMRTError("Rayleigh model (as implemented) is unable to handle background permittivity higher than scatterers permittivity. This error is probably due to dense snow layers. Limit the density of snow layer if possible.")
-
         # TODO Ghi: solve the problem of dielectric constant dependency. Which object is responsible of running
         # Probably the emmodule
 
@@ -39,8 +36,9 @@ class Rayleigh(object):
         radius = layer.microstructure.radius
 
         k0 = 2 * np.pi / lmda
-        self.ks = f * 2 * abs((eps - e0) / (eps + 2 * e0))**2 * radius**3 * k0**4
-        self.ka = f * 9 * k0 * eps.imag / e0 * abs(e0 / (eps + 2 * e0))**2
+
+        self.ks = f * 2 * abs((eps - e0) / (eps + 2 * e0))**2 * radius**3 * e0**2 * k0**4
+        self.ka = f * 9 * k0 * eps.imag * abs(e0 / (eps + 2 * e0))**2 + (1 - f) * e0.imag * k0
 
     def basic_check(self):
         # TODO Ghi: check the microstructure model is compatible.
