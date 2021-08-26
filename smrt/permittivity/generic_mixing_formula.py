@@ -143,7 +143,7 @@ bruggeman = polder_van_santen
 
 @layer_properties('frac_volume', optional_arguments=('inclusion_shape', 'depol_xyz', 'length_ratio'))
 def maxwell_garnett(frac_volume, e0, eps, depol_xyz=None, inclusion_shape=None, length_ratio=None):
-    """ Calculates effective permittivity of snow by solution of Maxwell-Garnett equation.
+    """ Calculates effective permittivity using Maxwell-Garnett equation.
 
     :param frac_volume: Fractional volume of snow
     :param e0: Permittivity of background (no default, must be provided)
@@ -180,10 +180,25 @@ def maxwell_garnett(frac_volume, e0, eps, depol_xyz=None, inclusion_shape=None, 
         depol_xyz = depolarization_factors(length_ratio)
 
     # Calculate x, y, z components of effective permittivity from Maxwell-Garnett theory
-    effective_permittivity_xyz = e0 + e0 * frac_volume * (eps - e0) / (e0 + (1. - frac_volume) * depol_xyz * (eps - e0))
+    effective_permittivity_xyz = e0 * (1 + frac_volume * (eps - e0) / (e0 + (1. - frac_volume) * depol_xyz * (eps - e0)))
 
     # Assume random orientation i.e. 1/3 of each polarizability component provides equal shares
     # to the macroscopic polarization density
     # See pg 68 Sihvola: Electromagnetic mixing formulas and applications
 
     return np.mean(effective_permittivity_xyz, dtype=np.complex128)
+
+
+@layer_properties('frac_volume')
+def maxwell_garnett_for_spheres(frac_volume, e0, eps):
+    """ Calculates effective permittivity using Maxwell-Garnett equation assuming spherical inclusion. This function is essentially an
+    optimized version of py:func:`maxwell_garnett`.
+
+"""
+
+    Cplus = eps + 2 * e0
+    Cminus = (eps - e0) * frac_volume
+
+    Emg = (Cplus + 2 * Cminus) / (Cplus - Cminus) * e0
+
+    return Emg
