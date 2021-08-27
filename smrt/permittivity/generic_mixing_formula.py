@@ -114,8 +114,9 @@ def polder_van_santen(frac_volume, e0=1, eps=3.185, depol_xyz=None, length_ratio
 
     assert frac_volume <= 1
 
-    if depol_xyz is None:
-        depol_xyz = depolarization_factors(length_ratio)
+    if (depol_xyz is not None) or (length_ratio is not None):
+        raise NotImplementedError("depol_xyz and length_ratio are not implemented")
+        # depol_xyz = depolarization_factors(length_ratio)
 
     # Polder Van Santen / de Loor / Böttcher / Bruggeman formula
     # Solution of quadratic equation arising from eqn 9.2. in Sihvola: Electromagnetic Mixing Formulas and Applications
