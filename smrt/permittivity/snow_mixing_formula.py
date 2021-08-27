@@ -71,5 +71,61 @@ Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publ
 
     Es = eps_a * (1 + 3 * ((Vw_i / Va_i) * diff_wa * alpha - (1 / Va_i) * diff_wi * (2 * eps_w + eps_a)) / denominator)
 
+    # t is possible to compute the square_field_ratio_tinga73
+    # using np.abs(eps_w * eps_a / denominator)**2
+    # to be implemented
+
     return Es
 
+
+@layer_properties("density")
+def depolarization_factors_maetzler96(density):
+    """The empirical depolarization factors of snow estimated by Mäzler 1996. It is supposed to provide more accurate permittivity=f(density)
+     than using constant depolarization factors in Polder van Santen (e.g. spheres)
+
+Biblio: C. Mäzler, Microwave Permittivity of dry snow, IEEE TRANSACTIONS ON GEOSCIENCE AND REMOTE SENSING, VOL. 34, NO. 2, MARCH 1996
+"""
+    frac_volume = density / DENSITY_OF_ICE   # this way to compute frac_volume avoid inversion of the medium
+
+    if frac_volume < 0.33:
+        A = 0.1 + 0.5 * frac_volume
+    elif frac_volume < 0.71:
+        A = 0.18 + 3.24 * (frac_volume - 0.49)**2
+    else:
+        A = 1 / 3
+    return np.array([A, A, 1 - 2 * A])
+
+
+@layer_properties("density")
+def drysnow_permittivity_maetzler96(density, e0=1, eps=3.185):
+
+    if (e0.real > 1) and (eps == 1):
+        e0, eps = eps, e0
+
+    assert e0.real < eps.real
+
+    frac_volume = density / DENSITY_OF_ICE   # this way to compute frac_volume avoid inversion of the medium
+
+    A = depolarization_factors_maetzler96(density)
+
+    # A = np.array([1 / 3., 1 / 3., 1 / 3.]) # Spheres. For testing
+
+    eps_diff = eps - e0
+
+    # Solve Polder van Santen with an iterative approach (could be optimized)
+    # rough first guess
+    eps_eff0 = frac_volume * eps + (1 - frac_volume) * e0
+
+    for i in range(20):  # use an inefficient iterative approach
+        eps_app = e0 * A + eps_eff0 * (1 - A)
+
+        eps_eff = e0 + frac_volume * eps_diff * np.sum(eps_app / (eps_app + A * eps_diff)) \
+            / (3 - frac_volume * eps_diff * np.sum(A / (eps_app + A * eps_diff)))
+
+        if np.abs(eps_eff - eps_eff0) < 1e-6:
+            break
+        eps_eff0 = eps_eff  # new estimate becomes first guess
+
+    # last estimation of eps_app: eps_app = e0 + (1 - A) * eps_eff
+
+    return eps_eff
