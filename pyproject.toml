@@ -9,16 +9,22 @@ documentation = "http://smrt.readthedocs.io/"
 
 
 [tool.poetry.dependencies]
-python = ">=3.5"
+python = ">=3.6"
 numpy = ">=1.13"
 pandas = ">=0.20.3"
 scipy = ">=1.0.0"
 xarray = ">=0.10.3"
-six = ">=1.0"
+numba = ">=0.40"
 
 [tool.poetry.dev-dependencies]
 nosetest = ""
 
+
 [build-system]
-requires = ["poetry>=0.12"]
+requires = ["poetry>=0.12",
+    		"setuptools >= 48",
+    #"setuptools_scm[toml] >= 4, <6",
+    #"setuptools_scm_git_archive",
+    #"wheel >= 0.29.0",
+]
 build-backend = "poetry.masonry.api"
