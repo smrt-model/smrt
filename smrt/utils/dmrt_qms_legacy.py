@@ -18,14 +18,16 @@ You may also want to increase the number of streams in passive/DMRT_QMS_passive.
 
 import os
 from collections.abc import Sequence
+from collections import namedtuple
 
 import numpy as np
 
 from oct2py import octave, Struct
 
+from smrt.core.snowpack import Snowpack
 from smrt.core.result import PassiveResult, concat_results
 from smrt.core.sensitivity_study import SensitivityStudy
-from smrt.core.globalconstants import DENSITY_OF_ICE
+from smrt.core.globalconstants import DENSITY_OF_ICE, GHz
 
 
 # python-space path to dmrt_qms.
@@ -37,12 +39,13 @@ def set_dmrt_qms_path(path):
     global _dmrt_qms_path
 
     if path != _dmrt_qms_path:
-        #octave.restoredefaultpath() # risk of bad interference with MEMLS
+        # octave.restoredefaultpath() # risk of bad interference with MEMLS
         octave.addpath(os.path.join(path, 'passive'))
         octave.addpath(os.path.join(path, 'active'))
         octave.addpath(os.path.join(path, 'common'))
         octave.addpath(os.path.dirname(__file__))
         _dmrt_qms_path = path
+
 
 try:
     # set
@@ -64,8 +67,8 @@ def run(sensor, snowpack, dmrt_qms_path=None, snowpack_dimension=None, full_outp
         set_dmrt_qms_path(dmrt_qms_path)
 
     if isinstance(snowpack, SensitivityStudy):
-            snowpack_dimension = (snowpack.variable, snowpack.values)
-            snowpack = snowpack.snowpacks.tolist()
+        snowpack_dimension = (snowpack.variable, snowpack.values)
+        snowpack = snowpack.snowpacks.tolist()
 
     if isinstance(snowpack, Sequence):
         result_list = [run(sensor, sp) for sp in snowpack]
@@ -79,7 +82,7 @@ def run(sensor, snowpack, dmrt_qms_path=None, snowpack_dimension=None, full_outp
 
     if snowpack.substrate is None:
         rough.model = 'QH'
-        epsr_ground = complex(1.0,0.0)
+        epsr_ground = complex(1.0, 0.0)
         rough.Q = 0.0
         rough.H = 0.0
     elif hasattr(snowpack.substrate, "Q") and hasattr(snowpack.substrate, "H"):
@@ -96,14 +99,13 @@ def run(sensor, snowpack, dmrt_qms_path=None, snowpack_dimension=None, full_outp
         epsr_ground = snowpack.substrate.permittivity_model(sensor.frequency, Tg)
         rough.s = snowpack.substrate.roughness_rms
 
-
-    diameter = np.float64([lay.microstructure.radius*200 for lay in snowpack.layers])
-    density = np.float64([lay.frac_volume*DENSITY_OF_ICE/1000 for lay in snowpack.layers])
-    thickness = np.float64([lay.thickness*100.0 for lay in snowpack.layers])
+    diameter = np.float64([lay.microstructure.radius * 200 for lay in snowpack.layers])
+    density = np.float64([lay.frac_volume * DENSITY_OF_ICE / 1000 for lay in snowpack.layers])
+    thickness = np.float64([lay.thickness * 100.0 for lay in snowpack.layers])
     stickiness = np.float64([min(lay.microstructure.stickiness, 1000.0) for lay in snowpack.layers])
     temperature = np.float64([lay.temperature for lay in snowpack.layers])
 
-    TbV, TbH, deg0, ot, albedo, epsr_snow = octave.DMRT_QMS_passive(sensor.frequency*1e-9,
+    TbV, TbH, deg0, ot, albedo, epsr_snow = octave.DMRT_QMS_passive(sensor.frequency / GHz,
                                                                     diameter, density, stickiness,
                                                                     thickness, temperature,
                                                                     Tg, epsr_ground, rough, nout=6)
@@ -126,7 +128,6 @@ def run(sensor, snowpack, dmrt_qms_path=None, snowpack_dimension=None, full_outp
         return PassiveResult(np.vstack([TbV, TbH]).T, coords)
 
 
-
 #
 # crash with octave
 #
@@ -140,19 +141,18 @@ def dmrt_qms_active(sensor, snowpack):
     surf_model = 'NMM3D'       # pre-built NMM3D look up table
     epsr_ground = 5.0 + 0.5j
 
-    diameter = np.float64([lay.microstructure.radius*200 for lay in snowpack.layers])
-    density = np.float64([lay.frac_volume*DENSITY_OF_ICE/1000 for lay in snowpack.layers])
-    thickness = np.float64([lay.thickness*100 for lay in snowpack.layers])
+    diameter = np.float64([lay.microstructure.radius * 200 for lay in snowpack.layers])
+    density = np.float64([lay.frac_volume * DENSITY_OF_ICE / 1000 for lay in snowpack.layers])
+    thickness = np.float64([lay.thickness * 100 for lay in snowpack.layers])
     stickiness = np.float64([min(lay.microstructure.stickiness, 1000) for lay in snowpack.layers])
     temperature = np.float64([lay.temperature for lay in snowpack.layers])
-
 
     vv = []
     hh = []
     for deg0inc in np.degrees(sensor.theta_inc):
-        res = octave.DMRT_QMS_active(sensor.frequency*1e-9, float(deg0inc),
-                                 thickness, density, diameter, stickiness, temperature,
-                                 epsr_ground, rms, ratio, surf_model, nout=15)
+        res = octave.DMRT_QMS_active(sensor.frequency / GHz, float(deg0inc),
+                                     thickness, density, diameter, stickiness, temperature,
+                                     epsr_ground, rms, ratio, surf_model, nout=15)
         print(res)
         vvdb, hvdb, vhdb, hhdb, ot, albedo, epsr_eff, vv_vol, hv_vol, vh_vol, hh_vol, vv_surf, hv_surf, vh_surf, hh_surf = res
         vv.append(vvdb)
@@ -161,3 +161,26 @@ def dmrt_qms_active(sensor, snowpack):
     return vv, hh
 
 
+def dmrt_qms_emmodel(sensor, layer, dmrt_qms_path=None):
+    """ Compute scattering and absorption coefficients using DMRT QMS
+
+        :param layer: describe the layer.
+        :param sensor: describe the sensor configuration.
+"""
+
+    diameter = np.float64([layer.microstructure.radius * 200])
+    density = np.float64([layer.frac_volume * DENSITY_OF_ICE / 1000])
+    thickness = np.float64([layer.thickness * 100.0])
+    stickiness = np.float64([min(layer.microstructure.stickiness, 1000.0)])
+    temperature = np.float64([layer.temperature])
+
+    ot, albedo, epsr_snow = octave.DMRT_QMS_coefs(sensor.frequency / GHz,
+                                                  diameter, density, stickiness,
+                                                  thickness, temperature, nout=3)
+
+    ke = ot / layer.thickness
+    ks = albedo * ke
+    ka = (1 - albedo) * ke
+
+    nt = namedtuple("dmrt_qms_emmodel", "ks ka")
+    return nt(ks=ks, ka=ka)
