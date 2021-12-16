@@ -610,7 +610,7 @@ class EigenValueSolver(object):
         else:
             self.ft_even_phase = smrt_matrix(0)
 
-    def solve(self, m, compute_coherent_only):
+    def solve(self, m, compute_coherent_only, debug_A=False):
         # solve the homogeneous equation for a single layer and return eigne value and eigen vector
         # :param m: mode
         # :param compute_coherent_only
@@ -652,6 +652,9 @@ class EigenValueSolver(object):
 
             A[np.diag_indices(2 * n)] += np.repeat(self.ke(mu), npol)
             A = invmu[:, np.newaxis] * A
+
+            if debug_A:
+                return A
 
             # diagonalise the matrix. Eq (13)
             try:

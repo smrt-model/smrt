@@ -82,18 +82,20 @@ class DMRT_QCA_ShortRange(Rayleigh):
         radius = layer.microstructure.radius
         t = layer.microstructure.compute_t()
 
-        y = (es - e0) / (es + 2*e0)
+        y = (es - e0) / (es + 2 * e0)
 
-        fy = f*y
+        fy = f * y
 
         k0 = (2 * math.pi / lmda) * cmath.sqrt(e0).real
-        Eeff = e0 + 3*fy*e0/(1-fy) * (1 + 2j/3* (k0 * radius)**3 * y * (1-f)**4 / ((1-fy)*(1+2*f-t*f*(1-f))**2) )
-        Ks =   2/(9*f) * k0 * (k0 * radius)**3 * abs(Eeff/e0 - 1)**2  * (1-f)**4 / (1+2*f-t*f*(1-f))**2  #  TODO: to further double check
+        Eeff = e0 + 3 * fy * e0 / (1 - fy) * (1 + 2j / 3 * (k0 * radius)**3 * y
+            * (1 - f)**4 / ((1 - fy) * (1 + 2 * f - t * f * (1 - f))**2))
+        Ks = 2 / (9 * f) * k0 * (k0 * radius)**3 * (
+            np.abs(Eeff / e0 - 1)**2 * (1 - f)**4 / (1 + 2 * f - t * f * (1 - f))**2)  #  TODO: to further double check
 
         beta = 2 * k0 * cmath.sqrt(Eeff).imag
 
         if Ks >= beta:
-            raise SMRTError("Grain diameter is too large for DMRT_ShortRange resulting in single scattering albedo larger than 1."
+            print("Grain diameter is too large for DMRT_ShortRange resulting in single scattering albedo larger than 1."
                             "It is recommended to decrease the size or used an alternative emmodel able to do Mie calculations.")
 
         self._effective_permittivity = Eeff

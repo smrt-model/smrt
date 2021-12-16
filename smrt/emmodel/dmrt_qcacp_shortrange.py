@@ -35,6 +35,7 @@ Examples:
 # Stdlib import
 import math
 import cmath
+from warnings import warn
 
 # other import
 import numpy as np
@@ -108,7 +109,7 @@ class DMRT_QCACP_ShortRange(Rayleigh):
             (1.0 - f)**4 / (1.0 + 2 * f - t * f * (1.0 - f))**2
         
         if albedo >= 1:
-            raise SMRTError("Grain diameter is too large for DMRT_ShortRange resulting in single scattering albedo larger than 1."
+            warn("Grain diameter is too large for DMRT_ShortRange resulting in single scattering albedo larger than 1."
                             "It is recommended to decrease the size or used an alternative emmodel able to do Mie calculations.")
 
         beta = 2 * math.pi / lmda * 2 * cmath.sqrt(Eeff).imag

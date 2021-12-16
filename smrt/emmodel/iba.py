@@ -109,12 +109,7 @@ class IBA(object):
         # Absorption coefficient for general lossy medium under assumption of low-loss medium.
         self.ka = self.compute_ka()
 
-        # Calculate scattering coefficient: integrate p11+p12 over mu
-        k = 6  # number of samples. This should be adaptative depending on the size/wavelength
-        mu = np.linspace(1, -1, 2**k + 1)
-        y = self.ks_integrand(mu)
-        ks_int = scipy.integrate.romb(y, mu[0] - mu[1])  # integrate between 0 and pi (i.e. mu between -1 and 1)
-        self.ks = ks_int / 4.  # Ding et al. (2010), normalised by (1/4pi)
+        self.ks = self.compute_ks()
 
         if not (self.ks >= 0):
             print("ks, the scattering coefficient has an invalid value '%g' in layer nb '%i'" % (self.ks, getattr(layer, 'number', 0)))
@@ -147,6 +142,15 @@ class IBA(object):
     def basic_check(self):
         # Need to be defined
         pass
+
+    def compute_ks(self):
+        """Calculate scattering coefficient: integrate p11+p12 over mu"""
+
+        k = 6  # number of samples. This should be adaptative depending on the size/wavelength
+        mu = np.linspace(1, -1, 2**k + 1)
+        y = self.ks_integrand(mu)
+        ks_int = scipy.integrate.romb(y, mu[0] - mu[1])  # integrate on mu between -1 and 1
+        return ks_int / 4.  # Ding et al. (2010), normalised by (1/4pi)
 
     def ks_integrand(self, mu):
         """ This is the scattering function for the IBA model.
@@ -184,7 +188,8 @@ class IBA(object):
         if hasattr(self.microstructure, 'ft_autocorrelation_function'):
             ft_corr_fn = self.microstructure.ft_autocorrelation_function(k_diff)
         else:
-            raise SMRTError("Fourier Transform of this microstructure model has not been defined, or there is a problem with its calculation")
+            raise SMRTError("Fourier Transform of this microstructure model has not been defined, or there is "
+                            "a problem with its calculation")
 
         p11 = (self.iba_coeff * ft_corr_fn).real * mu**2
         p22 = (self.iba_coeff * ft_corr_fn).real * 1.
@@ -206,7 +211,8 @@ class IBA(object):
         if hasattr(self.microstructure, 'ft_autocorrelation_function'):
             ft_corr_fn = self.microstructure.ft_autocorrelation_function(k_diff)
         else:
-            raise SMRTError("Fourier Transform of this microstructure model has not been defined, or there is a problem with its calculation")
+            raise SMRTError("Fourier Transform of this microstructure model has not been defined, or there is a "
+                            "problem with its calculation")
 
         return smrt_matrix(ft_corr_fn * self.iba_coeff * p)
 
