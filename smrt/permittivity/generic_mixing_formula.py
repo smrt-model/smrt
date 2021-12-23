@@ -12,6 +12,8 @@ from smrt.core.error import SMRTError
 from smrt.core.globalconstants import DENSITY_OF_ICE
 from smrt.core.layer import layer_properties
 
+import scipy.optimize
+
 
 def depolarization_factors(length_ratio=None):
     """ Calculates depolarization factors for use in effective permittivity models. These
@@ -112,7 +114,7 @@ def polder_van_santen(frac_volume, e0=1, eps=3.185, depol_xyz=None, length_ratio
                                                depol_xyz=depol_xyz, inclusion_shape=shape)
                     for shape, mixing in zip(inclusion_shape, mixing_ratio)))
 
-    assert frac_volume <= 1
+    assert np.all(frac_volume <= 1)
 
     if (depol_xyz is not None) or (length_ratio is not None):
         raise NotImplementedError("depol_xyz and length_ratio are not implemented")
@@ -140,6 +142,74 @@ def polder_van_santen(frac_volume, e0=1, eps=3.185, depol_xyz=None, length_ratio
 
 # synonym
 bruggeman = polder_van_santen
+
+
+def polder_van_santen_three_spherical_components(f1, f2, eps0, eps1, eps2):
+    """Calculates effective permittivity using Polder and van Santen with three components assuming spherical inclusions
+
+    :param f1: fractional volume of component 1
+    :param f2: fractional volume of component 2
+    :param eps0: permittivity of material 0
+    :param eps1: permittivity of material 1
+    :param eps2: permittivity of material 2
+
+"""
+    if (np.array(f1).ndim >= 1) or (np.array(f2).ndim >= 1):
+        def func(f1, f2):
+            return polder_van_santen_three_spherical_components(f1, f2, eps0, eps1, eps2)
+        return np.vectorize(func)(f1, f2)
+
+    # rough first guess
+    f0 = 1 - f1 - f2
+    # this first guess is not good enough: eps_eff0_0 = f1 * eps1 + f2 * eps2 + f0 * eps0
+    eps_eff0 = polder_van_santen(f0, polder_van_santen(f2 / (f1 + f2), eps1, eps2), eps0)
+
+    def pvs_equation(x):
+        eps_eff = complex(x[0], x[1])
+        residual = eps_eff * (1 - 3 * f2 * (eps2 - eps0) / (2 * eps_eff + eps2) - 3 * f1 * (eps1 - eps0) / (2 * eps_eff + eps1)) - eps0
+        return [residual.real, residual.imag]
+
+    res = scipy.optimize.root(pvs_equation, [eps_eff0.real, eps_eff0.imag])
+
+    eps_eff = complex(res.x[0], res.x[1])
+
+    return eps_eff
+
+
+def polder_van_santen_three_components(f1, f2, eps0, eps1, eps2, A1, A2):
+    """Calculates effective permittivity using Polder and van Santen with three components
+
+    :param f1: fractional volume of component 1
+    :param f2: fractional volume of component 2
+    :param eps0: permittivity of material 0
+    :param eps1: permittivity of material 1
+    :param eps2: permittivity of material 2
+    :param A1: depolarization factor for material 1
+    :param A2: depolarization factor for material 2
+
+"""
+    if (np.array(f1).ndim >= 1) or (np.array(f2).ndim >= 1):
+        def func(f1, f2):
+            return polder_van_santen_three_components(f1, f2, eps0, eps1, eps2, A1, A2)
+        return np.vectorize(func)(f1, f2)
+
+    # rough first guess
+    f0 = 1 - f1 - f2
+    eps_eff0 = f1 * eps1 + f2 * eps2 + f0 * eps0
+
+    def pvs_equation(x):
+        eps_eff = complex(x[0], x[1])
+        residual = eps_eff * (1
+                              - 1 / 3 * f2 * (eps2 - eps0) * sum(1 / (eps_eff + A2j * (eps2 - eps_eff)) for A2j in A2)
+                              - 1 / 3 * f1 * (eps1 - eps0) * sum(1 / (eps_eff + A1j * (eps1 - eps_eff)) for A1j in A1)
+                              ) - eps0
+        return [residual.real, residual.imag]
+
+    res = scipy.optimize.root(pvs_equation, [eps_eff0.real, eps_eff0.imag])
+
+    eps_eff = complex(res.x[0], res.x[1])
+
+    return eps_eff
 
 
 @layer_properties('frac_volume', optional_arguments=('inclusion_shape', 'depol_xyz', 'length_ratio'))
@@ -172,7 +242,7 @@ def maxwell_garnett(frac_volume, e0, eps, depol_xyz=None, inclusion_shape=None, 
 
     """
 
-    assert frac_volume <= 1
+    assert np.all(frac_volume <= 1)
 
     if inclusion_shape is not None and inclusion_shape != "spheres":
         raise SMRTError("inclusion_shape must be set to 'spheres'")
