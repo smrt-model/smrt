@@ -135,7 +135,7 @@ class Snowpack(object):
         if raise_attributeerror and all((p is None for p in prof)):
             raise AttributeError('The attribute %s can not be found' % property_name)
 
-        return prof
+        return np.array(prof)
 
     def append(self, layer, interface=None):
         """append a new layer at the bottom of the stack of layers. The interface is that at the top of the appended layer.
@@ -245,7 +245,7 @@ class Snowpack(object):
 
     def __radd__(self, other):
 
-        if other is 0:
+        if other == 0:
             return self
         elif isinstance(other, Layer):
 
