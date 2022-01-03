@@ -110,6 +110,13 @@ class Result(object):
         raise NotImplementedError("must be implemented in a subclass")
 
     def return_as_dataframe(self, name, channel_axis=None, **kwargs):
+        """return the result as a dataframe. The dataframe organization is different depending on channel_axis.
+
+        :param name: name of the data frame column
+        :param channel_axis: if channel_axis=None, the dataframe has hierarchical indexes with frequency, polarization, etc. 
+        If channel_axis="column", each channel defined in the sensor is one column.
+        If channel_axis="index", each channel defined in the sensor is one index.
+"""
 
         def xr_to_dataframe(x, name):
             # workaround for when the resulting array has no dims anymore
@@ -142,6 +149,13 @@ class Result(object):
             raise SMRTError('channel_axis argument must be "column" or "index"')
         else:
             return xr_to_dataframe(self.sel_data(**kwargs), name=name)
+
+    def return_as_series(self):
+        """return the result as a series with the channels defined in the sensor as index. 
+        This requires that the sensor has declared a channel list.
+
+        """
+        return self.return_as_dataframe('out', channel_axis='index')['out']
 
 
 class PassiveResult(Result):
