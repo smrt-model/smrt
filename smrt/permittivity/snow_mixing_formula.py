@@ -19,8 +19,8 @@ from ..core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE, DENSITY_OF_WA
 from .generic_mixing_formula import polder_van_santen, polder_van_santen_three_components, polder_van_santen_three_spherical_components
 
 
-@layer_properties("density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
-def wetsnow_permittivity_tinga73(frequency, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
+@layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
+def wetsnow_permittivity_tinga73(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
     """effective permittivity proposed by Tinga et al. 1973 for three-component mixing. The component 1 is the background ("a" here),
     the compoment 2 ("w" here) is a spherical shell surrounding the component 3 ("i" here).
 
@@ -36,6 +36,9 @@ Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publ
 
 
 """
+
+    if temperature < FREEZING_POINT:
+        assert np.all(liquid_water == 0)
 
     # wetness W is the weight percentage of liquid water contained in the snow
     W = liquid_water * DENSITY_OF_WATER / (liquid_water * DENSITY_OF_WATER + (1 - liquid_water) * DENSITY_OF_ICE)
@@ -59,7 +62,7 @@ Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publ
 
     eps_a = 1
     eps_w = water_permittivity_model(frequency, temperature=FREEZING_POINT)
-    eps_i = ice_permittivity_model(frequency, temperature=FREEZING_POINT)  # this must be dry ice !
+    eps_i = ice_permittivity_model(frequency, temperature=temperature)  # this must be dry ice !
 
     alpha = 2 * eps_w + eps_i
     diff_wi = eps_w - eps_i
@@ -78,14 +81,16 @@ Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publ
     return Es
 
 
-@layer_properties("density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
-def wetsnow_permittivity_colbeck80_caseI(frequency, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
+@layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
+def wetsnow_permittivity_colbeck80_caseI(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
     """effective permittivity proposed by Colbeck, 1980 for the pendular regime.
 
 Colbeck, S. C. (1980). Liquid distribution and the dielectric constant of wet snow.
 Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21â€“40.
 
 """
+    if temperature < FREEZING_POINT:
+        assert np.all(liquid_water == 0)
 
     ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
 
@@ -108,21 +113,24 @@ Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21â
         f1=fi,
         f2=fw,
         eps0=1,
-        eps1=ice_permittivity_model(frequency, temperature=FREEZING_POINT),
+        eps1=ice_permittivity_model(frequency, temperature=temperature),
         eps2=water_permittivity_model(frequency, temperature=FREEZING_POINT),
         A1=Asnow,
         A2=Awater
     )
 
 
-@layer_properties("density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
-def wetsnow_permittivity_colbeck80_caseII(frequency, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
+@layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
+def wetsnow_permittivity_colbeck80_caseII(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
     """effective permittivity proposed by Colbeck, 1980 for the funicular regime and low dry snow density.
 
 Colbeck, S. C. (1980). Liquid distribution and the dielectric constant of wet snow.
 Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21â€“40.
 
 """
+
+    if temperature < FREEZING_POINT:
+        assert np.all(liquid_water == 0)
 
     ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
 
@@ -136,7 +144,7 @@ Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21â
         f1=fi,               # ice fractional volume
         f2=1 - frac_volume,  # air fractional volume
         eps0=water_permittivity_model(frequency, temperature=FREEZING_POINT),
-        eps1=ice_permittivity_model(frequency, temperature=FREEZING_POINT),
+        eps1=ice_permittivity_model(frequency, temperature=temperature),
         eps2=1,
     )
 
@@ -177,12 +185,14 @@ IEEE Trans. on Antennasand Propagation,Vol. 34, No. 11, 1329â€“1340, 1986. DOI: 
     return eps_ws_r + 1j * eps_ws_i
 
 
-@layer_properties("density", "liquid_water", optional_arguments=["ice_permittivity_model"])
-def wetsnow_permittivity_wiesmann99(frequency, density, liquid_water, ice_permittivity_model=None):
+@layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model"])
+def wetsnow_permittivity_wiesmann99(frequency, temperature, density, liquid_water, ice_permittivity_model=None):
     """effective permittivity of a snow mixture as presented in MEMLS by Wiesmann and Matzler, 1999. Note that the version implemented
     in MEMLS v3 is different.
 
 """
+    if temperature < FREEZING_POINT:
+        assert np.all(liquid_water == 0)
 
     if ice_permittivity_model is None:
         from .ice import ice_permittivity_maetzler06
@@ -193,7 +203,7 @@ def wetsnow_permittivity_wiesmann99(frequency, density, liquid_water, ice_permit
 
     Wi = density * liquid_water / mass_melange  # fractional of water in air+ice+water
 
-    eps_dry = polder_van_santen(fi, e0=1, eps=ice_permittivity_model(frequency, temperature=FREEZING_POINT))  # permittivity of dry snow
+    eps_dry = polder_van_santen(fi, e0=1, eps=ice_permittivity_model(frequency, temperature=temperature))  # permittivity of dry snow
 
     Aa = 0.005    # depolarisation factors of prolate
     Ab = 0.4975   # water inclusion (Matzler 1987)
@@ -217,8 +227,8 @@ def wetsnow_permittivity_wiesmann99(frequency, density, liquid_water, ice_permit
     return eps_dry + eps_eff
 
 
-@layer_properties("density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
-def wetsnow_permittivity_memls(frequency, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
+@layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
+def wetsnow_permittivity_memls(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
     """effective permittivity of a snow mixture as calculated in MEMLS using Maxwell-Garnett Mixing rule of water in dry snow
 for prolate spheroidal water with experimentally determined. Dry snow permittivity is here determined with Polder van Santen.
 
@@ -245,6 +255,9 @@ for prolate spheroidal water with experimentally determined. Dry snow permittivi
     # %   University of Bern, Switzerland
     # %
 
+    if temperature < FREEZING_POINT:
+        assert np.all(liquid_water == 0)
+
     ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
 
     Aa = 0.005    # depolarisation factors of prolate
@@ -258,7 +271,7 @@ for prolate spheroidal water with experimentally determined. Dry snow permittivi
 
     Wi = density * liquid_water / mass_melange  # fractional of water in air+ice+water
 
-    epsd = polder_van_santen(fi, e0=1, eps=ice_permittivity_model(frequency, temperature=FREEZING_POINT))  # permittivity of dry snow
+    epsd = polder_van_santen(fi, e0=1, eps=ice_permittivity_model(frequency, temperature=temperature))  # permittivity of dry snow
 
     Ka = epsd / (epsd + Aa * (ew - epsd))
     Kb = epsd / (epsd + Ab * (ew - epsd))
@@ -269,12 +282,14 @@ for prolate spheroidal water with experimentally determined. Dry snow permittivi
     return eps
 
 
-@layer_properties("density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
-def wetsnow_permittivity_three_component_polder_van_santen(frequency, density, liquid_water,
+@layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
+def wetsnow_permittivity_three_component_polder_van_santen(frequency, temperature, density, liquid_water,
                                                            ice_permittivity_model=None, water_permittivity_model=None):
     """effective permittivity of a snow mixture using the three components polder_van_santen, assuming spherical inclusions
 
 """
+    if temperature < FREEZING_POINT:
+        assert np.all(liquid_water == 0)
 
     ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
 
@@ -296,7 +311,7 @@ def wetsnow_permittivity_three_component_polder_van_santen(frequency, density, l
 
     return polder_van_santen_three_spherical_components(f1, f2,
                                                         eps0=1,
-                                                        eps1=ice_permittivity_model(frequency, temperature=FREEZING_POINT),
+                                                        eps1=ice_permittivity_model(frequency, temperature=temperature),
                                                         eps2=water_permittivity_model(frequency, temperature=FREEZING_POINT))
 
 
