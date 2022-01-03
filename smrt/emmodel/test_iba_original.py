@@ -61,6 +61,7 @@ def setup_func_active(testpack=None):
     emmodel = IBA_original(scatt, testpack)
     return emmodel
 
+
 def setup_func_rayleigh():
     testpack = setup_func_indep(radius=1e-4)
     sensor = amsre('10V')
@@ -83,13 +84,13 @@ def setup_mu(stepsize, bypass_exception=None):
 # Tests to compare with MEMLS IBA, graintype = 2 (small spheres) outputs
 
 
-
 def test_ks_pc_is_0p3_mm():
     testpack = setup_func_pc(0.3e-3)
     em = setup_func_em(testpack)
     # Allow 5% error
     memls_ks = 4.13718676e+00
     assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
+
 
 def test_ks_pc_is_0p25_mm():
     testpack = setup_func_pc(0.25e-3)
@@ -99,6 +100,7 @@ def test_ks_pc_is_0p25_mm():
     # eq_(em.ks, memls_ks)
     assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
 
+
 def test_ks_pc_is_0p2_mm():
     testpack = setup_func_pc(0.2e-3)
     em = setup_func_em(testpack)
@@ -106,12 +108,14 @@ def test_ks_pc_is_0p2_mm():
     memls_ks = 1.41304849e+00
     assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
 
+
 def test_ks_pc_is_0p15_mm():
     testpack = setup_func_pc(0.15e-3)
     em = setup_func_em(testpack)
     # Allow 5% error
     memls_ks = 6.30218291e-01
     assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
+
 
 def test_ks_pc_is_0p1_mm():
     testpack = setup_func_pc(0.1e-3)
@@ -182,14 +186,16 @@ def test_energy_conservation_shs_active():
 def test_iba_vs_rayleigh_passive_m0():
     em_iba, em_ray = setup_func_rayleigh()
     mu = setup_mu(1. / 64)
-    assert (abs(em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks) < tolerance_pc).all()
+    assert (abs(em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks
+                - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks) < tolerance_pc).all()
 
 
 def test_iba_vs_rayleigh_active_m0():
     # Have to set npol = 2 for m=0 mode in active otherwise rayleigh will produce 3x3 matrix
     em_iba, em_ray = setup_func_rayleigh()
     mu = setup_mu(1. / 64, bypass_exception=True)
-    assert (abs(em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks) < tolerance_pc).all()
+    assert (abs(em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks
+                - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks) < tolerance_pc).all()
 
 
 def test_iba_vs_rayleigh_active_m1():
@@ -197,18 +203,37 @@ def test_iba_vs_rayleigh_active_m1():
     mu = setup_mu(1. / 64, bypass_exception=True)
     # Clear cache
     em_iba.cached_mu = None
-    assert (abs(em_iba.ft_even_phase(mu, mu, 1, npol=3)[:, :, 1] / em_iba.ks - em_ray.ft_even_phase(mu, mu, 1, npol=3)[:, :, 1] / em_ray.ks) < tolerance_pc).all()
+    assert (abs(em_iba.ft_even_phase(mu, mu, 1, npol=3)[:, :, 1] / em_iba.ks
+                - em_ray.ft_even_phase(mu, mu, 1, npol=3)[:, :, 1] / em_ray.ks) < tolerance_pc).all()
 
 
 def test_iba_vs_rayleigh_active_m2():
     em_iba, em_ray = setup_func_rayleigh()
     mu = setup_mu(1. / 64, bypass_exception=True)
-    assert (abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[:, :, 2] / em_iba.ks - em_ray.ft_even_phase(mu, mu, 2, npol=3)[:, :, 2] / em_ray.ks) < tolerance_pc).all()
+
+    def check(i, j):
+        print(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_iba.ks,
+            abs(em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_ray.ks))
+        assert abs((abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_iba.ks)
+                    - abs(em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_ray.ks)) < tolerance_pc).all()
+
+        assert (abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_iba.ks
+                    - em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_ray.ks) < tolerance_pc).all()
+
+    check(0, 0)
+    check(0, 1)
+    check(0, 2)
+    check(1, 0)
+    check(1, 1)
+    check(1, 2)
+    check(2, 0)
+    check(2, 1)
+    check(2, 2)
 
 
 def test_iba_raise_exception_mu_is_1():
-    shs_pack = setup_func_shs()
-    em = setup_func_active(testpack=shs_pack)
-    bad_mu = np.array([0.2, 1])
+    shs_pack=setup_func_shs()
+    em=setup_func_active(testpack=shs_pack)
+    bad_mu=np.array([0.2, 1])
     with pytest.raises(SMRTError):
         em.ft_even_phase(bad_mu, bad_mu, 2, npol=3)[:, :, 2]

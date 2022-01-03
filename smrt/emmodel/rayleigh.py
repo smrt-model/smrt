@@ -111,7 +111,7 @@ class Rayleigh(object):
             P[h, h, 2] = 0.5
             P[h, u, 2] = -0.5 * mu_i[np.newaxis, :]
 
-            P[u, v, 2] = np.outer(mu_s, mu_i2)
+            P[u, v, 2] = - np.outer(mu_s, mu_i2)
             P[u, h, 2] = mu_s[:, np.newaxis]
             P[u, u, 2] = np.outer(mu_s, mu_i)
 
