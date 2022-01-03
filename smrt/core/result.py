@@ -110,13 +110,7 @@ class Result(object):
         raise NotImplementedError("must be implemented in a subclass")
 
     def return_as_dataframe(self, name, channel_axis=None, **kwargs):
-        """return the result as a dataframe. The dataframe organization is different depending on channel_axis.
-
-        :param name: name of the data frame column
-        :param channel_axis: if channel_axis=None, the dataframe has hierarchical indexes with frequency, polarization, etc. 
-        If channel_axis="column", each channel defined in the sensor is one column.
-        If channel_axis="index", each channel defined in the sensor is one index.
-"""
+        # is to be called from child classes called to_dataframe
 
         def xr_to_dataframe(x, name):
             # workaround for when the resulting array has no dims anymore
@@ -150,12 +144,12 @@ class Result(object):
         else:
             return xr_to_dataframe(self.sel_data(**kwargs), name=name)
 
-    def return_as_series(self):
-        """return the result as a series with the channels defined in the sensor as index. 
+    def to_series(self, **kwargs):
+        """return the result as a series with the channels defined in the sensor as index.
         This requires that the sensor has declared a channel list.
 
         """
-        return self.return_as_dataframe('out', channel_axis='index')['out']
+        return self.return_as_dataframe('out', channel_axis='column', **kwargs).iloc[0]
 
 
 class PassiveResult(Result):
@@ -182,21 +176,27 @@ class PassiveResult(Result):
 """
         return _strongsqueeze(self.sel_data(channel=channel, **kwargs))
 
-    def Tb_as_dataframe(self, channel_axis=None, **kwargs):
-        """Return brightness temperature as a pandas.DataFrame or pandas.Series. Any parameter can be added to slice the results
+    def Tb_as_dataframe(self, **kwargs):
+        """See :py:meth:`PassiveResult`.to_dataframe
+"""
+
+        return self.to_dataframe(**kwargs)
+
+    def to_dataframe(self, channel_axis=None, **kwargs):
+        """Return brightness temperature as a pandas.DataFrame. Any parameter can be added to slice the results
         (e.g. frequency=37e9 or polarization='V'). See xarray slicing with sel method (to document).
-        In addition channel_axis controls the format of the output. If set to None, the DataFrame has a multi-index formed with all the
+        In addition channel_axis controls the format of the output. If set to None, the DataFrame has a multi-index with all the
         dimensions (frequency, polarization, ...).
-        If channel_axis is set to "column", and if the sensor has named channels (channel_map in SMRT wording), the channel are 
+        If channel_axis is set to "column", and if the sensor has a channel list, the channels are
         in columns and the other dimensions are in index. If set to "index", the channel are in index with all the other dimensions.
 
-        The most conviennent is probably channel_axis="column" while channel_axis=None (default) contains all the data even those 
+        The most conviennent is probably channel_axis="column" while channel_axis=None (default) contains all the data even those
         not corresponding to a channel and applies to any sensor even those without channel_map.
 
         :param channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
 """
 
-        return self.return_as_dataframe(name='Tb', channel_axis=channel_axis, **kwargs)
+        return super().return_as_dataframe(name='Tb', channel_axis=channel_axis, **kwargs)
 
     def TbV(self, **kwargs):
         """Return V polarization. Any parameter can be added to slice the results (e.g. frequency=37e9).
@@ -276,42 +276,54 @@ class ActiveResult(Result):
         return _strongsqueeze(self.sel_data(channel=channel, return_backscatter="natural", **kwargs))
 
     def sigma_dB(self, channel=None, **kwargs):
-        """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9, polarization_inc='V', polarization='V').
-         See xarray slicing with sel method (to document)"""
+        """Return backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9,
+        polarization_inc='V', polarization='V'). See xarray slicing with sel method (to document)
+"""
 
         return _strongsqueeze(self.sel_data(channel=channel, return_backscatter="dB", **kwargs))
 
     def sigma_as_dataframe(self, channel_axis=None, **kwargs):
-        """Return backscattering coefficient as a pandas.DataFrame or pandas.Series. Any parameter can be added to slice the results
+        """Return backscattering coefficient as a pandas.DataFrame. Any parameter can be added to slice the results
         (e.g. frequency=37e9 or polarization='V'). See xarray slicing with sel method (to document).
         In addition channel_axis controls the format of the output. If set to None, the DataFrame has a multi-index formed with all the
         dimensions (frequency, polarization, ...).
-        If channel_axis is set to "column", and if the sensor has named channels (channel_map in SMRT wording), the channel are 
+        If channel_axis is set to "column", and if the sensor has named channels (channel_map in SMRT wording), the channel are
         in columns and the other dimensions are in index. If set to "index", the channel are in index with all the other dimensions.
 
-        The most conviennent is probably channel_axis="column" while channel_axis=None (default) contains all the data even those 
+        The most conviennent is probably channel_axis="column" while channel_axis=None (default) contains all the data even those
         not corresponding to a channel and applies to any sensor even those without channel_map.
 
         :param channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
 """
 
-        return self.return_as_dataframe(name='sigma', channel_axis=channel_axis, return_backscatter="natural", **kwargs)
+        return super().return_as_dataframe(name='sigma', channel_axis=channel_axis, return_backscatter="natural", **kwargs)
 
-    def sigma_dB_as_dataframe(self, channel_axis=None, **kwargs):
-        """Return backscattering coefficient in dB as a pandas.DataFrame or pandas.Series. Any parameter can be added to slice the results
+    def sigma_dB_as_dataframe(self, **kwargs):
+        """See :py:meth:`ActiveResult`.to_dataframe
+"""
+        return self.to_dataframe(**kwargs)
+
+    def to_dataframe(self, channel_axis=None, **kwargs):
+        """Return backscattering coefficient in dB as a pandas.DataFrame. Any parameter can be added to slice the results
         (e.g. frequency=37e9 or polarization='V'). See xarray slicing with sel method (to document).
-        In addition channel_axis controls the format of the output. If set to None, the DataFrame has a multi-index formed with all the
+        In addition channel_axis controls the format of the output. If set to None, the DataFrame has a multi-index with all the
         dimensions (frequency, polarization, ...).
-        If channel_axis is set to "column", and if the sensor has named channels (channel_map in SMRT wording), the channel are 
+        If channel_axis is set to "column", and if the sensor has named channels (channel_map in SMRT wording), the channel are
         in columns and the other dimensions are in index. If set to "index", the channel are in index with all the other dimensions.
 
-        The most conviennent is probably channel_axis="column" while channel_axis=None (default) contains all the data even those 
+        The most conviennent is probably channel_axis="column" while channel_axis=None (default) contains all the data even those
         not corresponding to a channel and applies to any sensor even those without channel_map.
 
         :param channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
 """
+        return super().return_as_dataframe(name='sigma', channel_axis=channel_axis, return_backscatter="dB", **kwargs)
 
-        return self.return_as_dataframe(name='sigma', channel_axis=channel_axis, return_backscatter="dB", **kwargs)
+    def to_series(self, **kwargs):
+        """return backscattering coefficients in dB as a series with the channels defined in the sensor as index.
+        This requires that the sensor has declared a channel list.
+
+        """
+        return super().to_series(return_backscatter="dB", **kwargs)
 
     def sigmaVV(self, **kwargs):
         """Return VV backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
@@ -352,7 +364,6 @@ class ActiveResult(Result):
         """Return VH backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9).
          See xarray slicing with sel method (to document)"""
         return dB(self.sigmaVH(**kwargs))
-
 
     # def groupby(self, variable):
     #    """iterated over a given variable. Variable is typically frequency, theta, polarization or snowpack"""
