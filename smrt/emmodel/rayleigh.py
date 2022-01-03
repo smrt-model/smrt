@@ -48,6 +48,7 @@ class Rayleigh(object):
         if not hasattr(self.layer.microstructure, "radius"):
             raise SMRTError("Only microstructure_model which defined a `radius` can be used with Rayleigh scattering")
 
+
     def ft_even_phase_baseonUlaby(self, mu_s, mu_i, m_max, npol=None):
         """#
         # Equations are from pg 1188-1189 Ulaby, Moore, Fung. Microwave Remote Sensing Vol III.
@@ -56,25 +57,23 @@ class Rayleigh(object):
 
         """
 
-        assert mu_s is mu_i  # temporary hack, to be propagated
-        mu = mu_i
-
         if npol is None:
             npol = 2 if m_max == 0 else 3
 
         P = smrt_matrix.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
 
-        mu2 = mu**2
+        mu_i2 = mu_i**2
+        mu_s2 = mu_s**2
 
         v, h, u = 0, 1, 2
 
         # mode m == 0
-        P[v, v, 0] = 0.5 * np.outer(mu2, mu2) + np.outer(1 - mu2, 1 - mu2)
-        P[v, h, 0] = 0.5 * mu2[:, np.newaxis]  # mu2[:, np.newaxis]  # equiv np.dot(mu2, np.ones_like(mu2.T))
+        P[v, v, 0] = 0.5 * np.outer(mu_s2, mu_i2) + np.outer(1 - mu_s2, 1 - mu_i2)
+        P[v, h, 0] = 0.5 * mu_s2[:, np.newaxis]  # mu2[:, np.newaxis]  # equiv np.dot(mu2, np.ones_like(mu2.T))
         if npol >= 3:
             P[v, u] = 0
 
-        P[h, v, 0] = P[v, h, 0].T
+        P[h, v, 0] = 0.5 * mu_i2[np.newaxis, :]
         P[h, h, 0] = 0.5
         if npol >= 3:
             P[h, u, 0] = 0
@@ -85,36 +84,38 @@ class Rayleigh(object):
             P[u, u, 0] = 0
 
         if m_max >= 1:
-            sint = np.sqrt(1. - mu2)
-            cossint = mu * sint
+            sint_s = np.sqrt(1. - mu_s2)
+            sint_i = np.sqrt(1. - mu_i2)
+            cossint_s = mu_s * sint_s
+            cossint_i = mu_i * sint_i
 
-            P[v, v, 1] = 2 * np.outer(cossint, cossint)
+            P[v, v, 1] = 2 * np.outer(cossint_s, cossint_i)
             P[v, h, 1] = 0
-            P[v, u, 1] = np.outer(cossint, sint)
+            P[v, u, 1] = np.outer(cossint_s, sint_i)
 
             P[h, v, 1] = 0
             P[h, h, 1] = 0
             P[h, u, 1] = 0
 
-            P[u, v, 1] = -2 * P[v, u, 1].T
+            P[u, v, 1] = -2 * np.outer(sint_s, cossint_i)
 
             P[u, h, 1] = 0
-            P[u, u, 1] = np.outer(sint, sint)
+            P[u, u, 1] = np.outer(sint_s, sint_i)
 
         if m_max >= 2:
-            P[v, v, 2] = 0.5 * np.outer(mu2, mu2)
-            P[v, h, 2] = -0.5 * mu2[:, np.newaxis]
-            P[v, u, 2] = 0.5 * np.outer(mu2, mu)
+            P[v, v, 2] = 0.5 * np.outer(mu_s2, mu_i2)
+            P[v, h, 2] = -0.5 * mu_s2[:, np.newaxis]
+            P[v, u, 2] = 0.5 * np.outer(mu_s2, mu_i)
 
-            P[h, v, 2] = P[v, h, 2].T
+            P[h, v, 2] = -0.5 * mu_i2[np.newaxis, :]
             P[h, h, 2] = 0.5
-            P[h, u, 2] = -0.5 * mu[np.newaxis, :]
+            P[h, u, 2] = -0.5 * mu_i[np.newaxis, :]
 
-            P[u, v, 2] = -2 * P[v, u, 2].T
-            P[u, h, 2] = mu[:, np.newaxis]
-            P[u, u, 2] = np.outer(mu, mu)
+            P[u, v, 2] = np.outer(mu_s, mu_i2)
+            P[u, h, 2] = mu_s[:, np.newaxis]
+            P[u, u, 2] = np.outer(mu_s, mu_i)
 
-        if m_max >=3:
+        if m_max >= 3:
             P[:, :, 3:, :, :] = 0
 
         if npol == 3:
