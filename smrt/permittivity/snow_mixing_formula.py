@@ -262,7 +262,7 @@ for prolate spheroidal water with experimentally determined. Dry snow permittivi
 
     Aa = 0.005    # depolarisation factors of prolate
     Ab = 0.4975   # water inclusion (Matzler 1987)
-    Ac = Ab
+    # Ac = Ab
 
     ew = water_permittivity_model(frequency, temperature=FREEZING_POINT)
 
@@ -297,7 +297,7 @@ def wetsnow_permittivity_three_component_polder_van_santen(frequency, temperatur
         # density = np.array(density)
         # liquid_water = np.array(liquid_water)
         def func(dens, liq):
-            return wetsnow_permittivity_three_component_polder_van_santen(frequency, dens, liq,
+            return wetsnow_permittivity_three_component_polder_van_santen(frequency, temperature, dens, liq,
                                                                           ice_permittivity_model=ice_permittivity_model,
                                                                           water_permittivity_model=water_permittivity_model)
 

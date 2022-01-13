@@ -663,18 +663,18 @@ class EigenValueSolver(object):
                 diagonalization_failed = True
                 reason = "eig method"
             else:
-                notclose_beta = not np.allclose(beta.imag, 0, atol=1e-06)
-                notclose_E = not np.allclose(E.imag, 0, atol=1e-06)
-                diagonalization_failed = notclose_beta or notclose_E
+                iscomplex_beta = not np.allclose(beta.imag, 0, atol=1e-06)
+                iscomplex_E = not np.allclose(E.imag, 0, atol=1e-06)
+                diagonalization_failed = iscomplex_beta or iscomplex_E
 
                 reason = ""
-                if notclose_beta:
-                    reason += "not close beta "
-                if notclose_E:
-                    reason += "not close E "
+                if iscomplex_beta:
+                    reason += "Eigen values beta is complex "
+                if iscomplex_E:
+                    reason += "Eigen vector is complex "
 
             if diagonalization_failed:
-                print("Reason: ", reason, " ks:", self.ks)
+                print("Reason: ", reason, " ks:", self.ks, " m:", m)
                 mask = np.abs(E.imag) > 1e-8
                 print("Info:", m, E[mask], beta[np.any(mask, axis=0)])
                 raise SMRTError("""The diagonalization failed in DORT which is possibly caused by single scattering albedo larger than 1.

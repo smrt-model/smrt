@@ -16,21 +16,16 @@ Example::
 
 """
 
-import numpy as np
-
 from .rayleigh import Rayleigh
 
 
 class Prescribed_KsKaEps(Rayleigh):
     """
     """
-    def __init__(self, sensor, layer):
 
-        #e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
-        #eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
+    def __init__(self, sensor, layer):
 
         self._effective_permittivity = layer.effective_permittivity
 
         self.ks = layer.ks
         self.ka = layer.ka
-
