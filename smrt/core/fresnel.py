@@ -27,6 +27,17 @@ def fresnel_coefficients(eps_1, eps_2, mu1):
     return rv, rh, mu2
 
 
+def brewster_angle(eps_1, eps_2):
+    """compute the brewster angle
+
+    :param eps_1: permittivity of medium 1.
+    :param eps_2: permittivity of medium 2.
+
+    :returns: angle in radians
+"""
+    return np.arctan(np.sqrt(eps_2 / eps_1).real)
+
+
 def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
     """compute the fresnel reflection matrix for/in medium 1 laying above medium 2.
 
