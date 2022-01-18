@@ -26,13 +26,9 @@ def depolarization_factors(length_ratio=None):
 
     ::
 
-        # If imported to an electromagnetic model:
-        from .commonfunc import depolarization_factors
-        depol_xyz = depolarization_factors()
-
-        # General import:
-        from smrt.emmodel.commonfunc import depolarization_factors
+        from smrt.permittivity.generic_mixing_formula import depolarization_factors
         depol_xyz = depolarization_factors(length_ratio=1.2)
+        depol_xyz = depolarization_factors()
 
     """
 
@@ -75,7 +71,7 @@ def polder_van_santen(frac_volume, e0=1, eps=3.185, depol_xyz=None, length_ratio
 
     ::
 
-        from .commonfunc import polder_van_santen
+        from smrt.permittivity.generic_mixing_formula import polder_van_santen
         effective_permittivity = polder_van_santen(frac_volume, e0, eps)
 
         # for a mixture of 30% spheres and 70% needles

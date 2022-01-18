@@ -12,7 +12,6 @@ may be performed. All properties relate to a single layer. The absorption is cal
 from .iba import IBA
 
 
-
 class IBA_original(IBA):
 
     """
@@ -30,7 +29,6 @@ class IBA_original(IBA):
 
     """
 
-
     def compute_ka(self):
         """ IBA absorption coefficient calculated from the low-loss assumption of a general lossy medium.
 
@@ -46,5 +44,4 @@ class IBA_original(IBA):
         """
 
         # equation from Matzler 1998 (original IBA98 paper) and Matzler and Wiesmann 1999
-        return self.k0 * self.frac_volume *  self.eps.imag * abs(self.mean_sq_field_ratio(self.e0, self.eps))
-        
+        return self.k0 * self.frac_volume * self.eps.imag * abs(self.mean_sq_field_ratio(self.e0, self.eps))
