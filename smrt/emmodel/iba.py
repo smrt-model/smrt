@@ -21,7 +21,7 @@ from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
 from ..permittivity.generic_mixing_formula import polder_van_santen, depolarization_factors
 from ..core.lib import smrt_matrix, generic_ft_even_matrix, len_atleast_1d
-from .common import rayleigh_scattering_matrix_and_angle
+from .common import rayleigh_scattering_matrix_and_angle, AdjustableEffectivePermittivityMixins, derived_EMModel
 
 #
 # For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
@@ -30,19 +30,18 @@ from .common import rayleigh_scattering_matrix_and_angle
 #
 
 
-def derived_IBA(effective_permittivity_model=polder_van_santen):  # , absorption_calculation=None):
+def derived_IBA(effective_permittivity_model=polder_van_santen):
     """return a new IBA model with variant from the default IBA.
 
-    :param effective_permittivity_model: permittivity mixing formula. Must be a function of 4 parameters (frac_volume, e0, es, depol_xyz).
+    :param effective_permittivity_model: permittivity mixing formula.
 
     :returns a new class inheriting from IBA but with patched methods
     """
-    new_class_name = "IBA_%s" % (effective_permittivity_model.__name__)  # , absorption_calculation)
 
-    return type(new_class_name, (IBA, ), {'effective_permittivity_model': staticmethod(effective_permittivity_model)})
+    return derived_EMModel(IBA, effective_permittivity_model)
 
 
-class IBA(object):
+class IBA(AdjustableEffectivePermittivityMixins):
 
     """
     Improved Born Approximation electromagnetic model class.
@@ -304,30 +303,6 @@ class IBA(object):
 
         """
         return np.full(len_atleast_1d(mu), self.ks + self.ka)
-
-    def effective_permittivity(self):
-        """ Calculation of complex effective permittivity of the medium.
-
-        :returns effective_permittivity: complex effective permittivity of the medium
-
-        """
-
-        # eps = type(self).effective_permittivity_model(
-        #    self.frac_volume, self.e0, self.eps, self.depol_xyz, self.inclusion_shape)
-
-        effective_permittivity_model = type(self).effective_permittivity_model
-
-        # inspect the signature of the effective_permittivity_model
-        signature = inspect.signature(effective_permittivity_model).parameters
-        args = dict(e0=self.e0, eps=self.eps, frequency=self.frequency)
-        args = {k: v for k, v in args.items() if k in signature}  # filter the arguments needed by the function
-
-        eps = type(self).effective_permittivity_model(layer_to_inject=self.layer, **args)
-
-        if eps.imag < -1e-10:
-            print(eps)
-            raise SMRTError("the imaginary part of the permittivity must be positive, by convention, in SMRT")
-        return eps
 
 
 class IBA_MM(IBA):

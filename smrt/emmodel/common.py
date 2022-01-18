@@ -1,4 +1,6 @@
 
+import inspect
+
 import numpy as np
 
 
@@ -146,3 +148,46 @@ def Lmatrix(cos_phi, sin_phi_sign, npol):
 # the equality is not perfect when theta=0 and theta_s=0
 
 rayleigh_scattering_matrix_and_angle = rayleigh_scattering_matrix_and_angle_tsang00
+
+
+class AdjustableEffectivePermittivityMixins(object):
+    """
+    Mixin that allow an EM model to have the effective permittivity model defined by the user instead of by the theory of the EM Model.
+The EM model must declare a default effective permittivity model.
+
+    """
+
+    def effective_permittivity(self):
+        """ Calculation of complex effective permittivity of the medium.
+
+            :returns effective_permittivity: complex effective permittivity of the medium
+
+        """
+
+        # eps = type(self).effective_permittivity_model(
+        #    self.frac_volume, self.e0, self.eps, self.depol_xyz, self.inclusion_shape)
+
+        effective_permittivity_model = type(self).effective_permittivity_model
+
+        # inspect the signature of the effective_permittivity_model
+        signature = inspect.signature(effective_permittivity_model).parameters
+        args = dict(e0=self.e0, eps=self.eps, frequency=self.frequency)
+        args = {k: v for k, v in args.items() if k in signature}  # filter the arguments needed by the function
+
+        eps = type(self).effective_permittivity_model(layer_to_inject=self.layer, **args)
+        if eps.imag < -1e-10:
+            print(eps)
+            raise SMRTError("the imaginary part of the permittivity must be positive, by convention, in SMRT")
+        return eps
+
+
+def derived_EMModel(base_class, effective_permittivity_model):
+    """return a new IBA model with variant from the default IBA.
+
+    :param effective_permittivity_model: permittivity mixing formula.
+
+    :returns a new class inheriting from IBA but with patched methods
+    """
+    new_class_name = "%s_%s" % (base_class.__name__, effective_permittivity_model.__name__)  # , absorption_calculation)
+
+    return type(new_class_name, (base_class, ), {'effective_permittivity_model': staticmethod(effective_permittivity_model)})
