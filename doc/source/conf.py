@@ -28,7 +28,10 @@ if on_rtd:
     import math
     # For Autocorrelation microstructure_model:
     import copy
+    # For utils
+    import oct2py
     # For everything:
+    import xarray
     import smrt
 
 # sphinxcontrib-restbuilder specific code
@@ -60,7 +63,8 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.coverage',
     'sphinx.ext.todo',
-    'sphinx.ext.imgmath'
+    'sphinx.ext.imgmath',
+    'sphinx.ext.autosummary'
 ]
 autosummary_generate = True
 templates_path = [ '_templates' ]

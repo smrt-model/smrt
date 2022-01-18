@@ -28,7 +28,7 @@ The :py:mod:`~smrt.utils` package provides various useful tools to work with SMR
 
 .. toctree::
     :titlesonly:
-    :maxdepth: 1
+    :maxdepth: 4
 
     Inputs <smrt.inputs.rst>
     Permittivity <smrt.permittivity.rst>
