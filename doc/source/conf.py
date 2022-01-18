@@ -29,7 +29,7 @@ if on_rtd:
     # For Autocorrelation microstructure_model:
     import copy
     # For utils
-    import oct2py
+    # import oct2py
     # For everything:
     import xarray
     import smrt
