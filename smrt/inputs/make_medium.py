@@ -130,7 +130,7 @@ def make_snowpack(thickness, microstructure_model, density,
     :param density: densities of the layers.
     :param substrate: set the substrate of the snowpack. Another way to add a substrate is to use the + operator
     (e.g. snowpack + substrate).
-    All the other parameters (temperature, microstructure parameters, emmodel, etc, etc) are given as optional arguments
+    :param **kwargs: All the other parameters (temperature, microstructure parameters, emmodel, etc.) are given as optional arguments
     (e.g. temperature=[270, 250]).
     They are passed for each layer to the function :py:func:`~smrt.inputs.make_medium.make_snow_layer`.
     Thus, the documentation of this function is the reference. It describes precisely the available parameters.
@@ -181,7 +181,8 @@ def make_snow_layer(layer_thickness, microstructure_model,
     :param microstructure_model: module name of microstructure model to be used.
     :param density: density of snow layer in kg m :sup:`-3`.
     :param temperature: temperature of layer in K.
-    :param ice_permittivity_model: permittivity formulation (default is ice_permittivity_matzler87).
+    :param ice_permittivity_model: permittivity formulation of the scatterers (default is ice_permittivity_matzler87).
+    :param background_permittivity_model: permittivity formulation for the background (default is air).
     :param liquid_water: volume of liquid water with respect to ice+water volume (default=0).
     liquid_water = water_volume / (ice_volume + water_volume).
     :param salinity: salinity in kg/kg, for using PSU as unit see PSU constant in smrt module (default = 0).
