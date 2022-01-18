@@ -228,21 +228,19 @@ This allows permittivity functions to use any property of the layer, as long as 
     def wrapper(f):
         @wraps(f)
         def newf(*args, layer_to_inject=None, **kwargs):
-
             if layer_to_inject is not None:
                 args = list(args)  # make it mutable
                 assert isinstance(layer_to_inject, Layer)  # this is not stricly required
 
                 for ra in required_arguments:
                     if hasattr(layer_to_inject, ra):
-                        args.append(getattr(layer_to_inject, ra))  # add the layer's attributes at the end of args
+                        kwargs[ra] = getattr(layer_to_inject, ra)  # add the layer's attributes as named arguments (avoid problems)
                     else:
                         raise Exception("The layer must have the '%s' attribute to call the function %s " % (ra, str(f)))
                 if optional_arguments:
                     for ra in optional_arguments:
                         if hasattr(layer_to_inject, ra):
                             kwargs[ra] = getattr(layer_to_inject, ra)  # add the layer's over the eventual default arguments
-
             return f(*args, **kwargs)
         return newf
     return wrapper
