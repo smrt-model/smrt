@@ -83,7 +83,7 @@ autodoc_default_flags = ['members']
 
 
 # Mock imports if rtd cannot import them
-autodoc_mock_imports = ["collections", "warnings", "oct2py", "itertools", "inspect", "os", "copy"]
+autodoc_mock_imports = ["collections", "warnings", "oct2py", "itertools", "inspect", "os", "copy", "glob"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
