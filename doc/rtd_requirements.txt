@@ -7,6 +7,5 @@ pandas
 scipy
 oct2py
 matplotlib
-functools
 uuid
 importlib
