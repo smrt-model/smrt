@@ -8,3 +8,4 @@ scipy
 oct2py
 smrt
 matplotlib
+warnings
