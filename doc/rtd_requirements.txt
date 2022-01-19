@@ -7,9 +7,6 @@ pandas
 scipy
 oct2py
 matplotlib
-itertools
-collections
-warnings
 inspect
 os
 copy
