@@ -20,6 +20,7 @@ from warnings import warn
 
 # other import
 import numpy as np
+import xarray as xr
 import scipy.special.orthogonal
 import scipy.linalg
 import scipy.interpolate
@@ -171,7 +172,17 @@ class DORT(object):
             #coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola)] + coords
             coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola), ('polarization', pola)]
 
-        return make_result(sensor, intensity, coords)
+        result = make_result(sensor, intensity, coords)
+
+        # store other diagnostic information
+        layer_index = 'layer', range(snowpack.nlayer)
+        other_data = {
+            'effective_permittivity': xr.DataArray(self.effective_permittivity, coords=[layer_index]),
+            'ks': xr.DataArray([getattr(em, "ks", np.nan) for em in emmodels], coords=[layer_index]),
+            'ka': xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index])
+        }
+
+        return make_result(sensor, intensity, coords, other_data=other_data)
 
     def dort(self, m_max=0, special_return=False):
         # not to be called by the user

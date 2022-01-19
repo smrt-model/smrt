@@ -2,8 +2,12 @@
 
 """ The results of RT Solver are hold by the :py:class:`Result` class. This class provides several functions
 to access to the Stokes Vector and Muller matrix in a simple way. Most notable ones are :py:meth:`Result.TbV` and :py:meth:`Result.TbH`
-for the passive mode calculations and :py:meth:`Result.sigmaHH` and :py:meth:`Result.sigmaVV`. Other methods could be developed for
-specific needs.
+for the passive mode calculations and :py:meth:`Result.sigmaHH` and :py:meth:`Result.sigmaVV`. :py:meth:`Result.to_dataframe` is also 
+very convenient for the sensors with a channel map (all specific satellite sensors have such a map, 
+only generic sensors as :py:meth:`smrt.sensor_list.active` and :py:meth:`smrt.sensor_list.passive` does not provide a map by default).
+
+In addition, the RT Solver stores some information in Result.other_data. Currently this includes the effective_permittivity,
+ks and ka for each layer. The data are accessed directly with e.g. result.other_data['ks'].
 
 To save results of calculations in a file, simply use the pickle module or other serialization schemes. We may provide a unified and
 inter-operable solution in the future.
@@ -74,7 +78,7 @@ class Result(object):
 
     """
 
-    def __init__(self, intensity, coords=None, channel_map=None):
+    def __init__(self, intensity, coords=None, channel_map=None, other_data={}):
         """Construct results array with the given intensity array (numpy array or xarray) and dimensions if numpy array is given
 
 """
@@ -82,6 +86,10 @@ class Result(object):
             self.data = intensity
         else:
             self.data = xr.DataArray(intensity, coords)
+
+        for d in other_data.values():
+            assert isinstance(d, xr.DataArray)  # this is emitter responsability to precise the coordinates
+        self.other_data = other_data
 
         if hasattr(self, "mode"):
             self.data.attrs['mode'] = self.mode
@@ -252,7 +260,7 @@ class ActiveResult(Result):
             if lib.is_sequence(theta):
                 # now select all the theta if it is a sequence
                 x = xr.concat([select_theta(self.data, t, drop=True, **kwargs) for t in theta],
-                              pd.Index(theta, 'theta_inc'))
+                              pd.Index(theta, name='theta_inc'))
             else:
                 x = select_theta(self.data, theta, drop=True, **kwargs)
 
@@ -458,8 +466,12 @@ def concat_results(result_list, coord):
         # all the channel maps are the same
         channel_map = result_list[0].channel_map
 
-    return ResultClass(xr.concat([result.data for result in result_list], index),
-                       channel_map=channel_map)
+    data = xr.concat([result.data for result in result_list], index)
+    other_data = {v: xr.concat([result.other_data[v] for result in result_list], index) for v in result_list[0].other_data}
+
+    return ResultClass(data,
+                       channel_map=channel_map,
+                       other_data=other_data)
 
 
 def _strongsqueeze(x):
