@@ -29,8 +29,6 @@ from ..interface.flat import Flat  # core should not depend on something defined
 from .layer import Layer
 from .interface import SubstrateBase
 
-cached_property = getattr(functools, "cached_property", property)  # use cached_propertity if it exists... otherwise, use property
-
 
 class Snowpack(object):
     """holds the description of the snowpack, including the layers, interfaces, and the substrate
@@ -51,7 +49,7 @@ class Snowpack(object):
 """
         return len(self.layers)
 
-    @cached_property
+    @property
     def layer_thicknesses(self):
         """return the thickness of each layer
 """
@@ -67,7 +65,7 @@ class Snowpack(object):
                       DeprecationWarning)
         return np.cumsum(self.layer_thicknesses)
 
-    @cached_property
+    @property
     def bottom_layer_depths(self):
         """return the depth of the bottom of each layer
 
@@ -81,7 +79,7 @@ class Snowpack(object):
 """
         return self.z[:-1]
 
-    @cached_property
+    @property
     def mid_layer_depths(self):
         """return the depth of the bottom of each layer
 
@@ -89,7 +87,7 @@ class Snowpack(object):
         ld = self.z
         return (ld[1:] + ld[:-1]) / 2
 
-    @cached_property
+    @property
     def z(self):
         """return the depth of each interface, that is, 0 and the depth of the bottom of each layer
 
