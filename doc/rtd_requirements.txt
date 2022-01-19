@@ -6,7 +6,6 @@ xarray
 pandas
 scipy
 oct2py
-smrt
 matplotlib
 itertools
 collections
