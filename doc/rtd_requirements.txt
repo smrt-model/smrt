@@ -9,3 +9,4 @@ oct2py
 matplotlib
 uuid
 importlib
+pytest
