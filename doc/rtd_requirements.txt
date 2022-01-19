@@ -8,7 +8,6 @@ scipy
 oct2py
 matplotlib
 functools
-random
 uuid
 sys
 time
