@@ -18,11 +18,7 @@
 #
 import os
 import sys
-#import mock
-
-#MOCK_MODULES = ['warnings', 'oct2py']
-#for mod_name in MOCK_MODULES:
-#    sys.modules[mod_name] = mock.Mock()
+\
 
 
 
@@ -41,7 +37,6 @@ if on_rtd:
     # import oct2py
     # For everything:
     import xarray
-    import smrt
 
 
 # sphinxcontrib-restbuilder specific code
