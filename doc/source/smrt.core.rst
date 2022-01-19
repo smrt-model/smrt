@@ -100,14 +100,6 @@ smrt.core.progressbar module
    :undoc-members:
    :show-inheritance:
 
-smrt.core.result\-LAPTOP\-2A90AQN1 module
------------------------------------------
-
-.. automodule:: smrt.core.result-LAPTOP-2A90AQN1
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 smrt.core.result module
 -----------------------
 
