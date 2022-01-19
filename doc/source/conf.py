@@ -41,7 +41,7 @@ if on_rtd:
     # import oct2py
     # For everything:
     import xarray
-    #import smrt
+    import smrt
 
 
 # sphinxcontrib-restbuilder specific code
