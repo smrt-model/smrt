@@ -7,7 +7,6 @@ pandas
 scipy
 oct2py
 matplotlib
-os
 copy
 functools
 glob
