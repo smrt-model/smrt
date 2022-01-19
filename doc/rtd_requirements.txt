@@ -10,5 +10,4 @@ matplotlib
 functools
 uuid
 importlib
-logging
 threading
