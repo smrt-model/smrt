@@ -9,7 +9,6 @@ oct2py
 matplotlib
 functools
 uuid
-sys
 time
 importlib
 logging
