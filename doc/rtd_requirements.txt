@@ -10,4 +10,3 @@ matplotlib
 functools
 uuid
 importlib
-threading
