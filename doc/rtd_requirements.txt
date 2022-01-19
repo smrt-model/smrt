@@ -9,7 +9,6 @@ oct2py
 matplotlib
 functools
 uuid
-time
 importlib
 logging
 threading
