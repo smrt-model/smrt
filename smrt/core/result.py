@@ -78,7 +78,7 @@ class Result(object):
 
     """
 
-    def __init__(self, intensity, coords=None, channel_map=None, other_data={}):
+    def __init__(self, intensity, coords=None, channel_map=None, other_data={}, mother_df=None):
         """Construct results array with the given intensity array (numpy array or xarray) and dimensions if numpy array is given
 
 """
@@ -90,6 +90,9 @@ class Result(object):
         for d in other_data.values():
             assert isinstance(d, xr.DataArray)  # this is emitter responsability to precise the coordinates
         self.other_data = other_data
+
+        # a dataframe can be provided and will be merged with the results when using return_as_dataframe or to_dataframe
+        self.mother_df = mother_df
 
         if hasattr(self, "mode"):
             self.data.attrs['mode'] = self.mode
@@ -132,25 +135,28 @@ class Result(object):
                 raise SMRTError("No channel information is given in the result. Unable to index the result by channel.")
 
             # concat the dataframe obtained for each channel
-            x = pd.concat([xr_to_dataframe(self.sel_data(channel=ch, **kwargs), name=ch)
-                           for ch in self.channel_map],
-                          axis=1, join='inner')
+            df = pd.concat([xr_to_dataframe(self.sel_data(channel=ch, **kwargs), name=ch)
+                            for ch in self.channel_map],
+                           axis=1, join='inner')
 
             if channel_axis == "index":
-                droplevel = not x.index.name and len(x.index) == 1 and x.index[0] == 0  # this is our added index, remove it
-                x = x.stack()
-                if isinstance(x, pd.Series):
-                    x = pd.DataFrame(x, columns=[name])
+                droplevel = not df.index.name and len(df.index) == 1 and df.index[0] == 0  # this is our added index, remove it
+                df = df.stack()
+                if isinstance(df, pd.Series):
+                    df = pd.DataFrame(df, columns=[name])
 
-                x.index.set_names('channel', level=-1)
+                df.index.set_names('channel', level=-1)
                 if droplevel:
-                    x = x.droplevel(0)
-
-            return x
+                    df = df.droplevel(0)
         elif channel_axis:
             raise SMRTError('channel_axis argument must be "column" or "index"')
         else:
-            return xr_to_dataframe(self.sel_data(**kwargs), name=name)
+            df = xr_to_dataframe(self.sel_data(**kwargs), name=name)
+
+        if self.mother_df is not None:
+            df = df.join(self.mother_df)
+
+        return df
 
     def to_series(self, **kwargs):
         """return the result as a series with the channels defined in the sensor as index.
@@ -184,25 +190,28 @@ class PassiveResult(Result):
 """
         return _strongsqueeze(self.sel_data(channel=channel, **kwargs))
 
-    def Tb_as_dataframe(self, **kwargs):
+    def Tb_as_dataframe(self, channel_axis=None, **kwargs):
         """See :py:meth:`PassiveResult`.to_dataframe
 """
 
-        return self.to_dataframe(**kwargs)
+        return self.to_dataframe(channel_axis=None, **kwargs)
 
-    def to_dataframe(self, channel_axis=None, **kwargs):
+    def to_dataframe(self, channel_axis="auto", **kwargs):
         """Return brightness temperature as a pandas.DataFrame. Any parameter can be added to slice the results
         (e.g. frequency=37e9 or polarization='V'). See xarray slicing with sel method (to document).
         In addition channel_axis controls the format of the output. If set to None, the DataFrame has a multi-index with all the
         dimensions (frequency, polarization, ...).
-        If channel_axis is set to "column", and if the sensor has a channel list, the channels are
+        If channel_axis is set to "column", and if the sensor has a channel map, the channels are
         in columns and the other dimensions are in index. If set to "index", the channel are in index with all the other dimensions.
 
         The most conviennent is probably channel_axis="column" while channel_axis=None (default) contains all the data even those
-        not corresponding to a channel and applies to any sensor even those without channel_map.
+        not corresponding to a channel and applies to any sensor even those without channel_map. If set to "auto", 
+        the channel_axis is "column" if the channel map exit, otherwise is None.
 
         :param channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
 """
+        if channel_axis == "auto":
+            channel_axis = "column" if self.channel_map else None
 
         return super().return_as_dataframe(name='Tb', channel_axis=channel_axis, **kwargs)
 
@@ -306,10 +315,10 @@ class ActiveResult(Result):
 
         return super().return_as_dataframe(name='sigma', channel_axis=channel_axis, return_backscatter="natural", **kwargs)
 
-    def sigma_dB_as_dataframe(self, **kwargs):
+    def sigma_dB_as_dataframe(self, channel_axis=None, **kwargs):
         """See :py:meth:`ActiveResult`.to_dataframe
 """
-        return self.to_dataframe(**kwargs)
+        return self.to_dataframe(channel_axis=channel_axis, **kwargs)
 
     def to_dataframe(self, channel_axis=None, **kwargs):
         """Return backscattering coefficient in dB as a pandas.DataFrame. Any parameter can be added to slice the results
@@ -319,11 +328,17 @@ class ActiveResult(Result):
         If channel_axis is set to "column", and if the sensor has named channels (channel_map in SMRT wording), the channel are
         in columns and the other dimensions are in index. If set to "index", the channel are in index with all the other dimensions.
 
+        If channel_axis is set to "column", and if the sensor has a channel map, the channels are
+        in columns and the other dimensions are in index. If set to "index", the channel are in index with all the other dimensions.
+
         The most conviennent is probably channel_axis="column" while channel_axis=None (default) contains all the data even those
-        not corresponding to a channel and applies to any sensor even those without channel_map.
+        not corresponding to a channel and applies to any sensor even those without channel_map. If set to "auto", 
+        the channel_axis is "column" if the channel map exit, otherwise is None.
 
         :param channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
 """
+        if channel_axis == "auto":
+            channel_axis = "column" if self.channel_map else None
         return super().return_as_dataframe(name='sigma', channel_axis=channel_axis, return_backscatter="dB", **kwargs)
 
     def to_series(self, **kwargs):

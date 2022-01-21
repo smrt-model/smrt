@@ -21,9 +21,15 @@ Example::
 
     print(result.TbV())
 
-The :py:meth:`~Model.run` method can be used with list of snowpacks. In this case, it is recommended to set the snowpack_dimension_name and 
-snowpack_dimension_values variable which gives the name and values of the coordinates that are create for the Results. This is useful with
-timeseries for instance.
+The model can be run on a list of snowpacks or even more conveniently on a `pandas.Series` or `pandas.DataFrame` including snowpacks.
+The first advantage is that by setting parallel_computation=True, the :py:meth:`Model.run` method performs the simulation in parallel
+ on all the available cores of your machine and even possibly remotely on a high performance cluster using dask.
+ The second advantage is that the returned :py:class:`~smrt.core.result.Result` object contains all the simulations 
+ and provide an easier way to plot the results or compute statistics.
+
+If a list of snowpacks is provided, it is recommended to also set the snowpack_dimension argument. It takes the form of a tuple
+ (list of snowpack_dimension values, dimension name). The name and values are used to define the coordinates in the 
+ :py:class:`~smrt.core.result.Result` object. This is useful with timeseries or sensitivity analysis for instance.
 
 Example::
 
@@ -41,14 +47,44 @@ Example::
 
 The `res` variable has now a coordinate `time` and res.TbV() returns a timeseries.
 
+Using `pandas.Series` offers an even more elegant way to run SMRT and assemble the results of all the simulations.
+
+    thickness_list = np.arange(0, 10, 1)
+    snowpacks = pd.Series([make_snowpack(thickness=t, ........) for t in thickness_list], index=thickness_list)
+    # snowpacks is a pandas Series of snowpack objects with the thickness as index
+
+    # now run the model
+
+    res = m.run(sensor, snowpacks, parallel_computation=True)
+
+    # convert the result into a datframe
+    res = res.to_dataframe()
+
+The `res` variable is a dataframe with the thickness as index and the channels of the sensor as column.
+
+Using `pandas.DataFrame` is similar. One column must contain Snowpack objects (see snowpack_column argument).
+The results of the simulations are automatically joined with this dataframe and returned by 
+:py:meth:`~smrt.core.result.PassiveResults.to_dataframe` or :py:meth:`~smrt.core.result.ActiveResults.to_dataframe`.
+
+    # df is a DataFrame with several parameters in each row.
+
+    # add a snowpack object for each row
+    df['snowpack'] = [make_snowpack(thickness=row['thickness'], ........) for i, row in df.iterrows()]]
+
+    # now run the model
+    res = m.run(sensor, snowpacks, parallel_computation=True)
+
+    # convert the result into a datframe
+    res = res.to_dataframe()
+
+The `res` variable is a `pandas.DataFrame` equal to df  +  the results at all sensor's channel added.
+
+
 """
 
 from collections.abc import Sequence
 import itertools
 import inspect
-import copy
-
-import numpy as np
 import pandas as pd
 
 from .error import SMRTError
@@ -84,7 +120,6 @@ def make_model(emmodel, rtsolver=None, emmodel_options=None, rtsolver_options=No
         raise DeprecationWarning("Use rtsolver_options instead of rtsolver_kwargs")
         rtsolver_options = rtsolver_kwargs
 
-
     return Model(emmodel, rtsolver, emmodel_options=emmodel_options, rtsolver_options=rtsolver_options)
 
 
@@ -114,6 +149,7 @@ def make_emmodel(emmodel, sensor, layer, **emmodel_options):
 class Model(object):
     """ This class drives the whole calculation
     """
+
     def __init__(self, emmodel, rtsolver, emmodel_options=None, rtsolver_options=None):
         """create a new model. It is not recommended to instantiate Model class directly. Instead use the :py:meth:`make_model` function.
         """
@@ -154,7 +190,8 @@ class Model(object):
 
         self.emmodel_options.update(kwargs)  # update the options
 
-    def run(self, sensor, snowpack, atmosphere=None, snowpack_dimension=None, progressbar=False, parallel_computation=False, runner=None):
+    def run(self, sensor, snowpack, atmosphere=None, snowpack_dimension=None, snowpack_column="snowpack",
+            progressbar=False, parallel_computation=False, runner=None):
         """ Run the model for the given sensor configuration and return the results
 
             :param sensor: sensor to use for the calculation
@@ -163,6 +200,7 @@ class Model(object):
             :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack
                 is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and the values are
                 rom 1 to the number of snowpacks.
+            :param snowpack_column: when snowpack is a DataFrame this argument is used to specify which column contians the Snowpack objects
             :param progressbar: if True, display a progress bar during multi-snowpacks computation
             :param parallel_computation: if True, use the joblib library to run the simulation in parallel.
                 Otherwise, the simulations are run sequentially. See 'runner' arguments.
@@ -175,13 +213,13 @@ class Model(object):
 
         if atmosphere is not None:
             raise DeprecationWarning("The atmosphere argument of the run method is going to be depreciated."
-                " Setting the 'atmosphere' with make_snowpack (and similar functions) is now the recommended way.")
+                                     " Setting the 'atmosphere' with make_snowpack (and similar functions) is now the recommended way.")
 
         if not isinstance(sensor, SensorBase):
             raise SMRTError("the first argument of 'run' must be a sensor")
 
         # determine the simulations to run
-        simulations, dimensions = self.prepare_simulations(sensor, snowpack, snowpack_dimension)
+        simulations, dimensions = self.prepare_simulations(sensor, snowpack, snowpack_dimension, snowpack_column)
 
         # determine the runner
         if runner is None:
@@ -201,9 +239,14 @@ class Model(object):
             results = [concat_results(results[i: i + n], dimension) for i in range(0, len(results), n)]
 
         assert len(results) == 1
-        return results[0]
+        results = results[0]
 
-    def prepare_simulations(self, sensor, snowpack, snowpack_dimension):
+        if isinstance(snowpack, pd.DataFrame):
+            results.mother_df = snowpack
+
+        return results
+
+    def prepare_simulations(self, sensor, snowpack, snowpack_dimension, snowpack_column):
         # return a flat list of pairs (sensor, snowpack). Each is a unique simulation. The second returned parameter
         # is the list of (axis, values) to be used to concatenate the results.
 
@@ -218,6 +261,13 @@ class Model(object):
             snowpack_dimension = "snowpack", list(snowpack.keys())
             snowpack = list(snowpack.values())
 
+        if isinstance(snowpack, pd.DataFrame):
+            try:
+                snowpack = snowpack[snowpack_column]
+            except KeyError:
+                raise SMRTError("the snowpack DataFrame has no column named '%s'. Check the snowpack_column argument." % snowpack_column)
+            assert isinstance(snowpack, pd.Series)
+
         # or is it a pandas Series ?
         if isinstance(snowpack, pd.Series):
             snowpack_dimension = snowpack.index
@@ -230,7 +280,9 @@ class Model(object):
             if snowpack_dimension[1] is None:
                 snowpack_dimension = snowpack_dimension[0], range(len(snowpack))
 
-        if (snowpack_dimension is not None) and (len(snowpack) != len(snowpack_dimension[1])):
+        if (snowpack_dimension is not None) \
+                and isinstance(snowpack, tuple) \
+                and (len(snowpack) != len(snowpack_dimension[1])):
             raise SMRTError("The list of snowpacks must have the same length as the snowpack_dimension")
 
         if isinstance(snowpack_dimension, tuple) and not isinstance(snowpack_dimension[0], str):
@@ -248,7 +300,7 @@ class Model(object):
                 axis, values = sensor_configurations[0]
                 for sensor_subset in sensor.iterate(axis):
                     yield from prepare_recursive(sensor_subset, sensor_configurations[1:])
-            else: # we're at the end
+            else:  # we're at the end
                 if lib.is_sequence(snowpack):
                     for sp in snowpack:
                         yield (sensor, sp)
@@ -262,7 +314,6 @@ class Model(object):
             dimensions.append(snowpack_dimension)
 
         return simulations, dimensions
-
 
     def run_single_simulation(self, simulation, atmosphere):
         # run a single simulation
@@ -385,4 +436,3 @@ class DaskParallelRunner(object):
         results = self.client.gather(futures, direct=False)
 
         return results
-
