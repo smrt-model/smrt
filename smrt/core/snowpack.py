@@ -329,10 +329,10 @@ class Snowpack(object):
 
     def __repr__(self):
 
-        return repr(self.to_dataframe())
+        return 'Snowpack: ' + repr(self.to_dataframe())
 
     def _repr_html_(self):
         """use by IPython notebook to display a snowpack in a pretty format"""
 
-        return self.to_dataframe().to_html(notebook=True, na_rep='--', justify='start')
+        return 'Snowpack: ' + self.to_dataframe().to_html(notebook=True, na_rep='--', justify='start')
 
