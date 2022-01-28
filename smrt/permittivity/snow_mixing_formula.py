@@ -16,6 +16,7 @@ the already mixed materials with the background material).
 import numpy as np
 from ..core.layer import layer_properties
 from ..core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE, DENSITY_OF_WATER
+from ..core.error import SMRTError
 from .generic_mixing_formula import polder_van_santen, polder_van_santen_three_components, polder_van_santen_three_spherical_components
 
 
@@ -37,8 +38,8 @@ Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publ
 
 """
 
-    if temperature < FREEZING_POINT:
-        assert np.all(liquid_water == 0)
+    if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
+        raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
 
     # wetness W is the weight percentage of liquid water contained in the snow
     W = liquid_water * DENSITY_OF_WATER / (liquid_water * DENSITY_OF_WATER + (1 - liquid_water) * DENSITY_OF_ICE)
@@ -89,8 +90,8 @@ Colbeck, S. C. (1980). Liquid distribution and the dielectric constant of wet sn
 Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21â€“40.
 
 """
-    if temperature < FREEZING_POINT:
-        assert np.all(liquid_water == 0)
+    if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
+        raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
 
     ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
 
@@ -129,8 +130,8 @@ Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21â
 
 """
 
-    if temperature < FREEZING_POINT:
-        assert np.all(liquid_water == 0)
+    if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
+        raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
 
     ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
 
@@ -191,8 +192,8 @@ def wetsnow_permittivity_wiesmann99(frequency, temperature, density, liquid_wate
     in MEMLS v3 is different.
 
 """
-    if temperature < FREEZING_POINT:
-        assert np.all(liquid_water == 0)
+    if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
+        raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
 
     if ice_permittivity_model is None:
         from .ice import ice_permittivity_maetzler06
@@ -255,8 +256,8 @@ for prolate spheroidal water with experimentally determined. Dry snow permittivi
     # %   University of Bern, Switzerland
     # %
 
-    if temperature < FREEZING_POINT:
-        assert np.all(liquid_water == 0)
+    if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
+        raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
 
     ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
 
@@ -288,8 +289,8 @@ def wetsnow_permittivity_three_component_polder_van_santen(frequency, temperatur
     """effective permittivity of a snow mixture using the three components polder_van_santen, assuming spherical inclusions
 
 """
-    if temperature < FREEZING_POINT:
-        assert np.all(liquid_water == 0)
+    if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
+        raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
 
     ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
 
