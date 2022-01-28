@@ -154,7 +154,15 @@ class Result(object):
             df = xr_to_dataframe(self.sel_data(**kwargs), name=name)
 
         if self.mother_df is not None:
-            df = df.join(self.mother_df)
+            if channel_axis != "index":
+                # join without alignment. We assume both have the same order. In principle this is the case with model.py
+                df = df.reset_index(drop=True).join(self.mother_df.reset_index(drop=True))
+                df.index = self.mother_df.index
+            # silently ignore the case with channel_axis='index'. It is not clear what should be done but most probably nothing.
+            # for this reason, we don't any raise exception or warning.
+
+            #warnings("running a model with a pandas DataFrame snowpack (or Series) and calling to_dataframe with channel_axis='index' "
+            #             "is ambiguous / not implemented. The result is returned without joining with the snowpack DataFrame.")
 
         return df
 
