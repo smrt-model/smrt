@@ -497,7 +497,7 @@ def concat_results(result_list, coord):
     elif isinstance(coord, pd.Index):
         index = coord
         if index.name is None:
-            index.name = 'snowapck_index'  # hope this will not conflict with an existing column
+            index.name = 'snowpack_index'  # hope this will not conflict with an existing column
     else:
         raise SMRTError('unknown type for the coord argument')
 

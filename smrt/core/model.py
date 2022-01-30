@@ -242,7 +242,8 @@ class Model(object):
         results = results[0]
 
         if isinstance(snowpack, pd.DataFrame):
-            results.mother_df = snowpack
+            # remove the snowpack_column
+            results.mother_df = snowpack.drop(snowpack_column, axis=1)
 
         return results
 
