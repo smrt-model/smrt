@@ -154,14 +154,37 @@ class Result(object):
             df = xr_to_dataframe(self.sel_data(**kwargs), name=name)
 
         if self.mother_df is not None:
-            if channel_axis != "index":
+            if channel_axis == "column":
                 # join without alignment. We assume both have the same order. In principle this is the case with model.py
                 df = df.reset_index(drop=True).join(self.mother_df.reset_index(drop=True))
                 df.index = self.mother_df.index
+            elif channel_axis is None:
+
+                # df is multiindex by construction
+                assert isinstance(df.index, pd.MultiIndex)
+                # join, assuming the index is unique # add a check
+                if not self.mother_df.index.is_unique:
+                    raise SMRTError("The index of the snowpack DataFrame in input of Model.run "
+                                    "must be unique for calling to_dataframe. "
+                                    "The index is used to join the result and original DataFrame.")
+                name = self.mother_df.index.names
+                if name[0] is None:
+                    # give a name to the mother_df for the join
+                    name = df.index.names[0]
+                    if name in df.columns:
+                        raise SMRTError("The index of the snowpack DataFrame in input of Model.run "
+                                        "shall be named to avoid naming conflict in to_dataframe.")
+                    mother_df = self.mother_df.copy()
+                    mother_df.index.name = name
+                else:
+                    mother_df = self.mother_df
+
+                df = df.reset_index().join(mother_df, on=name).set_index(df.index.names)
+
             # silently ignore the case with channel_axis='index'. It is not clear what should be done but most probably nothing.
             # for this reason, we don't any raise exception or warning.
 
-            #warnings("running a model with a pandas DataFrame snowpack (or Series) and calling to_dataframe with channel_axis='index' "
+            # warnings("running a model with a pandas DataFrame snowpack (or Series) and calling to_dataframe with channel_axis='index' "
             #             "is ambiguous / not implemented. The result is returned without joining with the snowpack DataFrame.")
 
         return df
@@ -473,6 +496,8 @@ def concat_results(result_list, coord):
         index = pd.Index(dim_value, name=dim_name)
     elif isinstance(coord, pd.Index):
         index = coord
+        if index.name is None:
+            index.name = 'snowapck_index'  # hope this will not conflict with an existing column
     else:
         raise SMRTError('unknown type for the coord argument')
 

@@ -62,7 +62,7 @@ def test_sigma_dB_as_dataframe():
     np.testing.assert_allclose(df['VH'], -14.0321985560285)
 
 
-def test_to_dataframe():
+def test_to_dataframe_wtih_channel_axis_on_column():
     df = res_example.to_dataframe(channel_axis='column')
 
     assert 'VV' in df.columns
@@ -70,6 +70,12 @@ def test_to_dataframe():
 
     np.testing.assert_allclose(df['VV'], -13.8379882755357)
     np.testing.assert_allclose(df['VH'], -14.0321985560285)
+
+
+def test_to_dataframe_wtihout_channel_axis():
+    df = res_example.to_dataframe(channel_axis=None)
+    np.testing.assert_allclose(df.loc[(35, 'V', 'V'), :], -13.8379882755357)
+    np.testing.assert_allclose(df.loc[(35, 'H', 'V'), :], -14.0321985560285)
 
 
 def test_return_as_series():
