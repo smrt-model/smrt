@@ -8,9 +8,6 @@ may be performed. All properties relate to a single layer.
 
 """
 
-# Stdlib import
-import inspect
-
 # other import
 import numpy as np
 import scipy.integrate

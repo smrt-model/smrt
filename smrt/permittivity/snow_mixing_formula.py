@@ -267,12 +267,13 @@ for prolate spheroidal water with experimentally determined. Dry snow permittivi
 
     ew = water_permittivity_model(frequency, temperature=FREEZING_POINT)
 
-    mass_melange = ((1 - liquid_water) * DENSITY_OF_ICE + liquid_water * DENSITY_OF_WATER)
+    mass_melange = (1 - liquid_water) * DENSITY_OF_ICE + liquid_water * DENSITY_OF_WATER
     fi = density * (1 - liquid_water) / mass_melange  # fractional of ice in air+water+ice
 
     Wi = density * liquid_water / mass_melange  # fractional of water in air+ice+water
 
-    epsd = polder_van_santen(fi, e0=1, eps=ice_permittivity_model(frequency, temperature=temperature))  # permittivity of dry snow
+    epsd = polder_van_santen(np.clip(fi, 0, 1),
+                             e0=1, eps=ice_permittivity_model(frequency, temperature=temperature))  # permittivity of dry snow
 
     Ka = epsd / (epsd + Aa * (ew - epsd))
     Kb = epsd / (epsd + Ab * (ew - epsd))

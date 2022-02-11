@@ -143,7 +143,7 @@ def make_emmodel(emmodel, sensor, layer, **emmodel_options):
     emmodel = get_emmodel(emmodel)  # get the class
     if not isinstance(sensor, SensorBase):
         raise SMRTError("the first argument of 'run' must be a sensor")
-    return emmodel(sensor, layer, **emmodel_options)  # create a emmodele
+    return emmodel(sensor, layer, **emmodel_options)  # create a emmodel
 
 
 class Model(object):
@@ -365,7 +365,8 @@ class Model(object):
 
 
 class SequentialRunner(object):
-    """Run the simulations sequentially on a single (local) core. This is the most simple, but inefficient way to run smrt simulations."""
+    """Run the simulations sequentially on a single (local) core. This is the most simple way to run smrt simulations, but the 
+efficiency is poor."""
 
     def __init__(self, progressbar=False):
         pass
@@ -376,14 +377,15 @@ class SequentialRunner(object):
 
 
 class JoblibParallelRunner(object):
-    """Run the simulations on the local machine using all the cores, using the joblib library."""
+    """Run the simulations on the local machine on all the cores, using the joblib library for parallelism."""
 
     def __init__(self, backend='loky', n_jobs=-1, max_numerical_threads=1):
         """Joblib is a lightweight library for embarasingly parallel task.
 
     :param backend: see joblib documentation. The default 'loky' is the recommended backend.
     :param n_jobs: see joblib documentation. The default is to use all the cores.
-    :param max_numerical_threads: :py:func:`~smrt.core.lib.set_max_numerical_threads`. The default avoid miximing different parallelism techniques.
+    :param max_numerical_threads: :py:func:`~smrt.core.lib.set_max_numerical_threads`. The default avoid miximing different 
+    parallelism techniques.
 
 """
         self.n_jobs = n_jobs

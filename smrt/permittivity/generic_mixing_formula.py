@@ -110,7 +110,7 @@ def polder_van_santen(frac_volume, e0=1, eps=3.185, depol_xyz=None, length_ratio
                                                depol_xyz=depol_xyz, inclusion_shape=shape)
                     for shape, mixing in zip(inclusion_shape, mixing_ratio)))
 
-    assert np.all(frac_volume <= 1)
+    assert np.all(frac_volume <= 1), "the fractional volume is larger than 1: %g" % frac_volume
 
     if (depol_xyz is not None) or (length_ratio is not None):
         raise NotImplementedError("depol_xyz and length_ratio are not implemented")
