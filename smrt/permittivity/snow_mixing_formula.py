@@ -161,12 +161,13 @@ IEEE Trans. on Antennasand Propagation,Vol. 34, No. 11, 1329–1340, 1986. DOI: 
 
     """
 
+    # in this case liquid_water is the volume fraction of water wrt the snow (i.e., water / (ice+water+air))
+
     freqGHz = frequency * 1e-9
 
-    mass_melange = ((1 - liquid_water) * DENSITY_OF_ICE + liquid_water * DENSITY_OF_WATER)
+    mv = 100 * liquid_water # even if the definition in the paper is lwc
 
-    mv = 100 * density * liquid_water / mass_melange
-    dry_snow_density_gcm3 = 1e-3 * density * (1 - liquid_water) / (mass_melange / DENSITY_OF_ICE)
+    dry_snow_density_gcm3 = (1e-3 * density - liquid_water) / (1.0 - liquid_water)
 
     A1 = 0.78 + 0.03 * freqGHz - 0.58e-3 * freqGHz**2
     A2 = 0.97 - 0.39e-2 * freqGHz + 0.39e-3 * freqGHz**2
