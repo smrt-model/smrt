@@ -504,7 +504,7 @@ class DORT(object):
             return bBC, b
 
         if self.snowpack.substrate is None and optical_depth < 5:
-            warn("DORT has detected that the snowpack is optically shallow (tau=%g)and no substrate has been set, meaning that the space "
+            warn("DORT has detected that the snowpack is optically shallow (tau=%g) and no substrate has been set, meaning that the space "
                  "under the snowpack is vaccum and that the snowpack is shallow enough to affect the signal measured at the surface."
                  "This is usually not wanted. Either increase the thickness of the snowpack or set a substrate."
                  " If wanted, add a transparent substrate to supress this warning" % optical_depth)
