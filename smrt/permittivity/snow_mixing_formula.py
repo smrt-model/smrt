@@ -25,7 +25,7 @@ def wetsnow_permittivity_tinga73(frequency, temperature, density, liquid_water, 
     """effective permittivity proposed by Tinga et al. 1973 for three-component mixing. The component 1 is the background ("a" here),
     the compoment 2 ("w" here) is a spherical shell surrounding the component 3 ("i" here).
 
-     It was used by Tiuri as well as T. Mote to compute wet snow permittivity.
+     It was used by Tiuri as well as T. Mote to compute wet snolw permittivity.
 
 Tinga, W.R., Voss, W.A.G. and Blossey, D. F.: General approach to multiphase dielectric mixture theory.
 Journal of Applied Physics, Vol.44(1973) No.9,pp.3897-3902.
@@ -82,6 +82,27 @@ Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publ
     return Es
 
 
+def compute_frac_volumes(density, liquid_water):
+    """compute the fractional volume of ice+water, the fractional volume of ice, and the fractional volume of water 
+    from the (wet) snow density and the liquid_water which is the volume fraction of liquid with respect to ice + liquid (but no air).
+
+    :param density: density of the snow, including the ice and water phases.
+    :param liquid_water: (fractional volume of water with respect to ice+water volume).
+
+    :returns: frac_volume, fi, fw
+"""
+    density_melange = DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water
+    # variations of density with temperature (a few kg/m3) and air mass (less than 1 kg/m3) are not taken into account.
+
+    frac_volume = density / density_melange  #
+
+    fi = frac_volume * (1 - liquid_water)
+
+    fw = frac_volume * liquid_water
+
+    return frac_volume, fi, fw
+
+
 @layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
 def wetsnow_permittivity_colbeck80_caseI(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
     """effective permittivity proposed by Colbeck, 1980 for the pendular regime.
@@ -104,11 +125,7 @@ Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21â
 
     Awater = [(1 - Ac) / 2, (1 - Ac) / 2, Ac]
 
-    frac_volume = density / (DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water)
-
-    fi = frac_volume * (1 - liquid_water)
-
-    fw = frac_volume * liquid_water
+    frac_volume, fi, fw = compute_frac_volumes(density, liquid_water)
 
     return polder_van_santen_three_components(
         f1=fi,
@@ -135,11 +152,7 @@ Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21â
 
     ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
 
-    frac_volume = density / (DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water)
-
-    fi = frac_volume * (1 - liquid_water)
-
-    # fw = frac_volume * liquid_water
+    frac_volume, fi, fw = compute_frac_volumes(density, liquid_water)
 
     return polder_van_santen_three_spherical_components(
         f1=fi,               # ice fractional volume
@@ -161,11 +174,9 @@ IEEE Trans. on Antennasand Propagation,Vol. 34, No. 11, 1329â€“1340, 1986. DOI: 
 
     """
 
-    mass_melange = (1 - liquid_water) * DENSITY_OF_ICE + liquid_water * DENSITY_OF_WATER
+    frac_volume, fi, fw = compute_frac_volumes(density, liquid_water)
 
-    # fractional volume of water (volume of water to total volume of snow)
-    fw = density * liquid_water / mass_melange
-    # fractional volume in %
+    # fractional volume of water in %
     mv = 100 * fw
 
     # Eq 3 in H86 defines the dry snow by (snow density - mass of water per volume of snow) / (1 - volume fo water per volume of snow)
@@ -212,10 +223,7 @@ def wetsnow_permittivity_wiesmann99(frequency, temperature, density, liquid_wate
         from .ice import ice_permittivity_maetzler06
         ice_permittivity_model = ice_permittivity_maetzler06
 
-    mass_melange = ((1 - liquid_water) * DENSITY_OF_ICE + liquid_water * DENSITY_OF_WATER)
-    fi = density * (1 - liquid_water) / mass_melange  # fractional of ice in air+water+ice
-
-    Wi = density * liquid_water / mass_melange  # fractional of water in air+ice+water
+    frac_volume, fi, Wi = compute_frac_volumes(density, liquid_water)
 
     eps_dry = polder_van_santen(fi, e0=1, eps=ice_permittivity_model(frequency, temperature=temperature))  # permittivity of dry snow
 
@@ -280,10 +288,7 @@ for prolate spheroidal water with experimentally determined. Dry snow permittivi
 
     ew = water_permittivity_model(frequency, temperature=FREEZING_POINT)
 
-    mass_melange = (1 - liquid_water) * DENSITY_OF_ICE + liquid_water * DENSITY_OF_WATER
-    fi = density * (1 - liquid_water) / mass_melange  # fractional of ice in air+water+ice
-
-    Wi = density * liquid_water / mass_melange  # fractional of water in air+ice+water
+    frac_volume, fi, Wi = compute_frac_volumes(density, liquid_water)
 
     epsd = polder_van_santen(np.clip(fi, 0, 1),
                              e0=1, eps=ice_permittivity_model(frequency, temperature=temperature))  # permittivity of dry snow
@@ -318,13 +323,9 @@ def wetsnow_permittivity_three_component_polder_van_santen(frequency, temperatur
 
         return np.vectorize(func)(density, liquid_water)
 
-    frac_volume = float(density) / (DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water)
+    frac_volume, fi, fw = compute_frac_volumes(float(density), liquid_water)
 
-    f1 = frac_volume * (1 - liquid_water)
-
-    f2 = frac_volume * liquid_water
-
-    return polder_van_santen_three_spherical_components(f1, f2,
+    return polder_van_santen_three_spherical_components(fi, fw,
                                                         eps0=1,
                                                         eps1=ice_permittivity_model(frequency, temperature=temperature),
                                                         eps2=water_permittivity_model(frequency, temperature=FREEZING_POINT))
