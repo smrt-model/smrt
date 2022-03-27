@@ -271,7 +271,10 @@ class Model(object):
 
         # or is it a pandas Series ?
         if isinstance(snowpack, pd.Series):
-            snowpack_dimension = snowpack.index
+            name = snowpack.index.name
+            if name is None:
+                name = "snowpack"
+            snowpack_dimension = name, snowpack.index.tolist()
             snowpack = snowpack.tolist()
 
         # or a sequence ?
