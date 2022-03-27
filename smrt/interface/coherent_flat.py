@@ -130,7 +130,7 @@ class CoherentFlat(object):
 
         mu_0 = mu1
         R01_v, R01_h, mu_1 = fresnel_coefficients(eps_0, eps_1, mu_0)
-        R1t_v, R1t_h, mu_t = fresnel_coefficients(eps_1, eps_t, mu_1)
+        R1t_v, R1t_h, mu_t = fresnel_coefficients(eps_1, eps_t, np.maximum(mu_1, 1e-4))
 
         k_1 = 2 * np.pi / C_SPEED * frequency * np.sqrt(eps_1)
 
