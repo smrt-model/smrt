@@ -161,17 +161,30 @@ IEEE Trans. on Antennasand Propagation,Vol. 34, No. 11, 1329–1340, 1986. DOI: 
 
     """
 
+    mass_melange = (1 - liquid_water) * DENSITY_OF_ICE + liquid_water * DENSITY_OF_WATER
+
+    # fractional volume of water (volume of water to total volume of snow)
+    fw = density * liquid_water / mass_melange
+    # fractional volume in %
+    mv = 100 * fw
+
+    # Eq 3 in H86 defines the dry snow by (snow density - mass of water per volume of snow) / (1 - volume fo water per volume of snow)
+    dry_snow_density_gcm3 = 1e-3 * (density - DENSITY_OF_WATER * fw) / (1 - fw)
+
     freqGHz = frequency * 1e-9
 
-    mass_melange = ((1 - liquid_water) * DENSITY_OF_ICE + liquid_water * DENSITY_OF_WATER)
+    if freqGHz > 15:  # see comment in the first lines of p 1337
+        # Eq 13
+        A1 = 0.78 + 0.03 * freqGHz - 0.58e-3 * freqGHz**2
+        A2 = 0.97 - 0.39e-2 * freqGHz + 0.39e-3 * freqGHz**2
+        B1 = 0.31 - 0.05 * freqGHz + 0.87e-3 * freqGHz**2   # <-- this leads to a too low epsilon compared to the H86 graphs
+        B1 = 0  # ad hoc correction
+    else:
+        A1 = 1
+        A2 = 1
+        B1 = 0
 
-    mv = 100 * density * liquid_water / mass_melange
-    dry_snow_density_gcm3 = 1e-3 * density * (1 - liquid_water) / (mass_melange / DENSITY_OF_ICE)
-
-    A1 = 0.78 + 0.03 * freqGHz - 0.58e-3 * freqGHz**2
-    A2 = 0.97 - 0.39e-2 * freqGHz + 0.39e-3 * freqGHz**2
-    B1 = 0.31 - 0.05 * freqGHz + 0.87e-3 * freqGHz**2
-
+    # Eq 12
     A = 1 + 1.83 * dry_snow_density_gcm3 + 0.02 * A1 * mv**1.015 + B1
     B = 0.073 * A1
     C = 0.073 * A2
@@ -179,9 +192,9 @@ IEEE Trans. on Antennasand Propagation,Vol. 34, No. 11, 1329–1340, 1986. DOI: 
 
     freq0 = 9.07  # GHz
 
-    eps_ws_r = A + B * mv**x / (1 + freqGHz / freq0)**2
+    eps_ws_r = A + B * mv**x / (1 + (freqGHz / freq0)**2)
 
-    eps_ws_i = C * mv**x * freqGHz / freq0 / (1 + freqGHz / freq0)**2
+    eps_ws_i = C * mv**x * (freqGHz / freq0) / (1 + (freqGHz / freq0)**2)
 
     return eps_ws_r + 1j * eps_ws_i
 
