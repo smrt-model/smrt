@@ -189,14 +189,13 @@ IEEE Trans. on Antennasand Propagation,Vol. 34, No. 11, 1329–1340, 1986. DOI: 
         A1 = 0.78 + 0.03 * freqGHz - 0.58e-3 * freqGHz**2
         A2 = 0.97 - 0.39e-2 * freqGHz + 0.39e-3 * freqGHz**2
         B1 = 0.31 - 0.05 * freqGHz + 0.87e-3 * freqGHz**2   # <-- this leads to a too low epsilon compared to the H86 graphs
-        B1 = 0  # ad hoc correction
     else:
         A1 = 1
         A2 = 1
         B1 = 0
 
     # Eq 12
-    A = 1 + 1.83 * dry_snow_density_gcm3 + 0.02 * A1 * mv**1.015 + B1
+    A = A1 * (1.0 + 1.83 * dry_snow_density_gcm3 + 0.02 * mv**1.015) + B1
     B = 0.073 * A1
     C = 0.073 * A2
     x = 1.31
