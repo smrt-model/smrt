@@ -2,6 +2,7 @@
 
 """
 
+import warnings
 
 
 class SMRTError(Exception):
@@ -9,6 +10,10 @@ class SMRTError(Exception):
     pass
 
 
-class SMRTWarning(Exception):
+class SMRTWarning(Warning):
     """Warning raised by the model"""
     pass
+
+
+def smrt_warn(message):
+    warnings.warn(message, category=SMRTWarning, stacklevel=2)

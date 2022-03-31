@@ -20,7 +20,6 @@ Note that `make_snowpack` is directly imported from `smrt` instead of `smrt.inpu
 
 import itertools
 import collections
-import warnings
 
 import numpy as np
 import pandas as pd
@@ -30,7 +29,7 @@ from smrt.core.interface import make_interface
 from smrt.core.plugin import import_class
 from smrt.core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE, DENSITY_OF_WATER, PERMITTIVITY_OF_AIR, PSU
 from smrt.core.layer import get_microstructure_model, Layer
-from smrt.core.error import SMRTError
+from smrt.core.error import SMRTError, smrt_warn
 from smrt.core import lib
 from smrt.permittivity.ice import ice_permittivity_maetzler06  # default pure ice permittivity model
 from smrt.permittivity.brine import brine_volume
@@ -233,7 +232,7 @@ def snow_frac_volume(density, liquid_water):
     # ice in air background. Note that the emmodel might inverse the medium or use other technique for mid-range densities.
     # This is the case of DMRT_Shortrange for instance.
     if (liquid_water > 0.5) and (float(density) < DENSITY_OF_ICE):
-        warnings.warn("You set a high value of liquid_water (%f). Be warned that liquid_water defines the "
+        smrt_warn("You set a high value of liquid_water (%f). Be warned that liquid_water defines the "
                       "volume ratio of water with respect to ice + water. It does not control the air content." % liquid_water)
     frac_volume = float(density) / (DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water)
 

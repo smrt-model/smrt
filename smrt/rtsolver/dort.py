@@ -16,7 +16,6 @@ It is important not to set too low a value for n_max_streams. E.g. 32 is usually
 
 # Stdlib import
 import math
-from warnings import warn
 
 # other import
 import numpy as np
@@ -26,7 +25,7 @@ import scipy.linalg
 import scipy.interpolate
 
 # local import
-from ..core.error import SMRTError
+from ..core.error import SMRTError, smrt_warn
 from ..core.result import make_result
 from smrt.core.lib import smrt_matrix, smrt_diag, isnull
 from smrt.core.optional_numba import numba
@@ -504,7 +503,7 @@ class DORT(object):
             return bBC, b
 
         if self.snowpack.substrate is None and optical_depth < 5:
-            warn("DORT has detected that the snowpack is optically shallow (tau=%g) and no substrate has been set, meaning that the space "
+            smrt_warn("DORT has detected that the snowpack is optically shallow (tau=%g) and no substrate has been set, meaning that the space "
                  "under the snowpack is vaccum and that the snowpack is shallow enough to affect the signal measured at the surface."
                  "This is usually not wanted. Either increase the thickness of the snowpack or set a substrate."
                  " If wanted, add a transparent substrate to supress this warning" % optical_depth)

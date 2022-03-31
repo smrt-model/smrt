@@ -1,10 +1,9 @@
 
-from warnings import warn
 import numpy as np
 import scipy.signal
 
 from smrt.core.globalconstants import C_SPEED
-from smrt.core.error import SMRTError
+from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.result import ActiveResult
 from smrt.rtsolver.waveform_model import Brown1977
 
@@ -54,11 +53,11 @@ class NadirLRMAltimetry(object):
 
         if self.skip_pfs_convolution and self.theta_inc_sampling > 1:
             if not self.return_theta_inc_sampling:
-                warn("When skip_pfs_convolution is True and theta_inc_sampling > 1, it does not make sense to not return_theta_inc_sampling."
+                smrt_warn("When skip_pfs_convolution is True and theta_inc_sampling > 1, it does not make sense to not return_theta_inc_sampling."
                      "To prevent this warning, explicitly set return_theta_inc_sampling = True.")
                 self.return_theta_inc_sampling = True
         if self.return_theta_inc_sampling and self.theta_inc_sampling <= 1:
-            warn("It does not make sense to return_theta_inc_sampling."
+            smrt_warn("It does not make sense to return_theta_inc_sampling."
                  "To prevent this warning, explicitly set return_theta_inc_sampling = True.")
             self.return_theta_inc_sampling = False
 
