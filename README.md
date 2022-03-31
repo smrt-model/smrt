@@ -18,7 +18,7 @@ WARRANTIES.
 
 DISCLAIMER: This version of SMRT is under peer review. Please use this software with caution, ask for assistance if needed, and let us know any feedback you may have.
 
-Copyright (c) 2016-2018 Ghislain Picard, Melody Sandells, Henning Löwe.
+Copyright (c) 2016-2022 Ghislain Picard, Melody Sandells, Henning Löwe.
 
 
 Other contributions
@@ -28,3 +28,5 @@ Other contributions
  - Ludovic Brucker
  - Marion Leduc-Leballeur
  - Mai Winstrup
+ - Carlo Marin
+
