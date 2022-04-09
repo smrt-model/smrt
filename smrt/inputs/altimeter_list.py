@@ -86,3 +86,43 @@ def cryosat2_lrm():
               beamwidth=1.2,
               )
     return altimeter(channel='Ku', **params)
+
+
+def cryosat2_sin():
+    """ Return an altimeter instance for CryoSat-2: SIN mode
+
+    Parameters from https://earth.esa.int/web/eoportal/satellite-missions/c-missions/cryosat-2
+    Altitude from https://doi.org/10.1016/j.asr.2018.04.014
+    Beam width is 1.08 along track and 1.2 across track
+    
+    """    
+
+    params = dict(frequency=13.575e9,
+              altitude=720e3,
+              pulse_bandwidth=320e6,
+              nominal_gate=164,  # Estimate - needs better definition
+              ngate=512,
+              beamwidth=1.2,
+              )
+    return altimeter(channel='Ku', **params)
+    
+
+def asiras_lam(altitude=None):
+    """ Return an altimeter instance for ASIRAS in Low Altitude Mode
+
+    Parameters from https://earth.esa.int/web/eoportal/airborne-sensors/asiras
+    Beam width is 2.2 x 9.8 deg
+    """    
+    if altitude is None:
+        raise SMRTError('Aircraft altitude must be defined')
+    else:
+        altitude=altitude
+
+    params = dict(frequency=13.5e9,
+              pulse_bandwidth=1e9,
+              altitude=altitude,
+              nominal_gate=41,  # Estimate - needs better definition
+              ngate=256,
+              beamwidth=2.2,
+              )
+    return altimeter(channel='Ku', **params)
