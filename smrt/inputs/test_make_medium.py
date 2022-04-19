@@ -38,7 +38,7 @@ def test_make_snowpack_interface():
 def test_make_snowpack_surface_and_list_interface():
 
     with pytest.raises(SMRTError):
-        sp = make_snowpack(thickness=1, microstructure_model="exponential", density=300, corr_length=200e-6,
+        sp = make_snowpack(thickness=[1], microstructure_model="exponential", density=300, corr_length=200e-6,
                            interfaces=[Transparent, Flat], surface=Flat)
 
 
@@ -77,3 +77,57 @@ def test_make_medium():
     assert np.allclose(sp.layer_thicknesses, sp_dict['thickness'])
     assert np.allclose([lay.temperature for lay in sp.layers], sp_dict['temperature'])
     assert np.allclose([lay.microstructure.radius for lay in sp.layers], sp_dict['radius'])
+
+
+def test_make_snowpack_volumetric_liquid_water():
+
+    sp = make_snowpack(thickness=[1],
+                       microstructure_model="exponential",
+                       density=300,
+                       corr_length=200e-6
+                       )
+
+    assert np.allclose(sp.layers[0].frac_volume, 300 / 916.7)
+    assert sp.layers[0].liquid_water == 0
+
+    sp = make_snowpack(thickness=[1],
+                       microstructure_model="exponential",
+                       density=300,
+                       volumetric_liquid_water=0.1,   # 10 % volume
+                       corr_length=200e-6
+                       )
+
+    assert np.allclose(sp.layers[0].frac_volume, 0.31817388458601503)
+    assert np.allclose(sp.layers[0].liquid_water, 0.31429355093084654)
+
+
+def test_update_volumetric_liquid_water():
+
+    sp = make_snowpack(thickness=[1],
+                       microstructure_model="exponential",
+                       density=300,
+                       corr_length=200e-6
+                       )
+
+    assert sp.layers[0].liquid_water == 0
+
+    sp.layers[0].update(volumetric_liquid_water=0.1)   # 10 % volume
+
+    assert np.allclose(sp.layers[0].frac_volume, 0.31817388458601503)
+    assert np.allclose(sp.layers[0].liquid_water, 0.31429355093084654)
+
+
+def test_snow_set_readonly():
+
+    sp = make_snowpack(thickness=[1],
+                       microstructure_model="exponential",
+                       density=300,
+                       volumetric_liquid_water=0.1,   # 10 % volume
+                       corr_length=200e-6
+                       )   
+
+    with pytest.raises(SMRTError):
+        sp.layers[0].density = 400
+
+    with pytest.raises(SMRTError):
+        sp.layers[0].volumetric_liquid_water = 0.5

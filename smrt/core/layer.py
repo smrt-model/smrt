@@ -169,24 +169,33 @@ class Layer(object):
     def __setattr__(self, name, value):
 
         if hasattr(self, "read_only_attributes") and (name in self.read_only_attributes):
-            raise AttributeError("The attribute '%s' is read-only, setting its value would be subject to side effect."
-                                 " You need to create a new layer." % name)
+            raise SMRTError(f"The attribute '{name}' is read-only, because setting its value requires recalculation."
+                            " In general, this is solved by using the update method.")
 
         super().__setattr__(name, value)
 
+        # the callback system has been deactivated and replaced by the update method.
         # See here for why the option __setattr__ has been chosen:
         # https://stackoverflow.com/questions/17576009/python-class-property-use-setter-but-evade-getter
-        if hasattr(self, "attributes_with_callback") and (name in self.attributes_with_callback):
-            # get the callback function
-            callback = self.attributes_with_callback[name]
-            # call the callback function
-            callback(self, name)
+        # if hasattr(self, "attributes_with_callback") and (name in self.attributes_with_callback):
+        #     # get the callback function
+        #     callback = self.attributes_with_callback[name]
+        #     # call the callback function
+        #     callback(self, name)
+
+    def update(self, **kwargs):
+        """update the attributes. This method is to be used when recalculation of the state of the object
+        is necessary. See for instance :py:class:`~smrt.inputs.make_medium.SnowLayer`.
+        """
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
 
 def get_microstructure_model(modulename, classname=None):
     """return the class corresponding to the microstructure_model defined in modulename.
 
-    This function import the correct module if possible and return the class. It is used internally and should not be needed for normal usage.
+    This function import the correct module if possible and return the class.
+    It is used internally and should not be needed for normal usage.
 
     :param modulename: name of the python module in smrt/microstructure_model
     """

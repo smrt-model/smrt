@@ -169,7 +169,9 @@ def make_snow_layer(layer_thickness, microstructure_model,
                     temperature=FREEZING_POINT,
                     ice_permittivity_model=None,
                     background_permittivity_model=PERMITTIVITY_OF_AIR,
-                    liquid_water=0, salinity=0,
+                    volumetric_liquid_water=None,
+                    liquid_water=None,
+                    salinity=0,
                     **kwargs):
     """Make a snow layer for a given microstructure_model (see also :py:func:`~smrt.inputs.make_medium.make_snowpack`
     to create many layers). The microstructural parameters depend on the microstructural model and should be given as
@@ -178,20 +180,19 @@ def make_snow_layer(layer_thickness, microstructure_model,
 
     :param layer_thickness: thickness of snow layer in m.
     :param microstructure_model: module name of microstructure model to be used.
-    :param density: density of snow layer in kg m :sup:`-3`.
+    :param density: density of snow layer in kg m :sup:`-3`. Includes the ice and water phases.
     :param temperature: temperature of layer in K.
     :param ice_permittivity_model: permittivity formulation of the scatterers (default is ice_permittivity_matzler87).
     :param background_permittivity_model: permittivity formulation for the background (default is air).
-    :param liquid_water: volume of liquid water with respect to ice+water volume (default=0).
-    liquid_water = water_volume / (ice_volume + water_volume).
+    :param volumetric_liquid_water: volume of liquid water with respect to the volume of snow (default=0).
+    :param liquid_water: May be depreciated in the future (use instead volumetric_liquid_water): volume of liquid water 
+    with respect to ice+water volume (default=0). liquid_water = water_volume / (ice_volume + water_volume).
     :param salinity: salinity in kg/kg, for using PSU as unit see PSU constant in smrt module (default = 0).
     :param kwargs: other microstructure parameters are given as optional arguments (in Python words) but may be required (in SMRT words).
     See the documentation of the microstructure model.
 
-    :returns: :py:class:`Layer` instance
+    :returns: :py:class:`SnowLayer` instance
 """
-
-    # TODO: Check the validity of the density or see Layer basic_check
 
     if ice_permittivity_model is None:
         # must import this here instead of the top of the file because of cross-dependencies
@@ -205,40 +206,90 @@ def make_snow_layer(layer_thickness, microstructure_model,
     if isinstance(microstructure_model, str):
         microstructure_model = get_microstructure_model(microstructure_model)
 
-    lay = Layer(layer_thickness, microstructure_model,
-                frac_volume=snow_frac_volume(density, liquid_water),
-                temperature=float(temperature),
-                permittivity_model=(eps_1, eps_2), **kwargs)
+    # if liquid_water is not None:
+    #    raise smrt_warn("The argument 'liquid_water' is going to be depreciated because its definition is uncommon"
+    #                    " in the snow community. Use instead volumetric_liquid_water. Check the definition")
 
-    lay.liquid_water = float(liquid_water)  # read-only
-    lay.salinity = float(salinity)
-    lay.density = float(density)  # read-only
-
-    # they are read-only because the frac_volume needs to be recomputed if they are changed
-    # the only way to change these properties is to create a new Layer
-    # we might introduce auto-recomputation in the future, but it may be more confusing than useful
-    lay.read_only_attributes.update(['liquid_water', 'density'])
+    lay = SnowLayer(layer_thickness,
+                    microstructure_model=microstructure_model,
+                    density=float(density),
+                    temperature=float(temperature),
+                    permittivity_model=(eps_1, eps_2),
+                    salinity=float(salinity),
+                    volumetric_liquid_water=volumetric_liquid_water,
+                    liquid_water=liquid_water,
+                    **kwargs)
 
     return lay
 
 
-def snow_frac_volume(density, liquid_water):
-    """computes the fractional volume in snow. Account for wet snow
+class SnowLayer(Layer):
+    """Specialized Layer class for snow. It deals with the calculation of the frac_volume and the liquid_water
+     from density and volumetric_liquid_water. Alternatively it is possible to set liquid_water directly but this is
+     not recommended anymore.
+     """
 
-    :param density: density of snow layer in kg m :sup:`-3`.
-    :param liquid_water: volume of liquid water with respect to ice+water volume (default=0).
+    def __init__(self, *args, density=None, volumetric_liquid_water=None, liquid_water=None, **kwargs):
+
+        frac_volume, liquid_water = SnowLayer.compute_frac_volumes(density, volumetric_liquid_water, liquid_water)
+
+        super().__init__(*args,
+                         density=density,
+                         volumetric_liquid_water=volumetric_liquid_water,
+                         frac_volume=frac_volume,
+                         liquid_water=liquid_water,
+                         **kwargs)
+        self.read_only_attributes = {'density', 'volumetric_liquid_water', 'liquid_water'}
+
+    def update(self, density=None, volumetric_liquid_water=None, liquid_water=None, **kwargs):
+        """update the density and/or volumetric_liquid_water.
+        This method must be used every time density and/or volumetric_liquid_water are changed.
+        Setting directly the corresponding attributes of the Layer object raises an error because
+        a recalculation of the frac_volume and liquid_volume is necessary every time one of these variables
+        is changed.
 """
 
-    # ice in air background. Note that the emmodel might inverse the medium or use other technique for mid-range densities.
-    # This is the case of DMRT_Shortrange for instance.
-    if (liquid_water > 0.5) and (float(density) < DENSITY_OF_ICE):
-        smrt_warn("You set a high value of liquid_water (%f). Be warned that liquid_water defines the "
-                      "volume ratio of water with respect to ice + water. It does not control the air content." % liquid_water)
-    frac_volume = float(density) / (DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water)
+        if density is not None:
+            # avoid the readonly status
+            self.__dict__['density'] = density
 
-    assert 0 <= frac_volume <= 1
+        if volumetric_liquid_water is not None:
+            # avoid the readonly status
+            self.__dict__['volumetric_liquid_water'] = volumetric_liquid_water
 
-    return frac_volume
+        self.frac_volume, self.__dict__['liquid_water'] = \
+            SnowLayer.compute_frac_volumes(self.density, self.volumetric_liquid_water, liquid_water)
+
+        super().update(**kwargs)
+
+    @staticmethod
+    def compute_frac_volumes(density, volumetric_liquid_water=None, liquid_water=None):
+        """compute and return the fractional volumes:
+        - frac_volume =(ice+water) / (ice+water+air)
+        - liquid_water =(water) / (ice+water)
+    """
+
+        if volumetric_liquid_water is not None:
+            if liquid_water is not None:
+                raise SMRTError("Setting both liquid_water and volumetric_liquid_water is ambiguous")
+            frac_volume = (density - (DENSITY_OF_WATER - DENSITY_OF_ICE) * volumetric_liquid_water) / DENSITY_OF_ICE
+            liquid_water = volumetric_liquid_water / frac_volume
+        else:
+            if liquid_water is None:
+                liquid_water = 0
+            frac_volume = float(density) / (DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water)
+            # volumetric_liquid_water = liquid_water * frac_volume
+
+        # assert frac_volume == density / (DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water)
+
+        assert 0 <= frac_volume <= 1, f"the frac_volume of ice+water in snow is {frac_volume} but must be between 0 and 1."
+        " Check that volumetric_liquid_water is between 0 and 1,"
+        " and that density is between 0 and DENSITY_OF_ICE + (DENSITY_OF_WATER - DENSITY_OF_ICE) * volumetric_liquid_water. "
+
+        assert 0 <= liquid_water <= 1, f"liquid_water is {liquid_water} but must be between 0 and 1."
+        " Check the volumetric_liquid_water and density arguments"
+
+        return frac_volume, liquid_water
 
 
 def make_ice_column(ice_type,
