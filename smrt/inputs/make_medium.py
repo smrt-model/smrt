@@ -476,7 +476,7 @@ def make_ice_layer(ice_type,
     lay.inclusion_shape = inclusion_shape  # shape of inclusions (air or brine depending on ice_type)
     lay.ice_type = ice_type  # just for information, read-only
 
-    lay.read_only_attributes.update(['ice_type', 'density', 'porosity'])
+    lay.read_only_attributes = {'ice_type', 'density', 'porosity'}
 
     return lay
 
