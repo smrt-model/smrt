@@ -15,7 +15,7 @@ from ..core.globalconstants import C_SPEED
 
 
 # local import
-from .error import SMRTError
+from .error import SMRTError, smrt_warn
 
 
 def passive(frequency, theta, polarization=None, channel_map=None, name=None):
@@ -192,7 +192,7 @@ class Sensor(SensorBase):
         super().__init__()
 
         if frequency is not None and wavelength is not None:
-            raise SMRTError("Sensor requires either frequency or wavelength argument, not both")
+            smrt_warn("Sensor requires either frequency or wavelength argument, not both")
         if wavelength is not None:
             self.wavelength = wavelength
         else:
@@ -277,7 +277,7 @@ class Sensor(SensorBase):
 
         if frequency_min < 300e6:
             # Checks frequency is above 300 MHz
-            raise SMRTError('Frequency not in microwave range: check units are Hz')
+            smrt_warn('Frequency not in microwave range: check units are Hz')
 
     def configurations(self):
 

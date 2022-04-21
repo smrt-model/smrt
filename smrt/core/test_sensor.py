@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 
 from smrt.core import sensor
-from smrt.core.error import SMRTError
+from smrt.core.error import SMRTError, SMRTWarning
 
 # Generic test - store for later
 # class FooTests(unittest.TestCase):
@@ -21,7 +21,7 @@ from smrt.core.error import SMRTError
 def test_iterate():
     freqs = [1e9, 2e9, 3e9]
     s = sensor.active(freqs, 55)
-    
+
     freqs_bis = [sub_s.frequency for sub_s in s. iterate("frequency")]
 
     np.testing.assert_equal(freqs, freqs_bis)
@@ -39,7 +39,7 @@ def test_no_theta():
 
 
 def test_passive_wrong_frequency_units_warning():
-    with pytest.raises(SMRTError):
+    with pytest.warns(SMRTWarning):
         sensor.passive([1e9, 35], theta=55)
 
 
@@ -61,13 +61,12 @@ def test_passive_mode():
 # active test
 
 
-
 def test_active_wrong_frequency_units_warning():
-    with pytest.raises(SMRTError):
+    with pytest.warns(SMRTWarning):
         sensor.active([1e9, 35], 55)
 
 
-#def test_active_fourpol():
+# def test_active_fourpol():
 #    sensor = sensor.active(35e9, 55, polarization="4P")
 #    assert "HH" in sensor.polarization
 #    assert "VV" in sensor.polarization
@@ -78,4 +77,3 @@ def test_active_wrong_frequency_units_warning():
 def test_active_mode():
     se = sensor.active(35e9, 55)
     assert se.mode == 'A'
-
