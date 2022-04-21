@@ -282,6 +282,9 @@ class SnowLayer(Layer):
 
         # assert frac_volume == density / (DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water)
 
+        if 1 < frac_volume < 1.01:  # consider we have a small rounding error
+            frac_volume = 1
+
         assert 0 <= frac_volume <= 1, f"the frac_volume of ice+water in snow is {frac_volume} but must be between 0 and 1."
         " Check that volumetric_liquid_water is between 0 and 1,"
         " and that density is between 0 and DENSITY_OF_ICE + (DENSITY_OF_WATER - DENSITY_OF_ICE) * volumetric_liquid_water. "
