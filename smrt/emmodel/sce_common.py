@@ -8,8 +8,8 @@ import numpy as np
 # local import
 from ..core.globalconstants import C_SPEED
 from ..core.error import SMRTError
-from ..core.lib import smrt_matrix, generic_ft_even_matrix, len_atleast_1d
-from .common import rayleigh_scattering_matrix_and_angle
+from ..core.lib import smrt_matrix, generic_ft_even_matrix
+from .common import rayleigh_scattering_matrix_and_angle, extinction_matrix
 
 import scipy.integrate
 
@@ -276,7 +276,7 @@ class SCEBase(object):
 
         return 2 * self.k0 * np.sqrt(self._effective_permittivity).imag
 
-    def ke(self, mu):
+    def ke(self, mu, npol=2):
         """ SCE extinction coefficient matrix
 
         The extinction coefficient is defined as the sum of scattering and absorption
@@ -284,6 +284,7 @@ class SCEBase(object):
         so this method is called by the solver.
 
             :param mu: 1-D array of cosines of radiation stream incidence angles
+            :param npol: number of polarizations
             :returns ke: extinction coefficient matrix [m :sup:`-1`]
 
             .. note::
@@ -294,7 +295,7 @@ class SCEBase(object):
                 streams, which is set by the radiative transfer solver.
 
         """
-        return np.full(len_atleast_1d(mu), self._ke)
+        return extinction_matrix(self.ks + self.ka, mu=mu, npol=npol)
 
 
 def compute_A2_local(Q, microstructure):
