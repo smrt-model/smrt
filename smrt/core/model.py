@@ -82,7 +82,7 @@ The `res` variable is a `pandas.DataFrame` equal to df  +  the results at all se
 
 """
 
-from collections.abc import Sequence
+from collections.abc import Sequence, Mapping
 import itertools
 import inspect
 import pandas as pd
@@ -154,9 +154,12 @@ class Model(object):
         """create a new model. It is not recommended to instantiate Model class directly. Instead use the :py:meth:`make_model` function.
         """
 
-        # emmodel can be a single value (class or string) or an array with the same size as snowpack layers array
+        # emmodel can be a single value (class or string), an array with the same size as snowpack layers array, or a
+        # mapping between layer type and emmodel
         if lib.is_sequence(emmodel):
             self.emmodel = [get_emmodel(em) for em in emmodel]
+        elif isinstance(emmodel, Mapping):
+            self.emmodel = {k: get_emmodel(em) for k, em in emmodel.items()}
         else:
             self.emmodel = get_emmodel(emmodel)
 
@@ -319,29 +322,41 @@ class Model(object):
 
         return simulations, dimensions
 
-    def run_single_simulation(self, simulation, atmosphere):
-        # run a single simulation
-        sensor, snowpack = simulation
-
-        # create a list of emmodel instances (ready to run)
-        emmodel_instances = list()
+    def prepare_emmodels(self, sensor, snowpack):
+        # return emmodels instances for each layer
 
         if lib.is_sequence(self.emmodel):
             # check we have the same number as layer in the snowpack
-            assert (len(self.emmodel) == snowpack.nlayer)
+            assert (len(self.emmodel) == snowpack.nlayer)  # check we have the same number as layer in the snowpack
             # one different model per layer
             emmodel_list = self.emmodel
+        elif isinstance(self.emmodel, Mapping):
+            print(self.emmodel)
+            emmodel_list = (self.emmodel[layer.medium] for layer in snowpack.layers)
         else:
             # the same model for all layers
             emmodel_list = itertools.cycle([self.emmodel])
 
-        for i, (emmodel, layer) in enumerate(zip(emmodel_list, snowpack.layers)):
-            if isinstance(self.emmodel_options, Sequence):
-                emmodel_options = self.emmodel_options[i]
-            else:
-                emmodel_options = self.emmodel_options
-            em = make_emmodel(emmodel, sensor, layer, **emmodel_options)
-            emmodel_instances.append(em)
+        if isinstance(self.emmodel_options, Sequence):
+            assert (len(self.emmodel_options) == snowpack.nlayer)  # check we have the same number as layer in the snowpack
+            emmodel_options_list = self.emmodel_options
+        elif isinstance(self.emmodel, Mapping) and (self.emmodel_options) and \
+                all(isinstance(options, Mapping) for options in self.emmodel_options.values()):
+            emmodel_options_list = (self.emmodel_options[layer.medium] for layer in snowpack.layers)
+        else:
+            emmodel_options_list = itertools.cycle([self.emmodel_options])
+
+        # create a list of emmodel instances (ready to run)
+        emmodel_instances = [make_emmodel(emmodel, sensor, layer, **emmodel_options)
+                             for emmodel, emmodel_options, layer in zip(emmodel_list, emmodel_options_list, snowpack.layers)]
+
+        return emmodel_instances
+
+    def run_single_simulation(self, simulation, atmosphere):
+        # run a single simulation
+        sensor, snowpack = simulation
+
+        emmodel_instances = self.prepare_emmodels(sensor, snowpack)
 
         if self.rtsolver is not None:
             # need to create the rtsolver ?
@@ -405,4 +420,3 @@ class JoblibParallelRunner(object):
         runner = Parallel(n_jobs=self.n_jobs, backend=self.backend)  # Parallel Runner
 
         return runner(delayed(function)(*args) for args in argument_list)
-

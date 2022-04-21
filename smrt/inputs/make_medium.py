@@ -172,7 +172,8 @@ def make_snow_layer(layer_thickness, microstructure_model,
                     volumetric_liquid_water=None,
                     liquid_water=None,
                     salinity=0,
-                    **kwargs):
+                    medium="snow",
+                    ** kwargs):
     """Make a snow layer for a given microstructure_model (see also :py:func:`~smrt.inputs.make_medium.make_snowpack`
     to create many layers). The microstructural parameters depend on the microstructural model and should be given as
     additional arguments to this function. To know which parameters are required or optional, refer to the documentation
@@ -188,6 +189,8 @@ def make_snow_layer(layer_thickness, microstructure_model,
     :param liquid_water: May be depreciated in the future (use instead volumetric_liquid_water): volume of liquid water 
     with respect to ice+water volume (default=0). liquid_water = water_volume / (ice_volume + water_volume).
     :param salinity: salinity in kg/kg, for using PSU as unit see PSU constant in smrt module (default = 0).
+    :param medium: indicate which medium the layer is made of ("snow" is a default). 
+    It is used when emmodel is a dictionary mapping from medium to emmodels in :py:func:`~smrt.core.model.make_model`
     :param kwargs: other microstructure parameters are given as optional arguments (in Python words) but may be required (in SMRT words).
     See the documentation of the microstructure model.
 
@@ -211,6 +214,7 @@ def make_snow_layer(layer_thickness, microstructure_model,
     #                    " in the snow community. Use instead volumetric_liquid_water. Check the definition")
 
     lay = SnowLayer(layer_thickness,
+                    medium=medium,
                     microstructure_model=microstructure_model,
                     density=float(density),
                     temperature=float(temperature),
@@ -405,6 +409,7 @@ def make_ice_layer(ice_type,
                    brine_permittivity_model=None,
                    ice_permittivity_model=None,
                    saline_ice_permittivity_model=None,
+                   medium="ice",
                    **kwargs):
     """Make an ice layer for a given microstructure_model (see also :py:func:`~smrt.inputs.make_medium.make_ice_column`
     to create many layers). The microstructural parameters depend on the microstructural model and should be given as
@@ -427,6 +432,9 @@ def make_ice_layer(ice_type,
     :param saline_ice_permittivity_model: (multiyear) model to mix ice and brine. The default uses polder van staten and
     ice_permittivity_model and brine_permittivity_model. It is highly recommanded to use the default.
     :param kwargs: other microstructure parameters are given as optional arguments (in Python words) but may be required (in SMRT words).
+    :param medium: indicate which medium the layer is made of ("ice" is a default). 
+    It is used when emmodel is a dictionary mapping from medium to emmodels in :py:func:`~smrt.core.model.make_model`
+
     See the documentation of the microstructure model.
 
     :returns: :py:class:`Layer` instance
@@ -514,7 +522,8 @@ def make_ice_layer(ice_type,
         microstructure_model = get_microstructure_model(microstructure_model)
 
     lay = Layer(float(layer_thickness),
-                microstructure_model,
+                medium="ice",
+                microstructure_model=microstructure_model,
                 frac_volume=float(frac_volume),
                 temperature=float(temperature),
                 permittivity_model=(eps_1, eps_2),
