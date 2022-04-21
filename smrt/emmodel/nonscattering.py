@@ -12,7 +12,8 @@ import numpy as np
 
 # local import
 from ..core.globalconstants import C_SPEED
-from smrt.core.lib import smrt_matrix
+from ..core.lib import smrt_matrix
+from .common import extinction_matrix
 
 
 class NonScattering(object):
@@ -57,8 +58,8 @@ class NonScattering(object):
 
         return smrt_matrix.zeros((npol, npol, len(dphi), len(mu_s), len(mu_i)))
 
-    def ke(self, mu):
-        return np.full(len(mu), self.ka)
+    def ke(self, mu, npol=2):
+        return extinction_matrix(self.ka, mu=mu, npol=npol)
 
     def effective_permittivity(self):
         # very basic mixing formula. It is recommended to use either with frac_volume=0 or 1 a better mixings when available.

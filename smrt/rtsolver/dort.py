@@ -647,7 +647,7 @@ class EigenValueSolver(object):
 
         if isnull(A):
             # the solution is trivial
-            beta = invmu * np.repeat(self.ke(mu), npol)
+            beta = invmu * self.ke(mu, npol=npol).compress().diagonal()
             E = np.eye(2 * n, 2 * n)
         else:
             # solve the eigen value problem
@@ -660,7 +660,7 @@ class EigenValueSolver(object):
                 A = self.normalize(m, A)
             # normalization is done
 
-            A[np.diag_indices(2 * n)] += np.repeat(self.ke(mu), npol)
+            A[np.diag_indices(2 * n)] += self.ke(mu, npol=npol).compress().diagonal()
             A = invmu[:, np.newaxis] * A
 
             if debug_A:

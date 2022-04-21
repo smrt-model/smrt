@@ -3,6 +3,8 @@ import inspect
 
 import numpy as np
 
+from smrt.core.lib import abs2, smrt_matrix, len_atleast_1d
+
 
 def rayleigh_scattering_matrix_and_angle_tsang00(mu_s, mu_i, dphi, npol=2):
     """compute the Rayleigh matrix and half scattering angle. Based on Tsang theory and application p271 Eq 7.2.16
@@ -26,16 +28,7 @@ def rayleigh_scattering_matrix_and_angle_tsang00(mu_s, mu_i, dphi, npol=2):
     fhh = cosphi
     fvh = sinphi * mu_s
 
-    if npol == 2:
-        p = [[fvv * fvv, fvh * fvh],
-             [fhv * fhv, fhh * fhh]]
-
-    elif npol == 3:
-        p = [[fvv * fvv, fvh * fvh, fvh * fvv],
-             [fhv * fhv, fhh * fhh, fhv * fhh],
-             [2 * fvv * fhv, 2 * fvh * fhh, fvv * fhh + fvh * fhv]]
-    else:
-        raise RuntimeError("invalid number of polarisation")
+    p = phase_matrix_from_scattering_amplitude(fvv, fvh, fhv, fhh, npol=npol)
 
     # broadcast, it is not automatic (anymore?)
     shape = dphi.size, mu_s.size, mu_i.size
@@ -48,6 +41,46 @@ def rayleigh_scattering_matrix_and_angle_tsang00(mu_s, mu_i, dphi, npol=2):
     sin_half_scatt = np.sqrt(0.5 * (1 - cosT))   # compute half the scattering angle
 
     return p, sin_half_scatt
+
+
+def phase_matrix_from_scattering_amplitude(fvv, fvh, fhv, fhh, npol=2):
+    """compute the phase function according to the scattering amplitude. This follows Tsang's convention.
+"""
+
+    if npol == 2:
+        return [[abs2(fvv), abs2(fvh)],
+                [abs2(fhv), abs2(fhh)]]
+    elif npol == 3:
+        cfhh = np.conj(fhh)
+        cfhv = np.conj(fhv)
+
+        return [[abs2(fvv), abs2(fvh), (np.conj(fvh) * fvv).real],
+                [abs2(fhv), abs2(fhh), (cfhh * fhv).real],
+                [2 * (fvv * cfhv).real, 2 * (fvh * cfhh).real, (fvv * cfhh + fvh * cfhv).real]]
+    else:
+        raise RuntimeError("invalid number of polarisation")
+
+
+def extinction_matrix(sigma_V, sigma_H=None, npol=2, mu=None):
+    """compute the extinction matrix from the extinction in V and in H-pol.
+    If sigma_V or sigma_H are a scalar, they are expanded in a diagonal matrix provided mu is given.
+    If sigma_H is None, sigma_V is used.
+"""
+
+    if np.isscalar(sigma_V):
+        sigma_V = np.full(len_atleast_1d(mu), sigma_V)
+
+    if sigma_H is None:
+        sigma_H = sigma_V
+    elif np.isscalar(sigma_H):
+        sigma_H = np.full(len_atleast_1d(mu), sigma_H)
+
+    if npol == 2:
+        return smrt_matrix(np.array([sigma_V, sigma_H]))
+    elif npol == 3:
+        return smrt_matrix(np.array([sigma_V, sigma_H, 0.5 * (sigma_V + sigma_H)]))
+    else:
+        raise NotImplementedError("npol must be 2 or 3")
 
 
 def rayleigh_scattering_matrix_and_angle_maetzler06(mu_s, mu_i, dphi, npol=2):
