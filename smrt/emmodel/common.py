@@ -30,10 +30,6 @@ def rayleigh_scattering_matrix_and_angle_tsang00(mu_s, mu_i, dphi, npol=2):
 
     p = phase_matrix_from_scattering_amplitude(fvv, fvh, fhv, fhh, npol=npol)
 
-    # broadcast, it is not automatic (anymore?)
-    shape = dphi.size, mu_s.size, mu_i.size
-    p = np.array([[np.broadcast_to(ppp, shape) for ppp in pp] for pp in p])
-
     # compute scattering angle
 
     cosT = np.clip(mu_s * mu_i + sin_s * sin_i * cosphi, -1.0, 1.0)  # Prevents occasional numerical error
@@ -47,18 +43,22 @@ def phase_matrix_from_scattering_amplitude(fvv, fvh, fhv, fhh, npol=2):
     """compute the phase function according to the scattering amplitude. This follows Tsang's convention.
 """
 
+    fvv, fvh, fhv, fhh = np.broadcast_arrays(fvv, fvh, fhv, fhh)
+
     if npol == 2:
-        return [[abs2(fvv), abs2(fvh)],
-                [abs2(fhv), abs2(fhh)]]
+        p = [[abs2(fvv), abs2(fvh)],
+             [abs2(fhv), abs2(fhh)]]
     elif npol == 3:
         cfhh = np.conj(fhh)
         cfhv = np.conj(fhv)
 
-        return [[abs2(fvv), abs2(fvh), (np.conj(fvh) * fvv).real],
-                [abs2(fhv), abs2(fhh), (cfhh * fhv).real],
-                [2 * (fvv * cfhv).real, 2 * (fvh * cfhh).real, (fvv * cfhh + fvh * cfhv).real]]
+        p = [[abs2(fvv), abs2(fvh), (np.conj(fvh) * fvv).real],
+             [abs2(fhv), abs2(fhh), (cfhh * fhv).real],
+             [2 * (fvv * cfhv).real, 2 * (fvh * cfhh).real, (fvv * cfhh + fvh * cfhv).real]]
     else:
         raise RuntimeError("invalid number of polarisation")
+
+    return np.array(p)
 
 
 def extinction_matrix(sigma_V, sigma_H=None, npol=2, mu=None):
