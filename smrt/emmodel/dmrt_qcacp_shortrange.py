@@ -78,7 +78,7 @@ class DMRT_QCACP_ShortRange(Rayleigh):
         lmda = C_SPEED / sensor.frequency
 
         if not hasattr(layer.microstructure, "stickiness") or not hasattr(layer.microstructure, "compute_t"):
-            raise SMRTError("DMRT_ShortRange is only compatible with SHS microstructure model")
+            raise SMRTError("DMRT_QCACP_ShortRange is only compatible with SHS microstructure model")
 
         radius = layer.microstructure.radius
         t = layer.microstructure.compute_t()
@@ -100,17 +100,17 @@ class DMRT_QCACP_ShortRange(Rayleigh):
             Eeff0 = 0.5 * (-b - cmath.sqrt(discriminant))
 
         # Solve 1st-order solution: E
-        Eeff = e0 + (Eeff0 - e0) * (1 + 2.0j / 9.0 * (2 * math.pi * radius / lmda)**3 *
-                                    cmath.sqrt(Eeff0) * (es - e0) / (1.0 + (es - e0) / (3 * Eeff0) * (1.0 - f)) *
-                                    (1.0 - f)**4 / (1.0 + 2 * f - t * f * (1.0 - f))**2)
+        Eeff = e0 + (Eeff0 - e0) * (1 + 2.0j / 9.0 * (2 * math.pi * radius / lmda)**3
+                                    * cmath.sqrt(Eeff0) * (es - e0) / (1.0 + (es - e0) / (3 * Eeff0) * (1.0 - f))
+                                    * (1.0 - f)**4 / (1.0 + 2 * f - t * f * (1.0 - f))**2)
 
         albedo = 2.0 / 9.0 * (2 * np.pi * radius / lmda)**3 * f / (2 * cmath.sqrt(Eeff).imag) *  \
             abs((es - e0) / (1 + (es - e0) / (3 * Eeff0) * (1.0 - f)))**2 * \
             (1.0 - f)**4 / (1.0 + 2 * f - t * f * (1.0 - f))**2
-        
+
         if albedo >= 1:
-            warn("Grain diameter is too large for DMRT_ShortRange resulting in single scattering albedo larger than 1."
-                            "It is recommended to decrease the size or used an alternative emmodel able to do Mie calculations.")
+            warn("Grain diameter is too large for DMRT_QCACP_ShortRange resulting in single scattering albedo larger than 1."
+                 "It is recommended to decrease the size or used an alternative emmodel able to do Mie calculations.")
 
         beta = 2 * math.pi / lmda * 2 * cmath.sqrt(Eeff).imag
 

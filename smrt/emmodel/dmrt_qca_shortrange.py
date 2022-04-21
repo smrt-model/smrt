@@ -77,7 +77,7 @@ class DMRT_QCA_ShortRange(Rayleigh):
         lmda = C_SPEED / sensor.frequency
 
         if not hasattr(layer.microstructure, "stickiness") or not hasattr(layer.microstructure, "compute_t"):
-            raise SMRTError("DMRT_ShortRange is only compatible with SHS microstructure model")
+            raise SMRTError("DMRT_QCA_ShortRange is only compatible with SHS microstructure model")
 
         radius = layer.microstructure.radius
         t = layer.microstructure.compute_t()
@@ -95,7 +95,7 @@ class DMRT_QCA_ShortRange(Rayleigh):
         beta = 2 * k0 * cmath.sqrt(Eeff).imag
 
         if Ks >= beta:
-            print("Grain diameter is too large for DMRT_ShortRange resulting in single scattering albedo larger than 1."
+            print("Grain diameter is too large for DMRT_QCA_ShortRange resulting in single scattering albedo larger than 1."
                   "It is recommended to decrease the size or used an alternative emmodel able to do Mie calculations.")
 
         self._effective_permittivity = Eeff
