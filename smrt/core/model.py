@@ -97,15 +97,24 @@ from smrt.core import lib
 
 
 def make_model(emmodel, rtsolver=None, emmodel_options=None, rtsolver_options=None, emmodel_kwargs=None, rtsolver_kwargs=None):
-    """create a new model with a given EM model and RT solver. The model is then ready to be run using the :py:meth:`Model.run` method. This function is the privileged way
-    to create models compared to class instantiation. It supports automatic import of the emmodel and rtsolver modules.
+    """create a new model with a given EM model and RT solver. The model is then ready to be run using the :py:meth:`Model.run` method.
+    This function is the privileged way to create models compared to class instantiation.
+    It supports automatic import of the emmodel and rtsolver modules.
 
     :param emmodel: type of emmodel to use. Can be given by the name of a file/module in the emmodel directory (as a string) or a class.
-    :type emmodel:  string or class or list of strings or classes. If a list is given, different models are used for the different layers of the snowpack. In this case, the size of the list must be the same as the number of layers in the snowpack.
-    :param rtsolver: type of solver to use. Can be given by the name of a file/module in the rtsolver directeory (as a string) or a class.
+    List (and dict, respectively) can be provided when a different emmodel is needed for every layer (or every kind of layer medium).
+    :type emmodel:  string or class or list of strings or classes or dict of strings or classes.
+    If a list of emmodels is given, the size must be the same as the number of layers in the snowpack.
+    If a dict is given, the keys are the kinds of medium and the values are the associated emmodels to each sort of medium.
+    The layer attribute 'medium' is used to determine the emmodel to use for each layer.
+    :type emmodel:  string or class; or list of strings or classes; or dict of strings or classes.
+    :param rtsolver: type of RT solver to use. Can be given by the name of a file/module in the rtsolver directeory (as a string)
+    or a class.
     :type rtsolver: string or class.  Can be None when only computation of the layer electromagnetic properties is needed.
-    :param emmodel_options: extra arguments to use to create emmodel instance. Valid arguments depend on the selected emmodel. It is documented in for each emmodel class.
-    :type emmodel_options: dict or a list of dict. In the latter case, the size of the list must be the same as the number of layers in the snowpack.
+    :param emmodel_options: extra arguments to use to create emmodel instance. Valid arguments depend on the selected emmodel.
+    It is documented in for each emmodel class.
+    :type emmodel_options: dict or a list of dict. In the latter case, the size of the list must be the same as
+    the number of layers in the snowpack.
     :param rtsolver_options: extra to use to create the rtsolver instance (see __init__ of the solver used).
     :type rtsolver_options: dict
 
@@ -134,8 +143,7 @@ def get_emmodel(emmodel):
 def make_emmodel(emmodel, sensor, layer, **emmodel_options):
     """create a new emmodel instance based on the emmodel class or string
     :param emmodel: type of emmodel to use. Can be given by the name of a file/module in the emmodel directory (as a string) or a class.
-    :type emmodel:  string or class or list of strings or classes. If a list is given, different models are used for the different layers of the snowpack. In this case, the size of the list must be the same as the number of layers in the snowpack.
-    :param sensor: sensor to use for the calculation
+    :param sensor: sensor to use for the calculation.
     :param layer: layer to use for the calculation
 """
 
@@ -155,7 +163,7 @@ class Model(object):
         """
 
         # emmodel can be a single value (class or string), an array with the same size as snowpack layers array, or a
-        # mapping between layer type and emmodel
+        # mapping between an emmodel for each layer medium
         if lib.is_sequence(emmodel):
             self.emmodel = [get_emmodel(em) for em in emmodel]
         elif isinstance(emmodel, Mapping):
