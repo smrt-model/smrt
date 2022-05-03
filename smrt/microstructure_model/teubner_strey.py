@@ -19,7 +19,7 @@ class TeubnerStrey(Autocorrelation):
 
     def __init__(self, params):
 
-        super(TeubnerStrey, self).__init__(params)  # don't forget this line in our classes!
+        super().__init__(params)  # don't forget this line in our classes!
 
     @property
     def corr_func_at_origin(self):
