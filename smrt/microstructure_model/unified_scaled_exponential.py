@@ -1,6 +1,7 @@
 # coding: utf-8
 
-"""Scaled exponential autocorrelation function model of the microstructure. This microstructure uses unified parameters as definied by Picard et al. in prep
+"""Scaled exponential autocorrelation function model of the microstructure. This microstructure uses unified parameters as defined by 
+G. Picard, H. Löwe, F. Domine, L. Arnaud, F. Larue, V. Favier, E. Le Meur, E. Lefebvre, J. Savarino, A. Royer, The snow microstructural control on microwave scattering, AGU Advances.
 
 parameters: frac_volume, porod_length, polydispersity
 
