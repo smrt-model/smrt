@@ -275,7 +275,7 @@ class NadirLRMAltimetry(object):
         z_top, dz, b_gate, b_layer, b_interface = self.combined_depth_grid()
 
         # layer extinction
-        layer_extinction = [float(em.ke(mu=[1.])) for em in self.emmodels]
+        layer_extinction = [np.mean(em.ke(mu=[1.]).diagonal) for em in self.emmodels]
 
         subgate_layer_extinction = fill_forward(layer_extinction, b_layer)
 
