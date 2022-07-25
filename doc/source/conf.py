@@ -69,7 +69,8 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
-    'sphinx.ext.autosummary'
+    'sphinx.ext.autosummary',
+    'karma_sphinx_theme'
 ]
 autosummary_generate = True
 templates_path = [ '_templates' ]
