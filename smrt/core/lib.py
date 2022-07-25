@@ -5,6 +5,7 @@ from collections.abc import Sequence
 import numpy as np
 import pandas as pd
 import scipy.sparse
+from smrt.core.optional_numba import numba
 
 from smrt.core.error import SMRTError
 
@@ -48,11 +49,11 @@ def check_argument_size(x, n, name=None):
 def is_sequence(x):
     # maybe not the smartest way...
     return (
-            isinstance(x, Sequence) or \
-            isinstance(x, np.ndarray) or \
-            isinstance(x, pd.DataFrame) or \
-            isinstance(x, pd.Series)
-            ) and not isinstance(x, str)
+        isinstance(x, Sequence) or
+        isinstance(x, np.ndarray) or
+        isinstance(x, pd.DataFrame) or
+        isinstance(x, pd.Series)
+    ) and not isinstance(x, str)
 
 
 def len_atleast_1d(x):
@@ -143,7 +144,7 @@ class smrt_diag(object):
             self.diag -= other.diag
             return self
         else:
-        
+
             raise NotImplementedError
 
     def __getitem__(self, key):
@@ -262,7 +263,7 @@ class smrt_matrix(object):
 
         elif self.mtype == "diagonal4":
             if self.values.shape[0] == 3 and auto_reduce_npol and mode == 0:
-                ## 3pol->2pol
+                # 3pol->2pol
                 mat = self.values[0:2, :]
             else:
                 mat = self.values
@@ -354,12 +355,17 @@ def isnull(m):
         m = m.diagonal()
 
     return (m is 0) or \
-            (getattr(m, "mtype", None) == "0") or \
-             (not np.any(m))
+        (getattr(m, "mtype", None) == "0") or \
+        (not np.any(m))
 
 
-def abs2(c):
-    return c.real**2 + c.imag**2
+if numba:
+    @numba.vectorize([numba.float64(numba.complex128), numba.float32(numba.complex64)], cache=True)
+    def abs2(x):
+        return x.real**2 + x.imag**2
+else:
+    def abs2(x):
+        return x.real**2 + x.imag**2
 
 
 def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
@@ -450,4 +456,3 @@ in much better performance. Inspire from joblib."""
     os.environ['OMP_NUM_THREADS'] = nthreads
     os.environ['VECLIB_MAXIMUM_THREADS'] = nthreads
     os.environ['NUMEXPR_NUM_THREADS'] = nthreads
-

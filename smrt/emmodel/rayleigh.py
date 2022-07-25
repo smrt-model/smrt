@@ -11,8 +11,8 @@ import numpy as np
 
 from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
-from ..core.lib import smrt_matrix
-from .common import rayleigh_scattering_matrix_and_angle
+from ..core.lib import smrt_matrix, len_atleast_1d
+from .common import rayleigh_scattering_matrix_and_angle, extinction_matrix
 
 
 class Rayleigh(object):
@@ -318,16 +318,33 @@ class Rayleigh(object):
     # we use this one
     ft_even_phase = ft_even_phase_baseonUlaby
 
-
     def phase(self, mu_s, mu_i, dphi, npol=2):
 
         p, sin_half_scatt = rayleigh_scattering_matrix_and_angle(mu_s, mu_i, dphi, npol)
 
         return smrt_matrix(1.5 * self.ks * p)
 
-    def ke(self, mu):
-        """return the extinction coefficient"""
-        return np.full(len(mu), self.ks + self.ka)
+    def ke(self, mu, npol=2):
+        """return the extinction coefficient matrix
+
+        The extinction coefficient is defined as the sum of scattering and absorption
+        coefficients. However, the radiative transfer solver requires this in matrix form,
+        so this method is called by the solver.
+
+            :param mu: 1-D array of cosines of radiation stream incidence angles
+            :param npol: number of polarizations
+            :returns ke: extinction coefficient matrix [m :sup:`-1`]
+
+            .. note::
+
+                Spherical isotropy assumed (all elements in matrix are identical).
+
+                Size of extinction coefficient matrix depends on number of radiation
+                streams, which is set by the radiative transfer solver.
+
+        """
+
+        return extinction_matrix(self.ks + self.ka, mu=mu, npol=npol)
 
     def effective_permittivity(self):
         return self._effective_permittivity

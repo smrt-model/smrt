@@ -21,9 +21,15 @@ Example::
 
     print(result.TbV())
 
-The :py:meth:`~Model.run` method can be used with list of snowpacks. In this case, it is recommended to set the snowpack_dimension_name and 
-snowpack_dimension_values variable which gives the name and values of the coordinates that are create for the Results. This is useful with
-timeseries for instance.
+The model can be run on a list of snowpacks or even more conveniently on a `pandas.Series` or `pandas.DataFrame` including snowpacks.
+The first advantage is that by setting parallel_computation=True, the :py:meth:`Model.run` method performs the simulation in parallel
+ on all the available cores of your machine and even possibly remotely on a high performance cluster using dask.
+ The second advantage is that the returned :py:class:`~smrt.core.result.Result` object contains all the simulations 
+ and provide an easier way to plot the results or compute statistics.
+
+If a list of snowpacks is provided, it is recommended to also set the snowpack_dimension argument. It takes the form of a tuple
+ (list of snowpack_dimension values, dimension name). The name and values are used to define the coordinates in the 
+ :py:class:`~smrt.core.result.Result` object. This is useful with timeseries or sensitivity analysis for instance.
 
 Example::
 
@@ -41,14 +47,44 @@ Example::
 
 The `res` variable has now a coordinate `time` and res.TbV() returns a timeseries.
 
+Using `pandas.Series` offers an even more elegant way to run SMRT and assemble the results of all the simulations.
+
+    thickness_list = np.arange(0, 10, 1)
+    snowpacks = pd.Series([make_snowpack(thickness=t, ........) for t in thickness_list], index=thickness_list)
+    # snowpacks is a pandas Series of snowpack objects with the thickness as index
+
+    # now run the model
+
+    res = m.run(sensor, snowpacks, parallel_computation=True)
+
+    # convert the result into a datframe
+    res = res.to_dataframe()
+
+The `res` variable is a dataframe with the thickness as index and the channels of the sensor as column.
+
+Using `pandas.DataFrame` is similar. One column must contain Snowpack objects (see snowpack_column argument).
+The results of the simulations are automatically joined with this dataframe and returned by 
+:py:meth:`~smrt.core.result.PassiveResults.to_dataframe` or :py:meth:`~smrt.core.result.ActiveResults.to_dataframe`.
+
+    # df is a DataFrame with several parameters in each row.
+
+    # add a snowpack object for each row
+    df['snowpack'] = [make_snowpack(thickness=row['thickness'], ........) for i, row in df.iterrows()]]
+
+    # now run the model
+    res = m.run(sensor, snowpacks, parallel_computation=True)
+
+    # convert the result into a datframe
+    res = res.to_dataframe()
+
+The `res` variable is a `pandas.DataFrame` equal to df  +  the results at all sensor's channel added.
+
+
 """
 
-from collections.abc import Sequence
+from collections.abc import Sequence, Mapping
 import itertools
 import inspect
-import copy
-
-import numpy as np
 import pandas as pd
 
 from .error import SMRTError
@@ -61,15 +97,24 @@ from smrt.core import lib
 
 
 def make_model(emmodel, rtsolver=None, emmodel_options=None, rtsolver_options=None, emmodel_kwargs=None, rtsolver_kwargs=None):
-    """create a new model with a given EM model and RT solver. The model is then ready to be run using the :py:meth:`Model.run` method. This function is the privileged way
-    to create models compared to class instantiation. It supports automatic import of the emmodel and rtsolver modules.
+    """create a new model with a given EM model and RT solver. The model is then ready to be run using the :py:meth:`Model.run` method.
+    This function is the privileged way to create models compared to class instantiation.
+    It supports automatic import of the emmodel and rtsolver modules.
 
     :param emmodel: type of emmodel to use. Can be given by the name of a file/module in the emmodel directory (as a string) or a class.
-    :type emmodel:  string or class or list of strings or classes. If a list is given, different models are used for the different layers of the snowpack. In this case, the size of the list must be the same as the number of layers in the snowpack.
-    :param rtsolver: type of solver to use. Can be given by the name of a file/module in the rtsolver directeory (as a string) or a class.
+    List (and dict, respectively) can be provided when a different emmodel is needed for every layer (or every kind of layer medium).
+    :type emmodel:  string or class or list of strings or classes or dict of strings or classes.
+    If a list of emmodels is given, the size must be the same as the number of layers in the snowpack.
+    If a dict is given, the keys are the kinds of medium and the values are the associated emmodels to each sort of medium.
+    The layer attribute 'medium' is used to determine the emmodel to use for each layer.
+    :type emmodel:  string or class; or list of strings or classes; or dict of strings or classes.
+    :param rtsolver: type of RT solver to use. Can be given by the name of a file/module in the rtsolver directeory (as a string)
+    or a class.
     :type rtsolver: string or class.  Can be None when only computation of the layer electromagnetic properties is needed.
-    :param emmodel_options: extra arguments to use to create emmodel instance. Valid arguments depend on the selected emmodel. It is documented in for each emmodel class.
-    :type emmodel_options: dict or a list of dict. In the latter case, the size of the list must be the same as the number of layers in the snowpack.
+    :param emmodel_options: extra arguments to use to create emmodel instance. Valid arguments depend on the selected emmodel.
+    It is documented in for each emmodel class.
+    :type emmodel_options: dict or a list of dict. In the latter case, the size of the list must be the same as
+    the number of layers in the snowpack.
     :param rtsolver_options: extra to use to create the rtsolver instance (see __init__ of the solver used).
     :type rtsolver_options: dict
 
@@ -83,7 +128,6 @@ def make_model(emmodel, rtsolver=None, emmodel_options=None, rtsolver_options=No
     if rtsolver_kwargs is not None:
         raise DeprecationWarning("Use rtsolver_options instead of rtsolver_kwargs")
         rtsolver_options = rtsolver_kwargs
-
 
     return Model(emmodel, rtsolver, emmodel_options=emmodel_options, rtsolver_options=rtsolver_options)
 
@@ -99,8 +143,7 @@ def get_emmodel(emmodel):
 def make_emmodel(emmodel, sensor, layer, **emmodel_options):
     """create a new emmodel instance based on the emmodel class or string
     :param emmodel: type of emmodel to use. Can be given by the name of a file/module in the emmodel directory (as a string) or a class.
-    :type emmodel:  string or class or list of strings or classes. If a list is given, different models are used for the different layers of the snowpack. In this case, the size of the list must be the same as the number of layers in the snowpack.
-    :param sensor: sensor to use for the calculation
+    :param sensor: sensor to use for the calculation.
     :param layer: layer to use for the calculation
 """
 
@@ -108,19 +151,23 @@ def make_emmodel(emmodel, sensor, layer, **emmodel_options):
     emmodel = get_emmodel(emmodel)  # get the class
     if not isinstance(sensor, SensorBase):
         raise SMRTError("the first argument of 'run' must be a sensor")
-    return emmodel(sensor, layer, **emmodel_options)  # create a emmodele
+    return emmodel(sensor, layer, **emmodel_options)  # create a emmodel
 
 
 class Model(object):
     """ This class drives the whole calculation
     """
+
     def __init__(self, emmodel, rtsolver, emmodel_options=None, rtsolver_options=None):
         """create a new model. It is not recommended to instantiate Model class directly. Instead use the :py:meth:`make_model` function.
         """
 
-        # emmodel can be a single value (class or string) or an array with the same size as snowpack layers array
+        # emmodel can be a single value (class or string), an array with the same size as snowpack layers array, or a
+        # mapping between an emmodel for each layer medium
         if lib.is_sequence(emmodel):
             self.emmodel = [get_emmodel(em) for em in emmodel]
+        elif isinstance(emmodel, Mapping):
+            self.emmodel = {k: get_emmodel(em) for k, em in emmodel.items()}
         else:
             self.emmodel = get_emmodel(emmodel)
 
@@ -154,7 +201,8 @@ class Model(object):
 
         self.emmodel_options.update(kwargs)  # update the options
 
-    def run(self, sensor, snowpack, atmosphere=None, snowpack_dimension=None, progressbar=False, parallel_computation=False, runner=None):
+    def run(self, sensor, snowpack, atmosphere=None, snowpack_dimension=None, snowpack_column="snowpack",
+            progressbar=False, parallel_computation=False, runner=None):
         """ Run the model for the given sensor configuration and return the results
 
             :param sensor: sensor to use for the calculation
@@ -163,6 +211,7 @@ class Model(object):
             :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack
                 is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and the values are
                 rom 1 to the number of snowpacks.
+            :param snowpack_column: when snowpack is a DataFrame this argument is used to specify which column contians the Snowpack objects
             :param progressbar: if True, display a progress bar during multi-snowpacks computation
             :param parallel_computation: if True, use the joblib library to run the simulation in parallel.
                 Otherwise, the simulations are run sequentially. See 'runner' arguments.
@@ -175,13 +224,13 @@ class Model(object):
 
         if atmosphere is not None:
             raise DeprecationWarning("The atmosphere argument of the run method is going to be depreciated."
-                " Setting the 'atmosphere' with make_snowpack (and similar functions) is now the recommended way.")
+                                     " Setting the 'atmosphere' with make_snowpack (and similar functions) is now the recommended way.")
 
         if not isinstance(sensor, SensorBase):
             raise SMRTError("the first argument of 'run' must be a sensor")
 
         # determine the simulations to run
-        simulations, dimensions = self.prepare_simulations(sensor, snowpack, snowpack_dimension)
+        simulations, dimensions = self.prepare_simulations(sensor, snowpack, snowpack_dimension, snowpack_column)
 
         # determine the runner
         if runner is None:
@@ -201,9 +250,15 @@ class Model(object):
             results = [concat_results(results[i: i + n], dimension) for i in range(0, len(results), n)]
 
         assert len(results) == 1
-        return results[0]
+        results = results[0]
 
-    def prepare_simulations(self, sensor, snowpack, snowpack_dimension):
+        if isinstance(snowpack, pd.DataFrame):
+            # remove the snowpack_column
+            results.mother_df = snowpack.drop(snowpack_column, axis=1)
+
+        return results
+
+    def prepare_simulations(self, sensor, snowpack, snowpack_dimension, snowpack_column):
         # return a flat list of pairs (sensor, snowpack). Each is a unique simulation. The second returned parameter
         # is the list of (axis, values) to be used to concatenate the results.
 
@@ -218,9 +273,19 @@ class Model(object):
             snowpack_dimension = "snowpack", list(snowpack.keys())
             snowpack = list(snowpack.values())
 
+        if isinstance(snowpack, pd.DataFrame):
+            try:
+                snowpack = snowpack[snowpack_column]
+            except KeyError:
+                raise SMRTError("the snowpack DataFrame has no column named '%s'. Check the snowpack_column argument." % snowpack_column)
+            assert isinstance(snowpack, pd.Series)
+
         # or is it a pandas Series ?
         if isinstance(snowpack, pd.Series):
-            snowpack_dimension = snowpack.index
+            name = snowpack.index.name
+            if name is None:
+                name = "snowpack"
+            snowpack_dimension = name, snowpack.index.tolist()
             snowpack = snowpack.tolist()
 
         # or a sequence ?
@@ -230,7 +295,9 @@ class Model(object):
             if snowpack_dimension[1] is None:
                 snowpack_dimension = snowpack_dimension[0], range(len(snowpack))
 
-        if (snowpack_dimension is not None) and (len(snowpack) != len(snowpack_dimension[1])):
+        if (snowpack_dimension is not None) \
+                and isinstance(snowpack, tuple) \
+                and (len(snowpack) != len(snowpack_dimension[1])):
             raise SMRTError("The list of snowpacks must have the same length as the snowpack_dimension")
 
         if isinstance(snowpack_dimension, tuple) and not isinstance(snowpack_dimension[0], str):
@@ -248,7 +315,7 @@ class Model(object):
                 axis, values = sensor_configurations[0]
                 for sensor_subset in sensor.iterate(axis):
                     yield from prepare_recursive(sensor_subset, sensor_configurations[1:])
-            else: # we're at the end
+            else:  # we're at the end
                 if lib.is_sequence(snowpack):
                     for sp in snowpack:
                         yield (sensor, sp)
@@ -263,30 +330,41 @@ class Model(object):
 
         return simulations, dimensions
 
+    def prepare_emmodels(self, sensor, snowpack):
+        # return emmodels instances for each layer
+
+        if lib.is_sequence(self.emmodel):
+            # check we have the same number as layer in the snowpack
+            assert (len(self.emmodel) == snowpack.nlayer)  # check we have the same number as layer in the snowpack
+            # one different model per layer
+            emmodel_list = self.emmodel
+        elif isinstance(self.emmodel, Mapping):
+            print(self.emmodel)
+            emmodel_list = (self.emmodel[layer.medium] for layer in snowpack.layers)
+        else:
+            # the same model for all layers
+            emmodel_list = itertools.cycle([self.emmodel])
+
+        if isinstance(self.emmodel_options, Sequence):
+            assert (len(self.emmodel_options) == snowpack.nlayer)  # check we have the same number as layer in the snowpack
+            emmodel_options_list = self.emmodel_options
+        elif isinstance(self.emmodel, Mapping) and (self.emmodel_options) and \
+                all(isinstance(options, Mapping) for options in self.emmodel_options.values()):
+            emmodel_options_list = (self.emmodel_options[layer.medium] for layer in snowpack.layers)
+        else:
+            emmodel_options_list = itertools.cycle([self.emmodel_options])
+
+        # create a list of emmodel instances (ready to run)
+        emmodel_instances = [make_emmodel(emmodel, sensor, layer, **emmodel_options)
+                             for emmodel, emmodel_options, layer in zip(emmodel_list, emmodel_options_list, snowpack.layers)]
+
+        return emmodel_instances
 
     def run_single_simulation(self, simulation, atmosphere):
         # run a single simulation
         sensor, snowpack = simulation
 
-        # create a list of emmodel instances (ready to run)
-        emmodel_instances = list()
-
-        if lib.is_sequence(self.emmodel):
-            # check we have the same number as layer in the snowpack
-            assert (len(self.emmodel) == snowpack.nlayer)
-            # one different model per layer
-            emmodel_list = self.emmodel
-        else:
-            # the same model for all layers
-            emmodel_list = itertools.cycle([self.emmodel])
-
-        for i, (emmodel, layer) in enumerate(zip(emmodel_list, snowpack.layers)):
-            if isinstance(self.emmodel_options, Sequence):
-                emmodel_options = self.emmodel_options[i]
-            else:
-                emmodel_options = self.emmodel_options
-            em = make_emmodel(emmodel, sensor, layer, **emmodel_options)
-            emmodel_instances.append(em)
+        emmodel_instances = self.prepare_emmodels(sensor, snowpack)
 
         if self.rtsolver is not None:
             # need to create the rtsolver ?
@@ -313,7 +391,8 @@ class Model(object):
 
 
 class SequentialRunner(object):
-    """Run the simulations sequentially on a single (local) core. This is the most simple, but inefficient way to run smrt simulations."""
+    """Run the simulations sequentially on a single (local) core. This is the most simple way to run smrt simulations, but the 
+efficiency is poor."""
 
     def __init__(self, progressbar=False):
         pass
@@ -324,14 +403,15 @@ class SequentialRunner(object):
 
 
 class JoblibParallelRunner(object):
-    """Run the simulations on the local machine using all the cores, using the joblib library."""
+    """Run the simulations on the local machine on all the cores, using the joblib library for parallelism."""
 
     def __init__(self, backend='loky', n_jobs=-1, max_numerical_threads=1):
         """Joblib is a lightweight library for embarasingly parallel task.
 
     :param backend: see joblib documentation. The default 'loky' is the recommended backend.
     :param n_jobs: see joblib documentation. The default is to use all the cores.
-    :param max_numerical_threads: :py:func:`~smrt.core.lib.set_max_numerical_threads`. The default avoid miximing different parallelism techniques.
+    :param max_numerical_threads: :py:func:`~smrt.core.lib.set_max_numerical_threads`. The default avoid miximing different 
+    parallelism techniques.
 
 """
         self.n_jobs = n_jobs
@@ -348,41 +428,3 @@ class JoblibParallelRunner(object):
         runner = Parallel(n_jobs=self.n_jobs, backend=self.backend)  # Parallel Runner
 
         return runner(delayed(function)(*args) for args in argument_list)
-
-
-class DaskParallelRunner(object):
-    """Run the simulations using dask.distributed on a cluster. This requires some set up on the cluster
-    (see the dask.distributed documentation).
-
-    TO BE DOCUMENTED.
-    """
-
-    def __init__(self, client, chunk=10):
-
-        if isinstance(client, str):
-            from dask.distributed import Client
-            self.client = Client(client, set_as_default=False)
-        else:
-            self.client = client
-        self.chunk = chunk
-
-    def __call__(self, function, argument_list):
-
-        def function_with_single_numerical_threads(args):
-            lib.set_max_numerical_threads(1)
-            return function(*args)
-
-        # make a bag
-        argument_list = list(argument_list)
-        n = self.chunk
-
-        futures = []
-        for i in range(0, len(argument_list), n):
-            args = argument_list[i: i + n]
-            future = self.client.map(function_with_single_numerical_threads, list(args))
-            futures += future
-
-        results = self.client.gather(futures, direct=False)
-
-        return results
-

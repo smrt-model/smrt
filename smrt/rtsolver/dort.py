@@ -16,16 +16,16 @@ It is important not to set too low a value for n_max_streams. E.g. 32 is usually
 
 # Stdlib import
 import math
-from warnings import warn
 
 # other import
 import numpy as np
+import xarray as xr
 import scipy.special.orthogonal
 import scipy.linalg
 import scipy.interpolate
 
 # local import
-from ..core.error import SMRTError
+from ..core.error import SMRTError, smrt_warn
 from ..core.result import make_result
 from smrt.core.lib import smrt_matrix, smrt_diag, isnull
 from smrt.core.optional_numba import numba
@@ -171,7 +171,17 @@ class DORT(object):
             #coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola)] + coords
             coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola), ('polarization', pola)]
 
-        return make_result(sensor, intensity, coords)
+        result = make_result(sensor, intensity, coords)
+
+        # store other diagnostic information
+        layer_index = 'layer', range(snowpack.nlayer)
+        other_data = {
+            'effective_permittivity': xr.DataArray(self.effective_permittivity, coords=[layer_index]),
+            'ks': xr.DataArray([getattr(em, "ks", np.nan) for em in emmodels], coords=[layer_index]),
+            'ka': xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index])
+        }
+
+        return make_result(sensor, intensity, coords, other_data=other_data)
 
     def dort(self, m_max=0, special_return=False):
         # not to be called by the user
@@ -493,7 +503,7 @@ class DORT(object):
             return bBC, b
 
         if self.snowpack.substrate is None and optical_depth < 5:
-            warn("DORT has detected that the snowpack is optically shallow (tau=%g)and no substrate has been set, meaning that the space "
+            smrt_warn("DORT has detected that the snowpack is optically shallow (tau=%g) and no substrate has been set, meaning that the space "
                  "under the snowpack is vaccum and that the snowpack is shallow enough to affect the signal measured at the surface."
                  "This is usually not wanted. Either increase the thickness of the snowpack or set a substrate."
                  " If wanted, add a transparent substrate to supress this warning" % optical_depth)
@@ -637,7 +647,7 @@ class EigenValueSolver(object):
 
         if isnull(A):
             # the solution is trivial
-            beta = invmu * np.repeat(self.ke(mu), npol)
+            beta = invmu * self.ke(mu, npol=npol).compress().diagonal()
             E = np.eye(2 * n, 2 * n)
         else:
             # solve the eigen value problem
@@ -650,7 +660,7 @@ class EigenValueSolver(object):
                 A = self.normalize(m, A)
             # normalization is done
 
-            A[np.diag_indices(2 * n)] += np.repeat(self.ke(mu), npol)
+            A[np.diag_indices(2 * n)] += self.ke(mu, npol=npol).compress().diagonal()
             A = invmu[:, np.newaxis] * A
 
             if debug_A:

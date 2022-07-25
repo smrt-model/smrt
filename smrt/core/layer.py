@@ -38,7 +38,6 @@ class Layer(object):
     def __init__(self, thickness, microstructure_model=None,
                  temperature=FREEZING_POINT, permittivity_model=None, inclusion_shape=None,
                  **kwargs):
-
         """ Build a snow layer.
 
         :param thickness: thickness of snow layer in m
@@ -51,7 +50,9 @@ class Layer(object):
 """
 
         self.thickness = thickness
-        self.microstructure_model = microstructure_model
+        # TODO Ghi: send a warning for non valid_args
+        if thickness == 0:
+            raise SMRTError("Layer with thickness = 0 (or even <~wavelength) is not recommended, part of the code does not support it.")
 
         self.temperature = temperature
         if temperature < 0:
@@ -60,25 +61,21 @@ class Layer(object):
         self.permittivity_model = permittivity_model
         self.inclusion_shape = inclusion_shape
 
+        self.microstructure_model = microstructure_model
+
         # manage the microstructure parameters
         if microstructure_model is not None:
             valid_args = microstructure_model.valid_arguments()
-            params = {k: kwargs[k] for k in kwargs if k in valid_args}  # filter valid args
+            microstructure_params = {k: kwargs[k] for k in kwargs if k in valid_args}  # filter valid args
 
+            # make an instance of the micro-structure model
+            self.microstructure = microstructure_model(microstructure_params)
         else:
-            params = {}
-
-        # TODO Ghi: send a warning for non valid_args
-        if thickness == 0:
-            raise SMRTError("Layer with thickness = 0 (or even <~wavelength) is not recommended, part of the code does not support it.")
-
-        # make an instance of the micro-structure model
-        if microstructure_model is not None:
-            self.microstructure = microstructure_model(params)
+            microstructure_params = {}
 
         # other params
         for k in kwargs:
-            if k in params:
+            if k in microstructure_params:
                 continue
             setattr(self, k, kwargs[k])
 
@@ -126,7 +123,6 @@ class Layer(object):
             # be called with the layer argument, but the initial permittivity_model function never heard about layers
             return self.permittivity_model[i](frequency, layer_to_inject=self)
 
-
         else:  # assume it is independent of the frequency.
             return self.permittivity_model[i]
 
@@ -172,18 +168,34 @@ class Layer(object):
 
     def __setattr__(self, name, value):
 
-        if not hasattr(self, "read_only_attributes"):
-            super().__setattr__("read_only_attributes", set())
+        if hasattr(self, "read_only_attributes") and (name in self.read_only_attributes):
+            raise SMRTError(f"The attribute '{name}' is read-only, because setting its value requires recalculation."
+                            " In general, this is solved by using the update method.")
 
-        if name in self.read_only_attributes:
-            raise AttributeError("The attribute '%s' is read-only, setting its value would be subject to side effect. You need to create a new layer." % name)
         super().__setattr__(name, value)
+
+        # the callback system has been deactivated and replaced by the update method.
+        # See here for why the option __setattr__ has been chosen:
+        # https://stackoverflow.com/questions/17576009/python-class-property-use-setter-but-evade-getter
+        # if hasattr(self, "attributes_with_callback") and (name in self.attributes_with_callback):
+        #     # get the callback function
+        #     callback = self.attributes_with_callback[name]
+        #     # call the callback function
+        #     callback(self, name)
+
+    def update(self, **kwargs):
+        """update the attributes. This method is to be used when recalculation of the state of the object
+        is necessary. See for instance :py:class:`~smrt.inputs.make_medium.SnowLayer`.
+        """
+        for k, v in kwargs.items():
+            setattr(self, k, v)
 
 
 def get_microstructure_model(modulename, classname=None):
     """return the class corresponding to the microstructure_model defined in modulename.
 
-    This function import the correct module if possible and return the class. It is used internally and should not be needed for normal usage.
+    This function import the correct module if possible and return the class.
+    It is used internally and should not be needed for normal usage.
 
     :param modulename: name of the python module in smrt/microstructure_model
     """

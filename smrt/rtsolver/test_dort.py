@@ -7,6 +7,7 @@ import pytest
 from smrt import make_snowpack
 from smrt.core.sensor import passive, active
 from smrt.core.model import Model
+from smrt.core.error import SMRTWarning
 
 from smrt.interface.transparent import Transparent
 from smrt.emmodel.nonscattering import NonScattering
@@ -85,7 +86,7 @@ def test_2layer_pack():
 def test_shallow_snowpack():
     warnings.filterwarnings('error', message=".*optically shallow.*", module=".*dort")
 
-    with pytest.raises(UserWarning) as e_info:
+    with pytest.raises(SMRTWarning) as e_info:
         sp = make_snowpack([0.5, 0.5], "homogeneous", density=[300, 250], temperature=2 * [250], interface=2 * [Transparent])
         sensor = active(13e9, 45)
         m = Model(NonScattering, DORT)

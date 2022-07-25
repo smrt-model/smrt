@@ -8,9 +8,6 @@ may be performed. All properties relate to a single layer.
 
 """
 
-# Stdlib import
-import inspect
-
 # other import
 import numpy as np
 import scipy.integrate
@@ -21,7 +18,7 @@ from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
 from ..permittivity.generic_mixing_formula import polder_van_santen, depolarization_factors
 from ..core.lib import smrt_matrix, generic_ft_even_matrix, len_atleast_1d
-from .common import rayleigh_scattering_matrix_and_angle, AdjustableEffectivePermittivityMixins, derived_EMModel
+from .common import rayleigh_scattering_matrix_and_angle, AdjustableEffectivePermittivityMixins, derived_EMModel, extinction_matrix
 
 #
 # For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
@@ -284,7 +281,7 @@ class IBA(AdjustableEffectivePermittivityMixins):
 
         return 2 * self.k0 * np.sqrt(self._effective_permittivity).imag
 
-    def ke(self, mu):
+    def ke(self, mu, npol=2):
         """ IBA extinction coefficient matrix
 
         The extinction coefficient is defined as the sum of scattering and absorption
@@ -292,6 +289,7 @@ class IBA(AdjustableEffectivePermittivityMixins):
         so this method is called by the solver.
 
             :param mu: 1-D array of cosines of radiation stream incidence angles
+            :param npol: number of polarization
             :returns ke: extinction coefficient matrix [m :sup:`-1`]
 
             .. note::
@@ -302,7 +300,8 @@ class IBA(AdjustableEffectivePermittivityMixins):
                 streams, which is set by the radiative transfer solver.
 
         """
-        return np.full(len_atleast_1d(mu), self.ks + self.ka)
+
+        return extinction_matrix(self.ks + self.ka, mu=mu, npol=npol)
 
 
 class IBA_MM(IBA):
