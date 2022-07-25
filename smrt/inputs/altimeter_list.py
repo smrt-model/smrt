@@ -70,7 +70,7 @@ def saral_altika():
 
 
 def cryosat2_lrm():
-    """ Return an altimeter instance for CryoSat-2
+    """ Return an altimeter instance for CryoSat-2.
 
     Parameters from https://earth.esa.int/web/eoportal/satellite-missions/c-missions/cryosat-2
     Altitude from https://doi.org/10.1016/j.asr.2018.04.014
