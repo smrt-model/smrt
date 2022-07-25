@@ -10,3 +10,4 @@ matplotlib
 uuid
 importlib
 pytest
+karma_sphinx_theme
