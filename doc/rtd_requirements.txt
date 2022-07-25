@@ -6,6 +6,8 @@ xarray
 pandas
 scipy
 oct2py
-smrt
 matplotlib
-warnings
+uuid
+importlib
+pytest
+karma_sphinx_theme

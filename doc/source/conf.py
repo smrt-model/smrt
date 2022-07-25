@@ -18,6 +18,11 @@
 #
 import os
 import sys
+\
+
+
+
+
 # sys.path.insert(0, os.path.abspath('source/'))
 sys.path.insert(0, os.path.abspath('../../smrt/'))
 
@@ -32,7 +37,7 @@ if on_rtd:
     # import oct2py
     # For everything:
     import xarray
-    import smrt
+
 
 # sphinxcontrib-restbuilder specific code
 # from https://pythonhosted.org/sphinxcontrib-restbuilder/
@@ -65,7 +70,8 @@ extensions = [
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
     'sphinx.ext.autosummary'
-]
+ ]
+
 autosummary_generate = True
 templates_path = [ '_templates' ]
 exclude_patterns = ['_build', '_templates']
@@ -73,7 +79,7 @@ autodoc_default_flags = ['members']
 
 
 # Mock imports if rtd cannot import them
-autodoc_mock_imports = ["collections"]
+autodoc_mock_imports = ["collections", "warnings", "oct2py", "itertools", "inspect", "copy", "glob","pickle", "random", "time", "logging", "threading", "functools", "numbers"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -129,7 +135,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = ['**test**']
+exclude_patterns = ['test']
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.
@@ -168,7 +174,8 @@ todo_include_todos = True
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'bizstyle'
+#html_theme = 'bizstyle'
+html_theme = 'karma_sphinx_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -207,7 +214,7 @@ html_theme = 'bizstyle'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+#html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
