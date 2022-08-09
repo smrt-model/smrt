@@ -164,6 +164,9 @@ class Model(object):
 
         # emmodel can be a single value (class or string), an array with the same size as snowpack layers array, or a
         # mapping between an emmodel for each layer medium
+
+        super().__init__()
+
         if lib.is_sequence(emmodel):
             self.emmodel = [get_emmodel(em) for em in emmodel]
         elif isinstance(emmodel, Mapping):

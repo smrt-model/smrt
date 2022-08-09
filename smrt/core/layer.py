@@ -48,6 +48,7 @@ class Layer(object):
         :param inclusion_shape: assumption for shape of air/brine inclusions (so far, "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions) and "mix_spheres_needles" are implemented)
 
 """
+        super().__init__()
 
         self.thickness = thickness
         # TODO Ghi: send a warning for non valid_args

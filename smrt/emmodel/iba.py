@@ -73,6 +73,8 @@ class IBA(AdjustableEffectivePermittivityMixins):
 
     def __init__(self, sensor, layer):
 
+        super().__init__()
+
         # Set size of phase matrix: active needs an extended phase matrix
         if sensor.mode == 'P':
             self.npol = 2
@@ -339,4 +341,3 @@ class IBA_MM(IBA):
         ks_int = p_mm * np.sin(theta)
 
         return ks_int.real
-

@@ -27,7 +27,7 @@ class StickyHardSpheres(Autocorrelation):
 
     def __init__(self, params):
 
-        super(StickyHardSpheres, self).__init__(params)  # don't forget this line in our classes!
+        super().__init__(params)  # don't forget this line in our classes!
         # self.basic_check()
 
     @property

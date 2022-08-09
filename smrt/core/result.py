@@ -82,6 +82,8 @@ class Result(object):
         """Construct results array with the given intensity array (numpy array or xarray) and dimensions if numpy array is given
 
 """
+        super().__init__()
+
         if isinstance(intensity, xr.DataArray):
             self.data = intensity
         else:

@@ -19,20 +19,20 @@ def plot_snowpack(sp, show_vars=None, show_shade=False, ax=None):
     depth = np.cumsum(sp.layer_thicknesses)
     xmax = 1.5 * depth[-1]
 
-    ax.plot((0, 100*xmax), (0, 0), '0.5')
+    ax.plot((0, 100 * xmax), (0, 0), '0.5')
     for lay, z in zip(sp.layers, -depth):
         if show_shade:
-            ax.fill_between((0, 100 * xmax), [z]*2, [z+lay.thickness]*2, color='#55a9ff', alpha=lay.frac_volume)
+            ax.fill_between((0, 100 * xmax), [z] * 2, [z + lay.thickness] * 2, color='#55a9ff', alpha=lay.frac_volume)
         else:
-            ax.plot((0, 100*xmax), (z, z), '0.5')
+            ax.plot((0, 100 * xmax), (z, z), '0.5')
 
         if show_vars:
-            ax.text(0.8*xmax, z+lay.thickness/2, format_vars(lay, show_vars))
+            ax.text(0.8 * xmax, z + lay.thickness / 2, format_vars(lay, show_vars))
 
     ax.set_frame_on(False)
     ax.get_xaxis().set_visible(False)
     ax.set_aspect('equal', 'datalim')
-    ax.set_xlim((0,1))
+    ax.set_xlim((0, 1))
 
 
 def plot_streams(sp, emmodel, sensor, ilayer=None, ax=None):
@@ -69,7 +69,7 @@ def plot_streams(sp, emmodel, sensor, ilayer=None, ax=None):
             mask.append(False)
         else:
             # ticky to be sure the next segment will be plot
-            xs += [xs[-1] + lay.thickness *  np.tan(sensor.theta)] * 2
+            xs += [xs[-1] + lay.thickness * np.tan(sensor.theta)] * 2
             zs += [zs[-1] - lay.thickness] * 2
             mask += [True, False]
 
@@ -89,7 +89,7 @@ def format_vars(lay, show_vars, delimiter=" "):
     for v in show_vars:
         x = getattr(lay, v, None)
         if x is None and hasattr(lay, "microstructure"):
-            x = getattr(lay.microstructure, v,None)
+            x = getattr(lay.microstructure, v, None)
             if x is None:
                 continue
 
@@ -112,8 +112,8 @@ class CosineComputor(object):
         if sensor_in_layer:
             n /= n[sensor_in_layer]
 
-        cosine = np.sqrt(1 - (np.sin(sensor.theta)/n)**2)
-        return Result(cosine, [('layer', np.arange(1+len(snowpack.layers)))])
+        cosine = np.sqrt(1 - (np.sin(sensor.theta) / n)**2)
+        return Result(cosine, [('layer', np.arange(1 + len(snowpack.layers)))])
 
 
 #
@@ -126,6 +126,7 @@ class ReciprocalScale(mscale.LinearScale):
 
     def set_default_locators_and_formatters(self, axis):
         axis.set_major_locator(FixedLocator([0.07, 0.08, 0.1, 0.12, 0.15, 0.2, 0.3, 0.5, 1, 1000]))
+
         class StickinessFormatter(Formatter):
             def __call__(self, x, pos=None):
                 return "%g" % x
@@ -147,7 +148,6 @@ class ReciprocalScale(mscale.LinearScale):
         def inverted(self):
             return ReciprocalScale.InvertedReciprocalTransform()
 
-
     class InvertedReciprocalTransform(mtransforms.Transform):
         input_dims = 1
         output_dims = 1
@@ -158,6 +158,7 @@ class ReciprocalScale(mscale.LinearScale):
 
         def inverted(self):
             return ReciprocalScale.ReciprocalTransform()
+
 
 # Now that the Scale class has been defined, it must be registered so
 # that ``matplotlib`` can find it.

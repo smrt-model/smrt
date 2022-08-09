@@ -20,6 +20,8 @@ class SFT_Rayleigh(Rayleigh):
 
     def __init__(self, sensor, layer):
 
+        # super().__init__()  # must not be called. Todo: write a generic RayleighBase object with phase function methods only
+
         # check here the limit of the Rayleigh model
 
         f = layer.frac_volume

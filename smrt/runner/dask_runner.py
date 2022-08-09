@@ -30,6 +30,8 @@ class DaskParallelRunner(object):
 
         """
 
+        super().__init__()
+
         if isinstance(client, str):
             self.client = Client(client, set_as_default=False)
         else:

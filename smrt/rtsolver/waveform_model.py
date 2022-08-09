@@ -17,6 +17,8 @@ but is also available with off-nadir angles.
 
     def __init__(self, sensor, numerical_convolution=False):
 
+        super().__init__()
+
         self.sensor = sensor
 
         self.G0 = 1  # antenna_gain0

@@ -36,6 +36,8 @@ class Snowpack(object):
 """
 
     def __init__(self, layers=None, interfaces=None, substrate=None, atmosphere=None):
+        super().__init__()
+
         self.layers = layers if layers is not None else list()
         self.update_layer_number()
 

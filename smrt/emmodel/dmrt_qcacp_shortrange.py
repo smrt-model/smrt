@@ -67,6 +67,8 @@ class DMRT_QCACP_ShortRange(Rayleigh):
 
     def __init__(self, sensor, layer, dense_snow_correction="auto"):
 
+        # super().__init__()  # must not be called. Todo: write a generic RayleighBase object with phase function methods only
+
         if layer.frac_volume > 0.5 and dense_snow_correction == "auto":
             layer = layer.inverted_medium()
 

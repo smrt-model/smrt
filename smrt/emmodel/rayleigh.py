@@ -18,7 +18,10 @@ from .common import rayleigh_scattering_matrix_and_angle, extinction_matrix
 class Rayleigh(object):
     """
     """
+
     def __init__(self, sensor, layer):
+
+        super().__init__()
 
         # check here the limit of the Rayleigh model
 

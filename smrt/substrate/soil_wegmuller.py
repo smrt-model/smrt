@@ -12,7 +12,7 @@ import numpy as np
 # local import
 from smrt.core.interface import Substrate
 from smrt.core.fresnel import fresnel_reflection_matrix, fresnel_transmission_matrix
-from smrt.core import lib
+
 
 class SoilWegmuller(Substrate):
 
@@ -24,7 +24,7 @@ class SoilWegmuller(Substrate):
 
         #  Calculate ksigma = wavenumber*soilp%sigma(standard deviation of surface height)
 
-        ksigma = 2*np.pi*frequency*np.sqrt((1/2.9979e8)**2*eps_1) * self.roughness_rms
+        ksigma = 2 * np.pi * frequency * np.sqrt((1 / 2.9979e8)**2 * eps_1) * self.roughness_rms
         ksigma = ksigma.real
 
         #  Calculation of rh with ksigma
@@ -32,10 +32,10 @@ class SoilWegmuller(Substrate):
 
         # calculation of rv with rh (the model is valid for angle between 0-70°
 
-        mask = mu1 < np.cos(60*np.pi/180)
+        mask = mu1 < np.cos(60 * np.pi / 180)
 
-        rv[~mask] = rh[~mask] * mu1[~mask]**0.655   #  <-- * ou ** ??
-        rv[mask] = rh[mask] * (0.635-0.0014*(np.arccos(mu1[mask])*180/np.pi-60))
+        rv[~mask] = rh[~mask] * mu1[~mask]**0.655  # <-- * ou ** ??
+        rv[mask] = rh[mask] * (0.635 - 0.0014 * (np.arccos(mu1[mask]) * 180 / np.pi - 60))
 
     def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
 

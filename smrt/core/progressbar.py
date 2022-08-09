@@ -46,7 +46,7 @@ class ProgressBar(object):
         self.last = 0
 
     def _percentage(self, i):
-        if self.iterations !=0:
+        if self.iterations != 0:
             return 100 * i / float(self.iterations)
         else:
             # could be 100 ?
@@ -59,6 +59,7 @@ class ProgressBar(object):
 
 class TextProgressBar(ProgressBar):
     """Use :class:`Progress`"""
+
     def __init__(self, iterations, printer, width=40, interval=None):
         self.fill_char = '-'
         self.width = width
@@ -111,6 +112,7 @@ def ipythonprint(s):
 
 class IPythonNotebookPB(ProgressBar):
     """Use :class:`Progress`"""
+
     def __init__(self, iterations, interval=None):
         self.divid = str(uuid.uuid4())
         self.sec_id = str(uuid.uuid4())
@@ -131,14 +133,14 @@ class IPythonNotebookPB(ProgressBar):
             print("second argument in easydev.progress_bar.animate is deprecated. Update your code")
 
         # +1 if i starts at 0 and finishes at N-1
-        if divmod(i, self.interval)[1] != 0 and i != self.iterations :
+        if divmod(i, self.interval)[1] != 0 and i != self.iterations:
             pass
         else:
             percentage = self._percentage(i)
             fraction = percentage
             display(
                 Javascript("$('div#%s').width('%i%%')" %
-                       (self.divid, percentage)))
+                           (self.divid, percentage)))
             display(
                 Javascript("$('label#%s').text('%i%% in %.1f sec')" %
                            (self.sec_id, fraction, round(self.elapsed, 1))))
@@ -175,10 +177,10 @@ def progress_bar(iters, interval=None):
             return IPythonNotebookPB(iters, interval=interval)
         else:
             return TextProgressBar(iters, printer=ipythonprint,
-                    interval=interval)
+                                   interval=interval)
     else:
-        return TextProgressBar(iters, printer=consoleprint, 
-                interval=interval)
+        return TextProgressBar(iters, printer=consoleprint,
+                               interval=interval)
 
 
 class Progress(object):
@@ -190,6 +192,7 @@ class Progress(object):
         pb = Progress(100, interval=1)
         pb.animate(10)
     """
+
     def __init__(self, iters, interval=None):
         self.pb = progress_bar(iters, interval=interval)
 
@@ -218,8 +221,3 @@ def in_ipynb():
         return False
     except NameError:
         return False
-
-
-
-
-

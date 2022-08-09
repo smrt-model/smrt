@@ -61,6 +61,8 @@ It provides argument handling.
 
         """
 
+        # super().__init__()  # must not be call. This interfers with substrate_from_interface presumably
+
         for arg in self.args:
             if arg in kwargs:
                 setattr(self, arg, kwargs.get(arg))
@@ -86,6 +88,8 @@ It provides calculation of the permittivity constant for soil case. Argument han
         :param **kwargs: other parameters such as roughness_rms, corr_length, Q, N, etc are required or optional depending on the model. See the document of the model.
 
         """
+
+        # super().__init__()  # must not be call. This interfers with substrate_from_interface presumably
 
         self.temperature = temperature
         self.permittivity_model = permittivity_model  # this is a function, so it automatically becomes a method of substrate

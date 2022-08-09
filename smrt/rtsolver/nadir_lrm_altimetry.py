@@ -42,6 +42,8 @@ class NadirLRMAltimetry(object):
 
         # """
 
+        super().__init__()
+
         self.waveform_model_class = waveform_model if waveform_model is not None else Brown1977
         self.error_handling = error_handling
         self.oversampling = oversampling
