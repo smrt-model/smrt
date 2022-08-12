@@ -549,17 +549,31 @@ def make_ice_layer(ice_type,
     return lay
 
 
-def make_water_body(thickness=1000,
+def make_water_body(layer_thickness=1000,
                     temperature=273,
                     salinity=0,
                     water_permittivity_model=None,
                     surface=None,
                     atmosphere=None,
                     substrate=None):
+    """Make a water body with a single layer of water at given temperature and salinity.
 
-    sp = Snowpack(substrate=substrate, atmosphere=atmosphere)
+    Note that water is a very strong absorber even fresh water, it is unlikely that the layers under a water body 
+    could be seen by microwaves. If really needed anyway, a multi-layer water body or
+     a water layer on another medium (e.g. ice) can be build using the addition operator.
 
-    layer = make_water_layer(thickness,
+    :param layer_thickness: thickness of ice layer in m
+    :param temperature: temperature of layer in K
+    :param salinity: salinity in kg/kg (see PSU constant in smrt module)
+    :param water_permittivity_model: water permittivity formulation (default is seawater_permittivity_klein76)
+    :param surface: type of surface interface. Flat surface (Fresnel coefficient) is the default.
+    :param substrate: the substrate under the water layer.
+
+"""
+
+    sp = Snowpack(substrate=substrate, atmosphere=atmosphere)  # Snowpack is not a typo, yes SMRT use Snowpacks even for water or ice.
+
+    layer = make_water_layer(layer_thickness,
                              temperature=temperature,
                              salinity=salinity,
                              water_permittivity_model=water_permittivity_model)
@@ -573,7 +587,13 @@ def make_water_layer(layer_thickness,
                      temperature=273,
                      salinity=0,
                      water_permittivity_model=None, **kwargs):
+    """Make a water layer at given temperature and salinity.
 
+    :param layer_thickness: thickness of ice layer in m
+    :param temperature: temperature of layer in K
+    :param salinity: salinity in kg/kg (see PSU constant in smrt module)
+    :param water_permittivity_model: water permittivity formulation (default is seawater_permittivity_klein76)
+"""
     if water_permittivity_model is None:
         water_permittivity_model = seawater_permittivity_klein76
 
