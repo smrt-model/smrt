@@ -6,8 +6,6 @@ parameters: none
 
 """
 
-import numpy as np
-
 # local import
 from .autocorrelation import Autocorrelation
 

@@ -108,7 +108,9 @@ will be set to its default value (273.15 K). This issue applies to any optional 
     return sum(medium_list)
 
 
-def make_snowpack(thickness, microstructure_model, density,
+def make_snowpack(thickness,
+                  microstructure_model,
+                  density,
                   interface=None,
                   surface=None,
                   substrate=None,
@@ -164,7 +166,8 @@ def make_snowpack(thickness, microstructure_model, density,
     return sp
 
 
-def make_snow_layer(layer_thickness, microstructure_model,
+def make_snow_layer(layer_thickness,
+                    microstructure_model,
                     density,
                     temperature=FREEZING_POINT,
                     ice_permittivity_model=None,
@@ -300,7 +303,9 @@ class SnowLayer(Layer):
 
 
 def make_ice_column(ice_type,
-                    thickness, temperature, microstructure_model,
+                    thickness,
+                    temperature,
+                    microstructure_model,
                     brine_inclusion_shape='spheres',
                     salinity=0.,
                     brine_volume_fraction=None,
@@ -540,6 +545,46 @@ def make_ice_layer(ice_type,
     lay.ice_type = ice_type  # just for information, read-only
 
     lay.read_only_attributes = {'ice_type', 'density', 'porosity'}
+
+    return lay
+
+
+def make_water_body(thickness=1000,
+                    temperature=273,
+                    salinity=0,
+                    water_permittivity_model=None,
+                    surface=None,
+                    atmosphere=None,
+                    substrate=None):
+
+    sp = Snowpack(substrate=substrate, atmosphere=atmosphere)
+
+    layer = make_water_layer(thickness,
+                             temperature=temperature,
+                             salinity=salinity,
+                             water_permittivity_model=water_permittivity_model)
+    # add the layer and the interface interface
+    sp.append(layer, interface=make_interface(surface))
+
+    return sp
+
+
+def make_water_layer(layer_thickness,
+                     temperature=273,
+                     salinity=0,
+                     water_permittivity_model=None, **kwargs):
+
+    if water_permittivity_model is None:
+        water_permittivity_model = seawater_permittivity_klein76
+
+    lay = Layer(float(layer_thickness),
+                medium="water",
+                microstructure_model=get_microstructure_model("homogeneous"),
+                frac_volume=1,
+                temperature=float(temperature),
+                permittivity_model=(1, water_permittivity_model),
+                salinity=float(salinity),
+                **kwargs)
 
     return lay
 

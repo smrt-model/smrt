@@ -16,6 +16,8 @@ def fresnel_coefficients(eps_1, eps_2, mu1):
 
     :returns: rv, rh, mu2 the cosine of the angle in medium 2
 """
+    raise Exception("a revoir avec Rigorous expressions for the Fresnel equations at interfaces between absorbing media")
+
     n = np.sqrt(eps_2 / eps_1)
     b = 1.0 - (1.0 - mu1**2) / n**2
 
