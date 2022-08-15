@@ -9,8 +9,8 @@ from smrt import make_snowpack, make_model, sensor_list
 # Ghi: rapid hack, should be splitted in different functions
 #
 
-def setup_snowpack(l):
 
+def setup_snowpack(l):
 
     nl = l//2  # // Forces integer division
     thickness = np.array([0.1, 0.1]*nl)
@@ -25,7 +25,8 @@ def setup_snowpack(l):
                              density=density,
                              temperature=temperature,
                              corr_length=p_ex)
-    return  snowpack
+    return snowpack
+
 
 def test_iba_oneconfig_passive():
 
@@ -42,13 +43,12 @@ def test_iba_oneconfig_passive():
     res = m.run(radiometer, snowpack)
 
     print(res.TbV(), res.TbH())
-    #absorption with effective permittivity
+    # absorption with effective permittivity
     # abs(res.TbV() - 248.08794944809972) < 1e-4
     # abs(res.TbH() - 237.3056263719142) < 1e-4
 
-    assert abs(res.TbV() - 248.08744066791073) < 1e-4
-    assert abs(res.TbH() - 237.30720491883298) < 1e-4
-
+    assert abs(res.TbV() - 248.08374547409588) < 1e-4
+    assert abs(res.TbH() - 237.30435496083572) < 1e-4
 
 
 def test_iba_oneconfig_active():
@@ -67,7 +67,7 @@ def test_iba_oneconfig_active():
 
     print(res.sigmaVV_dB(), res.sigmaHH_dB(), res.sigmaHV_dB())
 
-    assert abs(res.sigmaVV_dB() - (-24.04497237)) < 1e-3
-    assert abs(res.sigmaHH_dB() - (-24.41628343)) < 1e-3
-    assert abs(res.sigmaHV_dB() - (-51.53673914)) < 1e-3
+    assert abs(res.sigmaVV_dB() - (-24.044882546524693)) < 1e-3
+    assert abs(res.sigmaHH_dB() - (-24.416295329469907)) < 1e-3
+    assert abs(res.sigmaHV_dB() - ( -51.544272924876886)) < 1e-3
 

@@ -54,8 +54,8 @@ def test_soil_wegmuller_dobson85():
     res = run_model(snowpack)
 
     print(res.TbV(), res.TbH())
-    assert abs(res.TbV() - 262.60009290172155) < 1e-4
-    assert abs(res.TbH() - 255.8655605977706) < 1e-4
+    assert abs(res.TbV() - 262.55457107119486) < 1e-4
+    assert abs(res.TbH() - 255.81725907587176) < 1e-4
     # note value from DMRTML Fortran running in the same conditions:
     # H=255.88187817295605 V=262.60345275739024
 
@@ -72,7 +72,7 @@ def test_soil_wegmuller_montpetit2008():
     res = run_model(snowpack)
 
     print(res.TbV(), res.TbH())
-    assert abs(res.TbV() - 262.45644269568135) < 1e-4
-    assert abs(res.TbH() - 255.7131655561391) < 1e-4
+    assert abs(res.TbV() - 262.4543081568107) < 1e-4
+    assert abs(res.TbH() - 255.71089039573724) < 1e-4
     # note value from DMRTML Fortran running in the same conditions:
     # H=255.88187817295605 V=262.60345275739024

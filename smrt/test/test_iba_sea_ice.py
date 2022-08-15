@@ -7,8 +7,8 @@ from smrt import make_model, sensor_list, PSU
 from smrt.inputs.make_medium import make_ice_column, bulk_ice_density
 from smrt.core.interface import Interface
 
-#test if this configuration gives values as originally produced by examples/iba_sea_ice.py
-#same structure as test_integration_iba.py
+# test if this configuration gives values as originally produced by examples/iba_sea_ice.py
+# same structure as test_integration_iba.py
 
 
 def setup_seaice():
@@ -17,7 +17,8 @@ def setup_seaice():
     n_max_stream = 64
 
     thickness = np.array([1.5 / l] * l)  # ice is 1.5m thick
-    temperature = np.linspace(273.15 - 20., 273.15 - 1.8, l)  # temperature gradient in the ice from -20 deg C at top to freezing temperature of water at bottom (-1.8 deg C)
+    # temperature gradient in the ice from -20 deg C at top to freezing temperature of water at bottom (-1.8 deg C)
+    temperature = np.linspace(273.15 - 20., 273.15 - 1.8, l)
     salinity = np.linspace(2., 10., l) * PSU  # salinity profile ranging from salinity=2 at the top to salinity=10 at the bottom of the ice
 
     return l, n_max_stream, thickness, temperature, salinity
@@ -34,26 +35,25 @@ def test_oneconfig_for_firstyear_sea_ice():
                                  thickness=thickness,
                                  temperature=temperature,
                                  microstructure_model="exponential",
-                                 brine_inclusion_shape="spheres", #inclusion_shape can be "spheres" or "random_needles", or "mix_spheres_needles"
-                                 salinity=salinity, #either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water ice
+                                 brine_inclusion_shape="spheres",  # inclusion_shape can be "spheres" or "random_needles", or "mix_spheres_needles"
+                                 salinity=salinity,  # either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water ice
                                  corr_length=p_ex,
                                  add_water_substrate="ocean"
                                  )
 
     # create the sensor
     sensor = sensor_list.passive(1.4e9, 40.)
-    n_max_stream= 128
-    m = make_model("iba", "dort", rtsolver_options ={"n_max_stream": n_max_stream})
+    n_max_stream = 128
+    m = make_model("iba", "dort", rtsolver_options={"n_max_stream": n_max_stream})
 
     # run the model
     res = m.run(sensor, ice_column)
 
     print(res.TbV(), res.TbH())
-    #absorption with effective permittivity
-    assert abs(res.TbV() - 256.01165061598317) < 1e-4
-    assert abs(res.TbH() - 228.47447378338745) < 1e-4
+    # absorption with effective permittivity
+    assert abs(res.TbV() - 256.0170296269674) < 1e-4
+    assert abs(res.TbH() - 228.4566040823167) < 1e-4
 
- 
 
 def test_oneconfig_for_multiyear_sea_ice():
     # prepare inputs
@@ -76,16 +76,16 @@ def test_oneconfig_for_multiyear_sea_ice():
     # create the sensor
     sensor = sensor_list.passive(1.4e9, 40.)
 
-    n_max_stream= 128
-    m = make_model("iba", "dort", rtsolver_options ={"n_max_stream": n_max_stream})
+    n_max_stream = 128
+    m = make_model("iba", "dort", rtsolver_options={"n_max_stream": n_max_stream})
 
     # run the model
     res = m.run(sensor, ice_column)
 
     print(res.TbV(), res.TbH())
     # absorption with effective permittivity
-    assert abs(res.TbV() - 257.5689162188296) < 1e-4
-    assert abs(res.TbH() - 232.03924683304172) < 1e-4
+    assert abs(res.TbV() - 257.57209000420636) < 1e-4
+    assert abs(res.TbH() - 232.01555447145563) < 1e-4
 
 
 def test_equivalence_porosity_density():
@@ -111,7 +111,7 @@ def test_equivalence_porosity_density():
                                   )
 
     # Same, but giving the density instead:
-    density = [bulk_ice_density(temp, salt , porosity) for temp, salt in zip(temperature, salinity)]
+    density = [bulk_ice_density(temp, salt, porosity) for temp, salt in zip(temperature, salinity)]
 
     ice_column2 = make_ice_column(ice_type,
                                   thickness=thickness,

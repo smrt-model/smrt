@@ -35,12 +35,13 @@ def _do_test_isothermal_universe(pc, thickness_1):
 
     T = 265
 
-    substrate = make_soil('soil_wegmuller', permittivity_model=complex(10,1), roughness_rms=0.001, temperature=T)
+    substrate = make_soil('soil_wegmuller', permittivity_model=complex(10, 1), roughness_rms=0.001, temperature=T)
 
     atmosphere = SimpleIsotropicAtmosphere(tbdown=T, tbup=0, trans=1)
 
     snowpack = make_snowpack([0.3, thickness_1], "exponential",
                              density=[200, 300], temperature=T, corr_length=pc,
+                             ice_permittivity_model=complex(1.7, 0.00001),
                              substrate=substrate, atmosphere=atmosphere)
 
     # create the sensor
@@ -59,7 +60,7 @@ def _do_test_isothermal_universe(pc, thickness_1):
 
 def _do_test_kirchoff_law(pc, thickness_1):
 
-    T = 265
+    T = 265.
 
     substrate = make_soil('soil_wegmuller', permittivity_model=complex(10, 1), roughness_rms=0.001, temperature=T)
 
@@ -67,6 +68,7 @@ def _do_test_kirchoff_law(pc, thickness_1):
 
     snowpack = make_snowpack([0.3, thickness_1], "exponential",
                              density=[200, 300], temperature=T, corr_length=pc,
+                             ice_permittivity_model=complex(1.7, 0.00001),
                              substrate=substrate)
 
     # create the sensor

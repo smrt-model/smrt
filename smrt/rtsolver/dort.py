@@ -699,6 +699,8 @@ raise and return NaN instead by adding the argument rtsolver_options=dict(error_
                     print(np.any(mask, axis=1))
                     print(beta[np.any(mask, axis=1)])
                     print(beta)
+                else:
+                    E = E.real
 
             beta = beta.real
 
