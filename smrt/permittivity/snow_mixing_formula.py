@@ -162,6 +162,40 @@ Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21â
         eps2=1,
     )
 
+@layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
+def wetsnow_permittivity_colbeck80_caseIII(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
+    """effective permittivity proposed by Colbeck, 1980 for the low porosity.
+
+Colbeck, S. C. (1980). Liquid distribution and the dielectric constant of wet snow.
+Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21â€“40.
+
+"""
+    if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
+        raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
+
+    ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
+
+    # for n = 3.5 (page 26), we read in Fig 2 page 31:
+    m = 0.072  
+    Ac = 1 / (1 + 2 / m)
+
+    Awater = [(1 - Ac) / 2, (1 - Ac) / 2, Ac]
+
+
+    Ac = 1 / 3  # air bubble
+    Aair = [Ac, Ac, Ac]
+
+    frac_volume, fi, fw = compute_frac_volumes(density, liquid_water)
+
+    return polder_van_santen_three_components(
+        f1=fw,
+        f2=1 - frac_volume,
+        eps0=ice_permittivity_model(frequency, temperature=temperature),
+        eps1=water_permittivity_model(frequency, temperature=FREEZING_POINT),
+        eps2=1,
+        A1=Awater,
+        A2=Aair
+    )
 
 @layer_properties("density", "liquid_water")
 def wetsnow_permittivity_hallikainen86(frequency, density, liquid_water):
