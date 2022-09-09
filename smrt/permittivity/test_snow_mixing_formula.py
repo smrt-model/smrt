@@ -118,8 +118,8 @@ def test_wetsnow_permittivity_colbeck80_caseIII():
     theta_a = phi - theta_w
     theta_i = 1 - phi
     
-    density_d = phi*DENSITY_OF_AIR+theta_i*DENSITY_OF_ICE
-    density_s = theta_w*DENSITY_OF_WATER+theta_a*DENSITY_OF_AIR+theta_i*DENSITY_OF_ICE
+    density_d = phi * DENSITY_OF_AIR + theta_i * DENSITY_OF_ICE
+    density_s = theta_w * DENSITY_OF_WATER + theta_a * DENSITY_OF_AIR + theta_i * DENSITY_OF_ICE
 
     lwc = theta_w / (theta_w + theta_i)
     
