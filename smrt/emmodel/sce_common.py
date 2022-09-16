@@ -46,20 +46,18 @@ class SCEBase(object):
 
         if self.symmetrical:
             self.A2A2inv = self.compute_A2A2inv()
-            self._ke = self.compute_ke_symmetrical()
+            self._ke, self.ks = self.compute_ke_ks_symmetrical()
         else:
             if self.scaled:
                 eps_HS = permittivity_hashin_shtrikman(self.e0, self.eps, self.frac_volume)
-                k_eff = self.k0 * np.sqrt(eps_HS) 
+                k_eff = self.k0 * np.sqrt(eps_HS)
             else:
                 k_eff = self.k1
 
             self.A2 = self.compute_A2(k_eff, self.microstructure)
-            self._ke = self.compute_ke()
+            self._ke, self.ks = self.compute_ke_ks()
 
         self.ka = self.compute_ka()
-
-        self.ks = self._ke - self.ka  # this may not be accurate...
 
     def compute_A2(self, Q, microstructure):
 
@@ -95,7 +93,7 @@ class SCEBase(object):
 
         return A2, A2inv
 
-    def compute_ke(self):
+    def compute_ke_ks(self):
 
         assert not self.symmetrical
 
@@ -104,45 +102,61 @@ class SCEBase(object):
         beta = (self.eps - self.e0) / (self.eps + 2 * self.e0)
 
         Eeff = self.e0 * (1 + 3 * beta * f**2 / (f * (1 - beta * f) - beta * self.A2))
+        Eeff0 = self.e0 * (1 + 3 * beta * f**2 / (f * (1 - beta * f)))
 
-        return 2 * self.k0 * np.sqrt(Eeff).imag
+        ke = 2 * self.k0 * np.sqrt(Eeff).imag
+        ks = ke - 2 * self.k0 * np.sqrt(Eeff0).imag
 
-    def compute_ke_symmetrical(self):
+        return ke, ks
+
+    def compute_ke_ks_symmetrical(self):
 
         assert self.symmetrical
         # equation D2
         A2, A2inv = self.A2A2inv
-        grandA2 = 2 + A2 / self.frac_volume + A2inv / (1 - self.frac_volume)
+
+        if self.frac_volume == 0 or (self.frac_volume == 1):
+            grandA2 = 2  # no scattering
+            # we could directly return Eeff=e0 or eps depending on frac_volume.
+        else:
+            grandA2 = 2 + A2 / self.frac_volume + A2inv / (1 - self.frac_volume)
 
         sum_eps = self.e0 + self.eps
         prod_eps = self.e0 * self.eps
         weighted_mean_eps = self.e0 * self.frac_volume + self.eps * (1 - self.frac_volume)
 
-        Eeff = sum_eps / 2 \
-            + 1 / (2 * grandA2) * (-3 * weighted_mean_eps
-                                   + np.sqrt(4 * grandA2 * (3 - grandA2) * prod_eps + (sum_eps * grandA2 - 3 * weighted_mean_eps)**2))
+        #Eeff = sum_eps / 2 \
+        #    + 1 / (2 * grandA2) * (-3 * weighted_mean_eps
+        #                           + np.sqrt(4 * grandA2 * (3 - grandA2) * prod_eps + (sum_eps * grandA2 - 3 * weighted_mean_eps)**2))
 
         delta = 4 * grandA2 * (3 - grandA2) * prod_eps + (sum_eps * grandA2 - 3 * weighted_mean_eps)**2
 
         Eeff = sum_eps / 2 + 1 / (2 * grandA2) * (-3 * weighted_mean_eps + np.sqrt(delta))
 
-        # Eeff2 = sum_eps / 2 + 1 / (2 * grandA2) * (-3 * weighted_mean_eps - np.sqrt(delta))
+        delta0 = 8 * prod_eps + (sum_eps * 2 - 3 * weighted_mean_eps)**2  # same with grandA2=2
 
-        #print(Eeff, Eeff2)
-        # heuristic approach the get the right solution of the quadratic equation
-        # this needs to be consolidated
-        # if (np.sqrt(Eeff).imag > np.sqrt(Eeff2).imag) and (np.sqrt(Eeff2).imag > 0):
-        #    Eeff = Eeff2
+        Eeff0 = sum_eps / 2 + 1 / 4 * (-3 * weighted_mean_eps + np.sqrt(delta0))
+        # Eeff0 is the same as PvS... we do a lot of calculus here.
 
-        return 2 * self.k0 * np.sqrt(Eeff).imag
+        ke = 2 * self.k0 * np.sqrt(Eeff).imag
+        ks = ke - 2 * self.k0 * np.sqrt(Eeff0).imag
+
+        return ke, ks
 
     def compute_phase_norm(self):
         """Compute the norm needed for the IBA phase matrix (=Rayleigh x microstructure ) when ks is known"""
+
+        if self.ks == 0:
+            return 0
 
         k = 6  # number of samples. This should be adaptative depending on the size/wavelength
         mu = np.linspace(1, -1, 2**k + 1)
         y = self.ks_integrand(mu)
         ks_int = scipy.integrate.romb(y, mu[0] - mu[1])  # integrate on mu between -1 and 1
+
+        if ks_int == 0:
+            return 0
+
         return self.ks / (ks_int / 4.)  # Ding et al. (2010), normalised by (1/4pi)
 
     def ks_integrand(self, mu):
@@ -338,8 +352,7 @@ def compute_A2_nonlocal(Q, microstructure):
 
     # integrate from 0 to 2Q (for Q in 0 to qmax)
     # take the real part to avoid warnings... but this remains to be explored
-    primitive = scipy.integrate.cumulative_trapezoid(y.real, 2 * q.real, initial=0)  
-
+    primitive = scipy.integrate.cumulative_trapezoid(y.real, 2 * q.real, initial=0)
 
     ImF = - 1 / (2 * (2 * np.pi)**1.5) * q * primitive
 

@@ -34,13 +34,11 @@ class SCER08(SCEBase):
         super().__init__(sensor, layer)
 
         self.A2 = self.compute_A2(self.k1, self.microstructure)
-        self._ke = self.compute_ke()
+        self._ke, self.ks = self.compute_ke_ks()
 
         self._effective_permittivity = self.effective_permittivity()
 
         self.ka = self.compute_ka()
-
-        self.ks = self._ke - self.ka  # this may not be accurate...
 
         # another way:
         # self.eps, self.e0 = self.eps.real, self.e0.real
@@ -73,8 +71,11 @@ class SCER08(SCEBase):
         adjusted_fractional = self.frac_volume / (1 - self.A2 / self.frac_volume * (self.eps - self.e0) / (self.eps + 2 * self.e0))
 
         Eeff = maxwell_garnett_for_spheres(adjusted_fractional, self.e0, self.eps)
+        Eeff0 = maxwell_garnett_for_spheres(self.frac_volume, self.e0, self.eps)
 
-        return 2 * self.k0 * np.sqrt(Eeff).imag
+        ke = 2 * self.k0 * np.sqrt(Eeff).imag
+
+        return ke, ke - 2 * self.k0 * np.sqrt(Eeff0).imag
 
     def effective_permittivity(self):
         """ Calculation of complex effective permittivity of the medium,
