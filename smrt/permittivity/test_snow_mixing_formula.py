@@ -3,7 +3,9 @@ import pytest
 import numpy as np
 
 from smrt.core.globalconstants import DENSITY_OF_ICE, DENSITY_OF_WATER
-from .snow_mixing_formula import wetsnow_permittivity_hallikainen86, wetsnow_permittivity_hallikainen86_ulaby14
+from .snow_mixing_formula import wetsnow_permittivity_hallikainen86, \
+    wetsnow_permittivity_hallikainen86_ulaby14, \
+    wetsnow_permittivity_colbeck80_caseI, wetsnow_permittivity_colbeck80_caseII, wetsnow_permittivity_colbeck80_caseIII
 
 
 @pytest.mark.skip(reason="no way to obtain an agreement between the equations and the graphs in H86")
@@ -65,9 +67,10 @@ def test_wetsnow_permittivity_hallikainen86_ulaby14():
         print("reference:", v)
         assert np.allclose(eps.real, v.real, atol=0.001)
         assert np.allclose(eps.imag, v.imag, atol=0.001)
-        
+
+
 def test_wetsnow_permittivity_colbeck80_caseI():
-    
+
     # values from Fig 5
     v = 1.891
     frequency = 1e9
@@ -77,18 +80,19 @@ def test_wetsnow_permittivity_colbeck80_caseI():
     d = wetsnow_permittivity_colbeck80_caseI(frequency=frequency, temperature=temperature, density=density, liquid_water=0).real
     print("dilectric constant: ", d)
     print("reference: ", v)
-    
-    assert  np.allclose(d, v, atol=0.001)
-    
+
+    assert np.allclose(d, v, atol=0.001)
+
+
 def test_wetsnow_permittivity_colbeck80_caseII():
-    
+
     DENSITY_OF_AIR = 1.22
-    
+
     # values from Fig 9
     v = 3.2
     frequency = 1e9
     temperature = 273.15
-    
+
     theta_w = 0.10
     phi = 0.4
     theta_a = phi - theta_w
@@ -96,39 +100,38 @@ def test_wetsnow_permittivity_colbeck80_caseII():
     density = theta_w * DENSITY_OF_WATER + theta_a * DENSITY_OF_AIR + theta_i * DENSITY_OF_ICE
 
     lwc = theta_w / (theta_w + theta_i)
-    
+
     d = wetsnow_permittivity_colbeck80_caseII(frequency=frequency, temperature=temperature, density=density, liquid_water=lwc).real
 
     print("dilectric constant: ", d)
     print("reference: ", v)
-    
-    assert  np.allclose(d, v, atol=0.001)
-    
+
+    assert np.allclose(d, v, atol=0.001)
+
+
 def test_wetsnow_permittivity_colbeck80_caseIII():
-    
+
     DENSITY_OF_AIR = 1.22
-    
+
     # values from Fig 8
     v = 5.062
     frequency = 1e9
     temperature = 273.15
-    
+
     theta_w = 0.16
     phi = 0.32
     theta_a = phi - theta_w
     theta_i = 1 - phi
-    
+
     density_d = phi * DENSITY_OF_AIR + theta_i * DENSITY_OF_ICE
     density_s = theta_w * DENSITY_OF_WATER + theta_a * DENSITY_OF_AIR + theta_i * DENSITY_OF_ICE
 
     lwc = theta_w / (theta_w + theta_i)
-    
+
     d_d = wetsnow_permittivity_colbeck80_caseI(frequency=frequency, temperature=temperature, density=density_d, liquid_water=0).real
     d_s = wetsnow_permittivity_colbeck80_caseIII(frequency=frequency, temperature=temperature, density=density_s, liquid_water=lwc).real
 
     print("delta dilectric constant: ", d_s - d_d)
     print("reference: ", v)
-    
-    assert  np.allclose(d_s - d_d, v, atol=0.001)
 
-
+    assert np.allclose(d_s - d_d, v, atol=0.001)
