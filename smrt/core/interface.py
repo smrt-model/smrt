@@ -124,6 +124,11 @@ def substrate_from_interface(interface_cls):
             SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model)
             # create an interface instance
             self.interface_inst = interface_cls(**kwargs)
+            # transfer the interface_instance's args and optional args here
+            for k in self.interface_inst.args:
+                setattr(self, k, getattr(self.interface_inst, k))
+            for k in self.interface_inst.optional_args:
+                setattr(self, k, getattr(self.interface_inst, k))
 
         def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
 
