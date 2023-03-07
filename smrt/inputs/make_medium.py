@@ -117,25 +117,25 @@ def make_snowpack(thickness,
                   atmosphere=None,
                   **kwargs):
     """
-    build a multi-layered snowpack. Each parameter can be an array, list or a constant value.
+    Build a multi-layered snowpack. Each parameter can be an array, list or a constant value.
 
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf"
-    for a semi-infinite layer.
+        for a semi-infinite layer.
     :param microstructure_model: microstructure_model to use (e.g. sticky_hard_spheres or independent_sphere or exponential).
     :param surface: type of surface interface, flat/fresnel is the default.  If surface and interface are both set,
-    the interface must be a constant refering to all the "internal" interfaces.
+        the interface must be a constant refering to all the "internal" interfaces.
     :param interface: type of interface, flat/fresnel is the default. It is usually a string for the interfaces
-    without parameters (e.g. Flat or Transparent) or is created with :py:func:`~smrt.core.interface.make_interface` in more complex cases.
-    Interface can be a constant or a list. In the latter case, its length must be the same as the number of layers,
-    and interface[0] refers to the surface interface.
+        without parameters (e.g. Flat or Transparent) or is created with :py:func:`~smrt.core.interface.make_interface` in more complex cases.
+        Interface can be a constant or a list. In the latter case, its length must be the same as the number of layers,
+        and interface[0] refers to the surface interface.
     :param density: densities of the layers.
     :param substrate: set the substrate of the snowpack. Another way to add a substrate is to use the + operator
-    (e.g. snowpack + substrate).
+        (e.g. snowpack + substrate).
     :param **kwargs: All the other parameters (temperature, microstructure parameters, emmodel, etc.) are given as optional arguments
-    (e.g. temperature=[270, 250]).
-    They are passed for each layer to the function :py:func:`~smrt.inputs.make_medium.make_snow_layer`.
-    Thus, the documentation of this function is the reference. It describes precisely the available parameters.
-    The microstructure parameter(s) depend on the microstructure_model used and is documented in each microstructure_model module.
+        (e.g. temperature=[270, 250]).
+        They are passed for each layer to the function :py:func:`~smrt.inputs.make_medium.make_snow_layer`.
+        Thus, the documentation of this function is the reference. It describes precisely the available parameters.
+        The microstructure parameter(s) depend on the microstructure_model used and is documented in each microstructure_model module.
 
     e.g.::
 
@@ -190,12 +190,12 @@ def make_snow_layer(layer_thickness,
     :param background_permittivity_model: permittivity formulation for the background (default is air).
     :param volumetric_liquid_water: volume of liquid water with respect to the volume of snow (default=0).
     :param liquid_water: May be depreciated in the future (use instead volumetric_liquid_water): volume of liquid water 
-    with respect to ice+water volume (default=0). liquid_water = water_volume / (ice_volume + water_volume).
+        with respect to ice+water volume (default=0). liquid_water = water_volume / (ice_volume + water_volume).
     :param salinity: salinity in kg/kg, for using PSU as unit see PSU constant in smrt module (default = 0).
     :param medium: indicate which medium the layer is made of ("snow" is a default). 
-    It is used when emmodel is a dictionary mapping from medium to emmodels in :py:func:`~smrt.core.model.make_model`
+        It is used when emmodel is a dictionary mapping from medium to emmodels in :py:func:`~smrt.core.model.make_model`
     :param kwargs: other microstructure parameters are given as optional arguments (in Python words) but may be required (in SMRT words).
-    See the documentation of the microstructure model.
+        See the documentation of the microstructure model.
 
     :returns: :py:class:`SnowLayer` instance
 """
@@ -335,25 +335,25 @@ def make_ice_column(ice_type,
 
     :param ice_type: Ice type. Options are "firstyear", "multiyear", "fresh"
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf"
-    for a semi-infinite layer.
+        for a semi-infinite layer.
     :param temperature: temperature of ice/water in K
     :param brine_inclusion_shape: assumption for shape of brine inclusions. So far, "spheres" or "random_needles"
-    (i.e. elongated ellipsoidal inclusions), and "mix" (a mix of the two) are implemented.
+        (i.e. elongated ellipsoidal inclusions), and "mix" (a mix of the two) are implemented.
     :param salinity: salinity of ice/water in kg/kg (see PSU constant in smrt module). Default is 0. If neither salinity
-    nor brine_volume_fraction are given, the ice column is considered to consist of fresh water ice.
+        nor brine_volume_fraction are given, the ice column is considered to consist of fresh water ice.
     :param brine_volume_fraction: brine / liquid water fraction in sea ice, optional parameter, if not given brine volume fraction is
-    calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
+        calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
     :param density: density of ice layer in kg m :sup:`-3`
     :param porosity: porosity of ice layer (0 - 1). Default is 0.
     :param add_water_substrate: Adds a substrate made of water below the ice column.
-    Possible arguments are True (default) or False. If True looks for ice_type to determine if a saline or fresh water layer is
-    added and/or uses the optional arguments 'water_temperature', 'water_salinity' of the water substrate.
+        Possible arguments are True (default) or False. If True looks for ice_type to determine if a saline or fresh water layer is
+        added and/or uses the optional arguments 'water_temperature', 'water_salinity' of the water substrate.
     :param surface: type of surface interface, flat/fresnel is the default.  If surface and interface are both set, the interface must be
-    a constant refering to all the "internal" interfaces.
+        a constant refering to all the "internal" interfaces.
     :param interface: type of interface, flat/fresnel is the default. It is usually a string for the interfaces without parameters
-    (e.g. Flat or Transparent) or is created with :py:func:`~smrt.core.interface.make_interface` in more complex cases.
-    Interface can be a constant or a list. In the latter case, its length must be the same as the number of layers,
-    and interface[0] refers to the surface interface.
+        (e.g. Flat or Transparent) or is created with :py:func:`~smrt.core.interface.make_interface` in more complex cases.
+        Interface can be a constant or a list. In the latter case, its length must be the same as the number of layers,
+        and interface[0] refers to the surface interface.
     :param substrate: if add_water_substrate is False, the substrate can be prescribed with this argument.
 
     All the other optional arguments are passed for each layer to the function :py:func:`~smrt.inputs.make_medium.make_ice_layer`.
@@ -428,19 +428,19 @@ def make_ice_layer(ice_type,
     :param temperature: temperature of layer in K
     :param salinity: (firstyear and multiyear) salinity in kg/kg (see PSU constant in smrt module)
     :param brine_inclusion_shape: (firstyear and multiyear) assumption for shape of brine inclusions (so far,
-    "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions), and "mix_spheres_needles" are implemented)
+        "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions), and "mix_spheres_needles" are implemented)
     :param brine_volume_fraction: (firstyear and multiyear) brine / liquid water fraction in sea ice, optional parameter,
-    if not given brine volume fraction is calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
+        if not given brine volume fraction is calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
     :param density: (multiyear) density of ice layer in kg m :sup:`-3`. If not given, density is calculated from temperature,
-    salinity and ice porosity.
+        salinity and ice porosity.
     :param porosity: (mutliyear and fresh) air porosity of ice layer (0..1). Default is 0.
     :param ice_permittivity_model: (all) pure ice permittivity formulation (default is ice_permittivity_matzler06)
     :param brine_permittivity_model: (firstyear and multiyear) brine permittivity formulation (default is brine_permittivity_stogryn85)
     :param saline_ice_permittivity_model: (multiyear) model to mix ice and brine. The default uses polder van staten and
-    ice_permittivity_model and brine_permittivity_model. It is highly recommanded to use the default.
+        ice_permittivity_model and brine_permittivity_model. It is highly recommanded to use the default.
     :param kwargs: other microstructure parameters are given as optional arguments (in Python words) but may be required (in SMRT words).
     :param medium: indicate which medium the layer is made of ("ice" is a default). 
-    It is used when emmodel is a dictionary mapping from medium to emmodels in :py:func:`~smrt.core.model.make_model`
+        It is used when emmodel is a dictionary mapping from medium to emmodels in :py:func:`~smrt.core.model.make_model`
 
     See the documentation of the microstructure model.
 
@@ -615,7 +615,7 @@ def water_parameters(ice_type, **kwargs):
     """Make a semi-infinite water layer.
 
     :param ice_type: ice_type is used to determine if a saline or fresh water layer is added
-    Optional arguments are 'water_temperature', 'water_salinity' and 'water_depth' of the water layer.
+    The optional arguments are 'water_temperature', 'water_salinity' and 'water_depth' of the water layer.
     """
 
     # prepare default
@@ -690,7 +690,7 @@ def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permitt
     Must be used with presribed_kskaeps emmodel.
 
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf" for
-    a semi-infinite layer.
+        a semi-infinite layer.
     :param temperature: temperature of layers in K
     :param ks: scattering coefficient of layers in m^-1
     :param ka: absorption coefficient of layers in m^-1

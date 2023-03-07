@@ -1,7 +1,7 @@
 # coding: utf-8
 
-"""Implement the empirical soil model presented in Wegmuller and Maetzler 1999. It is often used in microwave radiometry. It is 
-not suitable for the active mode.
+"""Implement the empirical soil model presented in Wegmuller and Maetzler 1999. 
+It is often used in microwave radiometry. It is not suitable for the active mode.
 
 parameters: roughness_rms
 

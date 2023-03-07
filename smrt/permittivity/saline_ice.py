@@ -48,8 +48,7 @@ def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
 
 
 @layer_properties("temperature", "brine_volume_fraction",
-                   optional=("brine_inclusion_shape", "brine_mixing_ratio", "ice_permittivity_model", "brine_permittivity_model"))
-
+                  optional=("brine_inclusion_shape", "brine_mixing_ratio", "ice_permittivity_model", "brine_permittivity_model"))
 def saline_ice_permittivity_pvs_mixing(frequency, temperature, brine_volume_fraction, brine_inclusion_shape='spheres',
                                        brine_mixing_ratio=1, ice_permittivity_model=None, brine_permittivity_model=None):
     """Computes effective permittivity of saline ice using the Polder Van Santen mixing formulaes.
@@ -57,9 +56,14 @@ def saline_ice_permittivity_pvs_mixing(frequency, temperature, brine_volume_frac
         :param frequency: frequency in Hz
         :param temperature: ice temperature in K
         :param brine_volume_fraction: brine / liquid water fraction in sea ice
-        :param brine_inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape, or a list/tuple/dict of strings for mixture of shapes. So far, we have the following shapes: "spheres" and "random_needles" (i.e. randomly-oriented elongated ellipsoidal inclusions). 
-            If the argument is a dict, the keys are the shapes and the values are the mixing ratio. If it is a list, the mixing_ratio argument is required.
-        :param brine_mixing_ratio: The mixing ratio of the shapes. This is only relevant when inclusion_shape is a list/tuple. Mixing ratio must be a sequence with length len(inclusion_shape)-1. The mixing ratio of the last shapes is deduced as the sum of the ratios must equal to 1.
+        :param brine_inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape,
+            or a list/tuple/dict of strings for mixture of shapes. So far, we have the following shapes: "spheres" and
+            "random_needles" (i.e. randomly-oriented elongated ellipsoidal inclusions).
+            If the argument is a dict, the keys are the shapes and the values are the mixing ratio.
+            If it is a list, the mixing_ratio argument is required.
+        :param brine_mixing_ratio: The mixing ratio of the shapes. This is only relevant when inclusion_shape is a list/tuple.
+            Mixing ratio must be a sequence with length len(inclusion_shape)-1.
+            The mixing ratio of the last shapes is deduced as the sum of the ratios must equal to 1.
         :param ice_permittivity_model: pure ice permittivity formulation (default is ice_permittivity_matzler87)
         :param brine_permittivity_model: brine permittivity formulation (default is brine_permittivity_stogryn85)
     """
@@ -74,6 +78,6 @@ def saline_ice_permittivity_pvs_mixing(frequency, temperature, brine_volume_frac
     brine_permittivity = brine_permittivity_model(frequency, temperature)
 
     return polder_van_santen(brine_volume_fraction,
-                            e0=pure_ice_permittivity,
-                            eps=brine_permittivity,
-                            inclusion_shape=brine_inclusion_shape, mixing_ratio=brine_mixing_ratio)
+                             e0=pure_ice_permittivity,
+                             eps=brine_permittivity,
+                             inclusion_shape=brine_inclusion_shape, mixing_ratio=brine_mixing_ratio)

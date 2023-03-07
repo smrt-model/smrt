@@ -106,7 +106,7 @@ def ice_permittivity_maetzler87(frequency, temperature):
 """
 
     import warnings
-    
+
     freqGHz = frequency / 1e9
     # Equation 10
     Ereal = 3.1884 + 9.1e-4 * (temperature - FREEZING_POINT)
@@ -155,8 +155,8 @@ def ice_permittivity_tiuri84(frequency, temperature):
 
     # Eq (6) - Imaginary part
     Eimag = 1.59e6 * \
-            (0.52 * density_gm3 + 0.62*density_gm3**2) * \
-            (frequency**-1 + 1.23e-14 * frequency**.5) * math.exp(0.036 * temp_degC)
+        (0.52 * density_gm3 + 0.62*density_gm3**2) * \
+        (frequency**-1 + 1.23e-14 * frequency**.5) * math.exp(0.036 * temp_degC)
 
     return Ereal + 1j * Eimag
 
@@ -195,7 +195,6 @@ def _ice_permittivity_DMRTML(frequency, temperature):
     # This gives exact agreement with the DMRT-ML model version
     # Only use if invoking an exact DMRT-ML simulation.
     # Should not be included in the sphinx documentation
-
 
     # Raise exception if temperature is zero
     # if temperature == 0:
