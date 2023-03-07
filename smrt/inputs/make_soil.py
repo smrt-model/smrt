@@ -34,15 +34,14 @@ def make_soil(substrate_model, permittivity_model, temperature, moisture=None,
 
     :param substrate_model: name of substrate model, can be a class or a string. e.g. fresnel, wegmuller...
     :param permittivity_model: permittivity_model to use. Can be a name ("hut_epss", "dobson85", "montpetit2008"), a function of
-    frequency and temperature or a complex value.
+        frequency and temperature or a complex value.
     :param moisture: soil moisture in m:sup:`3` m:sup:`-3` to compute the permittivity. This parameter is used depending on the permittivity_model.
     :param sand: soil relative sand content. This parameter is used or not depending on the permittivity_model.
     :param clay: soil relative clay content. This parameter is used or not depending on the permittivity_model.
     :param drymatter: soil content in dry matter in kg m:sup:`-3`. This parameter is used or not depending on the permittivity_model.
 
     :param **kwargs: geometrical parameters depending on the substrate_model. Refer to the document of each model to see the
-    list of required and optional parameters.
-    Usually, it is roughness_rms, corr_length, ...
+        list of required and optional parameters. Usually, it is roughness_rms, corr_length, ...
 
     **Usage example:**
 
@@ -158,9 +157,12 @@ def soil_dielectric_constant_hut(frequency, tempK, SM, sand, clay, dm_rho):
 
 
 def soil_dielectric_constant_monpetit2008(frequency, temperature):
-    """Soil dielectric constant formulation based on the formulation Montpetit et al. 2018. The formulation is only valid for below-frrezing point temperature.
+    """Soil dielectric constant formulation based on the formulation Montpetit et al. 2018. 
+    The formulation is only valid for below-frrezing point temperature.
 
-Reference: Montpetit, B., Royer, A., Roy, A., & Langlois, A. (2018). In-situ passive microwave emission model parameterization of sub-arctic frozen organic soils. Remote Sensing of Environment, 205, 112–118. https://doi.org/10.1016/j.rse.2017.10.033
+    Reference: Montpetit, B., Royer, A., Roy, A., & Langlois, A. (2018). In-situ passive microwave emission model 
+    parameterization of sub-arctic frozen organic soils. Remote Sensing of Environment, 205, 112–118. 
+    https://doi.org/10.1016/j.rse.2017.10.033
 
 """
     # from functools import partial
