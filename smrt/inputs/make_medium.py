@@ -234,6 +234,8 @@ class SnowLayer(Layer):
     """Specialized Layer class for snow. It deals with the calculation of the frac_volume and the liquid_water
      from density and volumetric_liquid_water. Alternatively it is possible to set liquid_water directly but this is
      not recommended anymore.
+
+    :meta private:
      """
 
     def __init__(self, *args, density=None, volumetric_liquid_water=None, liquid_water=None, **kwargs):
