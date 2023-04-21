@@ -208,7 +208,8 @@ class Model(object):
             progressbar=False, parallel_computation=False, runner=None):
         """ Run the model for the given sensor configuration and return the results
 
-            :param sensor: sensor to use for the calculation
+            :param sensor: sensor to use for the calculation. Can be a list of the same size as the snowpack list. 
+                In this case, the computation is performed for each pair (sensor, snowpack).
             :param snowpack: snowpack to use for the calculation. Can be a single snowpack, a list of snowpack, a dict of snowpack or
                 a SensitivityStudy object.
             :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack
@@ -229,8 +230,9 @@ class Model(object):
             raise DeprecationWarning("The atmosphere argument of the run method is going to be depreciated."
                                      " Setting the 'atmosphere' with make_snowpack (and similar functions) is now the recommended way.")
 
-        if not isinstance(sensor, SensorBase):
-            raise SMRTError("the first argument of 'run' must be a sensor")
+        if not (isinstance(sensor, SensorBase)
+                or (lib.is_sequence(sensor) and all(isinstance(s, SensorBase) for s in sensor))):
+            raise SMRTError("the first argument of 'run' must be a sensor or a sequence of sensor")
 
         # determine the simulations to run
         simulations, dimensions = self.prepare_simulations(sensor, snowpack, snowpack_dimension, snowpack_column)
@@ -308,16 +310,19 @@ class Model(object):
 
         # the sensor object is split in its basic sensors (config). How deep the sensor is split depends on the
         # radiative transfer solver's broadcast capability.
-        rt_solver_broadcast_capability = getattr(self.rtsolver, "_broadcast_capability", [])
 
-        sensor_configurations = [(axis, values) for (axis, values) in sensor.configurations() if axis not in rt_solver_broadcast_capability]
+        def get_sensor_configurations(sensor):
+            rt_solver_broadcast_capability = getattr(self.rtsolver, "_broadcast_capability", [])
+            sensor_configurations = [(axis, values) for (axis, values) in sensor.configurations()
+                                     if axis not in rt_solver_broadcast_capability]
+            return sensor_configurations
 
-        def prepare_recursive(sensor, sensor_configurations):
-
+        def prepare_recursive(sensor, sensor_configurations, snowpack):
+            """return the cross product of sensor x snowpack"""
             if sensor_configurations:
                 axis, values = sensor_configurations[0]
                 for sensor_subset in sensor.iterate(axis):
-                    yield from prepare_recursive(sensor_subset, sensor_configurations[1:])
+                    yield from prepare_recursive(sensor_subset, sensor_configurations[1:], snowpack)
             else:  # we're at the end
                 if lib.is_sequence(snowpack):
                     for sp in snowpack:
@@ -325,7 +330,18 @@ class Model(object):
                 else:
                     yield (sensor, snowpack)
 
-        simulations = prepare_recursive(sensor, sensor_configurations.copy())
+        if lib.is_sequence(sensor):
+            # sensor is a list
+            if len(sensor) != len(snowpack):
+                raise SMRTError("when sensor is a sequence, the length must be the same as snowpack sequence length")
+            sensor_configurations = get_sensor_configurations(next(iter(sensor)))  # take the config of the first, assume all are the same.
+            # we should check that all the configurations are the same...
+            simulations = (prepare_recursive(se, sensor_configurations, sp) for se, sp in zip(sensor, snowpack))
+            simulations = list(itertools.chain(*simulations))  # flatten
+        else:
+            # normal case
+            sensor_configurations = get_sensor_configurations(sensor)
+            simulations = prepare_recursive(sensor, sensor_configurations.copy(), snowpack)  # I don't know why I put a .copy here...
 
         dimensions = sensor_configurations
         if snowpack_dimension is not None:
