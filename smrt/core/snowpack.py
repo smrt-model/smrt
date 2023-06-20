@@ -315,7 +315,7 @@ class Snowpack(object):
             for args in self.substrate.optional_args:
                 substrate[('substrate', args)] = [getattr(self.substrate, args)]
 
-            df = df.append(pd.DataFrame(substrate, index=['s']), sort=False, verify_integrity=True)
+            df = pd.concat((df, pd.DataFrame(substrate, index=['s'])))  # append
             # reorder
             df = df[list(columns.keys()) + list(substrate.keys())]
 
