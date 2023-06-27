@@ -27,7 +27,7 @@ import scipy.interpolate
 # local import
 from ..core.error import SMRTError, smrt_warn
 from ..core.result import make_result
-from smrt.core.lib import smrt_matrix, smrt_diag, isnull
+from smrt.core.lib import smrt_matrix, smrt_diag, is_equal_zero
 from smrt.core.optional_numba import numba
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers
 
@@ -429,25 +429,25 @@ class DORT(object):
                 Tbottom_lp1 = interfaces.transmission_bottom(l, m, compute_coherent_only)
                 # the size of Tbottom_lp1 can be the nsl_npol in general or nslp1_npol if only the specular is present
                 # and some streams are subject to total reflection.
-                if not isnull(Tbottom_lp1):
+                if not is_equal_zero(Tbottom_lp1):
                     ns_npol_common_bottom = min(Tbottom_lp1.shape[0], nslp1_npol)
                     todiag(bBC, il_top[l + 1], j, -matmul(Tbottom_lp1, Ed, transb)[:ns_npol_common_bottom, :])
 
             # fill the vector
             if m == 0 and self.temperature is not None and self.temperature[l] > 0:
-                if isnull(Rtop_l):
+                if is_equal_zero(Rtop_l):
                     b[il_topl:il_topl + nsl_npol, :] -= self.temperature[l]  # to be put at layer (l)
                 else:
                     b[il_topl:il_topl + nsl_npol, :] -= ((1.0 - muleye(Rtop_l)) * self.temperature[l])[:, np.newaxis]  # a mettre en (l)
                 # the muleye comes from the isotropic emission of the black body
 
-                if l < nlayer - 1 and self.temperature[l] > 0 and not isnull(Tbottom_lp1):
+                if l < nlayer - 1 and self.temperature[l] > 0 and not is_equal_zero(Tbottom_lp1):
                     b[il_top[l + 1]:il_top[l + 1] + ns_npol_common_bottom, :] += \
                         (muleye(Tbottom_lp1) * self.temperature[l])[:ns_npol_common_bottom, np.newaxis]     # to be put at layer (l + 1)
 
             if l == 0:  # Air-snow interface
                 Tbottom_air_down = interfaces.transmission_bottom(-1, m, compute_coherent_only)
-                if not isnull(Tbottom_air_down):
+                if not is_equal_zero(Tbottom_air_down):
                     ns_npol_common_bottom = min(Tbottom_air_down.shape[0], nsl_npol)  # see the comment on Tbottom_lp1
                     b[il_topl:il_topl + ns_npol_common_bottom, :] += matmul(Tbottom_air_down, intensity_down_m)
 
@@ -462,18 +462,18 @@ class DORT(object):
 
             if l > 0:
                 Ttop_lm1 = interfaces.transmission_top(l, m, compute_coherent_only)
-                if not isnull(Ttop_lm1):
+                if not is_equal_zero(Ttop_lm1):
                     ns_npol_common_top = min(Ttop_lm1.shape[0], nslm1_npol)  # see the comment on Tbottom_lp1
                     todiag(bBC, il_bottom[l - 1], j, -matmul(Ttop_lm1, Eu, transt)[:ns_npol_common_top, :])   # to be put at layer (l - 1)
 
             # fill the vector
             if m == 0 and self.temperature is not None and self.temperature[l] > 0:
-                if isnull(Rbottom_l):
+                if is_equal_zero(Rbottom_l):
                     b[il_bottoml:il_bottoml + nsl_npol, :] -= self.temperature[l]   # to be put at layer (l)
                 else:
                     b[il_bottoml:il_bottoml + nsl_npol, :] -= \
                         ((1.0 - muleye(Rbottom_l)) * self.temperature[l])[:, np.newaxis]  # to be put at layer (l)
-                if l > 0 and not isnull(Ttop_lm1):
+                if l > 0 and not is_equal_zero(Ttop_lm1):
                     b[il_bottom[l - 1]:il_bottom[l - 1] + ns_npol_common_top, :] += \
                         (muleye(Ttop_lm1) * self.temperature[l])[:ns_npol_common_top, np.newaxis]  # to be put at layer (l - 1)
 
@@ -481,7 +481,7 @@ class DORT(object):
                     self.snowpack.substrate.temperature is not None and self.temperature is not None:
                 Tbottom_sub = interfaces.transmission_bottom(l, m, compute_coherent_only)
                 ns_npol_common_bottom = min(Tbottom_sub.shape[0], nsl_npol)  # see the comment on Tbottom_lp1
-                if not isnull(Tbottom_sub):
+                if not is_equal_zero(Tbottom_sub):
                     b[il_bottoml:il_bottoml + ns_npol_common_bottom, :] += \
                         (muleye(Tbottom_sub) * self.snowpack.substrate.temperature)[:ns_npol_common_bottom, np.newaxis]   # to be put at layer  (l)
 
@@ -533,7 +533,7 @@ def muleye(x):
 
     if isinstance(x, smrt_diag):
         return x.diagonal()
-    elif (x is 0) or (len(x.shape) == 0):
+    elif (x.is_zero_scalar()) or (len(x.shape) == 0):
         return np.atleast_1d(x)
     else:
         assert len(x.shape) == 2
@@ -645,7 +645,7 @@ class EigenValueSolver(object):
         # calculate the A matrix. Eq (12),  or 0 if compute_coherent_only
         A = self.ft_even_phase.compress(mode=m, auto_reduce_npol=True) if not compute_coherent_only else 0
 
-        if isnull(A):
+        if is_equal_zero(A):
             # the solution is trivial
             beta = invmu * self.ke(mu, npol=npol).compress().diagonal()
             E = np.eye(2 * n, 2 * n)
@@ -898,7 +898,7 @@ class InterfaceProperties(object):
 
         mat_coh = coh.compress(mode=m, auto_reduce_npol=True)
 
-        if (not compute_coherent_only) and (diff is not 0) and (not diff.isnull()):
+        if (not compute_coherent_only) and (not is_equal_zero(diff)):
             # the coef comes from the integration of \int dphi' cos(m (phi-phi')) cos(n phi')
             # m=n=0 --> 2*np.pi
             # m=n > 1 --> np.pi
@@ -916,7 +916,7 @@ class InterfaceProperties(object):
 
 
 def normalize_diffuse_matrix(mat, mu_st, mu_i, weights):
-    if mat.isnull():
+    if is_equal_zero(mat):
         return mat
 
     if mat.mtype == "dense5":

@@ -168,7 +168,7 @@ class smrt_matrix(object):
 
     def __init__(self, mat, mtype=None):
 
-        if mat is 0:
+        if is_zero_scalar(mat):
             self.values = np.float64(0.)  # 0, but can be used as a numpy thing
             self.mtype = "0"
         else:
@@ -217,8 +217,8 @@ class smrt_matrix(object):
     def npol(self):
         return self.values.shape[0]
 
-    def isnull(self):
-        return isnull(self)
+    def is_equal_zero(self):
+        return is_equal_zero(self)
 
     def compress(self, mode=None, auto_reduce_npol=False):
         """compress a matrix. This comprises several actions:
@@ -348,13 +348,17 @@ class smrt_matrix(object):
         return str("smrt_matrix %s %s" % (self.mtype, shape)) + "\n" + str(self.values)
 
 
-def isnull(m):
+def is_zero_scalar(m):
+    return np.isscalar(m) and (m == 0)
+
+
+def is_equal_zero(m):
     """return true if the smrt matrix is null"""
 
     if isinstance(m, smrt_diag):
         m = m.diagonal()
 
-    return (m is 0) or \
+    return is_zero_scalar(m) or \
         (getattr(m, "mtype", None) == "0") or \
         (not np.any(m))
 
