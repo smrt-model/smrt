@@ -54,4 +54,12 @@ class DaskParallelRunner(object):
 
         results = self.client.gather(futures, direct=False)
 
-        return results
+        # flatten the list of results if necessary
+        ret = []
+        for res in results:
+            if isinstance(res, list):
+                ret += res
+            else:
+                ret.append(res)
+
+        return ret
