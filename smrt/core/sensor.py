@@ -43,10 +43,10 @@ def passive(frequency, theta, polarization=None, channel_map=None, name=None):
 
     ::
 
-        from smrt import sensor
-        radiometer = sensor.passive(18e9, 50)
-        radiometer = sensor.passive(18e9, 50, "V")
-        radiometer = sensor.passive([18e9,36.5e9], [50,55], ["V","H"])
+        from smrt import sensor_list
+        radiometer = sensor_list.passive(18e9, 50)
+        radiometer = sensor_list.passive(18e9, 50, "V")
+        radiometer = sensor_list.passive([18e9,36.5e9], [50,55], ["V","H"])
 
     """
 
@@ -116,10 +116,10 @@ def active(frequency, theta_inc, theta=None, phi=None, polarization_inc=None, po
 
     ::
 
-        from smrt import sensor
-        scatterometer = sensor.active(frequency=18e9, theta_inc=50)
-        scatterometer = sensor.active(18e9, 50, 50, 0, "V", "V")
-        scatterometer = sensor.active([18e9,36.5e9], theta=50, theta_inc=50, polarization_inc=["V", "H"], polarization=["V", "H"])
+        from smrt import sensor_list
+        scatterometer = sensor_list.active(frequency=18e9, theta_inc=50)
+        scatterometer = sensor_list.active(18e9, 50, 50, 0, "V", "V")
+        scatterometer = sensor_list.active([18e9,36.5e9], theta=50, theta_inc=50, polarization_inc=["V", "H"], polarization=["V", "H"])
 
     """
 
@@ -160,7 +160,6 @@ def make_multi_channel_altimeter(config, channel):
         if channel is None:
             channel = config.keys()
         return SensorList([altimeter(c, **config[c]) for c in channel])
-
 
 
 class SensorBase(object):
@@ -303,6 +302,9 @@ class Sensor(SensorBase):
 class SensorList(SensorBase):
 
     def __init__(self, sensor_list, axis="channel"):
+
+        super().__init__()
+
         self.sensor_list = sensor_list
         self.axis = axis
 
@@ -319,7 +321,6 @@ class SensorList(SensorBase):
             raise SMRTError("It is required to set '%s' value for each sensor" % axis)
         if len(set(a)) != len(a):
             raise SMRTError("It is required to set different '%s' values for each sensor" % axis)
-
 
     @property
     def channel(self):
