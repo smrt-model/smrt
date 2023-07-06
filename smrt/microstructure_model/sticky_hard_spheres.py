@@ -77,7 +77,7 @@ class StickyHardSpheres(Autocorrelation):
         X = np.atleast_1d(k) * d / 2.0
 
         # solution of the quadratic equation, Eq. 32, LP2015
-        if np.isfinite(tau):
+        if np.isfinite(tau) and phi_2 > 0.:
             t = ((6 * tau * phi_2 - 6 * phi_2 - 6 * tau + (36 * tau**2 * phi_2**2 - 72 * tau * phi_2**2
                                                            - 72 * tau**2 * phi_2 + 30 * phi_2**2
                                                            + 72 * tau * phi_2 + 36 * tau**2 - 12 * phi_2)**0.5) / (phi_2 * (-1 + phi_2)))
