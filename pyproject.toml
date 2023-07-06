@@ -15,6 +15,7 @@ pandas = ">=0.20.3"
 scipy = ">=1.0.0"
 xarray = ">=0.10.3"
 numba = ">=0.40"
+joblib = ">=1.0.0"
 
 [tool.poetry.dev-dependencies]
 nosetest = ""
