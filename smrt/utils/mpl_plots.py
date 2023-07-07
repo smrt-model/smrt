@@ -7,7 +7,7 @@ from matplotlib import scale as mscale
 from matplotlib import transforms as mtransforms
 from matplotlib.ticker import FixedLocator, Formatter
 
-from smrt.core.result import Result
+from smrt.core.result import make_result
 from smrt.core.model import make_model
 
 
@@ -113,7 +113,7 @@ class CosineComputor(object):
             n /= n[sensor_in_layer]
 
         cosine = np.sqrt(1 - (np.sin(sensor.theta) / n)**2)
-        return Result(cosine, [('layer', np.arange(1 + len(snowpack.layers)))])
+        return make_result(sensor, cosine, [('layer', np.arange(1 + len(snowpack.layers)))])
 
 
 #
