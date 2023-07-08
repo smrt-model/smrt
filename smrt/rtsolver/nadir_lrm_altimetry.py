@@ -59,7 +59,7 @@ class NadirLRMAltimetry(object):
                      "To prevent this warning, explicitly set return_theta_inc_sampling = True.")
                 self.return_theta_inc_sampling = True
         if self.return_theta_inc_sampling and self.theta_inc_sampling <= 1:
-            smrt_warn("It does not make sense to return_theta_inc_sampling."
+            smrt_warn("It does not make sense to return_theta_inc_sampling if theta_inc_sampling is <= 1."
                  "To prevent this warning, explicitly set return_theta_inc_sampling = True.")
             self.return_theta_inc_sampling = False
 
@@ -340,7 +340,7 @@ class NadirLRMAltimetry(object):
 
         # compute the primitive of the subgate backscatter, select the gate interval and differentitate to get the integrated backscatter
         # over each gate
-        if self.return_contributions:
+        if self.return_contributions or self.theta_inc_sampling > 1:
             # volume contribution
             subgate_backscatter_v = np.insert(subgate_backscatter_v, 0, 0)
             gate_backscatter_v = np.diff(np.insert(np.cumsum(subgate_backscatter_v)[b_gate], 0, 0))
