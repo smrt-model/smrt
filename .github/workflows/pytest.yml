@@ -18,7 +18,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ruff pytest numpy = ">=1.13" pandas = ">=0.20.3" scipy = ">=1.0.0" xarray = ">=0.10.3" numba = ">=0.40"
+          pip install ruff pytest numpy pandas scipy xarray numba
       - name: Lint with ruff
         run: |
           ruff --format=github --select=E9,F63,F7,F82 --target-version=py37 .
