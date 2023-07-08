@@ -58,8 +58,9 @@ will be set to its default value (273.15 K). This issue applies to any optional 
 
 ** Note **: `make_medium` create laters using all the columns in the dataframe. It means that any column name becomes an attribute of
  the layer objects, even if not recognized/used by SMRT. This can be seen as an interesting feature to store information in layers,
- but this is also dangerous if column names collide with internal layer attributes or method names. It is recommended to clean
- the dataframe (with df.drop(columns=[...])) before calling make_medium.
+ but this is also dangerous if column names collide with internal layer attributes or method names. For this reason,
+this function is unsecure if the snowpack data are pulled from the internet. Always check the content of the file, and it is recommended 
+to drop all the unnecessary columns with df.drop(columns=[...])) before calling make_medium. 
 
 """
 
@@ -434,8 +435,10 @@ def make_ice_layer(ice_type,
     :param density: (multiyear) density of ice layer in kg m :sup:`-3`. If not given, density is calculated from temperature,
         salinity and ice porosity.
     :param porosity: (mutliyear and fresh) air porosity of ice layer (0..1). Default is 0.
-    :param ice_permittivity_model: (all) pure ice permittivity formulation (default is ice_permittivity_matzler06)
-    :param brine_permittivity_model: (firstyear and multiyear) brine permittivity formulation (default is brine_permittivity_stogryn85)
+    :param ice_permittivity_model: (all) pure ice permittivity formulation 
+        (default is ice_permittivity_matzler06 for firstyear and fresh, and saline_ice_permittivity_pvs_mixing for multiyear)
+    :param brine_permittivity_model: (firstyear and multiyear) brine permittivity formulation 
+        (default is brine_permittivity_stogryn85)
     :param saline_ice_permittivity_model: (multiyear) model to mix ice and brine. The default uses polder van staten and
         ice_permittivity_model and brine_permittivity_model. It is highly recommanded to use the default.
     :param kwargs: other microstructure parameters are given as optional arguments (in Python words) but may be required (in SMRT words).

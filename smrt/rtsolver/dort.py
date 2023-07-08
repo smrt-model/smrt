@@ -34,10 +34,10 @@ from smrt.core.optional_numba import numba
 
 class DORT(object):
     """Discrete Ordinate and Eigenvalue Solver
-
-        :param n_max_stream: number of stream in the most refringent layer
-        :param m_max: number of mode (azimuth)
-        :param phase_normalization: the integral of the phase matrix should in principe be equal to the scattering coefficient.
+    
+    :param n_max_stream: number of stream in the most refringent layer
+    :param m_max: number of mode (azimuth)
+    :param phase_normalization: the integral of the phase matrix should in principe be equal to the scattering coefficient.
         However, some emmodels do not respect this strictly. In general a small difference is due to numerical rounding and is acceptable,
         but a large difference rather indicates either a bug in the emmodel or input parameters that breaks the
         assumption of the emmodel. The most typical case is when the grain size is too big compared to wavelength for emmodels
@@ -45,16 +45,20 @@ class DORT(object):
         with the scattering coefficient, but only when the difference is moderate (0.7 to 1.3).
         If set to "force" the normalization is always performed. This option is dangerous because it may hide bugs or unappropriate
         input parameters (typically too big grains). If set to False, no normalization is performed.
-        :param error_handling: If set to "exception" (the default), raise an exception in cause of error, stopping the code. If set to "nan", return a nan, so the calculation can continue, 
-        but the result is of course unusuable and the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
-        :param process_coherent_layers: Adapt the layers thiner than the wavelegnth using the MEMLS method. The radiative transfer theory is inadequate
-        layers thiner than the wavelength and using DORT with thin layers is generally not recommended. In some parcticular cases (such as ice lenses)
-        where the thin layer is isolated between large layers, it is possible to replace the thin layer by an equivalent reflective interface.
-        This neglects scattering in the thin layer, which is acceptable in most case, because the layer is thin. To use this option and more generally 
+    :param error_handling: If set to "exception" (the default), raise an exception in cause of error, stopping the code.
+        If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
+        the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
+    :param process_coherent_layers: Adapt the layers thiner than the wavelegnth using the MEMLS method. The radiative transfer
+        theory is inadequate layers thiner than the wavelength and using DORT with thin layers is generally not recommended.
+        In some parcticular cases (such as ice lenses) where the thin layer is isolated between large layers, it is possible
+        to replace the thin layer by an equivalent reflective interface. This neglects scattering in the thin layer,
+        which is acceptable in most case, because the layer is thin. To use this option and more generally
         to investigate ice lenses, it is recommended to read MEMLS documentation on this topic.
-        :param prune_deep_snowpack: this value is the optical depth from which the layers are discarded in the calculation. It is to be use to accelerate the calculations
-        for deep snowpacks or at high frequencies when the contribution of the lowest layers is neglegible. The optical depth is a good criteria to determine this limit.
+    :param prune_deep_snowpack: this value is the optical depth from which the layers are discarded in the calculation.
+        It is to be use to accelerate the calculations for deep snowpacks or at high frequencies when the 
+        contribution of the lowest layers is neglegible. The optical depth is a good criteria to determine this limit.
         A value of about 6 is recommended. Use with care, especially values lower than 6.
+
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
@@ -504,9 +508,9 @@ class DORT(object):
 
         if self.snowpack.substrate is None and optical_depth < 5:
             smrt_warn("DORT has detected that the snowpack is optically shallow (tau=%g) and no substrate has been set, meaning that the space "
-                 "under the snowpack is vaccum and that the snowpack is shallow enough to affect the signal measured at the surface."
-                 "This is usually not wanted. Either increase the thickness of the snowpack or set a substrate."
-                 " If wanted, add a transparent substrate to supress this warning" % optical_depth)
+                      "under the snowpack is vaccum and that the snowpack is shallow enough to affect the signal measured at the surface."
+                      "This is usually not wanted. Either increase the thickness of the snowpack or set a substrate."
+                      " If wanted, add a transparent substrate to supress this warning" % optical_depth)
 
         x = scipy.linalg.solve_banded((nband, nband), bBC, b, overwrite_ab=True, overwrite_b=True)
 

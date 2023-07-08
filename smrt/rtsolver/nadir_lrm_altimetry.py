@@ -26,9 +26,9 @@ class NadirLRMAltimetry(object):
     backscatter of the interface, but are similar in the way the waveform is calculated, which concerns the solver here.
 
     :param oversampling: integer number defining the number of subgates used for the computation in each altimeter gate.
-    This is equivalent to multiply the bandwidth by this number. It is used to perform more accurate computation.
-    :param return_oversampled: by default the backscatter is returned for each gate. If set to True, the oversampled waveform is returned instead.
-    See the 'oversampling' argument.
+        This is equivalent to multiply the bandwidth by this number. It is used to perform more accurate computation.
+    :param return_oversampled: by default the backscatter is returned for each gate. If set to True, the oversampled waveform 
+        is returned instead. See the 'oversampling' argument.
     :param return_contributions: return volume, surface and interface backscatter contributions in addition to the total backscatter.
     """
 
@@ -56,11 +56,11 @@ class NadirLRMAltimetry(object):
         if self.skip_pfs_convolution and self.theta_inc_sampling > 1:
             if not self.return_theta_inc_sampling:
                 smrt_warn("When skip_pfs_convolution is True and theta_inc_sampling > 1, it does not make sense to not return_theta_inc_sampling."
-                     "To prevent this warning, explicitly set return_theta_inc_sampling = True.")
+                          "To prevent this warning, explicitly set return_theta_inc_sampling = True.")
                 self.return_theta_inc_sampling = True
         if self.return_theta_inc_sampling and self.theta_inc_sampling <= 1:
             smrt_warn("It does not make sense to return_theta_inc_sampling if theta_inc_sampling is <= 1."
-                 "To prevent this warning, explicitly set return_theta_inc_sampling = True.")
+                      "To prevent this warning, explicitly set return_theta_inc_sampling = True.")
             self.return_theta_inc_sampling = False
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
