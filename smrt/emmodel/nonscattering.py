@@ -14,6 +14,7 @@ import numpy as np
 from ..core.globalconstants import C_SPEED
 from ..core.lib import smrt_matrix, len_atleast_1d
 from .common import extinction_matrix
+from ..permittivity.generic_mixing_formula import polder_van_santen
 
 
 class NonScattering(object):
@@ -26,6 +27,9 @@ class NonScattering(object):
 
         self.e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
         self.eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
+
+        # effective permittivity using the classical polder van santen
+        self._effective_permittivity = polder_van_santen(self.frac_volume, self.e0, self.eps)
 
         # Wavenumber in free space
         self.k0 = 2 * np.pi * sensor.frequency / C_SPEED
@@ -63,4 +67,7 @@ class NonScattering(object):
 
     def effective_permittivity(self):
         # very basic mixing formula. It is recommended to use either with frac_volume=0 or 1 a better mixings when available.
-        return self.e0 * (1 - self.frac_volume) + self.eps * self.frac_volume
+        # return self.e0 * (1 - self.frac_volume) + self.eps * self.frac_volume
+
+        # change to polder von santen
+        return self._effective_permittivity
