@@ -72,11 +72,11 @@ def channel_map_for_radar(frequency=None, polarization='HV', order='fp'):
         frequency_str = ['%02i' % np.round(f / 1e9) for f in frequency]
 
     if order == 'fp':
-        def channel_name(freq, pola_inc, pola_ref):
-            return str(freq_str) + str(pola_inc) + str(pola_refl)
-    if order == 'pf':
-        def channel_name(freq, pola_inc, pola_ref):
-            return str(pola_inc) + str(pola_refl) + str(freq_str)
+        def channel_name(freq_str, pola_inc, pola_ref):
+            return str(freq_str) + str(pola_inc) + str(pola_ref)
+    elif order == 'pf':
+        def channel_name(freq_str, pola_inc, pola_ref):
+            return str(pola_inc) + str(pola_ref) + str(freq_str)
     else:
         raise SMRTError('order must be fp or pf')
 
