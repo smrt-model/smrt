@@ -358,7 +358,6 @@ class Model(object):
             # one different model per layer
             emmodel_list = self.emmodel
         elif isinstance(self.emmodel, Mapping):
-            print(self.emmodel)
             emmodel_list = (self.emmodel[layer.medium] for layer in snowpack.layers)
         else:
             # the same model for all layers
