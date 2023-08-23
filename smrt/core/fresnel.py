@@ -142,6 +142,21 @@ def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1, full_output=False
 fresnel_coefficients = fresnel_coefficients_maezawa09_rigorous
 
 
+def snell_angle(eps_1, eps_2, mu1):
+    """compute mu2 the cos(angle) in the second medium according to Snell's law."""
+
+    # incident wavenumber
+    n1 = np.sqrt(eps_1)
+    kiz2 = n1.real**2 * (1 - mu1**2)   # this the square of kiz = n1 * sin(theta)
+
+    ktz2 = kiz2   # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
+    kyt = - np.sqrt(complex(eps_2) - ktz2)                  # Eq 8 for t
+
+    mu2 = - kyt.real / np.sqrt(eps_2).real  # by definition of kyt
+
+    return mu2
+
+
 def brewster_angle(eps_1, eps_2):
     """compute the brewster angle
 
