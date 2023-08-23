@@ -4,7 +4,7 @@ import inspect
 import numpy as np
 
 from smrt.core.lib import abs2, smrt_matrix, len_atleast_1d
-from srmrt.core.error import SMRTError
+from smrt.core.error import SMRTError
 
 
 def rayleigh_scattering_matrix_and_angle_tsang00(mu_s, mu_i, dphi, npol=2):
