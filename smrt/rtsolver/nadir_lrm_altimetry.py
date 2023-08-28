@@ -317,11 +317,6 @@ class NadirLRMAltimetry(object):
         layer_echo = [i.diffuse_reflection_matrix(self.sensor.frequency, eps_1, eps_2,
                                                   mu_s=mu, mu_i=mu, dphi=np.pi, npol=2).diagonal[0].squeeze() / eps_1.real
                       for i, eps_1, eps_2, mu in zip(self.snowpack.interfaces, eps_upper_interface, eps, mu_upper_interface)]
-
-        if len(mu_upper_interface[0]) > 1:
-            # convert the scalar into matrix to get an homogeneous list before transformation to numpy array
-            layer_echo = [np.full(len(mu_upper_interface[0]), m) if np.isscalar(m) else m for m in layer_echo]
-
         # note that the division by eps_1 takes into account the divergence of the upwelling stream due to refraction
 
         if self.snowpack.substrate is not None:
@@ -333,6 +328,10 @@ class NadirLRMAltimetry(object):
             # no echo from the bottom
 
             layer_echo += [np.zeros_like(layer_echo[-1])]
+
+        if len(mu_upper_interface[0]) > 1:
+            # convert the scalar into matrix to get an homogeneous list before transformation to numpy array
+            layer_echo = [np.full(len(mu_upper_interface[0]), m) if np.isscalar(m) else m for m in layer_echo]
 
         layer_echo = np.transpose(layer_echo)
 
