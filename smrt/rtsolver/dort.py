@@ -34,7 +34,7 @@ from smrt.core.optional_numba import numba
 
 class DORT(object):
     """Discrete Ordinate and Eigenvalue Solver
-    
+
     :param n_max_stream: number of stream in the most refringent layer
     :param m_max: number of mode (azimuth)
     :param phase_normalization: the integral of the phase matrix should in principe be equal to the scattering coefficient.
@@ -637,7 +637,7 @@ class EigenValueSolver(object):
 
         # this coefficient come from the 1/4pi normalization of the RT equation and the
         # 1/(4*pi) * int_{phi=0}^{2*pi} cos(m phi)*cos(n phi) dphi
-        # note that equation A7 and A8 in Picard et al. 2018 has an error, it does not show this coefficient.
+        # note that equations A7, A8 and A11 in Picard et al. 2018 has an error, they do not show this coefficient.
         coef = 0.5 if m == 0 else 0.25
 
         # compute invmu
@@ -832,7 +832,11 @@ class InterfaceProperties(object):
             elif substrate is not None:
                 # sub-snow
                 self.Tbottom_coh[nlayer - 1] = substrate.emissivity_matrix(frequency, eps_l, streams.mu[l], npol)
-                self.Tbottom_diff[l] = 0
+                self.Tbottom_diff[nlayer - 1] = smrt_matrix(0)
+            else:
+                # sub-snow
+                self.Tbottom_coh[nlayer - 1] = smrt_matrix(0)
+                self.Tbottom_diff[nlayer - 1] = smrt_matrix(0)
 
             # compute reflection coefficient between l and l + 1  DOWN
             if l < nlayer - 1:
@@ -859,7 +863,7 @@ class InterfaceProperties(object):
                 self.Rbottom_diff[l] = normalize_diffuse_matrix(self.Rbottom_diff[l], streams.mu[l], streams.mu[l], streams.weight[l])
 
             else:
-                self.Rbottom_coh[l] = smrt_matrix(0)  # fully absorbant substrate
+                self.Rbottom_coh[l] = smrt_matrix(0)  # fully transparent substrate
                 self.Rbottom_diff[l] = smrt_matrix(0)
 
         # air-snow DOWN
@@ -881,26 +885,26 @@ class InterfaceProperties(object):
             if hasattr(interfaces[0], "ft_even_diffuse_reflection_matrix") else smrt_matrix(0)
         self.Rbottom_diff[-1] = normalize_diffuse_matrix(self.Rbottom_diff[-1], streams.outmu, streams.outmu, streams.outweight)
 
-    def reflection_top(self, l, m, compute_coherent_only):
+    def reflection_top(self, l, m, compute_coherent_only, compress=True):
         return InterfaceProperties.combine_coherent_diffuse_matrix(self.Rtop_coh[l], self.Rtop_diff[l],
-                                                                   m, compute_coherent_only)
+                                                                   m, compute_coherent_only, compress=compress)
 
-    def reflection_bottom(self, l, m, compute_coherent_only):
+    def reflection_bottom(self, l, m, compute_coherent_only, compress=True):
         return InterfaceProperties.combine_coherent_diffuse_matrix(self.Rbottom_coh[l], self.Rbottom_diff[l],
-                                                                   m, compute_coherent_only)
+                                                                   m, compute_coherent_only, compress=compress)
 
-    def transmission_top(self, l, m, compute_coherent_only):
+    def transmission_top(self, l, m, compute_coherent_only, compress=True):
         return InterfaceProperties.combine_coherent_diffuse_matrix(self.Ttop_coh[l], self.Ttop_diff[l],
-                                                                   m, compute_coherent_only)
+                                                                   m, compute_coherent_only, compress=compress)
 
-    def transmission_bottom(self, l, m, compute_coherent_only):
+    def transmission_bottom(self, l, m, compute_coherent_only, compress=True):
         return InterfaceProperties.combine_coherent_diffuse_matrix(self.Tbottom_coh[l], self.Tbottom_diff[l],
-                                                                   m, compute_coherent_only)
+                                                                   m, compute_coherent_only, compress=compress)
 
     @staticmethod
-    def combine_coherent_diffuse_matrix(coh, diff, m, compute_coherent_only):
+    def combine_coherent_diffuse_matrix(coh, diff, m, compute_coherent_only, compress=True):
 
-        mat_coh = coh.compress(mode=m, auto_reduce_npol=True)
+        mat_coh = coh.compress(mode=m, auto_reduce_npol=True) if compress else coh
 
         if (not compute_coherent_only) and (not is_equal_zero(diff)):
             # the coef comes from the integration of \int dphi' cos(m (phi-phi')) cos(n phi')
@@ -913,7 +917,7 @@ class InterfaceProperties(object):
                 coef = np.pi   # the factor 2*np.pi comes from the integration of \int dphi
                 npol = 3
 
-            mat_diff = diff.compress(mode=m, auto_reduce_npol=True)
+            mat_diff = diff.compress(mode=m, auto_reduce_npol=True) if compress else diff
             return coef * mat_diff + mat_coh
         else:
             return mat_coh

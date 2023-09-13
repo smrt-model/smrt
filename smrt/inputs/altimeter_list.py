@@ -94,7 +94,8 @@ def cryosat2_sin():
 
     Parameters from https://earth.esa.int/web/eoportal/satellite-missions/c-missions/cryosat-2
     Altitude from https://doi.org/10.1016/j.asr.2018.04.014
-    Beam width is 1.08 along track and 1.2 across track
+    Beam width is 1.08 along track and 1.2 across track. Unfortunately SMRT is not able to take into
+    account elliptical footprints yet.
 
     """
 
@@ -127,3 +128,6 @@ def asiras_lam(altitude=None):
                   beamwidth=2.2,
                   )
     return altimeter(channel='Ku', **params)
+
+
+# TODO: add Sentinel 6. Need to add non-circular footprints first.

@@ -39,6 +39,8 @@ class CeleryParallelRunner(object):
 
         """
 
+        super().__init__()
+
         # if isinstance(broker, str):
         #    self.app = Celery('hello', broker=broker)
         # else:

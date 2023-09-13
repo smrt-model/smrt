@@ -150,10 +150,10 @@ class Result(object):
                 df.index.set_names('channel', level=-1)
                 if droplevel:
                     df = df.droplevel(0)
-        elif channel_axis:
-            raise SMRTError('channel_axis argument must be "column" or "index"')
-        else:
+        elif channel_axis is None:
             df = xr_to_dataframe(self.sel_data(**kwargs), name=name)
+        else:
+            raise SMRTError('channel_axis argument must be None, "column" or "index"')
 
         if self.mother_df is not None:
             if channel_axis == "column":
