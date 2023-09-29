@@ -35,14 +35,13 @@ Examples:
 # Stdlib import
 import math
 import cmath
-from warnings import warn
 
 # other import
 import numpy as np
 
 
 # local import
-from ..core.error import SMRTError
+from ..core.error import SMRTError, smrt_warn
 from ..core.globalconstants import C_SPEED
 from .rayleigh import Rayleigh
 
@@ -73,6 +72,10 @@ class DMRT_QCACP_ShortRange(Rayleigh):
             layer = layer.inverted_medium()
 
         f = layer.frac_volume
+        if f > 0.5:
+            smrt_warn("Using DMRT with fraction_volume > 0.5 is not recommended, unless for testing."
+                      " See Picard et al. 2022 and references therein (doi: 10.5194/tc-16-3861-2022)"
+                      " for a detailed description of the issue.")
 
         e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
         es = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
@@ -111,8 +114,9 @@ class DMRT_QCACP_ShortRange(Rayleigh):
             (1.0 - f)**4 / (1.0 + 2 * f - t * f * (1.0 - f))**2
 
         if albedo >= 1:
-            warn("Grain diameter is too large for DMRT_QCACP_ShortRange resulting in single scattering albedo larger than 1."
-                 "It is recommended to decrease the size or used an alternative emmodel able to do Mie calculations.")
+            smrt_warn("Grain diameter is too large for DMRT_QCACP_ShortRange resulting in single scattering albedo "
+                      "larger than 1. It is recommended to decrease the size or used an alternative emmodel able to do "
+                      "Mie calculations.")
 
         beta = 2 * math.pi / lmda * 2 * cmath.sqrt(Eeff).imag
 

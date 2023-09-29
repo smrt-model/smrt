@@ -14,7 +14,7 @@ import scipy.integrate
 import scipy.fftpack
 
 # local import
-from ..core.error import SMRTError
+from ..core.error import SMRTError, smrt_warn
 from ..core.globalconstants import C_SPEED
 from ..permittivity.generic_mixing_formula import polder_van_santen, depolarization_factors
 from ..core.lib import smrt_matrix, generic_ft_even_matrix, len_atleast_1d
@@ -52,6 +52,8 @@ class IBA(AdjustableEffectivePermittivityMixins):
 
     :param sensor: object containing sensor characteristics
     :param layer: object containing snow layer characteristics (single layer)
+    :dense_snow_correction: set how snow denser than half the ice density (ie. fractional volume larger than 0.5 is handled).
+        "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air. The default is None
 
 
     **Usage Example:**
@@ -71,7 +73,7 @@ class IBA(AdjustableEffectivePermittivityMixins):
     # default effective_permittivity_model is polder_van_santen in Matzler 1998 and Matzler&Wiesman 1999
     effective_permittivity_model = staticmethod(polder_van_santen)
 
-    def __init__(self, sensor, layer):
+    def __init__(self, sensor, layer, dense_snow_correction=None):
 
         super().__init__()
 
@@ -82,8 +84,19 @@ class IBA(AdjustableEffectivePermittivityMixins):
             self.npol = 3
 
         # Bring layer and sensor properties into emmodel
+        if layer.frac_volume > 0.5 and dense_snow_correction == "auto":
+            layer = layer.inverted_medium()
+
         self.layer = layer
         self.frac_volume = layer.frac_volume
+
+        if self.frac_volume > 0.5:
+            smrt_warn("""Using IBA with fraction_volume > 0.5 is not recommended, unless for testing. See Picard et al.
+2022 and references therein (doi: 10.5194/tc-16-3861-2022) for a detailed description of the issue. A quick
+solution is to automatically invert the medium adding the argument:
+emmodel_options=dict(dense_snow_correction="auto")) when calling the make_model function. This option may
+become a default in the future.""")
+
         self.microstructure = layer.microstructure  # Do this here, so can pass FT of correlation fn to phase function
         self.e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
         self.eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
@@ -117,7 +130,7 @@ class IBA(AdjustableEffectivePermittivityMixins):
 
             .. note::
 
-                Requires mean squared field ratio (uses mean_sq_field_ratio method)
+                Requires mean squared field ratio(uses mean_sq_field_ratio method)
 
         """
         y2 = self.mean_sq_field_ratio(self.e0, self.eps)
@@ -127,10 +140,7 @@ class IBA(AdjustableEffectivePermittivityMixins):
     def mean_sq_field_ratio(self, e0, eps):
         """ Mean squared field ratio calculation
 
-            Uses layer effective permittivity
-
-            :param e0: background relative permittivity
-            :param eps: scattering constituent relative permittivity
+            Uses layer effective permittivity: param e0: background relative permittivity: param eps: scattering constituent relative permittivity
 
         """
         apparent_permittivity = self._effective_permittivity * (1 - self.depol_xyz) + e0 * self.depol_xyz
@@ -158,16 +168,14 @@ class IBA(AdjustableEffectivePermittivityMixins):
 
         .. math::
 
-            \\Theta = \\theta
+            \\Theta= \\theta
 
 
-        Scattering coefficient is determined by integration over the scattering angle (0 to \\pi)
-
-        :param mu: cosine of the scattering angle (single angle)
+        Scattering coefficient is determined by integration over the scattering angle(0 to \\pi): param mu: cosine of the scattering angle(single angle)
 
         .. math::
 
-            ks\\_int = p11 + p22
+            ks\\_int=p11 + p22
 
         The integration is performed outside this method.
 
@@ -197,7 +205,7 @@ class IBA(AdjustableEffectivePermittivityMixins):
         return ks_int.real
 
     def phase(self, mu_s, mu_i, dphi, npol=2):
-        """ IBA Phase function (not decomposed).
+        """ IBA Phase function(not decomposed).
 
 """
         p, sin_half_scatt = rayleigh_scattering_matrix_and_angle(mu_s, mu_i, dphi, npol)
@@ -222,14 +230,14 @@ class IBA(AdjustableEffectivePermittivityMixins):
 
         Coefficients within the phase function are
 
-        Passive case (m = 0 only) and active (m = 0) ::
+        Passive case (m = 0 only) and active (m = 0): :
 
-            M  = [Pvvp  Pvhp]
+            M=[Pvvp  Pvhp]
                  [Phvp  Phhp]
 
         Active case (m > 0)::
 
-            M =  [Pvvp Pvhp Pvup]
+            M=[Pvvp Pvhp Pvup]
                  [Phvp Phhp Phup]
                  [Puvp Puhp Puup]
 
@@ -238,13 +246,8 @@ class IBA(AdjustableEffectivePermittivityMixins):
         scattering of radiation in a granular medium. *Journal of Applied Physics*, 83(11),
         6111-6117. Here, calculation of the phase matrix is based on the phase matrix in
         the 1-2 frame, which is then rotated according to the incident and scattering angles,
-        as described in e.g. *Thermal Microwave Radiation: Applications for Remote Sensing, Mätzler (2006)*.
-        Fourier decomposition is then performed to separate the azimuthal dependency from the incidence angle dependency.
-
-        :param mu_s: 1-D array of cosine of viewing radiation stream angles (set by solver)
-        :param mu_i: 1-D array of cosine of incident radiation stream angles (set by solver)
-        :param m_max: maximum Fourier decomposition mode needed
-        :param npol: number of polarizations considered (set from sensor characteristics)
+        as described in e.g. *Thermal Microwave Radiation: Applications for Remote Sensing, Mätzler(2006)*.
+        Fourier decomposition is then performed to separate the azimuthal dependency from the incidence angle dependency.: param mu_s: 1-D array of cosine of viewing radiation stream angles(set by solver): param mu_i: 1-D array of cosine of incident radiation stream angles(set by solver): param m_max: maximum Fourier decomposition mode needed: param npol: number of polarizations considered(set from sensor characteristics)
 
         """
 
@@ -264,10 +267,8 @@ class IBA(AdjustableEffectivePermittivityMixins):
     def compute_ka(self):
         """ IBA absorption coefficient calculated from the low-loss assumption of a general lossy medium.
 
-        Calculates ka from wavenumber in free space (determined from sensor), and effective permittivity
-        of the medium (snow layer property)
-
-        :return ka: absorption coefficient [m :sup:`-1`]
+        Calculates ka from wavenumber in free space(determined from sensor), and effective permittivity
+        of the medium(snow layer property): return ka: absorption coefficient[m:sup:`-1`]
 
         .. note::
 
@@ -288,15 +289,11 @@ class IBA(AdjustableEffectivePermittivityMixins):
 
         The extinction coefficient is defined as the sum of scattering and absorption
         coefficients. However, the radiative transfer solver requires this in matrix form,
-        so this method is called by the solver.
-
-            :param mu: 1-D array of cosines of radiation stream incidence angles
-            :param npol: number of polarization
-            :returns ke: extinction coefficient matrix [m :sup:`-1`]
+        so this method is called by the solver.: param mu: 1-D array of cosines of radiation stream incidence angles: param npol: number of polarization: returns ke: extinction coefficient matrix[m:sup:`-1`]
 
             .. note::
 
-                Spherical isotropy assumed (all elements in matrix are identical).
+                Spherical isotropy assumed(all elements in matrix are identical).
 
                 Size of extinction coefficient matrix depends on number of radiation
                 streams, which is set by the radiative transfer solver.
