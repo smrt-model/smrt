@@ -49,7 +49,7 @@ class SCEBase(object):
             self._ke, self.ks = self.compute_ke_ks_symmetrical()
         else:
             if self.scaled:
-                eps_HS = permittivity_hashin_shtrikman(self.e0, self.eps, self.frac_volume)
+                eps_HS = permittivity_hashin_shtrikman(self.frac_volume, self.e0, self.eps)
                 k_eff = self.k0 * np.sqrt(eps_HS)
             else:
                 k_eff = self.k1
@@ -77,7 +77,7 @@ class SCEBase(object):
         inverted_microstructure = self.microstructure.inverted_medium()
 
         if self.scaled:
-            #eps_HS = permittivity_hashin_shtrikman(self.e0, self.eps, self.frac_volume)
+            #eps_HS = permittivity_hashin_shtrikman(self.frac_volume), self.e0, self.eps
             #eps_HS_inv = permittivity_hashin_shtrikman(self.eps, self.e0, 1 - self.frac_volume)
             #eps_symHS = (1 - self.frac_volume) * eps_HS + self.frac_volume * eps_HS_inv
             #
@@ -386,9 +386,11 @@ def compute_A2_nonlocal(Q, microstructure):
     return A2
 
 
-def permittivity_hashin_shtrikman(e0, eps, frac_volume):
+def permittivity_hashin_shtrikman(frac_volume, e0, eps):
 
     # Eq 72 in TK21
+    # in fact this is the same as Maxwell-Garnett equation. In principle we don't need to redefinie it.
+
     beta = (eps - e0) / (eps + 2 * e0)
     eps_HS = e0 * (1 + 3 * frac_volume * beta / (1 - frac_volume * beta))
 
