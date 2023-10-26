@@ -140,9 +140,13 @@ become a default in the future.""")
     def mean_sq_field_ratio(self, e0, eps):
         """ Mean squared field ratio calculation
 
-            Uses layer effective permittivity: param e0: background relative permittivity: param eps: scattering constituent relative permittivity
+        Uses layer effective permittivity
+
+        :param e0: background relative permittivity
+        :param eps: scattering constituent relative permittivity
 
         """
+
         apparent_permittivity = self._effective_permittivity * (1 - self.depol_xyz) + e0 * self.depol_xyz
         y2 = (1. / 3.) * np.sum(np.absolute(apparent_permittivity / (apparent_permittivity + (eps - e0) * self.depol_xyz))**2.)
         return y2
