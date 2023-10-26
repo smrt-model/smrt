@@ -1,8 +1,13 @@
 # coding: utf-8
 
+import sys
 import copy
+
 import numpy as np
 import xarray as xr
+
+import pytest
+
 from smrt.core import result
 
 
@@ -72,9 +77,11 @@ def test_to_dataframe_with_channel_axis_on_column():
     np.testing.assert_allclose(df['VH'], -14.0321985560285)
 
 
+@pytest.mark.skipif(sys.version_info < (3,8),
+                    reason="requires python3.8 and higher")
 def test_to_dataframe_without_channel_axis():
     df = res_example.to_dataframe(channel_axis=None)
-    print(df)
+    print(df)  # this test fail for old version of xarray
     np.testing.assert_allclose(df.loc[(35, 'V', 'V'), :], (35, -13.8379882755357))
     np.testing.assert_allclose(df.loc[(35, 'H', 'V'), :], (35, -14.0321985560285))
 
