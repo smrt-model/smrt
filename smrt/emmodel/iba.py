@@ -133,22 +133,19 @@ become a default in the future.""")
                 Requires mean squared field ratio(uses mean_sq_field_ratio method)
 
         """
-        y2 = self.mean_sq_field_ratio(self.e0, self.eps)
+        y2 = self.mean_sq_field_ratio()
         iba_coeff = (1. / (4. * np.pi)) * np.absolute(self.eps - self.e0)**2. * y2 * (self.k0)**4
         return iba_coeff
 
-    def mean_sq_field_ratio(self, e0, eps):
+    def mean_sq_field_ratio(self):
         """ Mean squared field ratio calculation
 
         Uses layer effective permittivity
 
-        :param e0: background relative permittivity
-        :param eps: scattering constituent relative permittivity
-
         """
 
-        apparent_permittivity = self._effective_permittivity * (1 - self.depol_xyz) + e0 * self.depol_xyz
-        y2 = (1. / 3.) * np.sum(np.absolute(apparent_permittivity / (apparent_permittivity + (eps - e0) * self.depol_xyz))**2.)
+        apparent_permittivity = self._effective_permittivity * (1 - self.depol_xyz) + self.e0 * self.depol_xyz
+        y2 = (1. / 3.) * np.sum(np.absolute(apparent_permittivity / (apparent_permittivity + (self.eps - self.e0) * self.depol_xyz))**2.)
         return y2
 
     def basic_check(self):

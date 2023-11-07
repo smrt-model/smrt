@@ -203,7 +203,9 @@ def quikscat(channel=None, theta=None):
 
 
 def ascat(theta=None):
-    """ Configuration for ASCAT on ENVISAT sensor.
+    """ Configuration for ASCAT on MetOp satellites.
+
+        Characteristics of the observation configuration: https://ieeexplore.ieee.org/document/7815274
 
        This function returns a sensor at 5.255 GHz (C-band) and VV polarization. The incidence angle can be chosen or is by defaut from 25° to 65° every 5°
 

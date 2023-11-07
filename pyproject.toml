@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "smrt"
 version = "1.0.2"
-description = "The Snow Microwave Radiative Transfer (SMRT) model is a highly modular model to compute the thermal emission of snowpacks and other cryospheric bodies in the microwave domain."
+description = "The Snow Microwave Radiative Transfer (SMRT) model is a highly modular model to compute the thermal emission and backscattering coefficient of snowpacks and other cryospheric bodies in the microwave domain."
 authors = ["Ghislain Picard <ghislain.picard@univ-grenoble-alpes.fr>", "Melody Sandells <melody.sandells@gmail.com>", "Henning Löwe <loewe@slf.ch>"]
 homepage = "https://www.smrt-model.science/"
 repository = "https://github.com/smrt-model/smrt"
@@ -24,8 +24,18 @@ nosetest = ""
 [build-system]
 requires = ["poetry>=0.12",
     		"setuptools >= 48",
-    #"setuptools_scm[toml] >= 4, <6",
+    "setuptools_scm[toml] >= 6.2",
     #"setuptools_scm_git_archive",
     #"wheel >= 0.29.0",
 ]
+
 build-backend = "poetry.masonry.api"
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.pydocstyle]
+convention = "numpy"
+
+[tool.setuptools_scm]
