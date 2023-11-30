@@ -75,7 +75,8 @@ class DORT(object):
                  phase_normalization=True,
                  error_handling="exception",
                  process_coherent_layers=False,
-                 prune_deep_snowpack=None):
+                 prune_deep_snowpack=None,
+                 diagonalization_method="eig"):
         # """
         # :param n_max_stream: number of stream in the most refringent layer
         # :param m_max: number of mode (azimuth)
@@ -87,6 +88,7 @@ class DORT(object):
         self.phase_normalization = phase_normalization
         self.error_handling = error_handling
         self.process_coherent_layers = process_coherent_layers
+        self.diagonalization_method = diagonalization_method
 
         if prune_deep_snowpack is True:
             prune_deep_snowpack = 6
@@ -226,7 +228,8 @@ class DORT(object):
                                               streams.mu[l],
                                               streams.weight[l],
                                               m_max,
-                                              self.phase_normalization) for l in range(len(self.emmodels))]
+                                              self.phase_normalization,
+                                              self.diagonalization_method) for l in range(len(self.emmodels))]
 
         #
         # compute the outgoing intensity for each mode
@@ -607,7 +610,7 @@ def extend_2pol_npol(x, npol):
 
 class EigenValueSolver(object):
 
-    def __init__(self, ke, ks, ft_even_phase_function, mu, weight, m_max, normalization):
+    def __init__(self, ke, ks, ft_even_phase_function, mu, weight, m_max, normalization, method):
         # :param Ke: extinction coefficient of the layer for mode m
         # :param ft_even_phase: ft_even_phase function of the layer for mode m
         # :param mu: cosines
@@ -618,6 +621,16 @@ class EigenValueSolver(object):
         self.mu = mu
         self.weight = weight
         self.normalization = normalization
+
+        if method == "eig":
+            self.diagonalize_function = self.diagonalize_eig
+        elif method == "shur":
+            self.diagonalize_function = self.diagonalize_shur
+        elif method == "eig_shur":
+            self.diagonalize_function = self.diagonalize_eig_shur
+        else:
+            raise SMRTError("Unknown method to diagonalize the matrix")
+
         self.norm_0 = None
         self.norm_m = None
 
@@ -628,25 +641,24 @@ class EigenValueSolver(object):
             self.ft_even_phase = smrt_matrix(0)
 
     def solve(self, m, compute_coherent_only, debug_A=False):
-        # solve the homogeneous equation for a single layer and return eigne value and eigen vector
+        # solve the homogeneous equation for a single layer and return eignen values and eigen vectors
         # :param m: mode
         # :param compute_coherent_only
         # :returns: beta, E, Q
         #
 
         npol = 2 if m == 0 else 3
-
         n = npol * len(self.mu)
 
         # this coefficient come from the 1/4pi normalization of the RT equation and the
         # 1/(4*pi) * int_{phi=0}^{2*pi} cos(m phi)*cos(n phi) dphi
-        # note that equations A7, A8 and A11 in Picard et al. 2018 has an error, they do not show this coefficient.
+        # note that equation A7 and A8 in Picard et al. 2018 has an error, it does not show this coefficient.
         coef = 0.5 if m == 0 else 0.25
 
         # compute invmu
         invmu = 1.0 / self.mu
         invmu = np.repeat(invmu, npol)
-        invmu = np.concatenate((invmu, -invmu))
+        invmu = np.concatenate((invmu, -invmu))  # matrix M^-1 in Stamnes et al. DISORT 1988
         mu = np.concatenate((self.mu, -self.mu))
 
         # calculate the A matrix. Eq (12),  or 0 if compute_coherent_only
@@ -656,90 +668,50 @@ class EigenValueSolver(object):
             # the solution is trivial
             beta = invmu * self.ke(mu, npol=npol).compress().diagonal()
             E = np.eye(2 * n, 2 * n)
-        else:
-            # solve the eigen value problem
-            coef_weight = np.tile(np.repeat(-coef * self.weight, npol), 2)    # could be cached (per layer) because same for each mode
+            Eu = E[0:n, :]  # upwelling
+            Ed = E[n:, :]  # downwelling
 
-            A *= coef_weight[np.newaxis, :]
+            return beta, Eu, Ed
 
-            # normalize
-            if self.normalization and self.ks > 0:
-                A = self.normalize(m, A)
-            # normalization is done
+        # the phase function is not null, let's continue to create the A matrix
+        coef_weight = np.tile(np.repeat(-coef * self.weight, npol), 2)    # could be cached (per layer) because same for each mode
 
-            A[np.diag_indices(2 * n)] += self.ke(mu, npol=npol).compress().diagonal()
-            A = invmu[:, np.newaxis] * A
+        A *= coef_weight[np.newaxis, :]
 
-            if debug_A:
-                return A
+        k = A.shape[0]  # can be n or 2*n depending on whether the symmetry optimization is used or not
 
-            # diagonalise the matrix. Eq (13)
-            try:
-                beta, E = scipy.linalg.eig(A, overwrite_a=True)
-            except scipy.linalg.LinAlgError:
-                diagonalization_failed = True
-                reason = "eig method"
+        # normalize
+        if self.normalization:
+            if callable(self.ks):
+                A = self.normalize(m, A, self.ks(mu[0:k // npol], npol=npol).compress().diagonal())
             else:
-                iscomplex_beta = not np.allclose(beta.imag, 0, atol=1e-06)
-                iscomplex_E = not np.allclose(E.imag, 0, atol=1e-06)
-                diagonalization_failed = iscomplex_beta or iscomplex_E
+                A = self.normalize(m, A, self.ks)
+        # normalization is done
 
-                reason = ""
-                if iscomplex_beta:
-                    reason += "Eigen values beta is complex "
-                if iscomplex_E:
-                    reason += "Eigen vector is complex "
+        A[np.diag_indices(k)] += self.ke(mu[0:k // npol], npol=npol).compress().diagonal()
+        A = invmu[0:k, np.newaxis] * A
 
-            if diagonalization_failed:
-                print("Reason: ", reason, " ks:", self.ks, " m:", m)
-                mask = np.abs(E.imag) > 1e-8
-                print("Info:", m, E[mask], beta[np.any(mask, axis=0)])
-                raise SMRTError("""The diagonalization failed in DORT which is possibly caused by single scattering albedo larger than 1.
-It is often due to grain size too large (or too low stickiness parameter) to respect the Rayleigh/low-frequency assumption required by
-some emmodel (DMRT ShortRange, IBA, ...). It is recommended to reduce the size of the bigger grains. It is possible to disable this error
-raise and return NaN instead by adding the argument rtsolver_options=dict(error_handling='nan') to make_model).
-""")
+        if debug_A:  # this is not elegant but can be useful. A dedicated function to compute_A is not better
+            return A
 
-            if np.iscomplexobj(E):
-                mask = abs(E.imag) > np.linalg.norm(E) * 1e-5
-                if np.any(mask):
-                    print(np.any(mask, axis=1))
-                    print(beta[np.any(mask, axis=1)])
-                    print(beta)
-                else:
-                    E = E.real
-
-            beta = beta.real
-
-            # get the positive and negative beta
-            # this should be improve a the mathematical level because there is no need to solve
-            # the eigenvalue for + and - well according to inverse optical path equivalent,
-            # the + and - should be equal
-
-            # debug only
-            if False:
-                idx2 = np.argsort(beta)
-                idx2[0:n] = idx2[0:n][::-1]
-                beta = beta[idx2]
-                E = E[:, idx2]
-
-        Eu = E[0:n, :]  # upwelling
-        Ed = E[n:, :]  # downwelling
-
-        return beta, Eu, Ed
+        return self.diagonalize_function(m, A)
         # !-----------------------------------------------------------------------------!
 
-    def normalize(self, m, A):
+    def normalize(self, m, A, ks):
         # normalize A to conserve energy, assuming isotrope scattering coefficient
         # ks should be a function of mu if non-isotropic medium and to be consistent with ke which is a function of mu
 
         npol = 2 if m == 0 else 3
 
         if m == 0:
-            self.norm_0 = -self.ks / np.sum(A, axis=1)
+            if np.any(ks == 0):  # can't perform normalization
+                return A
+            self.norm_0 = -ks / np.sum(A, axis=1)
+
             norm = self.norm_0
 
             if self.normalization != "forced" and np.any(np.abs(self.norm_0 - 1.0) > 0.3):
+                print("norm=", norm)
                 raise SMRTError("""The re-normalization of the phase function exceeds the predefined threshold of 30%.
 This is likely because of a too large grain size or a bug in the phase function. It is recommended to check the grain size.
 You can also deactivate this check using normalization="forced" as an options of the dort solver. It is at last possible
@@ -759,6 +731,98 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
 
         A *= norm[:, np.newaxis]
         return A
+
+    def diagonalize_eig(self, m, A):
+        # diagonalise the matrix. Eq (13)
+
+        try:
+            beta, E = scipy.linalg.eig(A, overwrite_a=True)
+        except scipy.linalg.LinAlgError:
+            raise SMRTError("Eigen value decomposition failed.\n" + self.diagonalization_error_message())
+
+        beta, E = self.validate_eigen(beta, E, m)
+
+        npol = 2 if m == 0 else 3
+        n = npol * len(self.mu)
+        Eu = E[0:n, :]  # upwelling
+        Ed = E[n:, :]  # downwelling
+
+        return beta, Eu, Ed
+
+
+    def diagonalize_shur(self, m, A):
+        # diagonalise the matrix. Eq (13) using Shur decomposition. This avoids some instabilities with the direct eig function
+
+        try:
+            T, Z = scipy.linalg.schur(A)
+        except scipy.linalg.LinAlgError:
+            raise SMRTError("Schur decomposition failed.\n" + self.diagonalization_error_message())
+        try:
+            beta, E = scipy.linalg.eig(T, overwrite_a=True)
+        except scipy.linalg.LinAlgError:
+            raise SMRTError("Diagonalization of the schur decomposition failed.\n" + self.diagonalization_error_message())
+
+        E = Z @ E
+
+        beta, E = self.validate_eigen(beta, E, m)
+
+        npol = 2 if m == 0 else 3
+        n = npol * len(self.mu)
+        Eu = E[0:n, :]  # upwelling
+        Ed = E[n:, :]  # downwelling
+
+        return beta, Eu, Ed
+
+
+
+    def validate_eigen(self, beta, E, m):
+
+        iscomplex_beta = not np.allclose(beta.imag, 0) #, atol=np.max(beta.real) * 1e-07)
+        iscomplex_E = not np.allclose(E.imag, 0, atol=1e-6)
+        diagonalization_failed = iscomplex_beta or iscomplex_E
+
+        reasons = []
+        if iscomplex_beta:
+            reasons.append("Some eigen values beta are complex.")
+        if iscomplex_E:
+            reasons.append("Some eigen vectors are complex.")
+
+        if diagonalization_failed:
+            print("Inof: ks:", self.ks, " m:", m)
+            mask = np.abs(E.imag) > 1e-8
+            print("E:", E[mask], "beta:", beta[np.any(mask, axis=0)])
+
+            raise SMRTError('n'.join(reasons) + '\n' + self.diagonalization_error_message())
+            
+        if np.iscomplexobj(E):
+            mask = abs(E.imag) > np.linalg.norm(E) * 1e-5
+            if np.any(mask):
+                print(np.any(mask, axis=1))
+                print(beta[np.any(mask, axis=1)])
+                print(beta)
+            else:
+                E = E.real
+        return beta.real, E
+
+    def diagonalization_error_message(self):
+        return"""The diagonalization failed in DORT. Several causes are possible:
+
+- single scattering albedo is larger than 1 in the layer. It is often due to too large grain size (or too low stickiness
+parameter). Some emmodel (DMRT ShortRange, ...) that rely on the Rayleigh/low-frequency assumption may produce unphysical 
+single scattering albedo. In this case, it is recommended to reduce the grain size. If the phase_normalization option in
+DORT was desactivated (default is active), it is advised to reactivate it. 
+
+- almost diagonal matrix. Such a problematic matrix often arises in active mode when m_max is quite high. However it can
+also arises in passive mode or with low m_max. To solve this issue reduce the m_max option progressively (high values of
+m_max give more accurate results in active mode but tends to produce almost diagonal matrix). Alternatively, you can try to 
+activate the diagonalization_method="shur" option. This option is experimental, please report your results (both success
+and failure).
+
+To avoid raising exception and return NaN as a result instead is possible by setting the option error_handling='nan'.
+
+Note:: setting an option in dort is obtained with make_model(..., "dort", rtsolver_options=dict(error_handling='nan')).
+"""
+
 
 
 class InterfaceProperties(object):
