@@ -626,10 +626,10 @@ class EigenValueSolver(object):
             self.diagonalize_function = self.diagonalize_eig
         elif method == "shur":
             self.diagonalize_function = self.diagonalize_shur
-        elif method == "eig_shur":
-            self.diagonalize_function = self.diagonalize_eig_shur
+        # elif method == "eig_shur":
+        #     self.diagonalize_function = self.diagonalize_eig_shur
         else:
-            raise SMRTError("Unknown method to diagonalize the matrix")
+            raise SMRTError(f"Unknown method '{method}' to diagonalize the matrix")
 
         self.norm_0 = None
         self.norm_m = None
@@ -749,7 +749,6 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
 
         return beta, Eu, Ed
 
-
     def diagonalize_shur(self, m, A):
         # diagonalise the matrix. Eq (13) using Shur decomposition. This avoids some instabilities with the direct eig function
 
@@ -773,11 +772,9 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
 
         return beta, Eu, Ed
 
-
-
     def validate_eigen(self, beta, E, m):
 
-        iscomplex_beta = not np.allclose(beta.imag, 0) #, atol=np.max(beta.real) * 1e-07)
+        iscomplex_beta = not np.allclose(beta.imag, 0, atol=np.max(beta.real) * 1e-07)
         iscomplex_E = not np.allclose(E.imag, 0, atol=1e-6)
         diagonalization_failed = iscomplex_beta or iscomplex_E
 
