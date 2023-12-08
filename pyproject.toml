@@ -1,11 +1,12 @@
-[tool.poetry]
+[project]
 name = "smrt"
-version = "1.0.2"
+version = "1.2.1"
 description = "The Snow Microwave Radiative Transfer (SMRT) model is a highly modular model to compute the thermal emission and backscattering coefficient of snowpacks and other cryospheric bodies in the microwave domain."
 authors = ["Ghislain Picard <ghislain.picard@univ-grenoble-alpes.fr>", "Melody Sandells <melody.sandells@gmail.com>", "Henning Löwe <loewe@slf.ch>"]
 homepage = "https://www.smrt-model.science/"
 repository = "https://github.com/smrt-model/smrt"
 documentation = "http://smrt.readthedocs.io/"
+readme = "README.md"
 
 
 [tool.poetry.dependencies]
