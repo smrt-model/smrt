@@ -1,16 +1,31 @@
 [project]
 name = "smrt"
-version = "1.2.1"
+dynamic = ["version"]
 description = "The Snow Microwave Radiative Transfer (SMRT) model is a highly modular model to compute the thermal emission and backscattering coefficient of snowpacks and other cryospheric bodies in the microwave domain."
-authors = ["Ghislain Picard <ghislain.picard@univ-grenoble-alpes.fr>", "Melody Sandells <melody.sandells@gmail.com>", "Henning Löwe <loewe@slf.ch>"]
-homepage = "https://www.smrt-model.science/"
-repository = "https://github.com/smrt-model/smrt"
-documentation = "http://smrt.readthedocs.io/"
+authors = [
+            {name = "Ghislain Picard", email = "ghislain.picard@univ-grenoble-alpes.fr"},
+            {name = "Melody Sandells", email = "melody.sandells@gmail.com"}, 
+            {name = "Henning Löwe", email = "loewe@slf.ch"},
+            ]
 readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.7"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+]
 
 
-[tool.poetry.dependencies]
-python = ">=3.6"
+[project.urls]
+Homepage = "https://http://smrt-model.science/l"
+Issues = "https://github.com/smrt/smrt-model/issues"
+Documentation = "http://smrt.readthedocs.io/"
+Repository = "https://github.com/smrt-model/smrt.git"
+
+
+[dependencies]
+python = ">=3.8"
 numpy = ">=1.13"
 pandas = ">=0.20.3"
 scipy = ">=1.0.0"
@@ -18,19 +33,16 @@ xarray = ">=0.10.3"
 numba = ">=0.40"
 joblib = ">=1.0.0"
 
-[tool.poetry.dev-dependencies]
-nosetest = ""
-
-
 [build-system]
-requires = ["poetry>=0.12",
-    		"setuptools >= 48",
-    "setuptools_scm[toml] >= 6.2",
-    #"setuptools_scm_git_archive",
-    #"wheel >= 0.29.0",
+requires = ["setuptools >= 48",
+            "setuptools_scm[toml] >= 6.2",
 ]
+build-backend = "setuptools.build_meta"
 
-build-backend = "poetry.masonry.api"
+[tool.setuptools]
+packages = ['smrt']
+
+
 
 [tool.ruff]
 line-length = 120
