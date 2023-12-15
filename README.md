@@ -77,3 +77,5 @@ Other contributions
  - Mai Winstrup
  - Carlo Marin
  - Justin Murfitt
+ - Julien Meloche
+

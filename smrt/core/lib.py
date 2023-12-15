@@ -160,9 +160,11 @@ class smrt_diag(object):
 
 
 class smrt_matrix(object):
-    """SMRT uses two formats of matrix: one most suitable to implement emmodel where equations are different for each polarization and another one suitable
-    for DORT computation where stream and polarization are collapsed in one dimension to allow matrix operation. In addition, the reflection and transmission matrix
-    are often diagonal matrix, which needs to be handled because it saves space and allow much faster operations. This class implemented all these features.
+    """SMRT uses two formats of matrix: one most suitable to implement emmodel where equations are different for each
+    polarization and another one suitable for DORT computation where stream and polarization are collapsed in one
+    dimension to allow matrix operation. In addition, the reflection and transmission matrix are often diagonal matrix,
+    which needs to be handled because it saves space and allow much faster operations. This class implemented all these
+    features.
 
     """
 
