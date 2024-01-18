@@ -6,16 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+### Changed
 
 
+## [v1.2.4]
+### Added
+	- implement another diagonalisation method in DORT to avoid numerical instabilities, especially in active mode. It can be activated with rtsolver_options=dict(diagonalization_method="shur_forcedtriu") in make_model. If good results are reported, this may become the default option as it seems as fast as the direct, origianl, eigenvalue solver.
 
 ### Changed
+none
 
 
 ## [v1.2.3]
 ### Added
 
-	- implement a new diagonalisation method in DORT to avoid numerical instabilities, especially in active mode. It can be activated with rtsolver_options=dict(diagonalization_method="shur") in make_model. If good results are reported, this may become the default option as it seems as fast as the direct, origianl, eigenvalue solver.
+	- implement a new diagonalisation method in DORT to avoid numerical instabilities, especially in active mode. It can be activated with rtsolver_options=dict(diagonalization_method="shur") in make_model.
 	- a new version of IBA is implemented for testing only. It uses the Maxwell Garnett formulation for the effective permittivity. The default IBA in iba.py is still the recommended version for normal calculations.
 	- add a "snell_angles" convenience function
 	- in IBA add warning for fractional volume > 0.5. Also add an argument to enable auto-model-inversion.
