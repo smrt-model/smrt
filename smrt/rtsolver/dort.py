@@ -5,7 +5,7 @@ but less efficient  than 2 or 6 flux solvers. Different flavours of DORT (or DIS
 (passive or active), on the density of the medium (sparse media have trivial inter-layer boundary conditions), on the
 way the streams are connected between the layers and on the way the phase function is prescribed. The actual version is
 a blend between Picard et al. 2004 (active mode for sparse media) and DMRT-ML (Picard et al. 2013) which works in
-passive mode only for snow. The DISORT often used in optics (Stamnes et al. 1988) works only for sparse medium and uses
+passive mode only for snow. The DISORT often used in optics (Stamnes et al. 1988) only works for sparse medium and uses
 a development of the phase function in Legendre polynomia on theta. The version used in DMRT-QMS (L. Tsang's group) is
 similar to the present implementation except it uses spline interpolation to connect constant-angle streams between the
 layers although we use direct connection by varying the angle  according to Snell's law. A practical consequence is that
@@ -14,11 +14,32 @@ layer. The number of outgoing streams in the air is usually smaller, sometimes t
 profile). It is important not to set too low a value for n_max_streams. E.g. 32 is usually fine, 64 or 128 are better
 but simulations will be much slower.
 
+Note:: The DORT solver is very robust in passive mode but may raise exception in active mode due to a matrix
+diagonlisation problem. The exception provides detailed information on how to address this issue. Two new
+diagonalisation approches were added in Jan 2024. They are activated by setting the diagonalization_method optional
+argument (see :py:meth:`smrt.core.make_model`). The first method (diagonalization_method='shur') replaces the
+scipy.linalg.eig function by a shur decomposition followed by a diagionalisation of the shur matrix. Whule
+scipy.linalg.eig performs such a shur decomposition internally in any case, it seems that explicitly calling the shur
+decomposition beforehand improves the stability. Nevertheless to really solve the problem, the second method
+(diagonalization_method='shur_forcedtriu') consists in removing the 2x2 and 3x3 blocks in the shur matrix, ie. forcing
+the shur matrix to be upper triangular (triu in numpy jargon (=zeroing the lower part of this
+matrix). This problem is due to the structure of the matrix to be diagonalized and the formulation of the DORT method in the polarimetric 
+configuration. Eigenvalues come by triplets and can be very close to each other for the three H, V, U Stockes components
+when scattering is becoming small (or equiv. the azimuth mode 'm' is large). As a consequence of the Gershgorin theorem,
+this results in slightly complex eigenvalues (i.e. eigenvalues with very small imaginary part) that comes from 2x2 or
+3x3 blocks in the shur decomposition. This would not be a problem if the eigenvectors were correctly estimated, but this
+is not the case. It is indeed difficult to find the correct orientation of eigenvectors associated to very close
+eigenvalues. To overcome the problem, the solution is to remove the 2x2 and 3x3 blocks. In principle, it would be safer
+to check that these blocks are nearly diagonal but this is not done in the current implementation. The user is
+reponsabible to commute between the options until it works. After sufficient successfull reports by user will be received the last
+method (forcedtriu) will certainly be the defaut.
+
 """
 
 
 # Stdlib import
 import math
+from functools import partial
 
 # other import
 import numpy as np
@@ -625,9 +646,9 @@ class EigenValueSolver(object):
         if method == "eig":
             self.diagonalize_function = self.diagonalize_eig
         elif method == "shur":
-            self.diagonalize_function = self.diagonalize_shur
-        # elif method == "eig_shur":
-        #     self.diagonalize_function = self.diagonalize_eig_shur
+            self.diagonalize_function = partial(self.diagonalize_shur, force_triu=False)
+        elif method == "shur_forcedtriu":
+            self.diagonalize_function = partial(self.diagonalize_shur, force_triu=True)
         else:
             raise SMRTError(f"Unknown method '{method}' to diagonalize the matrix")
 
@@ -749,19 +770,50 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
 
         return beta, Eu, Ed
 
-    def diagonalize_shur(self, m, A):
-        # diagonalise the matrix. Eq (13) using Shur decomposition. This avoids some instabilities with the direct eig function
+    def diagonalize_shur(self, m, A, force_triu=False):
+        # diagonalise the matrix. Eq (13) using Shur decomposition. This avoids some instabilities with the direct eig
+        # function
+        # in addition it is possible to remove the 2x2 or 3x3 blocks that occurs when eigenvalues are close
+        # forcing the lower triangular part of the shur matrix to zero solves this problem but is radical
+        # a better algorithm would first check that the 2x2 nd 3x3 blocks are nearly diagional (values are very small)
 
         try:
             T, Z = scipy.linalg.schur(A)
         except scipy.linalg.LinAlgError:
             raise SMRTError("Schur decomposition failed.\n" + self.diagonalization_error_message())
         try:
+            if force_triu:
+                T[np.tril_indices(T.shape[0], k=-1)] = 0
+
             beta, E = scipy.linalg.eig(T, overwrite_a=True)
         except scipy.linalg.LinAlgError:
             raise SMRTError("Diagonalization of the schur decomposition failed.\n" + self.diagonalization_error_message())
 
         E = Z @ E
+    
+        # if m >= 0: #== 2:
+
+        #     #print(m, T)
+        #     iscomplex_beta = not np.allclose(beta.imag, 0, atol=0)
+        #     iscomplex_E = not np.allclose(E.imag, 0, atol=1e-6)
+
+        #     if np.any(beta.imag != 0):
+        #         print("pas ok")
+        #         # print(m, T)
+        #         # print(m, T[np.tril_indices(T.shape[0], k=-1)])
+        #         # print(m, np.max(np.abs(T[np.tril_indices_from(T, k=-1)])), np.all(T[np.tril_indices_from(T, k=-1)]==0))
+        #         # print("beta.imag=", beta.imag)
+
+        #         beta, E = scipy.linalg.eig(T, overwrite_a=False)
+
+        #         iscomplex_beta = not np.allclose(beta.imag, 0, atol=0)
+        #         iscomplex_E = not np.allclose(E.imag, 0, atol=1e-6)
+
+        #         print('new beta.img', m, iscomplex_beta, iscomplex_E, np.all(beta.imag==0), np.all(E.imag==0), beta.imag)
+        #         print('isnan', np.any(np.isnan(beta)), np.any(np.isnan(E)))
+        #     else:
+        #         print("ok")
+        #     #print(f"{m}, {iscomplex_beta}, {iscomplex_E}")
 
         beta, E = self.validate_eigen(beta, E, m)
 
@@ -804,22 +856,25 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
     def diagonalization_error_message(self):
         return"""The diagonalization failed in DORT. Several causes are possible:
 
-- single scattering albedo is larger than 1 in the layer. It is often due to too large grain size (or too low stickiness
-parameter). Some emmodel (DMRT ShortRange, ...) that rely on the Rayleigh/low-frequency assumption may produce unphysical 
-single scattering albedo. In this case, it is recommended to reduce the grain size. If the phase_normalization option in
-DORT was desactivated (default is active), it is advised to reactivate it. 
+- single scattering albedo > 1 in a layer. It is often due to a too large grain size (or too low stickiness
+parameter, or too large polydispersity or too high frequency). Some emmodels (DMRT ShortRange, ...) that rely on the
+Rayleigh/low-frequency assumption may produce unphysical single scattering albedo > 1. In this case, it is necessary
+to reduce the grain size. If the phase_normalization option in DORT was desactivated (default is active), it is advised
+to reactivate it.
 
-- almost diagonal matrix. Such a problematic matrix often arises in active mode when m_max is quite high. However it can
-also arises in passive mode or with low m_max. To solve this issue reduce the m_max option progressively (high values of
-m_max give more accurate results in active mode but tends to produce almost diagonal matrix). Alternatively, you can try to 
-activate the diagonalization_method="shur" option. This option is experimental, please report your results (both success
-and failure).
+- almost diagonal matrix. Such a matrix often arises in active mode when m_max is quite high. However it can
+also arises in passive mode or with low m_max. To solve this issue  you can try to 
+activate the diagonalization_method="shur" option and if it does not work the more radical diagonalization_method="shur_forcedtriu". 
+These options are experimental, please report your results (both success and failure).
+diagonalization_method="shur_forcedtriu" should become the default if success are reported.
+Alternatively you could reduce the m_max option progressively but high values of m_max give more accurate results in
+active mode (but tends to produce almost diagonal matrix).
 
-To avoid raising exception and return NaN as a result instead is possible by setting the option error_handling='nan'.
+For mass simulations, exceptions may be annoying, to avoid raising exception and return NaN as a result instead is
+obtained by setting the option error_handling='nan'.
 
-Note:: setting an option in dort is obtained with make_model(..., "dort", rtsolver_options=dict(error_handling='nan')).
+Note:: setting an option in DORT is obtained with make_model(..., "dort", rtsolver_options=dict(error_handling='nan')).
 """
-
 
 
 class InterfaceProperties(object):

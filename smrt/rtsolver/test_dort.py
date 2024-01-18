@@ -11,6 +11,7 @@ from smrt.core.error import SMRTWarning
 
 from smrt.interface.transparent import Transparent
 from smrt.emmodel.nonscattering import NonScattering
+from smrt.emmodel.iba import IBA
 from smrt.rtsolver.dort import DORT
 
 
@@ -91,3 +92,47 @@ def test_shallow_snowpack():
         sensor = active(13e9, 45)
         m = Model(NonScattering, DORT)
         m.run(sensor, sp).sigmaVV()
+
+
+def test_shur_based_diagonalisation():
+
+    sp = make_snowpack(thickness=[1000],
+                       microstructure_model='exponential',
+                       density=280,
+                       temperature=265,
+                       corr_length=0.05e-3)
+
+    scatt = active(10e9, 50)
+
+    m_max = 6
+    nstreams = 32
+
+    # this setting fails when DORT  use scipy.linalg.eig
+    # but this works with the shur diagonalization. Let check this:
+
+    m = Model(IBA, DORT, rtsolver_options=dict(
+        m_max=m_max,
+        n_max_stream=nstreams,
+        diagonalization_method="shur"))
+
+
+def test_shur_based_diagonalisation():
+
+    sp = make_snowpack(thickness=[1000],
+                       microstructure_model='exponential',
+                       density=280,
+                       temperature=265,
+                       corr_length=0.05e-3)
+
+    scatt = active(10e9, 50)
+
+    m_max = 16
+    nstreams = 32
+
+    # this setting fails when DORT  use scipy.linalg.eig and using shur
+    # but this works with the shur_forcedtriu diagonalization. Let check this:
+
+    m = m = Model(IBA, DORT, rtsolver_options=dict(
+        m_max=m_max,
+        n_max_stream=nstreams,
+        diagonalization_method="shur_forcedtriu"))
