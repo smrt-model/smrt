@@ -4,6 +4,7 @@
 # See http://stackoverflow.com/questions/1153469/mercurial-scripting-with-python
 import subprocess
 
+
 def get_hg_rev(file_path):
     """
     get_hg_rev is a tool to print out which commit of the model you are using.
@@ -25,5 +26,5 @@ def get_hg_rev(file_path):
     pipe = subprocess.Popen(
         ["hg", "id", "-i", "-R", file_path],
         stdout=subprocess.PIPE
-        )
+    )
     return pipe.stdout.read()

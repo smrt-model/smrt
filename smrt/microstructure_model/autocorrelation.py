@@ -24,6 +24,8 @@ class AutocorrelationBase(object):
 
     def __init__(self, params):
 
+        super().__init__()
+
         if not hasattr(self, "all_optional_arguments"):
             self.compute_all_arguments()
 
@@ -39,7 +41,7 @@ class AutocorrelationBase(object):
 
     @classmethod
     def compute_all_arguments(cls):
-        #"""return the list of valid arguments. this include those defined in the whole class hierarchy"""
+        # """return the list of valid arguments. this include those defined in the whole class hierarchy"""
         # TODO transfer this in a the __metaclass__ to avoid recomputation
         cls.all_required_arguments = []
         cls.all_optional_arguments = {}
@@ -50,7 +52,6 @@ class AutocorrelationBase(object):
             if hasattr(upcls, "optional_args"):
                 cls.all_optional_arguments.update({k: v for k, v in upcls.optional_args.items() if k not in cls.all_optional_arguments})
             upcls = upcls.__base__   # may break if multiple inheritence... let us know if you have this problem
-
 
     @classmethod
     def valid_arguments(cls):
@@ -73,7 +74,7 @@ to see how to use this class.
 
     def __init__(self, params):
 
-        super(Autocorrelation, self).__init__(params)
+        super().__init__(params)
 
         # numerical or not
         if not hasattr(self, "ft_autocorrelation_function") or params.get('ft_numerical', False):
@@ -81,7 +82,6 @@ to see how to use this class.
 
         if not hasattr(self, "autocorrelation_function") or params.get('real_numerical', False):
             self.autocorrelation_function = self.autocorrelation_function_invfft
-
 
     def ft_autocorrelation_function_fft(self, k):
         """compute the fourier transform of the autocorrelation function via fft
