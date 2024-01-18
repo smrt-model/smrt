@@ -324,7 +324,7 @@ class SensorList(SensorBase):
 
     @property
     def channel(self):
-        return [ch for ch in s.channel_map for s in self.sensor_list]
+        return [ch for s in self.sensor_list for ch in s.channel_map]
 
     @property
     def frequency(self):
