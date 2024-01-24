@@ -21,7 +21,7 @@ from smrt.permittivity.generic_mixing_formula import maxwell_garnett
 from .iba import IBA
 
 
-class IBA_MaxewellGarnett(IBA):
+class IBA_MaxwellGarnett(IBA):
 
     """
     Modified Improved Born Approximation electromagnetic model class.
@@ -40,7 +40,7 @@ class IBA_MaxewellGarnett(IBA):
     effective_permittivity_model = staticmethod(maxwell_garnett)
 
 
-    def mean_sq_field_ratio(self, e0, eps):
+    def mean_sq_field_ratio(self):
         """ Mean squared field ratio calculation
 
         Uses layer effective permittivity
@@ -49,6 +49,6 @@ class IBA_MaxewellGarnett(IBA):
         :param eps: scattering constituent relative permittivity
 
         """
-        apparent_permittivity = e0
-        y2 = (1. / 3.) * np.sum(np.absolute(apparent_permittivity / (apparent_permittivity + (eps - e0) * self.depol_xyz))**2.)
+        apparent_permittivity = self.e0
+        y2 = (1. / 3.) * np.sum(np.absolute(apparent_permittivity / (apparent_permittivity + (self.eps - self.e0) * self.depol_xyz))**2.)
         return y2
