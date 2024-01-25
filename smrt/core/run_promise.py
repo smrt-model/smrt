@@ -21,11 +21,10 @@ def honour_all_promises(directory_or_filename, save_result_to=None, show_progres
      IF False, the `save_result_to` argument must be set to a valid directory where the results. 
 """
 
-
     if isinstance(directory_or_filename, str):
         directory_or_filename = [directory_or_filename]
 
-    filename_list =[]
+    filename_list = []
     for item in directory_or_filename:
         if os.path.isdir(item):
             filename_list += glob.glob(os.path.join(item, "smrt-promise-*.P"))
@@ -38,7 +37,7 @@ def honour_all_promises(directory_or_filename, save_result_to=None, show_progres
         random.shuffle(filename_list)
 
     if save_result_to is not None and not os.path.isdir(save_result_to):
-            raise SMRTError("save_result_to must be an existing directory (or None).")
+        raise SMRTError("save_result_to must be an existing directory (or None).")
 
     result_list = []
     for filename in filename_list:
@@ -67,7 +66,8 @@ def honour_promise(filename, save_result_to=None, force_compute=True):
     if save_result_to is not None:
         if os.path.isdir(save_result_to):
             if getattr(promise, "result_filename", None) is None:
-                raise SMRTError("promise has no predefined output filename and save_result_to is a directory. Either rebuild the promise or provide a file for save_result_to.")
+                raise SMRTError(
+                    "promise has no predefined output filename and save_result_to is a directory. Either rebuild the promise or provide a file for save_result_to.")
             outfilename = os.path.join(save_result_to, promise.result_filename)
         elif os.path.isfile(save_result_to):
             outfilename = save_result_to
@@ -80,15 +80,15 @@ def honour_promise(filename, save_result_to=None, force_compute=True):
 
         if os.path.exists(outfilename):
             return  # the result exist, no need to do the computation
-        lock = FileLock(outfilename + ".lock", timeout=0)  
+        lock = FileLock(outfilename + ".lock", timeout=0)
         try:
             with lock:
-                if os.path.exists(outfilename): # check the result file has not been written between the first check and the lock acquisition.
+                if os.path.exists(outfilename):  # check the result file has not been written between the first check and the lock acquisition.
                     return  # done!
                 result = promise.run()
                 result.save(outfilename)
         except Timeout:
-            return # another process is doing the computation according to the existence of the lock file.
+            return  # another process is doing the computation according to the existence of the lock file.
 
     else:
         result = promise.run()
@@ -111,6 +111,9 @@ def load_promise(filename):
 class RunPromise(object):
 
     def __init__(self, model, sensor, snowpack, kwargs):
+
+        super().__init__()
+
         self.model = model
         self.sensor = sensor
         self.snowpack = snowpack
@@ -121,11 +124,10 @@ class RunPromise(object):
 
         return self.model.run(self.sensor, self.snowpack, **self.kwargs)
 
-
     def save(self, directory=None, filename=None):
 
         if (filename is None) == (directory is None):
-            raise Runtime("Either directory or filename must be given")
+            raise RuntimeError"Either directory or filename must be given")
 
         if filename is None:
             uid = uuid4()
@@ -149,6 +151,3 @@ class RunPromise(object):
 
 #     def run(self):
 #         return [promise.run() for promise in promises]
-
-
-

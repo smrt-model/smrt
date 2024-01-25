@@ -54,6 +54,8 @@ class CoherentFlat(object):
 
     def __init__(self, interfaces, layer, permittivity):
 
+        super().__init__()
+
         self.interfaces = interfaces  # (interface_above, interface_below)
         self.layer = layer
         self.permittivity = permittivity

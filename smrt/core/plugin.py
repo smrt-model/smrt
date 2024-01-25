@@ -9,7 +9,8 @@ from functools import lru_cache
 from smrt.core.error import SMRTError
 
 
-user_plugin_package  = []
+user_plugin_package = []
+
 
 def register_package(pkg):
     global user_plugin_package
@@ -37,7 +38,7 @@ def import_class(scope, modulename, classname=None):
 
     modulename = scope + "." + modulename
 
-    # add user_directories     
+    # add user_directories
     for pkg in user_plugin_package:
         #print(pkg + "." + modulename)
         res = do_import_class(pkg + "." + modulename, classname)
@@ -60,7 +61,7 @@ def do_import_class(modulename, classname):
 
     # check the module
     #spec = importlib.util.find_spec(modulename)
-    #if spec is None:
+    # if spec is None:
     #    return None
 
     # import the module
@@ -81,5 +82,3 @@ def do_import_class(modulename, classname):
 
     # get the class
     return getattr(module, classname)
-    
-    

@@ -20,6 +20,7 @@ from smrt.core.interface import Substrate
 from smrt.core.fresnel import fresnel_reflection_matrix, fresnel_transmission_matrix
 from smrt.core import lib
 
+
 class SoilQNH(Substrate):
 
     args = ['H']

@@ -153,7 +153,7 @@ class Rayleigh(object):
         mu = mu_i
 
         if npol is None:
-            npol = 2 if m == 0 else 3
+            npol = 2 if m_max == 0 else 3
 
         P = smrt_matrix.empty((npol, npol, m_max + 1, len(mu_s), len(mu_i)))
 

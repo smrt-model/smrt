@@ -43,7 +43,10 @@ class IBA_MaxwellGarnett(IBA):
     def mean_sq_field_ratio(self):
         """ Mean squared field ratio calculation
 
-            Uses layer effective permittivity: param e0: background relative permittivity: param eps: scattering constituent relative permittivity
+        Uses layer effective permittivity
+
+        :param e0: background relative permittivity
+        :param eps: scattering constituent relative permittivity
 
         """
         apparent_permittivity = self.e0
