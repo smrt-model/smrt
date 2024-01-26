@@ -51,7 +51,7 @@ import scipy.interpolate
 # local import
 from ..core.error import SMRTError, smrt_warn
 from ..core.result import make_result
-from smrt.core.lib import smrt_matrix, smrt_diag, is_equal_zero
+from smrt.core.lib import smrt_matrix, smrt_diag, is_equal_zero, is_zero_scalar
 from smrt.core.optional_numba import numba
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers
 
@@ -564,7 +564,7 @@ def muleye(x):
 
     if isinstance(x, smrt_diag):
         return x.diagonal()
-    elif (x.is_zero_scalar()) or (len(x.shape) == 0):
+    elif (is_zero_scalar(x)) or (len(x.shape) == 0):
         return np.atleast_1d(x)
     else:
         assert len(x.shape) == 2
