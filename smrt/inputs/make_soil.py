@@ -133,7 +133,7 @@ def soil_dielectric_constant_hut(frequency, tempK, SM, sand, clay, dm_rho):
 
     tempC = tempK - 273.15
 
-    if tempC > 0:  # liquid water
+    if tempC >= 0:  # liquid water
         # calculates real and imag. part of water dielectricity (code HUT 20.12.95 [epsw.m]; K.Tigerstedt)
         ew0 = 87.74 - 0.40008 * tempC + 9.398e-4 * tempC**2 + 1.410e-6 * tempC**3
         d = 25 - tempC
