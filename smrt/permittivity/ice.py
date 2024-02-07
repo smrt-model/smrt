@@ -6,12 +6,13 @@ from __future__ import print_function
 import math
 
 # other import
-# import numpy as np
+import numpy as np
 
 # local import
 # from ..core.error import SMRTError
 from ..core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE
 from ..core.layer import layer_properties
+from ..core.error import SMRTError
 
 #
 # for developers: see note in __init__.py
@@ -45,7 +46,12 @@ def ice_permittivity_maetzler06(frequency, temperature):
 
     freqGHz = frequency / 1e9
 
-    Ereal = 3.1884 + 9.1e-4 * (temperature - FREEZING_POINT)
+    tempC = temperature - FREEZING_POINT
+
+    if np.any(tempC > 0):
+        raise SMRTError(f"The ice temperature must be lower or equal to {FREEZING_POINT}K")
+
+    Ereal = 3.1884 + 9.1e-4 * tempC
 
     theta = 300.0 / temperature - 1.0
     alpha = (0.00504 + 0.0062 * theta) * math.exp(-22.1 * theta)
@@ -53,7 +59,7 @@ def ice_permittivity_maetzler06(frequency, temperature):
     B1 = 0.0207
     B2 = 1.16e-11
     b = 335.
-    deltabeta = math.exp(- 9.963 + 0.0372 * (temperature - FREEZING_POINT))
+    deltabeta = math.exp(- 9.963 + 0.0372 * tempC)
     betam = (B1 / temperature) * (math.exp(b / temperature) / ((math.exp(b / temperature) - 1)**2)) + B2 * freqGHz**2
     beta = betam + deltabeta
 
@@ -69,8 +75,13 @@ def ice_permittivity_maetzler98(frequency, temperature):
     :param temperature: ice temperature in K
     :param frequency: Frequency in Hz"""
 
+    tempC = temperature - FREEZING_POINT
+
+    if np.any(tempC > 0):
+        raise SMRTError(f"The ice temperature must be lower or equal to {FREEZING_POINT}K")
+
     f = frequency * 1e-9
-    epi = 3.1884 + 9.1e-4 * (temperature - 273.15)
+    epi = 3.1884 + 9.1e-4 * tempC
 
     # The Hufford model for the imaginary part:
     theta = 300. / temperature - 1.
@@ -108,8 +119,14 @@ def ice_permittivity_maetzler87(frequency, temperature):
     import warnings
 
     freqGHz = frequency / 1e9
+
+    tempC = temperature - FREEZING_POINT
+
+    if np.any(tempC > 0):
+        raise SMRTError(f"The ice temperature must be lower or equal to {FREEZING_POINT}K")
+
     # Equation 10
-    Ereal = 3.1884 + 9.1e-4 * (temperature - FREEZING_POINT)
+    Ereal = 3.1884 + 9.1e-4 * tempC
 
     if (temperature - FREEZING_POINT) < -10:
         A = 3.5e-4
@@ -146,9 +163,13 @@ def ice_permittivity_tiuri84(frequency, temperature):
 
 """
 
+    tempC = temperature - FREEZING_POINT
+
+    if np.any(tempC > 0):
+        raise SMRTError(f"The ice temperature must be lower or equal to {FREEZING_POINT}K")
+
     # Units conversion
     density_gm3 = DENSITY_OF_ICE * 1e-3
-    temp_degC = temperature - 273.15
 
     # Eq (1) - Real part
     Ereal = 1 + 1.7 * density_gm3 + 0.7 * density_gm3**2
@@ -156,7 +177,7 @@ def ice_permittivity_tiuri84(frequency, temperature):
     # Eq (6) - Imaginary part
     Eimag = 1.59e6 * \
         (0.52 * density_gm3 + 0.62*density_gm3**2) * \
-        (frequency**-1 + 1.23e-14 * frequency**.5) * math.exp(0.036 * temp_degC)
+        (frequency**-1 + 1.23e-14 * frequency**.5) * math.exp(0.036 * tempC)
 
     return Ereal + 1j * Eimag
 
@@ -176,7 +197,13 @@ def _ice_permittivity_HUT(frequency, temperature):
     #    warnings.warn('Warning: temperature is below 240K. Ice permittivity is out of range of applicability')
 
     # Real part: from Mätzler and Wegmuller (1987)
-    real_permittivity_ice = 3.1884 + 9.1e-4 * (temperature - 273.0)
+
+    tempC = temperature - FREEZING_POINT
+
+    if np.any(tempC > 0):
+        raise SMRTError(f"The ice temperature must be lower or equal to {FREEZING_POINT}K")
+
+    real_permittivity_ice = 3.1884 + 9.1e-4 * tempC
 
     # Imaginary part: from Mätzler (2006)
     # NB frequencies in original equations are in GHz, here in Hz.
@@ -184,7 +211,7 @@ def _ice_permittivity_HUT(frequency, temperature):
     theta = (300.0 / temperature) - 1.0  # Floats needed for correct calculation in py2.7 but not needed in 3.x
     alpha = (0.00504 + 0.0062 * theta) * math.exp(-22.1 * theta)
     beta = (0.0207 / temperature) * (math.exp(335.0 / temperature) / (math.exp(335.0 / temperature) - 1.0)**2) + (
-        1.16e-11 * (freqGHz)**2 + math.exp(-10.02 + 0.0364 * (temperature - 273.0)))
+        1.16e-11 * (freqGHz)**2 + math.exp(-10.02 + 0.0364 * tempC))
     imag_permittivity_ice = alpha / freqGHz + beta * freqGHz
 
     return real_permittivity_ice + 1j * imag_permittivity_ice
@@ -205,6 +232,7 @@ def _ice_permittivity_DMRTML(frequency, temperature):
     #    warnings.warn('Warning: temperature is below 240K. Ice permittivity is out of range of applicability')
 
     # Real part: from Mätzler and Wegmuller (1987)
+
     real_permittivity_ice = 3.1884 + 9.1e-4 * (temperature - 273.0)
     # Imaginary part: from Mätzler (2006)
     # NB frequencies in original equations are in GHz, here in Hz.
