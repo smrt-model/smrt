@@ -198,12 +198,12 @@ def _ice_permittivity_HUT(frequency, temperature):
 
     # Real part: from Mätzler and Wegmuller (1987)
 
-    tempC = temperature - FREEZING_POINT
+    
 
-    if np.any(tempC > 0):
-        raise SMRTError(f"The ice temperature must be lower or equal to {FREEZING_POINT}K")
+    if np.any(temperature > 273):
+        raise SMRTError(f"The ice temperature must be lower or equal to 273.0 K")
 
-    real_permittivity_ice = 3.1884 + 9.1e-4 * tempC
+    real_permittivity_ice = 3.1884 + 9.1e-4 * (temperature - 273.0)
 
     # Imaginary part: from Mätzler (2006)
     # NB frequencies in original equations are in GHz, here in Hz.
@@ -211,7 +211,7 @@ def _ice_permittivity_HUT(frequency, temperature):
     theta = (300.0 / temperature) - 1.0  # Floats needed for correct calculation in py2.7 but not needed in 3.x
     alpha = (0.00504 + 0.0062 * theta) * math.exp(-22.1 * theta)
     beta = (0.0207 / temperature) * (math.exp(335.0 / temperature) / (math.exp(335.0 / temperature) - 1.0)**2) + (
-        1.16e-11 * (freqGHz)**2 + math.exp(-10.02 + 0.0364 * tempC))
+        1.16e-11 * (freqGHz)**2 + math.exp(-10.02 + 0.0364 * (temperature - 273.0)))
     imag_permittivity_ice = alpha / freqGHz + beta * freqGHz
 
     return real_permittivity_ice + 1j * imag_permittivity_ice

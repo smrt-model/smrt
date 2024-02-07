@@ -2,6 +2,7 @@
 import numpy as np
 import pytest
 
+from smrt.core.globalconstants import FREEZING_POINT
 from smrt.inputs.make_soil import make_soil
 from smrt.permittivity.water import water_permittivity
 
@@ -33,12 +34,12 @@ def test_raises_ksigma_warning():
 
 
 def test_make_rough_water():
-    make_soil('rough_choudhury79', water_permittivity(6e9, 273), temperature=270, roughness_rms=0.5e-3)
+    make_soil('rough_choudhury79', water_permittivity(6e9, FREEZING_POINT), temperature=270, roughness_rms=0.5e-3)
 
 
 def test_equivalence_fresnel():
 
-    h2o = water_permittivity(6e9, 273)
-    rough = make_soil('rough_choudhury79', h2o, temperature=273, roughness_rms=0.)
-    smooth = make_soil('flat', h2o, temperature=273)
+    h2o = water_permittivity(6e9, FREEZING_POINT)
+    rough = make_soil('rough_choudhury79', h2o, temperature=FREEZING_POINT, roughness_rms=0.)
+    smooth = make_soil('flat', h2o, temperature=FREEZING_POINT)
     np.testing.assert_equal(rough.specular_reflection_matrix(10e9, 1, np.cos(50), 2)[0], smooth.specular_reflection_matrix(10e9, 1, np.cos(50), 2)[0])
