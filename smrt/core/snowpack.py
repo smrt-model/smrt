@@ -226,6 +226,9 @@ class Snowpack(object):
         newsp = sp.layers[0] + wetsp
 
 """
+        if other == 0:
+            return self
+
         self.check_addition_validity(other)
 
         if isinstance(other, SubstrateBase):
@@ -265,7 +268,9 @@ class Snowpack(object):
 """
         self.check_addition_validity(other)
 
-        if isinstance(other, SubstrateBase):
+        if other == 0:
+            pass
+        elif isinstance(other, SubstrateBase):
             self.substrate = other
         elif isinstance(other, Layer):
             self.layers.append(copy.deepcopy(other))
