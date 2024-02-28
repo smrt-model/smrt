@@ -80,7 +80,7 @@ def saline_snow_permittivity_scharien_with_stogryn95(frequency, density, tempera
 
 
 def saline_snow_permittivity_scharien(density, temperature, salinity, brine_permittivity):
-    """Computes permittivity of saline snow using the Denoth / Matzler Mixture Model - Dielectric Contsant of Saline Snow.
+    """Computes permittivity of saline snow using the Denoth / Matzler Mixture Model - Dielectric Constant of Saline Snow.
 
      Assumptions:
      (1) Brine inclusion geometry as oblate spheroids
