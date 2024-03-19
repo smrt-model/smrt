@@ -580,7 +580,7 @@ def make_ice_layer(ice_type,
 
 
 def make_water_body(layer_thickness=1000,
-                    temperature=273,
+                    temperature=FREEZING_POINT,
                     salinity=0,
                     water_permittivity_model=None,
                     surface=None,
@@ -590,9 +590,13 @@ def make_water_body(layer_thickness=1000,
 
     Note that water is a very strong absorber even fresh water, it is unlikely that the layers under a water body 
     could be seen by microwaves. If really needed anyway, a multi-layer water body or
-     a water layer on another medium (e.g. ice) can be build using the addition operator.
+        a water layer on another medium (e.g. ice) can be build using the addition operator. 
 
-    :param layer_thickness: thickness of ice layer in m
+    Note that water has a strong real permittivity and when used in
+        combinaison with the DORT solver, it is recommended to increase the `n_max_stream` option of the solver to get
+        enough streams in the air (see about stream Picard et al. 2018).
+
+    :param layer_thickness: thickness of ice layer in m. If the thickness is zero, a transparent layer is added.
     :param temperature: temperature of layer in K
     :param salinity: salinity in kg/kg (see PSU constant in smrt module)
     :param water_permittivity_model: water permittivity formulation (default is seawater_permittivity_klein76)
@@ -610,11 +614,16 @@ def make_water_body(layer_thickness=1000,
     # add the layer and the interface interface
     sp.append(layer, interface=make_interface(surface))
 
+    if layer_thickness <= 0:
+        # snowpack without layer is accepted as input of this function, but SMRT prefers to have one internally.
+        # we make a transparent volume
+        sp = add_transparent_layer(sp)
+
     return sp
 
 
 def make_water_layer(layer_thickness,
-                     temperature=273,
+                     temperature=FREEZING_POINT,
                      salinity=0,
                      water_permittivity_model=None, **kwargs):
     """Make a water layer at given temperature and salinity.
@@ -709,7 +718,7 @@ def bulk_ice_density(temperature, salinity, porosity):
     return rho
 
 
-def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permittivity=1,
+def make_generic_stack(thickness, temperature=FREEZING_POINT, ks=0, ka=0, effective_permittivity=1,
                        interface=None,
                        substrate=None,
                        atmosphere=None):
@@ -718,7 +727,7 @@ def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permitt
     Must be used with presribed_kskaeps emmodel.
 
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf" for
-        a semi-infinite layer.
+        a semi-infinite layer. Any layer with zero thickness is removed.
     :param temperature: temperature of layers in K
     :param ks: scattering coefficient of layers in m^-1
     :param ka: absorption coefficient of layers in m^-1
