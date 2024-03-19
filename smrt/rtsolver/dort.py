@@ -1073,6 +1073,18 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="mos
 
     streams = Streams()
 
+    nlayer = len(permittivity)
+
+    if nlayer == 0:
+        streams.outmu, streams.outwweight = gaussquad(n_max_stream)
+        streams.n_air = n_max_stream
+        streams.weight = []
+        streams.mu = []
+        streams.n = []
+        return streams
+
+    # there are some layers
+
     #  ### search and proceed with the most refringent layer
     k_most_refringent = np.argmax(permittivity)
     real_index_air = np.real(np.sqrt(permittivity[k_most_refringent] / 1.0))
@@ -1096,7 +1108,6 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="mos
     else:
         raise RuntimeError("Unknow mode to compute the number of stream")
 
-    nlayer = len(permittivity)
 
     #  calculate the nodes and weights of all the other layers
 

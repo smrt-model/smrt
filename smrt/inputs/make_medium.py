@@ -14,6 +14,15 @@ For example::
 creates a semi-infinite snowpack made of sticky hard spheres with radius 0.3mm and stickiness 0.2.
 The :py:obj:`~smrt.core.Snowpack` object is in the `sp` variable.
 
+Note that any layer with zero thickness is completely removed in most of these functions (as well as its top interface), 
+and a transparent layer is added if the resulting medium does not have any layer. This allows simulation of bare soil and bare ice 
+more easily. It is important to understand that any layer with non-zero thickness, even much smaller than the wavelength, even
+10^-20 m, has an impact in the radiative transfer framework due to the reflection, transmission and refraction. In reality,
+and according to the wave theory such sub-wavelength layers and their interface should have reduced or close to zero impact.
+It is the responsability of the user to ensure that such thin layers (less than a quarter of wavelength) are removed from
+the snowpack. Alternatively setting the `process_coherent_layers` option when using the
+`smrt.rtsolver.dort` solver allows to deal with sub-wavelength layers provided they are isolated between two thick layers.
+
 Note that `make_snowpack` is directly imported from `smrt` instead of `smrt.inputs.make_medium`. This feature is for convenience.
 
 """
@@ -121,7 +130,7 @@ def make_snowpack(thickness,
     Build a multi-layered snowpack. Each parameter can be an array, list or a constant value.
 
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf"
-        for a semi-infinite layer.
+        for a semi-infinite layer. Any layer with zero thickness is removed.
     :param microstructure_model: microstructure_model to use (e.g. sticky_hard_spheres or independent_sphere or exponential).
     :param surface: type of surface interface, flat/fresnel is the default.  If surface and interface are both set,
         the interface must be a constant refering to all the "internal" interfaces.
@@ -156,13 +165,21 @@ def make_snowpack(thickness,
         raise SMRTError("Setting both 'surface' and 'interface' arguments is ambiguous when inteface is a list or any sequence.")
 
     for i, dz in enumerate(thickness):
+        if dz <= 0:
+            continue
         layer = make_snow_layer(dz, lib.get(microstructure_model, i, "microstructure_model"),
                                 density=lib.get(density, i, "density"),
                                 **lib.get(kwargs, i))
 
-        # add the interface
-        linterface = lib.get(interface, i, "interface") if (i > 0) or (surface is None) else surface
+        # add the interface or surface for the first non-zero layer
+        linterface = lib.get(interface, i, "interface") if surface is None else surface
+        surface = None
         sp.append(layer, interface=make_interface(linterface))
+
+    # snowpack without layer is accepted as input of this function, but SMRT prefers to have one internally.
+    # we make a transparent volume
+    if sp.nlayer == 0:
+        sp = add_transparent_layer(sp)
 
     return sp
 
@@ -336,7 +353,7 @@ def make_ice_column(ice_type,
 
     :param ice_type: Ice type. Options are "firstyear", "multiyear", "fresh"
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf"
-        for a semi-infinite layer.
+        for a semi-infinite layer. Any layer with zero thickness is removed.
     :param temperature: temperature of ice/water in K
     :param brine_inclusion_shape: assumption for shape of brine inclusions. So far, "spheres" or "random_needles"
         (i.e. elongated ellipsoidal inclusions), and "mix" (a mix of the two) are implemented.
@@ -385,6 +402,8 @@ def make_ice_column(ice_type,
         raise SMRTError("Setting both 'surface' and 'interface' arguments is ambiguous when inteface is a list or any sequence.")
 
     for i, dz in enumerate(thickness):
+        if dz <= 0:
+            continue
         layer = make_ice_layer(ice_type,
                                dz, temperature=lib.get(temperature, i),
                                salinity=lib.get(salinity, i),
@@ -398,9 +417,15 @@ def make_ice_column(ice_type,
                                saline_ice_permittivity_model=lib.get(saline_ice_permittivity_model, i),
                                **lib.get(kwargs, i))
 
-        # add the interface
-        linterface = lib.get(interface, i, "interface") if (i > 0) or (surface is None) else surface
+        # add the interface or surface for the first non-zero layer
+        linterface = lib.get(interface, i, "interface") if surface is None else surface
+        surface = None
         sp.append(layer, interface=make_interface(linterface))
+
+    # snowpack without layer is accepted as input of this function, but SMRT prefers to have one internally.
+    # we make a transparent volume
+    if sp.nlayer == 0:
+        sp = add_transparent_layer(sp)
 
     return sp
 
@@ -425,7 +450,7 @@ def make_ice_layer(ice_type,
     of the specific microstructure model used.
 
     :param ice_type: Assumed ice type
-    :param layer_thickness: thickness of ice layer in m
+    :param layer_thickness: thickness of ice layer in m. 
     :param temperature: temperature of layer in K
     :param salinity: (firstyear and multiyear) salinity in kg/kg (see PSU constant in smrt module)
     :param brine_inclusion_shape: (firstyear and multiyear) assumption for shape of brine inclusions (so far,
@@ -713,6 +738,8 @@ def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permitt
         raise SMRTError("The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame.")
 
     for i, dz in enumerate(thickness):
+        if dz <= 0:
+            continue
         layer = make_generic_layer(dz,
                                    ks=lib.get(ks, i, "ks"),
                                    ka=lib.get(ka, i, "ka"),
@@ -722,10 +749,15 @@ def make_generic_stack(thickness, temperature=273, ks=0, ka=0, effective_permitt
 
         sp.append(layer, lib.get(interface, i))
 
+    # snowpack without layer is accepted as input of this function, but SMRT prefers to have one internally.
+    # we make a transparent volume
+    if sp.nlayer == 0:
+        sp = add_transparent_layer(sp)
+
     return sp
 
 
-def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, temperature=273):
+def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, temperature=FREEZING_POINT):
     """Make a generic layer with prescribed scattering and absorption coefficients and effective permittivity.
     Must be used with presribed_kskaeps emmodel.
 
@@ -745,6 +777,46 @@ def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, te
     lay.ka = float(ka)
 
     return lay
+
+
+def add_transparent_layer(snowpack):
+    """
+    add a transparent layer to the snowpack
+
+    :param snowpack: the substrate under the transparent layer.
+
+   e.g.::
+
+       sp = add_transparent_layer(sp)
+
+"""
+
+    layer = Layer(thickness=0,
+                  microstructure_model=get_microstructure_model("homogeneous"),
+                  frac_volume=0,
+                  temperature=0,
+                  permittivity_model=(1, 1))
+
+    sp.append(layer, interface=make_interface("transparent"))
+
+    return sp
+
+
+def make_transparent_volume(substrate=None,
+                            atmosphere=None):
+    """
+    build a transparent single-layer snowpack. This is useful to run SMRT without any 'real' layer.
+
+    :param substrate: the substrate under the transparent layer.
+
+   e.g.::
+
+       sp = make_transparent_volume()
+
+"""
+
+    return add_transparent_layer(Snowpack(substrate=substrate, atmosphere=atmosphere))
+
 
 
 def make_atmosphere(atmosphere_model, **kwargs):
