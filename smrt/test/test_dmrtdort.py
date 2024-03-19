@@ -79,7 +79,7 @@ def test_less_refringent_bottom_layer():
     snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density=[290.0, 250.0], radius=50e-6, stickiness=0.2,
                              substrate=make_soil("transparent", 1, 270))
     # this test fails with some version of scipy if not using the shur method
-    m = make_model("dmrt_qcacp_shortrange", "dort", rtsolver_options=dict(diagonalization_method='shur'))
+    m = make_model("dmrt_qcacp_shortrange", "dort", rtsolver_options=dict(diagonalization_method='shur_forcedtriu'))
     scat = active(10e9, 45)
     res = m.run(scat, snowpack)
     print(res.sigmaVV_dB(), res.sigmaHH_dB())
@@ -92,7 +92,7 @@ def test_less_refringent_bottom_layer():
 def test_less_refringent_bottom_layer_VV():
     # Regression test 19-03-2018: value may change if other bugs found
     snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density = [290.0, 250.0], radius = 1e-4, stickiness=0.2)
-    m = make_model("dmrt_qcacp_shortrange", "dort", rtsolver_options=dict(diagonalization_method='shur'))
+    m = make_model("dmrt_qcacp_shortrange", "dort", rtsolver_options=dict(diagonalization_method='shur_forcedtriu'))
     scat = active(10e9, 45)
     res = m.run(scat, snowpack)
     print(res.sigmaVV())
@@ -102,7 +102,7 @@ def test_less_refringent_bottom_layer_VV():
 def test_less_refringent_bottom_layer_HH():
     # Regression test 19-03-2018: value may change if other bugs found
     snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density = [290.0, 250.0], radius = 1e-4, stickiness=0.2)
-    m = make_model("dmrt_qcacp_shortrange", "dort", rtsolver_options=dict(diagonalization_method='shur'))
+    m = make_model("dmrt_qcacp_shortrange", "dort", rtsolver_options=dict(diagonalization_method='shur_forcedtriu'))
     scat = active(10e9, 45)
     res = m.run(scat, snowpack)
     print(res.sigmaHH())
