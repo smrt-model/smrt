@@ -639,6 +639,8 @@ class EigenValueSolver(object):
 
         self.ke = ke
         self.ks = ks
+        self.ft_even_phase_function = ft_even_phase_function
+        self.m_max = m_max
         self.mu = mu
         self.weight = weight
         self.normalization = normalization
@@ -655,11 +657,16 @@ class EigenValueSolver(object):
         self.norm_0 = None
         self.norm_m = None
 
-        if ft_even_phase_function is not None:
-            mu = np.concatenate((self.mu, -self.mu))
-            self.ft_even_phase = ft_even_phase_function(mu, mu, m_max)
-        else:
-            self.ft_even_phase = smrt_matrix(0)
+    @property
+    def ft_even_phase(self):
+        # cached version of the ft_even_phase
+        if not hasattr(self, "_ft_even_phase"):
+            if self.ft_even_phase_function is None:
+                self._ft_even_phase = smrt_matrix(0)
+            else:
+                mu = np.concatenate((self.mu, -self.mu))
+                self._ft_even_phase = self.ft_even_phase_function(mu, mu, self.m_max)
+        return self._ft_even_phase
 
     def solve(self, m, compute_coherent_only, debug_A=False):
         # solve the homogeneous equation for a single layer and return eignen values and eigen vectors
