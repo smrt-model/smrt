@@ -806,9 +806,9 @@ def add_transparent_layer(snowpack):
                   temperature=0,
                   permittivity_model=(1, 1))
 
-    sp.append(layer, interface=make_interface("transparent"))
+    snowpack.append(layer, interface=make_interface("transparent"))
 
-    return sp
+    return snowpack
 
 
 def make_transparent_volume(substrate=None,

@@ -3,7 +3,7 @@ import pytest
 
 import numpy as np
 
-from .make_medium import make_snowpack, make_ice_column, make_medium
+from .make_medium import make_snowpack, make_ice_column, make_medium, make_transparent_volume
 from ..core.error import SMRTError
 from ..interface.flat import Flat
 from ..interface.transparent import Transparent
@@ -131,3 +131,27 @@ def test_snow_set_readonly():
 
     with pytest.raises(SMRTError):
         sp.layers[0].volumetric_liquid_water = 0.5
+
+
+def test_empty_snowpack():
+
+    sp = make_snowpack(thickness=[0],
+                       microstructure_model="exponential",
+                       density=300,
+                       corr_length=200e-6
+                       )   
+    # test that the snowpack has one empty layer
+    assert len(sp.layers) == 1
+    assert sp.layers[0].thickness == 0
+    assert sp.layers[0].frac_volume == 0
+    assert sp.layers[0].microstructure_model.__name__ == "Homogeneous"
+
+
+def test_make_transparent_volume():
+    sp = make_transparent_volume()
+
+    # test that the snowpack has one empty layer
+    assert len(sp.layers) == 1
+    assert sp.layers[0].thickness == 0
+    assert sp.layers[0].frac_volume == 0
+    assert sp.layers[0].microstructure_model.__name__ == "Homogeneous"

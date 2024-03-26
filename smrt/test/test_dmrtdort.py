@@ -1,10 +1,13 @@
 # coding: utf-8
 
+from re import sub
 import numpy as np
 
 # local import
 from smrt import make_snowpack, make_model, make_snow_layer, make_soil
-from smrt.inputs.sensor_list import amsre, active
+from smrt.inputs.make_medium import make_transparent_volume
+from smrt.inputs.sensor_list import amsre, active, passive
+from smrt.substrate.reflector import make_reflector
 
 #
 # Ghi: rapid hack, should be splitted in different functions
@@ -107,3 +110,22 @@ def test_less_refringent_bottom_layer_HH():
     res = m.run(scat, snowpack)
     print(res.sigmaHH())
     assert abs(res.sigmaHH() - 7.09606407e-05) < 1e-7
+
+
+def test_transparent_volume():
+
+    r = 0.5
+    temperature = 200
+    substrate=make_reflector(temperature=temperature, specular_reflection=r)
+    snowpack = make_transparent_volume(substrate=substrate)
+
+    m = make_model("iba", "dort")
+    radiometer = passive(37e9, 45)
+    res = m.run(radiometer, snowpack)
+    print(res.TbV(), res.TbH())
+
+    # the emissivity is e = 1-r 
+    assert abs(res.TbV() - (1 - r) * temperature) < 1e-7
+    assert abs(res.TbH() - (1 - r) * temperature) < 1e-7
+
+

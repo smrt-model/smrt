@@ -6,7 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+
+	- make_transparent_volume: allow creation of an empty medium. Useful for bare soil and open ocean calculations (with only a substrate).
+
 ### Changed
+
+	- automatically remove zero-thickness layers and deal with a zero-layer snowpack by creating one zero-thickness homogenous transparent layer to fake a completely transparent volume in the rtsolver.
+	- change 273 to FREEZING_POINT for some permittivity functions
+	- add checks the the temperature is above or below the freezing point for water and ice permittivity formulations repsectively
 
 
 ## [v1.2.4]
