@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Added
 
 	- make_transparent_volume: allow creation of an empty medium. Useful for bare soil and open ocean calculations (with only a substrate).
+	- add optical_depth and single_scattering_albedo methods in the result of the simulations, for convenience.
 
 ### Changed
 

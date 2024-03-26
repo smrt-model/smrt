@@ -208,7 +208,8 @@ class DORT(object):
         other_data = {
             'effective_permittivity': xr.DataArray(self.effective_permittivity, coords=[layer_index]),
             'ks': xr.DataArray([getattr(em, "ks", np.nan) for em in emmodels], coords=[layer_index]),
-            'ka': xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index])
+            'ka': xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index]),
+            'thickness': xr.DataArray(self.snowpack.layer_thicknesses, coords=[layer_index]),
         }
 
         return make_result(sensor, intensity, coords, other_data=other_data)
