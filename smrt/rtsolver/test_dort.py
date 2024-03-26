@@ -116,7 +116,7 @@ def test_shur_based_diagonalisation():
         diagonalization_method="shur"))
 
 
-def test_shur_based_diagonalisation():
+def test_shur_forcedtriu_based_diagonalisation():
 
     sp = make_snowpack(thickness=[1000],
                        microstructure_model='exponential',
