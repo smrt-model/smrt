@@ -29,6 +29,8 @@ Note that `make_snowpack` is directly imported from `smrt` instead of `smrt.inpu
 
 import itertools
 import collections
+import inspect
+from warnings import warn
 
 import numpy as np
 import pandas as pd
@@ -226,6 +228,9 @@ def make_snow_layer(layer_thickness,
 
     eps_1 = background_permittivity_model
     eps_2 = ice_permittivity_model
+
+    warn_mixing_formula(background_permittivity_model, "background_permittivity_model")
+    warn_mixing_formula(ice_permittivity_model, "ice_permittivity_model")
 
     if isinstance(microstructure_model, str):
         microstructure_model = get_microstructure_model(microstructure_model)
@@ -483,12 +488,18 @@ def make_ice_layer(ice_type,
         if brine_permittivity_model is None:
             brine_permittivity_model = brine_permittivity_stogryn85  # default brine permittivity model
 
+        warn_mixing_formula(brine_permittivity_model, "brine_permittivity_model")
+        warn_mixing_formula(saline_ice_permittivity_model, "saline_ice_permittivity_model")
+
+    warn_mixing_formula(ice_permittivity_model, "ice_permittivity_model")
+
     if density is None:
         density = bulk_ice_density(temperature, salinity, porosity)
     elif porosity == 0:
         porosity = np.clip(1. - density / bulk_ice_density(temperature, salinity, porosity=0), 0., 1.)
     else:
         raise SMRTError("Setting density and porosity is invalid")
+
 
     # specific setup
     if ice_type == "firstyear":
@@ -827,7 +838,6 @@ def make_transparent_volume(substrate=None,
     return add_transparent_layer(Snowpack(substrate=substrate, atmosphere=atmosphere))
 
 
-
 def make_atmosphere(atmosphere_model, **kwargs):
     """
     make a atmospheric single-layer using the prescribed atmosphere model.
@@ -888,3 +898,16 @@ the value 0 can never be in z. This raises an error.
         raise SMRTError("The z argument is not sorted")
 
     return np.diff(z)
+
+
+def warn_mixing_formula(permittivity_model, name):
+
+    if not callable(permittivity_model):
+        return
+
+    signature = inspect.signature(permittivity_model).parameters
+    if ('density' in signature) or ('frac_volume' in signature):
+        warn(f"""The permittivity model set for the {name} argument seems to be a mixing formula. Such formula should
+        not be used in this function but rather using derived_IBA or derive_SymSCE or equivalent functions. Check the
+        module documentation of the permittivity model.""",
+             stacklevel=2)

@@ -35,3 +35,5 @@ E.g. ice.py contains formulation for pure ice permittivity.
     pass this function to :py:func:`smrt.core.snowpack.make_snowpack` or :py:func:`smrt.core.layer:make_snow_layer`.
 
 """
+
+
