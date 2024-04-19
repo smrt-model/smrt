@@ -7,11 +7,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 
-	- make_transparent_volume: allow creation of an empty medium. Useful for bare soil and open ocean calculations (with only a substrate).
+### Changed
+
+
+## [v1.3]
+### Added
+
+	- make_transparent_volume: allow creation of an empty medium. Useful for bare soil and open ocean calculations (no volume, with only a substrate).
+	- integrate a feature-full atmosphere model (see pyrtlib_atmosphere.py) based on the open source pyrtlib package by Larosa et al. 2024 (GMD). Expect bugs at this initial stage of development.
 	- add optical_depth and single_scattering_albedo methods in the result of the simulations, for convenience.
 
 ### Changed
 
+	- The atmosphere class has been changed and is not backward compatible: renaming of the arguments and functions in to tb_up, tb_down and transmittance, and adding a run method, tb_up, tb_down and transmittance are now properties)
 	- automatically remove zero-thickness layers and deal with a zero-layer snowpack by creating one zero-thickness homogenous transparent layer to fake a completely transparent volume in the rtsolver.
 	- change 273 to FREEZING_POINT for some permittivity functions
 	- add checks the the temperature is above or below the freezing point for water and ice permittivity formulations repsectively

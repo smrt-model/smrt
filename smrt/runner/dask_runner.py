@@ -22,9 +22,10 @@ class DaskParallelRunner(object):
     """Run the simulations using dask.distributed on a cluster.
     """
 
-    def __init__(self, client="localhost:7454", chunk=10):
+    def __init__(self, progressbar=False, client="localhost:7454", chunk=10):
         """prepare a dask runner.
 
+        :param progressbar: show a progress bar if True (not available for DaskparalleRunner)
         :param client: the url or a dask client objbect
         :param chunk: size of the chunk to transmit to the runner
 
