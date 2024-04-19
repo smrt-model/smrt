@@ -43,6 +43,7 @@ from functools import partial
 
 # other import
 import numpy as np
+from pandas._libs import properties
 import xarray as xr
 import scipy.special.orthogonal
 import scipy.linalg
@@ -224,18 +225,23 @@ class DORT(object):
         #     :param viewing_phi: viewing azimuth angle, the incident beam is at 0, so pi is the backscatter
         # """
 
+        npol = 3 if self.sensor.mode == 'A' else 2
+
         #
         #   compute the cosine of the angles in all layers
         # first compute the permittivity of the ground
 
         streams = compute_stream(self.n_max_stream, self.effective_permittivity, self.substrate_permittivity, mode=self.stream_mode)
 
+        # prepare the atmosphere
+
+        self.atmosphere_result = self.atmosphere.run(self.sensor.frequency, streams.outmu, npol) if self.atmosphere is not None else None
+
         #
         # compute the incident intensity array depending on the sensor
 
         intensity_0, intensity_higher, incident_streams = self.prepare_intensity_array(streams)  # TODO Ghi: make an iterator
 
-        npol = 3 if self.sensor.mode == 'A' else 2
 
         #
         # compute interface reflection and transmittance properties
@@ -282,9 +288,9 @@ class DORT(object):
                 # TODO: implement a convergence test if we want to avoid long computation
                 # when self.m_max is too high for the phase function.
 
-        if self.sensor.mode == 'P' and self.atmosphere is not None:
-            intensity_up = self.atmosphere.tbup(self.sensor.frequency, streams.outmu, npol) + \
-                self.atmosphere.trans(self.sensor.frequency, streams.outmu, npol) * intensity_up
+        if self.sensor.mode == 'P' and self.atmosphere_result is not None:
+            intensity_up = self.atmosphere_result.tb_up + \
+                self.atmosphere_result.transmittance * intensity_up
 
         if self.sensor.mode == 'A':
             # compress to get only the backscatter
@@ -345,11 +351,11 @@ class DORT(object):
             npol = 2
             incident_streams = []
 
-            if self.atmosphere is not None:
+            if self.atmosphere_result is not None:
 
                 # incident radiation is a function of frequency and incidence angle
                 # assume azimuthally symmetric
-                intensity_0 = self.atmosphere.tbdown(self.sensor.frequency, streams.outmu, npol)[:, np.newaxis]
+                intensity_0 = self.atmosphere_result.tb_down[:, np.newaxis]
                 intensity_higher = np.zeros_like(intensity_0)
 
             else:
@@ -357,7 +363,6 @@ class DORT(object):
                 intensity_higher = intensity_0
                 intensity_0.flags.writeable = False  # make immutable
                 intensity_higher.flags.writeable = False  # make immutable
-
         else:
             raise SMRTError("Unknow sensor mode")
 

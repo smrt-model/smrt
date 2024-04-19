@@ -227,8 +227,8 @@ class Model(object):
         """
 
         if atmosphere is not None:
-            raise DeprecationWarning("The atmosphere argument of the run method is going to be depreciated."
-                                     " Setting the 'atmosphere' with make_snowpack (and similar functions) is now the recommended way.")
+            raise DeprecationWarning("""The atmosphere argument of the run method is depreciated.
+Setting the 'atmosphere' through make_snowpack (and similar functions) or using medium = atmosphere + snowpack are now the recommended ways.""")
 
         if not (isinstance(sensor, SensorBase)
                 or (lib.is_sequence(sensor) and all(isinstance(s, SensorBase) for s in sensor))):

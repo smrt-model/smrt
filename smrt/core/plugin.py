@@ -73,7 +73,7 @@ def do_import_class(modulename, classname):
 
     if classname is None:  # search for the first class defined in the module
         for name, obj in inspect.getmembers(module, inspect.isclass):
-            if obj.__module__ == modulename:  # the second condition check if the class was defined in this module
+            if obj.__module__ == modulename and not name.startswith("_"):  # the second condition check if the class was defined in this module
                 classname = name
                 break
 
