@@ -1,13 +1,17 @@
 # coding: utf-8
 
-""" Implement a reflective boundary conditions with prescribed reflection coefficient in the specular direction.
-The reflection is set to a value or a function of theta. Azimuthal symmetry is assumed (no dependence on phi).
+""" Implement a reflective boundary conditions with prescribed reflection coefficient in the specular direction, and backscatter coefficient.
+The reflection is set to a value or a function of theta. Azimuthal symmetry is assumed (no dependence on phi). 
 
 The `specular_reflection` parameter can be a scalar, a function or a dictionary.
 
     - scalar: same reflection is use for all angles
     - function: the function must take a unique argument theta array (in radians) and return the reflection as an array of the same size as theta
     - dictionary: in this case, the keys must be 'H' and 'V' and the values are a scalar or a function and are interpreted as for the non-polarized case.
+
+The `backscattering_coefficient` is a dictionary with VV nad HH keys. It is not possible to set HV and VH.
+Note also that modeling substrate with prescribed backscatter value with the DORT solver is an approximate trick, and
+the result is only approximatly the prescribed value even for a transparent snowpack.
 
 To make a reflector, it is recommended to use the helper function :py:func:`~smrt.substrate.reflector.make_reflector`.
 
@@ -44,20 +48,20 @@ def make_reflector(temperature=None, specular_reflection=None, backscattering_co
     """
 
     # create the instance
-    return Reflector(temperature=temperature, specular_reflection=specular_reflection,
+    return ReflectorBackscatter(temperature=temperature, specular_reflection=specular_reflection,
                      backscattering_coefficient=backscattering_coefficient)
 
 
-class Reflector(Substrate):
+class ReflectorBackscatter(Substrate):
 
     args = []
     optional_args = {'specular_reflection': None, 'backscattering_coefficient': None}
 
     def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
 
-        if npol > 2 and not hasattr(Reflector, "stop_pol2_warning"):
+        if npol > 2 and not hasattr(ReflectorBackscatter, "stop_pol2_warning"):
             print("active model is not yet fully implemented, need modification for the third component")  # !!!
-            Reflector.stop_pol2_warning = True
+            ReflectorBackscatter.stop_pol2_warning = True
 
         if self.specular_reflection is None and self.backscattering_coefficient is None:
             self.specular_reflection = 1
@@ -95,7 +99,7 @@ class Reflector(Substrate):
         elif self.backscattering_coefficient is not None:
             raise SMRTError("backscattering_coefficient must be a dictionary with keys VV and HH")
         else:
-            return smrt_matrix(0)
+            diffuse_refl_coeff = smrt_matrix(0)
 
         return diffuse_refl_coeff
 

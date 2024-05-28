@@ -51,9 +51,6 @@ class Layer(object):
         super().__init__()
 
         self.thickness = thickness
-        # TODO Ghi: send a warning for non valid_args
-        if thickness == 0:
-            raise SMRTError("Layer with thickness = 0 (or even <~wavelength) is not recommended, part of the code does not support it.")
 
         self.temperature = temperature
         if temperature < 0:

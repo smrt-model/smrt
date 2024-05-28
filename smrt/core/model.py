@@ -92,7 +92,6 @@ from .result import concat_results
 from .plugin import import_class
 from .sensor import SensorBase
 from .sensitivity_study import SensitivityStudy
-from .progressbar import Progress
 from smrt.core import lib
 
 
@@ -227,8 +226,8 @@ class Model(object):
         """
 
         if atmosphere is not None:
-            raise DeprecationWarning("The atmosphere argument of the run method is going to be depreciated."
-                                     " Setting the 'atmosphere' with make_snowpack (and similar functions) is now the recommended way.")
+            raise DeprecationWarning("""The atmosphere argument of the run method is depreciated.
+Setting the 'atmosphere' through make_snowpack (and similar functions) or using medium = atmosphere + snowpack are now the recommended ways.""")
 
         if not (isinstance(sensor, SensorBase)
                 or (lib.is_sequence(sensor) and all(isinstance(s, SensorBase) for s in sensor))):
@@ -240,9 +239,7 @@ class Model(object):
         # determine the runner
         if runner is None:
             if parallel_computation:
-                if progressbar:
-                    raise SMRTError("Parallel computation is incompatible with progressbar")
-                runner = JoblibParallelRunner()
+                runner = JoblibParallelRunner(progressbar=progressbar)
             else:
                 runner = SequentialRunner(progressbar=progressbar)
 
@@ -252,6 +249,7 @@ class Model(object):
         # reshape the results with successive concatenations
         for dimension in reversed(dimensions):
             n = len(dimension[1]) if isinstance(dimension, tuple) else len(dimension)
+            assert n > 0, f"dimension={dimensions}"
             results = [concat_results(results[i: i + n], dimension) for i in range(0, len(results), n)]
 
         assert len(results) == 1
@@ -412,20 +410,32 @@ class SequentialRunner(object):
     """Run the simulations sequentially on a single (local) core. This is the most simple way to run smrt simulations, but the 
 efficiency is poor."""
 
-    def __init__(self, progressbar=False):
-        pass
+    def __init__(self, progressbar):
+        """
+        :param progressbar: show a progress bar if True
+        """
+        self.progressbar = progressbar
 
     def __call__(self, function, argument_list):
 
-        return [function(*args) for args in argument_list]
+        if self.progressbar:
+            from tqdm.auto import tqdm
+            argument_list = list(argument_list)
+            return [function(*args) for args in tqdm(argument_list,
+                                                     total=len(argument_list),
+                                                     desc="Running SMRT",
+                                                     )]
+        else:
+            return [function(*args) for args in argument_list]
 
 
 class JoblibParallelRunner(object):
     """Run the simulations on the local machine on all the cores, using the joblib library for parallelism."""
 
-    def __init__(self, backend='loky', n_jobs=-1, max_numerical_threads=1):
+    def __init__(self, progressbar, backend='loky', n_jobs=-1, max_numerical_threads=1):
         """Joblib is a lightweight library for embarasingly parallel task.
 
+    :param progressbar: show a progress bar if True
     :param backend: see joblib documentation. The default 'loky' is the recommended backend.
     :param n_jobs: see joblib documentation. The default is to use all the cores.
     :param max_numerical_threads: :py:func:`~smrt.core.lib.set_max_numerical_threads`. The default avoid miximing different 
@@ -434,6 +444,7 @@ class JoblibParallelRunner(object):
 """
         self.n_jobs = n_jobs
         self.backend = backend
+        self.progressbar = progressbar
 
         if max_numerical_threads > 0:
             # it is recommended to set max_numerical_threads to 1, to disable numerical libraries parallelism.
@@ -443,6 +454,18 @@ class JoblibParallelRunner(object):
 
         from joblib import Parallel, delayed
 
-        runner = Parallel(n_jobs=self.n_jobs, backend=self.backend)  # Parallel Runner
+        if self.progressbar:
+            from tqdm.auto import tqdm
+            runner = Parallel(return_as="generator", n_jobs=self.n_jobs, backend=self.backend)  # Parallel Runner
 
-        return runner(delayed(function)(*args) for args in argument_list)
+            argument_list = list(argument_list)
+            return list(
+                tqdm(
+                    runner(delayed(function)(*args) for args in argument_list),
+                    total=len(argument_list),
+                    desc="Running SMRT in parallel",
+                )
+            )
+        else:
+            runner = Parallel(n_jobs=self.n_jobs, backend=self.backend)  # Parallel Runner
+            return runner(delayed(function)(*args) for args in argument_list)

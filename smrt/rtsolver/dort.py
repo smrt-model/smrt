@@ -43,6 +43,7 @@ from functools import partial
 
 # other import
 import numpy as np
+from pandas._libs import properties
 import xarray as xr
 import scipy.special.orthogonal
 import scipy.linalg
@@ -51,7 +52,7 @@ import scipy.interpolate
 # local import
 from ..core.error import SMRTError, smrt_warn
 from ..core.result import make_result
-from smrt.core.lib import smrt_matrix, smrt_diag, is_equal_zero
+from smrt.core.lib import smrt_matrix, smrt_diag, is_equal_zero, is_zero_scalar
 from smrt.core.optional_numba import numba
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers
 
@@ -208,7 +209,8 @@ class DORT(object):
         other_data = {
             'effective_permittivity': xr.DataArray(self.effective_permittivity, coords=[layer_index]),
             'ks': xr.DataArray([getattr(em, "ks", np.nan) for em in emmodels], coords=[layer_index]),
-            'ka': xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index])
+            'ka': xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index]),
+            'thickness': xr.DataArray(self.snowpack.layer_thicknesses, coords=[layer_index]),
         }
 
         return make_result(sensor, intensity, coords, other_data=other_data)
@@ -223,18 +225,23 @@ class DORT(object):
         #     :param viewing_phi: viewing azimuth angle, the incident beam is at 0, so pi is the backscatter
         # """
 
+        npol = 3 if self.sensor.mode == 'A' else 2
+
         #
         #   compute the cosine of the angles in all layers
         # first compute the permittivity of the ground
 
         streams = compute_stream(self.n_max_stream, self.effective_permittivity, self.substrate_permittivity, mode=self.stream_mode)
 
+        # prepare the atmosphere
+
+        self.atmosphere_result = self.atmosphere.run(self.sensor.frequency, streams.outmu, npol) if self.atmosphere is not None else None
+
         #
         # compute the incident intensity array depending on the sensor
 
         intensity_0, intensity_higher, incident_streams = self.prepare_intensity_array(streams)  # TODO Ghi: make an iterator
 
-        npol = 3 if self.sensor.mode == 'A' else 2
 
         #
         # compute interface reflection and transmittance properties
@@ -281,9 +288,9 @@ class DORT(object):
                 # TODO: implement a convergence test if we want to avoid long computation
                 # when self.m_max is too high for the phase function.
 
-        if self.sensor.mode == 'P' and self.atmosphere is not None:
-            intensity_up = self.atmosphere.tbup(self.sensor.frequency, streams.outmu, npol) + \
-                self.atmosphere.trans(self.sensor.frequency, streams.outmu, npol) * intensity_up
+        if self.sensor.mode == 'P' and self.atmosphere_result is not None:
+            intensity_up = self.atmosphere_result.tb_up + \
+                self.atmosphere_result.transmittance * intensity_up
 
         if self.sensor.mode == 'A':
             # compress to get only the backscatter
@@ -344,11 +351,11 @@ class DORT(object):
             npol = 2
             incident_streams = []
 
-            if self.atmosphere is not None:
+            if self.atmosphere_result is not None:
 
                 # incident radiation is a function of frequency and incidence angle
                 # assume azimuthally symmetric
-                intensity_0 = self.atmosphere.tbdown(self.sensor.frequency, streams.outmu, npol)[:, np.newaxis]
+                intensity_0 = self.atmosphere_result.tb_down[:, np.newaxis]
                 intensity_higher = np.zeros_like(intensity_0)
 
             else:
@@ -356,7 +363,6 @@ class DORT(object):
                 intensity_higher = intensity_0
                 intensity_0.flags.writeable = False  # make immutable
                 intensity_higher.flags.writeable = False  # make immutable
-
         else:
             raise SMRTError("Unknow sensor mode")
 
@@ -564,7 +570,7 @@ def muleye(x):
 
     if isinstance(x, smrt_diag):
         return x.diagonal()
-    elif (x.is_zero_scalar()) or (len(x.shape) == 0):
+    elif (is_zero_scalar(x)) or (len(x.shape) == 0):
         return np.atleast_1d(x)
     else:
         assert len(x.shape) == 2
@@ -639,6 +645,8 @@ class EigenValueSolver(object):
 
         self.ke = ke
         self.ks = ks
+        self.ft_even_phase_function = ft_even_phase_function
+        self.m_max = m_max
         self.mu = mu
         self.weight = weight
         self.normalization = normalization
@@ -655,11 +663,16 @@ class EigenValueSolver(object):
         self.norm_0 = None
         self.norm_m = None
 
-        if ft_even_phase_function is not None:
-            mu = np.concatenate((self.mu, -self.mu))
-            self.ft_even_phase = ft_even_phase_function(mu, mu, m_max)
-        else:
-            self.ft_even_phase = smrt_matrix(0)
+    @property
+    def ft_even_phase(self):
+        # cached version of the ft_even_phase
+        if not hasattr(self, "_ft_even_phase"):
+            if self.ft_even_phase_function is None:
+                self._ft_even_phase = smrt_matrix(0)
+            else:
+                mu = np.concatenate((self.mu, -self.mu))
+                self._ft_even_phase = self.ft_even_phase_function(mu, mu, self.m_max)
+        return self._ft_even_phase
 
     def solve(self, m, compute_coherent_only, debug_A=False):
         # solve the homogeneous equation for a single layer and return eignen values and eigen vectors
@@ -1073,6 +1086,18 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="mos
 
     streams = Streams()
 
+    nlayer = len(permittivity)
+
+    if nlayer == 0:
+        streams.outmu, streams.outwweight = gaussquad(n_max_stream)
+        streams.n_air = n_max_stream
+        streams.weight = []
+        streams.mu = []
+        streams.n = []
+        return streams
+
+    # there are some layers
+
     #  ### search and proceed with the most refringent layer
     k_most_refringent = np.argmax(permittivity)
     real_index_air = np.real(np.sqrt(permittivity[k_most_refringent] / 1.0))
@@ -1096,7 +1121,6 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="mos
     else:
         raise RuntimeError("Unknow mode to compute the number of stream")
 
-    nlayer = len(permittivity)
 
     #  calculate the nodes and weights of all the other layers
 

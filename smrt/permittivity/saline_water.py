@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import numpy as np
+from smrt.core.error import SMRTError
 
 from smrt.core.globalconstants import FREEZING_POINT, GHz, PERMITTIVITY_OF_FREE_SPACE, PSU
 from .brine import brine_conductivity, brine_relaxation_time, permittivity_high_frequency_limit, \
@@ -19,7 +20,13 @@ def seawater_permittivity_klein76(frequency, temperature, salinity):
        Returns complex water permittivity for a frequency f."""
 
     tempC = temperature - FREEZING_POINT
+
     Sppt = salinity / PSU
+    
+    # Millero and Leung 1976
+    tempF = - (0.0575 * Sppt - 1.710523e-3 * Sppt**1.5 + 2.154996e-4 * Sppt**2)
+    if np.any(tempC < tempF - 0.1):  # take into account a small tolerance
+        raise SMRTError(f"The water temperature must be higher than the freezing point at the given salinity (here {tempF + FREEZING_POINT:.2f} K).")
 
     omega = 2 * np.pi * frequency
     eps_inf = 4.9  # limiting high frequency value

@@ -1,7 +1,10 @@
 # coding: utf-8
 
+import numpy as np
+
 from ..core.layer import layer_properties
 from ..core.globalconstants import FREEZING_POINT, GHz
+from ..core.error import SMRTError
 
 
 @layer_properties("temperature")
@@ -15,6 +18,8 @@ def water_permittivity_maetzler87(frequency, temperature):
      :raises Exception: if liquid water > 0 or salinity > 0 (model unsuitable)
      :returns: Complex permittivity of pure ice
 """
+    if temperature < FREEZING_POINT:
+        raise SMRTError(f"The water temperature must be higher or equal to {FREEZING_POINT}K")
 
     freqGHz = frequency / 1e9
 
@@ -51,6 +56,9 @@ Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publ
     freqGHz = frequency / GHz
 
     tempC = temperature - FREEZING_POINT
+
+    if np.any(tempC < 0):
+        raise SMRTError(f"The water temperature must be higher or equal to {FREEZING_POINT}K")
 
     e2 = 4.903e-2
 

@@ -10,6 +10,8 @@ from smrt.core.lib import smrt_matrix, abs2
 def fresnel_coefficients_old(eps_1, eps_2, mu1):
     """compute the reflection in two polarizations (H and V). The equations are only valid for lossless media.
     Applying these equations for (strongly) lossy media result in (large) errors. Don't use it. It is here for reference only.
+    The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
+    reflection coefficient.
 
     :param eps_1: permittivity of medium 1.
     :param eps_2: permittivity of medium 2.
@@ -35,6 +37,8 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=Fals
 
     The classical derivation does not respect energy conservation, especially the transmittivity.
     Don't use it. It is here for reference only.
+    The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
+    reflection coefficient.
 
     :param eps_1: permittivity of medium 1.
     :param eps_2: permittivity of medium 2.
@@ -88,6 +92,8 @@ def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1, full_output=False
     Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
 
     The 'rigorous' derivation respect the energy conservation even for strongly loosly media.
+    The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
+    reflection coefficient.
 
     :param eps_1: permittivity of medium 1.
     :param eps_2: permittivity of medium 2.
@@ -169,7 +175,7 @@ def brewster_angle(eps_1, eps_2):
 
 
 def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
-    """compute the fresnel reflection matrix for/in medium 1 laying above medium 2.
+    """compute the fresnel power reflection matrix for/in medium 1 laying above medium 2.
 
     :param npol: number of polarizations to return.
     :param eps_1: permittivity of medium 1.
@@ -197,7 +203,7 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
 
 
 def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol):
-    """compute the fresnel reflection matrix for/in medium 1 laying above medium 2.
+    """compute the fresnel power reflection matrix for/in medium 1 laying above medium 2.
 
     :param npol: number of polarizations to return.
     :param eps_1: permittivity of medium 1.

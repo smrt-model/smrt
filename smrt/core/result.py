@@ -198,6 +198,31 @@ class Result(object):
         """
         return self.return_as_dataframe('out', channel_axis='column', **kwargs).iloc[0]
 
+    def optical_depth(self):
+        """return the optical depth of each layer tau = ke * thickness, where ke = ka + ks calculated for each layer.
+        This is useful to assess the e-folding depth (aka penetration depth), neglecting the layer transmittance.
+
+        For instance the direct incoming radiation (in active mode) or the radiation emanating directly (in passive
+        mode) can be estimated as::
+
+            intensity = np.exp(-result.optical_depth().cumsum('layer'))
+
+        """
+        if 'ka' not in self.other_data or 'ks' not in self.other_data:
+            raise SMRTError("optical_depth requires that the RT solver provides ka, ks and thickness.")
+
+        ke = self.other_data['ka'] + self.other_data['ks']
+        return ke * self.other_data['thickness']
+
+    def single_scattering_albedo(self):
+        """return the single scattering albedo of each layer: ssalb = ks / (ks + ka). This is useful to assess if
+        multiple scattering is significant (e.g. if ssalb > 0.2).
+        """
+        if 'ka' not in self.other_data or 'ks' not in self.other_data:
+            raise SMRTError("single_scattering_albedo requires that the RT solver provides ka and ks.")
+
+        return self.other_data['ks'] / (self.other_data['ka'] + self.other_data['ks'])
+
 
 class PassiveResult(Result):
 

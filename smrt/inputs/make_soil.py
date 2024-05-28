@@ -133,7 +133,7 @@ def soil_dielectric_constant_hut(frequency, tempK, SM, sand, clay, dm_rho):
 
     tempC = tempK - 273.15
 
-    if tempC > 0:  # liquid water
+    if tempC >= 0:  # liquid water
         # calculates real and imag. part of water dielectricity (code HUT 20.12.95 [epsw.m]; K.Tigerstedt)
         ew0 = 87.74 - 0.40008 * tempC + 9.398e-4 * tempC**2 + 1.410e-6 * tempC**3
         d = 25 - tempC
@@ -143,7 +143,7 @@ def soil_dielectric_constant_hut(frequency, tempK, SM, sand, clay, dm_rho):
         ew_r = ew_inf + (ew0 - ew_inf) / (1 + (2 * np.pi * frequency * tw)**2)
         ew_i = (ew0 - ew_inf) * 2 * np.pi * frequency * tw / (1 + (2 * np.pi * frequency * tw)**2)
     else:
-        raise NotImplementedError("not implemented")
+        raise SMRTError("soil_dielectric_constant_hut requires above freezing point temperatures")
 #      !option for salt consideration (Mätzler 1987)
 #      !iei_S =A/M+B*M**C                 !impure ice
 #      !iei_P=Ap/M+Bp*M**Cp                 !pure ice

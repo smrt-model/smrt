@@ -24,6 +24,10 @@ dependencies = [
     "joblib>=1.0.0",
 ]
 
+[project.optional-dependencies]
+    progressbar = ["tqdm"]
+    pyrtlib = ["scikit-learn", "bs4", "netCDF4", "requests", "cdsapi", "cfgrib", "pyrtlib"]
+
 
 [project.urls]
 Homepage = "https://http://smrt-model.science/l"

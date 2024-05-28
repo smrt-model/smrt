@@ -1,4 +1,6 @@
 
+from dataclasses import dataclass
+import numpy as np
 
 from .error import SMRTError
 from .snowpack import Snowpack
@@ -27,3 +29,10 @@ class AtmosphereBase(object):
 
     def __iadd__(self, other):
         raise SMRTError("Inplace addition with an atmosphere is not a valid operation.")
+
+
+@dataclass
+class AtmosphereResult:
+    tb_down: np.ndarray
+    tb_up: np.ndarray
+    transmittance: np.ndarray

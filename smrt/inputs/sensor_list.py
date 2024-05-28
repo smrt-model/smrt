@@ -270,7 +270,7 @@ def smap(mode, theta=40):
     """
 
     if mode == 'P':
-        return passive(1.4e9, theta=theta, channel_map={pola: dict(polarization=pola) for pola in 'HV'}, name='smap')
+        return passive(1.4e9, theta=theta, channel_map={'01' + pola: dict(polarization=pola) for pola in 'HV'}, name='smap')
     elif mode == 'A':
         return active(1.26e9, theta=theta, theta_inc=theta,
                       channel_map={channel: dict(polarization=channel[1], polarization_inc=channel[0]) for channel in ['HH', 'VV', 'HV']},
@@ -295,7 +295,10 @@ def extract_configuration(channel_map):
     configuration = dict()
     for k in keys:
         try:
-            configuration[k] = list({channel_map[ch][k] for ch in channel_map})
+            x = np.unique([channel_map[ch][k] for ch in channel_map])
+            if len(x) == 1:
+                x = x[0]
+            configuration[k] = x
         except KeyError:
             continue
 
