@@ -186,7 +186,7 @@ rayleigh_scattering_matrix_and_angle = rayleigh_scattering_matrix_and_angle_tsan
 
 class AdjustableEffectivePermittivityMixins(object):
     """
-    Mixin that allow an EM model to have the effective permittivity model defined by the user instead of by the theory of the EM Model.
+    Mixin that allows an EM model to have the effective permittivity model defined by the user instead of by the theory of the EM Model.
 The EM model must declare a default effective permittivity model.
 
     """
@@ -216,7 +216,7 @@ The EM model must declare a default effective permittivity model.
 
 
 def derived_EMModel(base_class, effective_permittivity_model):
-    """return a new IBA model with variant from the default IBA.
+    """return a new IBA/SCE model with variant from the default IBA/SCE.
 
     :param effective_permittivity_model: permittivity mixing formula.
 

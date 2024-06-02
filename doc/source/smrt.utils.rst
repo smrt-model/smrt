@@ -1,8 +1,7 @@
 smrt.utils package
 ==================
 
-Submodules
-----------
+This package contains useful but non-required code to work with SMRT.
 
 smrt.utils.dmrt\_qms\_legacy module
 -----------------------------------
@@ -32,14 +31,6 @@ smrt.utils.mpl\_plots module
 ----------------------------
 
 .. automodule:: smrt.utils.mpl_plots
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.utils.repo\_tools module
------------------------------
-
-.. automodule:: smrt.utils.repo_tools
    :members:
    :undoc-members:
    :show-inheritance:

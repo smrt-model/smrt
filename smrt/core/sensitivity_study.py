@@ -1,6 +1,6 @@
 # coding: utf-8
 
-""" SensitivityStudy is used to easily conduct sensitivity studies.
+""" SensitivityStudy is used to easily conduct sensitivity studies. A more modern alternative is to use a pandas.DataFrame of snowpacks.
 
 Example::
 

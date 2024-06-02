@@ -1,8 +1,8 @@
 smrt.substrate package
 ======================
 
-Submodules
-----------
+This package provides models for the substrate. Part of them are automatically inheriter from the `~smrt.interfaces` package but other are specific to a particular medium (e.g. soil).
+
 
 smrt.substrate.flat module
 --------------------------
@@ -92,45 +92,6 @@ smrt.substrate.soil\_wegmuller module
    :undoc-members:
    :show-inheritance:
 
-smrt.substrate.test\_flat module
---------------------------------
-
-.. automodule:: smrt.substrate.test_flat
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.substrate.test\_reflector module
--------------------------------------
-
-.. automodule:: smrt.substrate.test_reflector
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.substrate.test\_rough\_choudhury79 module
-----------------------------------------------
-
-.. automodule:: smrt.substrate.test_rough_choudhury79
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.substrate.test\_soil\_qnh module
--------------------------------------
-
-.. automodule:: smrt.substrate.test_soil_qnh
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.substrate.test\_soil\_wegmuller module
--------------------------------------------
-
-.. automodule:: smrt.substrate.test_soil_wegmuller
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 smrt.substrate.transparent module
 ---------------------------------

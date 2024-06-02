@@ -99,7 +99,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'SMRT'
-copyright = u'2016, G. Picard, M. Sandells, H. Löwe'
+copyright = u'2016-2024, G. Picard, M. Sandells, H. Löwe'
 author = u'G. Picard, M. Sandells, H. Löwe'
 
 
@@ -362,7 +362,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'smrt', u'SMRT Documentation',
+    (master_doc, 'smrt', u'SMRT API Documentation',
      [author], 1)
 ]
 
@@ -377,7 +377,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'SMRT', u'SMRT Documentation',
+    (master_doc, 'SMRT', u'SMRT API Documentation',
      author, 'SMRT', 'One line description of project.',
      'Miscellaneous'),
 ]

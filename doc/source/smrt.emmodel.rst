@@ -1,21 +1,13 @@
 smrt.emmodel package
 ====================
 
-Submodules
-----------
+This package provides scattering models based on various theories (IBA, SCE, DMRT, Rayleight, ...).
 
-smrt.emmodel.common module
---------------------------
 
-.. automodule:: smrt.emmodel.common
-   :members:
-   :undoc-members:
-   :show-inheritance:
+smrt.emmodel.iba module
+-----------------------
 
-smrt.emmodel.commontest module
-------------------------------
-
-.. automodule:: smrt.emmodel.commontest
+.. automodule:: smrt.emmodel.iba
    :members:
    :undoc-members:
    :show-inheritance:
@@ -36,18 +28,10 @@ smrt.emmodel.dmrt\_qcacp\_shortrange module
    :undoc-members:
    :show-inheritance:
 
-smrt.emmodel.iba module
------------------------
+smrt.emmodel.symsce_torquato21 module
+-------------------------------------------
 
-.. automodule:: smrt.emmodel.iba
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.emmodel.iba\_original module
----------------------------------
-
-.. automodule:: smrt.emmodel.iba_original
+.. automodule:: smrt.emmodel.symsce_torquato21
    :members:
    :undoc-members:
    :show-inheritance:
@@ -84,42 +68,34 @@ smrt.emmodel.sft\_rayleigh module
    :undoc-members:
    :show-inheritance:
 
-smrt.emmodel.test\_iba module
------------------------------
+smrt.emmodel.iba\_original module
+---------------------------------
 
-.. automodule:: smrt.emmodel.test_iba
+.. automodule:: smrt.emmodel.iba_original
    :members:
    :undoc-members:
    :show-inheritance:
 
-smrt.emmodel.test\_iba\_original module
----------------------------------------
+smrt.emmodel.sce_torquato21 module
+-------------------------------------------
 
-.. automodule:: smrt.emmodel.test_iba_original
+.. automodule:: smrt.emmodel.sce_torquato21
    :members:
    :undoc-members:
    :show-inheritance:
 
-smrt.emmodel.test\_prescribed\_kskaeps module
----------------------------------------------
+smrt.emmodel.sce_torquato21_shortrange module
+----------------------------------------------
 
-.. automodule:: smrt.emmodel.test_prescribed_kskaeps
+.. automodule:: smrt.emmodel.sce_torquato21_shortrange
    :members:
    :undoc-members:
    :show-inheritance:
 
-smrt.emmodel.test\_rayleigh module
-----------------------------------
+smrt.emmodel.sce_rechtsman08 module
+-------------------------------------------
 
-.. automodule:: smrt.emmodel.test_rayleigh
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.emmodel.test\_sft\_rayleigh module
----------------------------------------
-
-.. automodule:: smrt.emmodel.test_sft_rayleigh
+.. automodule:: smrt.emmodel.sce_rechtsman08
    :members:
    :undoc-members:
    :show-inheritance:

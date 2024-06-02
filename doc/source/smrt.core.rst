@@ -1,8 +1,23 @@
 smrt.core package
 =================
 
-Submodules
-----------
+This package does not contain any science code. It is the machinery of SMRT which makes the different components to work together, and provide a result. 
+
+smrt.core.result module
+-----------------------
+
+.. automodule:: smrt.core.result
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+smrt.core.globalconstants module
+--------------------------------
+
+.. automodule:: smrt.core.globalconstants
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 smrt.core.atmosphere module
 ---------------------------
@@ -32,14 +47,6 @@ smrt.core.fresnel module
 ------------------------
 
 .. automodule:: smrt.core.fresnel
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.core.globalconstants module
---------------------------------
-
-.. automodule:: smrt.core.globalconstants
    :members:
    :undoc-members:
    :show-inheritance:
@@ -76,34 +83,10 @@ smrt.core.model module
    :undoc-members:
    :show-inheritance:
 
-smrt.core.optional\_numba module
---------------------------------
-
-.. automodule:: smrt.core.optional_numba
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 smrt.core.plugin module
 -----------------------
 
 .. automodule:: smrt.core.plugin
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.core.progressbar module
-----------------------------
-
-.. automodule:: smrt.core.progressbar
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.core.result module
------------------------
-
-.. automodule:: smrt.core.result
    :members:
    :undoc-members:
    :show-inheritance:
@@ -140,61 +123,6 @@ smrt.core.snowpack module
    :undoc-members:
    :show-inheritance:
 
-smrt.core.test\_globalconstants module
---------------------------------------
-
-.. automodule:: smrt.core.test_globalconstants
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.core.test\_interface module
---------------------------------
-
-.. automodule:: smrt.core.test_interface
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.core.test\_layer module
-----------------------------
-
-.. automodule:: smrt.core.test_layer
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.core.test\_lib module
---------------------------
-
-.. automodule:: smrt.core.test_lib
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.core.test\_result module
------------------------------
-
-.. automodule:: smrt.core.test_result
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.core.test\_sensor module
------------------------------
-
-.. automodule:: smrt.core.test_sensor
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.core.test\_snowpack module
--------------------------------
-
-.. automodule:: smrt.core.test_snowpack
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 Module contents
 ---------------
