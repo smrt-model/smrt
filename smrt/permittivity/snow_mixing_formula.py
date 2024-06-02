@@ -23,19 +23,18 @@ from .generic_mixing_formula import polder_van_santen, polder_van_santen_three_c
 
 @layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
 def wetsnow_permittivity_tinga73(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
-    """effective permittivity proposed by Tinga et al. 1973 for three-component mixing. The component 1 is the background ("a" here),
+    """Computes the effective permittivity proposed by Tinga et al. 1973 for three-component mixing. The component 1 is the background ("a" here),
     the compoment 2 ("w" here) is a spherical shell surrounding the component 3 ("i" here).
 
      It was used by Tiuri as well as T. Mote to compute wet snolw permittivity.
 
-Tinga, W.R., Voss, W.A.G. and Blossey, D. F.: General approach to multiphase dielectric mixture theory.
-Journal of Applied Physics, Vol.44(1973) No.9,pp.3897-3902.
-doi: /10.1063/1.1662868
+    Tinga, W.R., Voss, W.A.G. and Blossey, D. F.: General approach to multiphase dielectric mixture theory.
+    Journal of Applied Physics, Vol.44(1973) No.9,pp.3897-3902.
+    doi: /10.1063/1.1662868
 
-Tiuri, M. and Schultz, H., Theoretical and experimental studies of microwave radiation from a natural snow field. In Rango, A. , ed.
-Microwave remote sensing of snowpack properties. Proceedings of a workshop ... Fort Collins, Colorado, May 20-22, 1980.
-Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publication 2153.)
-
+    Tiuri, M. and Schultz, H., Theoretical and experimental studies of microwave radiation from a natural snow field. In Rango, A. , ed.
+    Microwave remote sensing of snowpack properties. Proceedings of a workshop ... Fort Collins, Colorado, May 20-22, 1980.
+    Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publication 2153.)
 
 """
 
@@ -84,7 +83,7 @@ Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publ
 
 
 def compute_frac_volumes(density, liquid_water):
-    """compute the fractional volume of ice+water, the fractional volume of ice, and the fractional volume of water 
+    """Computes the fractional volume of ice+water, the fractional volume of ice, and the fractional volume of water 
     from the (wet) snow density and the liquid_water which is the volume fraction of liquid with respect to ice + liquid (but no air).
 
     :param density: density of the snow, including the ice and water phases.
@@ -106,10 +105,10 @@ def compute_frac_volumes(density, liquid_water):
 
 @layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
 def wetsnow_permittivity_colbeck80_caseI(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
-    """effective permittivity proposed by Colbeck, 1980 for the pendular regime.
+    """Computes the effective permittivity proposed by Colbeck, 1980 for the pendular regime.
 
-Colbeck, S. C. (1980). Liquid distribution and the dielectric constant of wet snow.
-Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21–40.
+    Colbeck, S. C. (1980). Liquid distribution and the dielectric constant of wet snow.
+    Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21–40.
 
 """
     if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
@@ -141,10 +140,10 @@ Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21�
 
 @layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
 def wetsnow_permittivity_colbeck80_caseII(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
-    """effective permittivity proposed by Colbeck, 1980 for the funicular regime and low dry snow density.
+    """Computes the effective permittivity proposed by Colbeck, 1980 for the funicular regime and low dry snow density.
 
-Colbeck, S. C. (1980). Liquid distribution and the dielectric constant of wet snow.
-Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21–40.
+    Colbeck, S. C. (1980). Liquid distribution and the dielectric constant of wet snow.
+    Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21–40.
 
 """
 
@@ -165,10 +164,10 @@ Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21�
 
 @layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
 def wetsnow_permittivity_colbeck80_caseIII(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
-    """effective permittivity proposed by Colbeck, 1980 for the low porosity.
+    """Computes the effective permittivity proposed by Colbeck, 1980 for the low porosity.
 
-Colbeck, S. C. (1980). Liquid distribution and the dielectric constant of wet snow.
-Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21–40.
+    Colbeck, S. C. (1980). Liquid distribution and the dielectric constant of wet snow.
+    Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21–40.
 
 """
     if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
@@ -200,7 +199,7 @@ Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21�
 
 @layer_properties("density", "liquid_water")
 def wetsnow_permittivity_hallikainen86(frequency, density, liquid_water):
-    """effective permittivity of a snow mixture calculated with the Modified Debye model by Hallikainen 1986
+    """Computes the effective permittivity of a snow mixture calculated with the Modified Debye model by Hallikainen 1986
 
     The implemented equation are 10, 11 and 13a-c.
 
@@ -253,7 +252,7 @@ def wetsnow_permittivity_hallikainen86(frequency, density, liquid_water):
 
 @layer_properties("density", "liquid_water")
 def wetsnow_permittivity_hallikainen86_ulaby14(frequency, density, liquid_water):
-    """effective permittivity of a snow mixture calculated with the Modified Debye model by Hallikainen 1986
+    """Computes the effective permittivity of a snow mixture calculated with the Modified Debye model by Hallikainen 1986
     and revised in Microwave Radar and Radiometric Remote Sensing by Ulaby et al. 2014 
     Equations implemented are ch 4 pp 143-15 4.60a - 4.61h.
 
@@ -300,7 +299,7 @@ def wetsnow_permittivity_hallikainen86_ulaby14(frequency, density, liquid_water)
 
 @layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model"])
 def wetsnow_permittivity_wiesmann99(frequency, temperature, density, liquid_water, ice_permittivity_model=None):
-    """effective permittivity of a snow mixture as presented in MEMLS by Wiesmann and Matzler, 1999. Note that the version implemented
+    """Computes the effective permittivity of a snow mixture as presented in MEMLS by Wiesmann and Matzler, 1999. Note that the version implemented
     in MEMLS v3 is different.
 
 """
@@ -339,8 +338,8 @@ def wetsnow_permittivity_wiesmann99(frequency, temperature, density, liquid_wate
 
 @layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
 def wetsnow_permittivity_memls(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
-    """effective permittivity of a snow mixture as calculated in MEMLS using Maxwell-Garnett Mixing rule of water in dry snow
-for prolate spheroidal water with experimentally determined. Dry snow permittivity is here determined with Polder van Santen.
+    """Computes the effective permittivity of a snow mixture as calculated in MEMLS using Maxwell-Garnett Mixing rule of water in dry snow
+    for prolate spheroidal water with experimentally determined. Dry snow permittivity is here determined with Polder van Santen.
 
 """
     # %   depolarisation factors.
@@ -393,7 +392,7 @@ for prolate spheroidal water with experimentally determined. Dry snow permittivi
 @layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
 def wetsnow_permittivity_three_component_polder_van_santen(frequency, temperature, density, liquid_water,
                                                            ice_permittivity_model=None, water_permittivity_model=None):
-    """effective permittivity of a snow mixture using the three components polder_van_santen, assuming spherical inclusions
+    """Computes the effective permittivity of a snow mixture using the three components polder_van_santen, assuming spherical inclusions
 
 """
     if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):

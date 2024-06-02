@@ -1,7 +1,13 @@
 smrt.permittivity package
 =========================
 
-This package provides many formulations for the permititivity of various materials (ice, water, ...) or for mixing formulae. It is worth noting that the formers are to be used as input of the functions in py:mod:`~smrt.inputs` in order to prescribe the scatterers and background permittivity, while the latter are to be used in py:mod:`~smrt.emmodels` to reformulate how the effective permittivity is calculated. This latter usage is very specific and should not concern most users. See py:function:`~smrt.emmodel.symsce_torquato21.derived_SymSCETK21` and py:function:`~smrt.emmodel.iba.derived_IBA`.
+.. automodule:: smrt.permittivity
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. contents:: Contents
+   :depth: 2
 
 smrt.permittivity.ice module
 ----------------------------
@@ -83,10 +89,4 @@ smrt.permittivity.wetsnow module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
 
-.. automodule:: smrt.permittivity
-   :members:
-   :undoc-members:
-   :show-inheritance:

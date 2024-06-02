@@ -1,5 +1,3 @@
-# coding: utf-8
-
 """Sampled autocorrelation function model. To use when no analytical form of the autocorrelation function but
 the values of the autocorrelation function (`acf`) is known at a series of `lag`.
 

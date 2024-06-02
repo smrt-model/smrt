@@ -41,7 +41,9 @@ def sensitivity_study(name, values, snowpacks):
     :param name: name of the variable to investigate
     :param values: values taken by the variable
     :param snowpacks: list of snowpacks. Can be a sequence or a function that takes one argument and return a snowpack.
-    In the latter case, the function is called for each values to build the list of snowpacks"""
+        In the latter case, the function is called for each values to build the list of snowpacks
+
+    """
 
     if callable(snowpacks):
         snowpacks = [snowpacks(value) for value in values]

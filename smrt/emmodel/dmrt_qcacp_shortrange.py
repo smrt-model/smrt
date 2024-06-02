@@ -1,5 +1,3 @@
-# coding: utf-8
-
 """ Compute scattering with DMRT QCACP Short range like in DMRT-ML. Short range means that it is accurate only for small
 and weakly sticky spheres (high stickiness value). It diverges (increasing scattering coefficient) if these conditions
 are not met. Numerically the size conditions can be evaluated with the ratio radius/wavelength as for Rayleigh scatterers.
@@ -8,7 +6,7 @@ dangerous to use too small a stickiness value, especially if the grains are big.
 
 This model is only compatible with the SHS microstructure model.
 
-Examples:
+Examples::
 
     from smrt import make_snowpack, make_sensor
 
@@ -60,8 +58,8 @@ class DMRT_QCACP_ShortRange(Rayleigh):
         :param sensor: sensor instance
         :param layer: layer instance
         :dense_snow_correction: set how snow denser than half the ice density (ie. fractional volume larger than 0.5 is handled).
-        "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air.
-        "bridging" should be developed in the future.
+            "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air.
+            "bridging" should be developed in the future.
     """
 
     def __init__(self, sensor, layer, dense_snow_correction="auto"):

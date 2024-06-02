@@ -1,7 +1,12 @@
 smrt.substrate package
 ======================
 
-This package provides models for the substrate. Part of them are automatically inheriter from the `~smrt.interfaces` package but other are specific to a particular medium (e.g. soil).
+.. automodule:: smrt.substrate
+   :members:
+   :show-inheritance:
+
+.. contents:: Contents
+   :depth: 2
 
 
 smrt.substrate.flat module
@@ -101,10 +106,3 @@ smrt.substrate.transparent module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: smrt.substrate
-   :members:
-   :undoc-members:
-   :show-inheritance:

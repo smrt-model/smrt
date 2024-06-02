@@ -23,13 +23,13 @@ Example::
 
 The model can be run on a list of snowpacks or even more conveniently on a `pandas.Series` or `pandas.DataFrame` including snowpacks.
 The first advantage is that by setting parallel_computation=True, the :py:meth:`Model.run` method performs the simulation in parallel
- on all the available cores of your machine and even possibly remotely on a high performance cluster using dask.
- The second advantage is that the returned :py:class:`~smrt.core.result.Result` object contains all the simulations 
- and provide an easier way to plot the results or compute statistics.
+on all the available cores of your machine and even possibly remotely on a high performance cluster using dask.
+The second advantage is that the returned :py:class:`~smrt.core.result.Result` object contains all the simulations 
+and provide an easier way to plot the results or compute statistics.
 
 If a list of snowpacks is provided, it is recommended to also set the snowpack_dimension argument. It takes the form of a tuple
- (list of snowpack_dimension values, dimension name). The name and values are used to define the coordinates in the 
- :py:class:`~smrt.core.result.Result` object. This is useful with timeseries or sensitivity analysis for instance.
+(list of snowpack_dimension values, dimension name). The name and values are used to define the coordinates in the 
+:py:class:`~smrt.core.result.Result` object. This is useful with timeseries or sensitivity analysis for instance.
 
 Example::
 
@@ -101,19 +101,19 @@ def make_model(emmodel, rtsolver=None, emmodel_options=None, rtsolver_options=No
     It supports automatic import of the emmodel and rtsolver modules.
 
     :param emmodel: type of emmodel to use. Can be given by the name of a file/module in the emmodel directory (as a string) or a class.
-    List (and dict, respectively) can be provided when a different emmodel is needed for every layer (or every kind of layer medium).
+        List (and dict, respectively) can be provided when a different emmodel is needed for every layer (or every kind of layer medium).
     :type emmodel:  string or class or list of strings or classes or dict of strings or classes.
-    If a list of emmodels is given, the size must be the same as the number of layers in the snowpack.
-    If a dict is given, the keys are the kinds of medium and the values are the associated emmodels to each sort of medium.
-    The layer attribute 'medium' is used to determine the emmodel to use for each layer.
+        If a list of emmodels is given, the size must be the same as the number of layers in the snowpack.
+        If a dict is given, the keys are the kinds of medium and the values are the associated emmodels to each sort of medium.
+        The layer attribute 'medium' is used to determine the emmodel to use for each layer.
     :type emmodel:  string or class; or list of strings or classes; or dict of strings or classes.
     :param rtsolver: type of RT solver to use. Can be given by the name of a file/module in the rtsolver directeory (as a string)
-    or a class.
+        or a class.
     :type rtsolver: string or class.  Can be None when only computation of the layer electromagnetic properties is needed.
     :param emmodel_options: extra arguments to use to create emmodel instance. Valid arguments depend on the selected emmodel.
-    It is documented in for each emmodel class.
+        It is documented in for each emmodel class.
     :type emmodel_options: dict or a list of dict. In the latter case, the size of the list must be the same as
-    the number of layers in the snowpack.
+        the number of layers in the snowpack.
     :param rtsolver_options: extra to use to create the rtsolver instance (see __init__ of the solver used).
     :type rtsolver_options: dict
 

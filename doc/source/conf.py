@@ -69,7 +69,8 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
-    'sphinx.ext.autosummary'
+    'sphinx.ext.autosummary',
+    'sphinx_rtd_theme',
  ]
 
 autosummary_generate = True
@@ -79,7 +80,8 @@ autodoc_default_flags = ['members']
 
 
 # Mock imports if rtd cannot import them
-autodoc_mock_imports = ["collections", "warnings", "oct2py", "itertools", "inspect", "copy", "glob","pickle", "random", "time", "logging", "threading", "functools", "numbers"]
+autodoc_mock_imports = ["collections", "warnings", "oct2py", "itertools", "inspect", "copy", "glob", "pickle", "random","time",
+                        "logging", "threading", "functools", "numbers", "pyrtlib"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -175,7 +177,7 @@ todo_include_todos = True
 # a list of builtin themes.
 #
 #html_theme = 'bizstyle'
-html_theme = 'karma_sphinx_theme'
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

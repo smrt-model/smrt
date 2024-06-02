@@ -261,9 +261,8 @@ class NadirLRMAltimetry(object):
         return z[:-1], dz, b_gate, b_layer[:-1], b_interface
 
     def vertical_scattering_distribution(self, return_contributions, mu_i=1.0):
-        """
-            Compute the vertical backscattering distribution due to "grain" or volume scattering (symbol pvg in Eq 9 in Lacroix 2008) and 
-"interfaces" or 'surface' scattering (symbol pvl in Eq 9 in Lacroix 2008)
+        """Compute the vertical backscattering distribution due to "grain" or volume scattering (symbol pvg in Eq 9 in Lacroix 2008) and 
+        "interfaces" or 'surface' scattering (symbol pvl in Eq 9 in Lacroix 2008)
 
         :param mu: cosine of the incidence angles. Only the dependence on the surface scattering depend on mu_i
 

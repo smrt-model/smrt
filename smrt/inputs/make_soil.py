@@ -40,12 +40,10 @@ def make_soil(substrate_model, permittivity_model, temperature, moisture=None,
     :param clay: soil relative clay content. This parameter is used or not depending on the permittivity_model.
     :param drymatter: soil content in dry matter in kg m:sup:`-3`. This parameter is used or not depending on the permittivity_model.
 
-    :param **kwargs: geometrical parameters depending on the substrate_model. Refer to the document of each model to see the
+    :param \\**kwargs: geometrical parameters depending on the substrate_model. Refer to the document of each model to see the
         list of required and optional parameters. Usually, it is roughness_rms, corr_length, ...
 
-    **Usage example:**
-
-    ::
+    **Usage example:**::
         TOTEST: bottom = substrate.make('Flat', permittivity_model=complex('6-0.5j'))
         TOTEST:  bottom = substrate.make('Wegmuller', permittivity_model='soil', roughness_rms=0.25, moisture=0.25)
 

@@ -1,6 +1,6 @@
 # coding: utf-8
 
-"""This module  implements the base class for all the substrate models.
+"""This package implements the base class for all the substrate models.
 To create a substrate, it is recommended to use help functions such as :py:func:`~smrt.inputs.make_soil.make_soil`
 rather than the class constructor.
 
@@ -17,10 +17,11 @@ def make_interface(inst_class_or_modulename, broadcast=True, **kwargs):
     """return an instance corresponding to the interface model with the provided arguments.
 
     This function imports the interface module if necessary and
-    return an instance of the interface class with the provided arguments in **kwargs.
+    return an instance of the interface class with the provided arguments in \\**kwargs.
 
     :param inst_class_or_modulename: a class, and instance or the name of the python module in smrt/interface
-    :param **kwargs: all the arguments required by the interface class
+    :param \\**kwargs: all the arguments required by the interface class
+
     """
 
     # import the module

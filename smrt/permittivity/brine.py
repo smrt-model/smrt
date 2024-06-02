@@ -8,9 +8,11 @@ from ..core.layer import layer_properties
 
 
 def brine_conductivity(temperature):
-    """computes ionic conductivity of dissolved salts, Stogryn and Desargant, 1985
+    """Computes ionic conductivity of dissolved salts, Stogryn and Desargant, 1985
 
-    :param temperature: thermometric temperature [K]"""
+    :param temperature: thermometric temperature [K]
+
+    """
 
     tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
     if tempC >= -22.9:
@@ -21,9 +23,11 @@ def brine_conductivity(temperature):
 
 
 def brine_relaxation_time(temperature):
-    """computes relaxation time of brine, Stogryn and Desargant, 1985
+    """Computes relaxation time of brine, Stogryn and Desargant, 1985
 
-    :param temperature: thermometric temperature [K]"""
+    :param temperature: thermometric temperature [K]
+
+    """
 
     tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
 
@@ -34,9 +38,11 @@ def brine_relaxation_time(temperature):
 
 @layer_properties("temperature")
 def static_brine_permittivity(temperature):
-    """computes  static dielectric constant of brine, Stogryn and Desargant, 1985
+    """Computes  static dielectric constant of brine, Stogryn and Desargant, 1985
 
-    :param temperature: thermometric temperature [K]"""
+    :param temperature: thermometric temperature [K]
+
+    """
 
     tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
     eps_static = (939.66 - 19.068 * tempC) / (10.737 - tempC)  # Static dielectric constant of saline water
@@ -44,10 +50,10 @@ def static_brine_permittivity(temperature):
 
 
 def calculate_brine_salinity(temperature):
-    """ Computes the salinity of brine (in ppt) for a given temperature (Cox and Weeks, 1975)
+    """Computes the salinity of brine (in ppt) for a given temperature (Cox and Weeks, 1975)
 
         :param temperature: snow temperature in K
-        :return salinity_brine in ppt
+        :returns: salinity_brine in ppt
     """
     tempC = temperature - FREEZING_POINT
 
@@ -63,9 +69,11 @@ def calculate_brine_salinity(temperature):
 
 @layer_properties("temperature")
 def permittivity_high_frequency_limit(temperature):
-    """computes permittivity.
+    """Computes permittivity.
 
-        :param temperature: ice or snow temperature in K"""
+        :param temperature: ice or snow temperature in K
+
+        """
 
     tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
     eps_inf = (82.79 + 8.19 * tempC ** 2) / (15.68 + tempC ** 2)
@@ -73,7 +81,7 @@ def permittivity_high_frequency_limit(temperature):
 
 
 def brine_volume(temperature, salinity, porosity=0, bulk_density=None):
-    """computes brine volume fraction using coefficients from Cox and Weeks (1983): 'Equations for determining the gas and brine volumes in sea-ice samples',
+    """Computes brine volume fraction using coefficients from Cox and Weeks (1983): 'Equations for determining the gas and brine volumes in sea-ice samples',
     J. of Glac. if ice temperature is below -2 deg C or coefficients determined by Lepparanta and Manninen (1988):
     'The brine and gas content of sea ice with attention to low salinities and high temperatures' for warmer temperatures.
 
@@ -81,6 +89,7 @@ def brine_volume(temperature, salinity, porosity=0, bulk_density=None):
     :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
     :param porosity: fractional air volume in ice (0..1). Default is 0.
     :param bulk_density: density of bulk ice in kg m :sup:`-3`
+
     """
 
     if temperature > calculate_freezing_temperature(salinity):
@@ -158,7 +167,7 @@ def brine_volume(temperature, salinity, porosity=0, bulk_density=None):
 
 @layer_properties("salinity")
 def calculate_freezing_temperature(salinity):
-    """calculates temperature at which saline water freezes using polynomial fits
+    """Calculates temperature at which saline water freezes using polynomial fits
     of the Gibbs function given in TEOS-10: The international thermodynamic equation
     of seawater - 2010 ('http://www.teos-10.org/pubs/TEOS-10_Manual.pdf).
     The error of this fit ranges between -5e-4 K and 6e-4 K when compared with the

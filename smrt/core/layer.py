@@ -210,7 +210,7 @@ def make_microstructure_model(modelname_or_class, **kwargs):
     :param modelname_or_class: name of the module or directly the class.
     :param type: string
 
-    :param **kwargs: all the arguments need for the specific autocorrelation.
+    :param \\**kwargs: all the arguments need for the specific autocorrelation.
 
     :returns: instance of the autocorrelation `modelname` with the parameters given in `**kwargs`
 

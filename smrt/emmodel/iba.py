@@ -3,7 +3,7 @@
 """Compute scattering from Improved Born Approximation theory as described in Mätzler 1998 and Mätzler and Wiesman 1999, except the
 absorption coefficient which is computed with Polden von Staten formulation instead of the Eq 24 in Mätzler 1998. See iba_original.py for
 a fully conforming IBA version.
- This model allows for different microstructural models provided that the Fourier transform of the correlation function
+This model allows for different microstructural models provided that the Fourier transform of the correlation function
 may be performed. All properties relate to a single layer.
 
 """

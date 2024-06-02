@@ -52,26 +52,28 @@ from smrt.substrate.flat import Flat
 
 def make_medium(data, surface=None, interface=None, substrate=None, **kwargs):
     """build a multi-layered medium using a pandas DataFrame (or a dict that can be transformed into a DataFrame) and optinal arguments.
-The 'medium' column (or key) in data indicates the medium type: 'snow' or 'ice'. If not given, it defaults to 'snow'.
-'data' must contain enough information to build either a snowpack or an ice_column. The minimum requirements are:
+    The 'medium' column (or key) in data indicates the medium type: 'snow' or 'ice'. If not given, it defaults to 'snow'.
+    'data' must contain enough information to build either a snowpack or an ice_column. The minimum requirements are:
     - for a snowpack: ('z' or 'thickness'), 'density', 'microstructure_model' and the arguments required by the microstructural_model.
     - for a ice column: ice_type, ('z' or 'thickness'), 'temperature', 'salinity', 'microstructure_model' and the arguments required by
     the microstructural_model.
 
-When reading a dataframe from disk for instance, it is convenient to use df.rename(columns={...}) to map the column names of the file
-to the column names required by SMRT.
+    When reading a dataframe from disk for instance, it is convenient to use df.rename(columns={...}) to map the column names of the file
+    to the column names required by SMRT.
 
-if 'z' is given, the thickness is deduced using :py:meth:`~smrt.core.inputs.make_medium.compute_thickness_from_z`.
+    if 'z' is given, the thickness is deduced using :py:meth:`~smrt.core.inputs.make_medium.compute_thickness_from_z`.
 
-** Warning **: Using this function is a bit dangerous as any unrecognized column names are silently ignored.
-For instance, a column named 'Temperature' is ignore (due to the uppercase), and the temperature in the snowpack
-will be set to its default value (273.15 K). This issue applies to any optional argument. Double ckeck the spelling of the columns.
+    .. warning:: 
+        Using this function is a bit dangerous as any unrecognized column names are silently ignored.
+        For instance, a column named 'Temperature' is ignore (due to the uppercase), and the temperature in the snowpack
+        will be set to its default value (273.15 K). This issue applies to any optional argument. Double ckeck the spelling of the columns.
 
-** Note **: `make_medium` create laters using all the columns in the dataframe. It means that any column name becomes an attribute of
- the layer objects, even if not recognized/used by SMRT. This can be seen as an interesting feature to store information in layers,
- but this is also dangerous if column names collide with internal layer attributes or method names. For this reason,
-this function is unsecure if the snowpack data are pulled from the internet. Always check the content of the file, and it is recommended 
-to drop all the unnecessary columns with df.drop(columns=[...])) before calling make_medium. 
+    .. note:: 
+        `make_medium` create layers using all the columns in the dataframe. It means that any column name becomes an attribute of
+        the layer objects, even if not recognized/used by SMRT. This can be seen as an interesting feature to store information in layers,
+        but this is also dangerous if column names collide with internal layer attributes or method names. For this reason,
+        this function is unsecure if the snowpack data are pulled from the internet. Always check the content of the file, and it is recommended 
+        to drop all the unnecessary columns with df.drop(columns=[...])) before calling make_medium. 
 
 """
 
@@ -143,7 +145,7 @@ def make_snowpack(thickness,
     :param density: densities of the layers.
     :param substrate: set the substrate of the snowpack. Another way to add a substrate is to use the + operator
         (e.g. snowpack + substrate).
-    :param **kwargs: All the other parameters (temperature, microstructure parameters, emmodel, etc.) are given as optional arguments
+    :param \\**kwargs: All the other parameters (temperature, microstructure parameters, emmodel, etc.) are given as optional arguments
         (e.g. temperature=[270, 250]).
         They are passed for each layer to the function :py:func:`~smrt.inputs.make_medium.make_snow_layer`.
         Thus, the documentation of this function is the reference. It describes precisely the available parameters.
@@ -601,11 +603,11 @@ def make_water_body(layer_thickness=1000,
 
     Note that water is a very strong absorber even fresh water, it is unlikely that the layers under a water body 
     could be seen by microwaves. If really needed anyway, a multi-layer water body or
-        a water layer on another medium (e.g. ice) can be build using the addition operator. 
+    a water layer on another medium (e.g. ice) can be build using the addition operator. 
 
     Note that water has a strong real permittivity and when used in
-        combinaison with the DORT solver, it is recommended to increase the `n_max_stream` option of the solver to get
-        enough streams in the air (see about stream Picard et al. 2018).
+    combinaison with the DORT solver, it is recommended to increase the `n_max_stream` option of the solver to get
+    enough streams in the air (see about stream Picard et al. 2018).
 
     :param layer_thickness: thickness of ice layer in m. If the thickness is zero, a transparent layer is added.
     :param temperature: temperature of layer in K
@@ -663,7 +665,7 @@ def water_parameters(ice_type, **kwargs):
     """Make a semi-infinite water layer.
 
     :param ice_type: ice_type is used to determine if a saline or fresh water layer is added
-    The optional arguments are 'water_temperature', 'water_salinity' and 'water_depth' of the water layer.
+        The optional arguments are 'water_temperature', 'water_salinity' and 'water_depth' of the water layer.
     """
 
     # prepare default
@@ -839,12 +841,11 @@ def make_transparent_volume(substrate=None,
 
 
 def make_atmosphere(atmosphere_model, **kwargs):
-    """
-    make a atmospheric single-layer using the prescribed atmosphere model.
+    """Make a atmospheric single-layer using the prescribed atmosphere model.
     Warning: this function is subject to change in the future when refactoring how SMRT deals with atmosphere.
 
     :param atmosphere_model: the name of the model to use. The available models are in smrt.atmosphere.
-    :param **kwargs: all the parameters used by the atmosphere_model.
+    :param \\**kwargs: all the parameters used by the atmosphere_model.
 
 """
 
@@ -857,17 +858,17 @@ def compute_thickness_from_z(z):
     """Compute the thickness of layers given the elevation z. Whatever the sign of z, the order *MUST* be from the topmost layer to the
     lowermost.
 
-Several situation are accepted and interpretated as follows:
-- z is positive and decreasing. The first value is the height of the surface about the ground (z=0) and z represents the top elevation
-of each layer. This is typical of the seasonal snowpack.
-- z is negative and decreasing. The first value is the elevation of the bottom of the first layer with respect to the surface (z=0).
-This is typical of a snowpack on ice-sheet.
-- z is positive and increasing. The first value is the depth of the bottom of the first layer with respect to the surface.
-This is typical of a snowpack on ice-sheet.
-- other case, when z is not monoton or is increasing with negative value raises an error.
+    Several situation are accepted and interpretated as follows:
+    - z is positive and decreasing. The first value is the height of the surface about the ground (z=0) and z represents the top elevation
+    of each layer. This is typical of the seasonal snowpack.
+    - z is negative and decreasing. The first value is the elevation of the bottom of the first layer with respect to the surface (z=0).
+    This is typical of a snowpack on ice-sheet.
+    - z is positive and increasing. The first value is the depth of the bottom of the first layer with respect to the surface.
+    This is typical of a snowpack on ice-sheet.
+    - other case, when z is not monoton or is increasing with negative value raises an error.
 
-Because z indicate the top or the bottom of a layer depending whether z=0 is the ground or the surface,
-the value 0 can never be in z. This raises an error.
+    Because z indicate the top or the bottom of a layer depending whether z=0 is the ground or the surface,
+    the value 0 can never be in z. This raises an error.
 
 """
     order = (np.diff(z) < 0)
