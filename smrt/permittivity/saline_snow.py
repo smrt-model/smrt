@@ -94,13 +94,11 @@ def saline_snow_permittivity_scharien_with_stogryn95(frequency, density, tempera
 def saline_snow_permittivity_scharien(density, temperature, salinity, brine_permittivity):
     """Computes permittivity of saline snow using the Denoth / Matzler Mixture Model - Dielectric Constant of Saline Snow.
 
-     Assumptions:
-     (1) Brine inclusion geometry as oblate spheroids
-         Depolarization factor, A0 = 0.053 (Denoth, 1980)
-     (2) Brine inclusions are isotropically oriented
-         Coupling factor, X = 2/3 (Drinkwater and Crocker, 1988)
+    Assumptions:
+    (1) Brine inclusion geometry as oblate spheroids. Depolarization factor, A0 = 0.053 (Denoth, 1980)
+    (2) Brine inclusions are isotropically oriented. Coupling factor, X = 2/3 (Drinkwater and Crocker, 1988)
 
-     Validity ranges:
+    Validity ranges:
     (1) Temperature, Ts, down to - 22.9 degrees Celcius;
     (2) Brine salinity, Sb, up to 157ppt;  i.e.up to a Normality of 3 for NaCl
     Not valid for wet snow
@@ -111,6 +109,7 @@ def saline_snow_permittivity_scharien(density, temperature, salinity, brine_perm
     :param temperature: snow temperature in K
     :param salinity: snow salinity in kg/kg (see PSU constant in smrt module)
     :param brine_permittivity: brine_permittivity
+    
     """
 
     # convert units
