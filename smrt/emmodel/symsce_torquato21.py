@@ -26,7 +26,7 @@ def derived_SymSCETK21(effective_permittivity_model):
 
     :param effective_permittivity_model: permittivity mixing formula.
 
-    :returns a new class inheriting from SymSCE but with patched methods
+    :returns: a new class inheriting from SymSCE but with patched methods
     """
 
     return derived_EMModel(SymSCETK21, effective_permittivity_model)

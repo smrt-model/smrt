@@ -16,8 +16,6 @@ In the medium:
  - Backscatter is computed assuming only first order scattering. The propagation is then simply givern by extinction
  - Small angle approximation: to compute delay, the paths in the snow are along the z-axis. We neglect the off-nadir delay.*
  This error is likely to be small (except for very deep penetration).
- - At this stage, we consider that the backscatter of layers does not depends on theta (Geomtrical optics or other, not AIEM). 
- This is the isotropic assumption which is only valid for rough surfaces
  """
 
 
@@ -30,6 +28,15 @@ class NadirLRMAltimetry(object):
     :param return_oversampled: by default the backscatter is returned for each gate. If set to True, the oversampled waveform 
         is returned instead. See the 'oversampling' argument.
     :param return_contributions: return volume, surface and interface backscatter contributions in addition to the total backscatter.
+    :param skip_pfs_convolution: return the vertical backscatter without the convolution by the PFS, if set to True.
+    :param theta_inc_sampling: number of subdivisions used to calculate the incidence angular variations of surface and inteface
+        backscatter (the higher the better but the more computationnaly expensive). Note
+        that the subdivisions are irregular in incidence angle but correspond to annulii of equi-duration. This number
+        must be a true divider of the number of gates.
+    :param return_theta_inc_sampling: return the backscatter at the different angles
+    :param error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
+        If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
+        the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
@@ -180,7 +187,7 @@ class NadirLRMAltimetry(object):
                     return gaussian_norm * np.exp(-x**2 / (2 * sigma_c**2)) / self.sensor.pulse_bandwidth
                 pfs_ptr_pdf = scipy.signal.convolve(pfs, ptr(t_gate), mode='full')
             else:
-                # no need to had PR (point response)
+                # no need to add PTR (point response)
                 pfs_ptr_pdf = pfs / self.sensor.pulse_bandwidth
 
         def do_convolve(backscatter):
@@ -202,7 +209,7 @@ class NadirLRMAltimetry(object):
 
             # compute interface convolution
             waveform_interface = np.zeros_like(waveform_volume)
-            assert(len(waveform_interface) == len(waveform_volume))
+            assert len(waveform_interface) == len(waveform_volume)
 
             for i in range(backscatter_interfaces.shape[1]):
                 # this is a bit hacky, we should rather directly compute and use the backscatter per interface instead of the subgate interface backscatter

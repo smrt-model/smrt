@@ -15,7 +15,7 @@ backscattering coefficient, etc.
 
 Example::
 
-    m = make_model("iba", "rtsolver")
+    m = make_model("iba", "dort")
 
     result = m.run(sensor, snowpack)  # sensor and snowpack are created before
 
@@ -83,6 +83,7 @@ The `res` variable is a `pandas.DataFrame` equal to df  +  the results at all se
 """
 
 from collections.abc import Sequence, Mapping
+from dataclasses import dataclass
 import itertools
 import inspect
 import pandas as pd
@@ -109,7 +110,7 @@ def make_model(emmodel, rtsolver=None, emmodel_options=None, rtsolver_options=No
     :type emmodel:  string or class; or list of strings or classes; or dict of strings or classes.
     :param rtsolver: type of RT solver to use. Can be given by the name of a file/module in the rtsolver directeory (as a string)
         or a class.
-    :type rtsolver: string or class.  Can be None when only computation of the layer electromagnetic properties is needed.
+    :type rtsolver: string or class.  Is optional when only the computation of the layer electromagnetic properties is needed.
     :param emmodel_options: extra arguments to use to create emmodel instance. Valid arguments depend on the selected emmodel.
         It is documented in for each emmodel class.
     :type emmodel_options: dict or a list of dict. In the latter case, the size of the list must be the same as

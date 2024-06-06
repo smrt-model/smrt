@@ -70,7 +70,7 @@ class DORT(object):
         with the scattering coefficient, but only when the difference is moderate (0.7 to 1.3).
         If set to "force" the normalization is always performed. This option is dangerous because it may hide bugs or unappropriate
         input parameters (typically too big grains). If set to False, no normalization is performed.
-    :param error_handling: If set to "exception" (the default), raise an exception in cause of error, stopping the code.
+    :param error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
         If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
         the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
     :param process_coherent_layers: Adapt the layers thiner than the wavelegnth using the MEMLS method. The radiative transfer
@@ -83,7 +83,6 @@ class DORT(object):
         It is to be use to accelerate the calculations for deep snowpacks or at high frequencies when the 
         contribution of the lowest layers is neglegible. The optical depth is a good criteria to determine this limit.
         A value of about 6 is recommended. Use with care, especially values lower than 6.
-
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)

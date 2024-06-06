@@ -35,7 +35,7 @@ class IBA_original(IBA):
         Calculates ka from wavenumber in free space (determined from sensor), and effective permittivity
         of the medium (snow layer property)
 
-        :return ka: absorption coefficient [m :sup:`-1`]
+        :returns: absorption coefficient [m :sup:`-1`]
 
         .. note::
 
