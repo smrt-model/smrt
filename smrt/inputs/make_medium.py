@@ -596,6 +596,7 @@ def make_water_body(layer_thickness=1000,
                     temperature=FREEZING_POINT,
                     salinity=0,
                     water_permittivity_model=None,
+                    foam_frac_volume=0,
                     surface=None,
                     atmosphere=None,
                     substrate=None):
@@ -613,6 +614,11 @@ def make_water_body(layer_thickness=1000,
     :param temperature: temperature of layer in K
     :param salinity: salinity in kg/kg (see PSU constant in smrt module)
     :param water_permittivity_model: water permittivity formulation (default is seawater_permittivity_klein76)
+    :param foam_frac_volume: fractional volume of air bubbles in the water. See for instance Hwang et al. 2019. 
+        https://doi.org/10.1175/JPO-D-19-0061.1 . Note that the permittivity mixing formula suggested in that paper is
+        different from the Polder van Santen used in most emmodels in SMRT.
+    :param foam_bubble_radius: effective radius of the foam bubbles. See for instance Golbraikh and Shtemler, 2018
+      doi:10.1007/s10236-018-1166-4
     :param surface: type of surface interface. Flat surface (Fresnel coefficient) is the default.
     :param substrate: the substrate under the water layer.
 
@@ -623,7 +629,8 @@ def make_water_body(layer_thickness=1000,
     layer = make_water_layer(layer_thickness,
                              temperature=temperature,
                              salinity=salinity,
-                             water_permittivity_model=water_permittivity_model)
+                             water_permittivity_model=water_permittivity_model,
+                             foam_frac_volume=foam_frac_volume)
     # add the layer and the interface interface
     sp.append(layer, interface=make_interface(surface))
 
@@ -638,21 +645,35 @@ def make_water_body(layer_thickness=1000,
 def make_water_layer(layer_thickness,
                      temperature=FREEZING_POINT,
                      salinity=0,
-                     water_permittivity_model=None, **kwargs):
+                     water_permittivity_model=None,
+                     foam_frac_volume=0,
+                     foam_bubble_radius=0.1e-3,
+                     **kwargs):
     """Make a water layer at given temperature and salinity.
 
     :param layer_thickness: thickness of ice layer in m
     :param temperature: temperature of layer in K
     :param salinity: salinity in kg/kg (see PSU constant in smrt module)
     :param water_permittivity_model: water permittivity formulation (default is seawater_permittivity_klein76)
+    :param foam_frac_volume: fractional volume of air bubbles in the water. See for instance Hwang et al. 2019. 
+        https://doi.org/10.1175/JPO-D-19-0061.1 . Note that the permittivity mixing formula suggested in that paper is
+        different from the Polder van Santen used in most emmodels in SMRT.
+    :param foam_bubble_radius: effective radius of the foam bubbles. See for instance Golbraikh and Shtemler, 2018
+      doi:10.1007/s10236-018-1166-4
 """
     if water_permittivity_model is None:
         water_permittivity_model = seawater_permittivity_klein76
 
+    if foam_frac_volume == 0:
+        microstructure_model = "homogeneous"
+    else:
+        microstructure_model = "sticky_hard_spheres"
+        kwargs['radius'] = foam_bubble_radius
+
     lay = Layer(float(layer_thickness),
                 medium="water",
-                microstructure_model=get_microstructure_model("homogeneous"),
-                frac_volume=1,
+                microstructure_model=get_microstructure_model(microstructure_model),
+                frac_volume=1 - foam_frac_volume,
                 temperature=float(temperature),
                 permittivity_model=(1, water_permittivity_model),
                 salinity=float(salinity),
