@@ -218,8 +218,9 @@ class Model(object):
             :param snowpack_column: when snowpack is a DataFrame this argument is used to specify which column contians the Snowpack objects
             :param progressbar: if True, display a progress bar during multi-snowpacks computation
             :param parallel_computation: if True, use the joblib library to run the simulations of many snowpacks in parallel.
-                Otherwise, the simulations are run sequentially, one after one. See 'runner' for a more advanced control on parallel computations.
-                 Note for users seeking performances: numpy and scipy usually also perform low-level parallel computations
+                Otherwise, the simulations are run sequentially, one after one. See 'runner' for a more advanced control
+                on parallel computations. Note for users seeking performances: numpy and scipy usually also perform low-
+                level parallel computations
                 that may (inefficiently) interact with the high-level parallelism activated by parallel_computation. For this reason
                 joblib and other parallel runners try to desactivate numpy and scipy low-level parallelism (see
                 :py:func:`~smrt.core.lib.set_max_numerical_threads`) to maximize performances. Conversely it means that
