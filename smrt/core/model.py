@@ -217,12 +217,21 @@ class Model(object):
                 rom 1 to the number of snowpacks.
             :param snowpack_column: when snowpack is a DataFrame this argument is used to specify which column contians the Snowpack objects
             :param progressbar: if True, display a progress bar during multi-snowpacks computation
-            :param parallel_computation: if True, use the joblib library to run the simulation in parallel.
-                Otherwise, the simulations are run sequentially. See 'runner' arguments.
+            :param parallel_computation: if True, use the joblib library to run the simulations of many snowpacks in parallel.
+                Otherwise, the simulations are run sequentially, one after one. See 'runner' for a more advanced control on parallel computations.
+                 Note for users seeking performances: numpy and scipy usually also perform low-level parallel computations
+                that may (inefficiently) interact with the high-level parallelism activated by parallel_computation. For this reason
+                joblib and other parallel runners try to desactivate numpy and scipy low-level parallelism (see
+                :py:func:`~smrt.core.lib.set_max_numerical_threads`) to maximize performances. Conversely it means that
+                when parallel_computation is False, the simulations are run sequentially, but numpy and scipy
+                parallelism is NOT disabled. If you really want to use a single core for the simulations, you must first call
+                :py:func:`~smrt.core.lib.set_max_numerical_threads` with 1 as argument and then call Model.run with
+                parallel_computation=False.
             :param runner: a 'runner' is a function (or more likely a class with a __call__ method) that takes a function and a
                 list/generator of simulations, executes the function on each simulation and returns a list of results.
                 'parallel_computation' allows to select between two default (basic) runners (sequential and joblib).
-                Use 'runner' for more advanced parallel distributed computations.
+                Use 'runner' for more advanced parallel distributed computations. To develop a costum runner, see the implementation of 
+                :py:class:`JoblibParallelRunner` for instance.
             :returns: result of the calculation(s) as a :py:class:`Results` instance
         """
 
