@@ -91,7 +91,7 @@ class Snowpack(object):
 
     @property
     def z(self):
-        """return the depth of each interface, that is, 0 and the depth of the bottom of each layer
+        """return the depth of each interface, that is, 0 and the depths of the bottom of each layer
 
 """
         return np.insert(self.bottom_layer_depths, 0, 0)

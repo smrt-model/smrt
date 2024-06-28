@@ -1,8 +1,10 @@
 
+import warnings
 import numpy as np
 
 # local import
 from smrt import make_snowpack, make_model, sensor_list
+from smrt.core.error import SMRTWarning
 
 
 def test_snowpack_with_coherent_layer():
@@ -23,7 +25,7 @@ def test_snowpack_with_coherent_layer():
 
     # create the EM Model - Equivalent DMRTML
     m = make_model("iba", "dort", rtsolver_options={'n_max_stream': 64, 'process_coherent_layers': True})
-
+    warnings.simplefilter("ignore", category=SMRTWarning)
     res = m.run(radiometer, sp)
 
     print(res.TbV(), res.TbH())

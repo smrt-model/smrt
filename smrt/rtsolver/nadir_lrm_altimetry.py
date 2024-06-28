@@ -249,8 +249,7 @@ class NadirLRMAltimetry(object):
 
     def combined_depth_grid(self):
 
-        z_lay = self.snowpack.layer_depths
-        z_lay = np.insert(z_lay, 0, 0)  # include the top layer
+        z_lay = self.snowpack.z
 
         # merge both depth array (layer and gate)
         z = np.concatenate((z_lay, self.z_gate))

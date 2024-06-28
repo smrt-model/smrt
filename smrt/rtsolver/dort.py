@@ -45,7 +45,7 @@ from functools import partial
 import numpy as np
 from pandas._libs import properties
 import xarray as xr
-import scipy.special.orthogonal
+import scipy.special
 import scipy.linalg
 import scipy.interpolate
 
@@ -1190,7 +1190,7 @@ def gaussquad(n):
     # """
     assert n >= 2
 
-    mu, weight = scipy.special.orthogonal.p_roots(2 * n)
+    mu, weight = scipy.special.p_roots(2 * n)
 
     mu = mu[-1:n - 1:-1]
     weight = weight[-1:n - 1:-1]

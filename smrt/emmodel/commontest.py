@@ -29,7 +29,7 @@ def test_energy_conservation(em, tolerance_pc, npol=None, subset=16):
             #p_sum, p_err = scipy.integrate.quad(phase_fn_int, 0, 2. * np.pi, args=(inc, pol, em, mu, npol)) # not needed as we already use m=0
             
             p11_12 = np.sum(ft_even_phase[:, pol, 0, :, inc], axis=0)
-            p_sum = 2 * np.pi * scipy.integrate.simps(p11_12, mu)
+            p_sum = 2 * np.pi * scipy.integrate.simpson(p11_12, x=mu)
             phase_integral = p_sum / (4. * np.pi)
             print ('Test failed for incidence__polarization_angle_number: ', inc, pol)  # Only prints if test fails
             print ('Integrated phase function is: ', phase_integral)  # Only prints if test fails
