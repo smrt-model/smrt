@@ -34,7 +34,7 @@ but is also available with off-nadir angles.
 
         newtheta = np.arccos((np.cos(self.sensor.off_nadir_angle) + rho_h * np.sin(self.sensor.off_nadir_angle)
                               * np.cos(phi)) / np.sqrt(1 + rho_h**2))
-        return self.G0 * np.exp(-2 / self.gamma * np.sin(newtheta)**2)
+        return self.G0 * np.exp(-2 / self.gamma * np.sin(newtheta)**2)  # Eq 4
 
     def PFS(self, tau, surface_slope=0, shift_nominal_gate=True):
         # tau = t - 2*h/c

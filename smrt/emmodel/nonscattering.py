@@ -45,7 +45,7 @@ class NonScattering(object):
     def ft_even_phase(self, mu_s, mu_i, m_max, npol=None):
         """ Non-scattering phase matrix.
 
-            Returns : null phase matrix
+        :returns: null phase matrix
 
         """
         if npol is None:
@@ -56,7 +56,7 @@ class NonScattering(object):
     def phase(self, mu_s, mu_i, dphi, npol=2):
         """Non-scattering phase matrix.
 
-            Returns : null phase matrix
+        :returns: null phase matrix
 
         """
 

@@ -14,10 +14,10 @@ inter-operable solution in the future.
 
 Under the hood, :py:class:`Result` uses xarray module which provides multi-dimensional array with explicit, named, dimensions. Here the
 common dimensions are frequency, polarization, polarization_inc, theta_inc, theta, and phi. They are created by the RT Solver. The interest
- of using named dimension is that slice of the xarray (i.e. results) can be selected based on the dimension name whereas with numpy the order
- of the dimensions matters. Because this is very convenient, users may be interested in adding other dimensions specific to their context such
-  as time, longitude, latitude, points, ... To do so, :py:meth:`smrt.core.model.Model.run` accepts a list of snowpack and optionally
-  the parameter `snowpack_dimension` is used to specify the name and values of the new dimension to build.
+of using named dimension is that slice of the xarray (i.e. results) can be selected based on the dimension name whereas with numpy the order
+of the dimensions matters. Because this is very convenient, users may be interested in adding other dimensions specific to their context such
+as time, longitude, latitude, points, ... To do so, :py:meth:`smrt.core.model.Model.run` accepts a list of snowpack and optionally
+the parameter `snowpack_dimension` is used to specify the name and values of the new dimension to build.
 
 Example::
 
@@ -244,7 +244,7 @@ class PassiveResult(Result):
          See xarray slicing with sel method (to document). It is also posisble to select by channel if the sensor has a channel_map.
 
          :param channel: channel to select
-         :param **kwargs: any parameter to slice the results.
+         :param \\**kwargs: any parameter to slice the results.
 """
         return _strongsqueeze(self.sel_data(channel=channel, **kwargs))
 
@@ -345,7 +345,7 @@ class ActiveResult(Result):
          See xarray slicing with sel method (to document). It is also posisble to select by channel if the sensor has a channel_map.
 
          :param channel: channel to select
-         :param **kwargs: any parameter to slice the results.
+         :param \\**kwargs: any parameter to slice the results.
 """
 
         return _strongsqueeze(self.sel_data(channel=channel, return_backscatter="natural", **kwargs))
@@ -511,7 +511,7 @@ def concat_results(result_list, coord):
 
     :param result_list: list of results returned by :py:meth:`smrt.core.model.Model.run` or other functions.
     :param coord: a tuple (dimension_name, dimension_values) for the new dimension. Dimension_values must be a sequence or
-    array with the same length as result_list.
+        array with the same length as result_list.
 
     :returns: :py:class:`Result` instance
 

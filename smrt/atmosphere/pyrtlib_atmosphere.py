@@ -10,7 +10,7 @@ advantage of being fully written in Python, synonym of easy installation and com
 PyRTLib is licensed under the GPL-3.0 License, and it must be installed independently of SMRT. pip install smrt[pyrtlib] may work.
 
 PyRTlib allows to simulate and calculate radiometric parameters and estimating propogation parameters needed by SMRT using
- meteorological data as input. Some meteorological datasets are built-in in PyRTlib and others can be download and used
+meteorological data as input. Some meteorological datasets are built-in in PyRTlib and others can be download and used
 directly in PyRTlib. Available datasets are described on the main website: https://satclop.github.io/pyrtlib/
 
 Citation:
@@ -44,7 +44,7 @@ The downloaded file is copied in a temporary directory, unless the `era5_directo
 recommended to avoid repetitive downloads.
 
 If interested in several locations, it is more efficient to download a single file with the full extent following the PyRTlib documentation:
-https://satclop.github.io/pyrtlib/en/main/generated/pyrtlib.apiwebservices.ERA5Reanalysis.request_data.html and then use the 'ncfile' argument:
+https://satclop.github.io/pyrtlib/en/main/generated/pyrtlib.apiwebservices.ERA5Reanalysis.request_data.html and then use the 'ncfile' argument::
 
     from smrt import make_atmosphere
 

@@ -1,29 +1,24 @@
 smrt.atmosphere package
 =======================
 
-Submodules
-----------
+.. automodule:: smrt.atmosphere
+   :members:
+   :show-inheritance:
+
+.. contents:: Contents
+   :depth: 2
 
 smrt.atmosphere.simple\_isotropic\_atmosphere module
 ----------------------------------------------------
 
 .. automodule:: smrt.atmosphere.simple_isotropic_atmosphere
    :members:
-   :undoc-members:
    :show-inheritance:
 
-smrt.atmosphere.test\_atmosphere module
----------------------------------------
+smrt.atmosphere.pyrtlib_atmosphere module
+-----------------------------------------
 
-.. automodule:: smrt.atmosphere.test_atmosphere
+.. automodule:: smrt.atmosphere.pyrtlib_atmosphere
    :members:
-   :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: smrt.atmosphere
-   :members:
-   :undoc-members:
-   :show-inheritance:

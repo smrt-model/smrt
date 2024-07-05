@@ -15,7 +15,7 @@ backscattering coefficient, etc.
 
 Example::
 
-    m = make_model("iba", "rtsolver")
+    m = make_model("iba", "dort")
 
     result = m.run(sensor, snowpack)  # sensor and snowpack are created before
 
@@ -23,13 +23,13 @@ Example::
 
 The model can be run on a list of snowpacks or even more conveniently on a `pandas.Series` or `pandas.DataFrame` including snowpacks.
 The first advantage is that by setting parallel_computation=True, the :py:meth:`Model.run` method performs the simulation in parallel
- on all the available cores of your machine and even possibly remotely on a high performance cluster using dask.
- The second advantage is that the returned :py:class:`~smrt.core.result.Result` object contains all the simulations 
- and provide an easier way to plot the results or compute statistics.
+on all the available cores of your machine and even possibly remotely on a high performance cluster using dask.
+The second advantage is that the returned :py:class:`~smrt.core.result.Result` object contains all the simulations 
+and provide an easier way to plot the results or compute statistics.
 
 If a list of snowpacks is provided, it is recommended to also set the snowpack_dimension argument. It takes the form of a tuple
- (list of snowpack_dimension values, dimension name). The name and values are used to define the coordinates in the 
- :py:class:`~smrt.core.result.Result` object. This is useful with timeseries or sensitivity analysis for instance.
+(list of snowpack_dimension values, dimension name). The name and values are used to define the coordinates in the 
+:py:class:`~smrt.core.result.Result` object. This is useful with timeseries or sensitivity analysis for instance.
 
 Example::
 
@@ -83,6 +83,7 @@ The `res` variable is a `pandas.DataFrame` equal to df  +  the results at all se
 """
 
 from collections.abc import Sequence, Mapping
+from dataclasses import dataclass
 import itertools
 import inspect
 import pandas as pd
@@ -101,19 +102,19 @@ def make_model(emmodel, rtsolver=None, emmodel_options=None, rtsolver_options=No
     It supports automatic import of the emmodel and rtsolver modules.
 
     :param emmodel: type of emmodel to use. Can be given by the name of a file/module in the emmodel directory (as a string) or a class.
-    List (and dict, respectively) can be provided when a different emmodel is needed for every layer (or every kind of layer medium).
+        List (and dict, respectively) can be provided when a different emmodel is needed for every layer (or every kind of layer medium).
     :type emmodel:  string or class or list of strings or classes or dict of strings or classes.
-    If a list of emmodels is given, the size must be the same as the number of layers in the snowpack.
-    If a dict is given, the keys are the kinds of medium and the values are the associated emmodels to each sort of medium.
-    The layer attribute 'medium' is used to determine the emmodel to use for each layer.
+        If a list of emmodels is given, the size must be the same as the number of layers in the snowpack.
+        If a dict is given, the keys are the kinds of medium and the values are the associated emmodels to each sort of medium.
+        The layer attribute 'medium' is used to determine the emmodel to use for each layer.
     :type emmodel:  string or class; or list of strings or classes; or dict of strings or classes.
     :param rtsolver: type of RT solver to use. Can be given by the name of a file/module in the rtsolver directeory (as a string)
-    or a class.
-    :type rtsolver: string or class.  Can be None when only computation of the layer electromagnetic properties is needed.
+        or a class.
+    :type rtsolver: string or class.  Is optional when only the computation of the layer electromagnetic properties is needed.
     :param emmodel_options: extra arguments to use to create emmodel instance. Valid arguments depend on the selected emmodel.
-    It is documented in for each emmodel class.
+        It is documented in for each emmodel class.
     :type emmodel_options: dict or a list of dict. In the latter case, the size of the list must be the same as
-    the number of layers in the snowpack.
+        the number of layers in the snowpack.
     :param rtsolver_options: extra to use to create the rtsolver instance (see __init__ of the solver used).
     :type rtsolver_options: dict
 
@@ -216,12 +217,22 @@ class Model(object):
                 rom 1 to the number of snowpacks.
             :param snowpack_column: when snowpack is a DataFrame this argument is used to specify which column contians the Snowpack objects
             :param progressbar: if True, display a progress bar during multi-snowpacks computation
-            :param parallel_computation: if True, use the joblib library to run the simulation in parallel.
-                Otherwise, the simulations are run sequentially. See 'runner' arguments.
+            :param parallel_computation: if True, use the joblib library to run the simulations of many snowpacks in parallel.
+                Otherwise, the simulations are run sequentially, one after one. See 'runner' for a more advanced control
+                on parallel computations. Note for users seeking performances: numpy and scipy usually also perform low-
+                level parallel computations
+                that may (inefficiently) interact with the high-level parallelism activated by parallel_computation. For this reason
+                joblib and other parallel runners try to desactivate numpy and scipy low-level parallelism (see
+                :py:func:`~smrt.core.lib.set_max_numerical_threads`) to maximize performances. Conversely it means that
+                when parallel_computation is False, the simulations are run sequentially, but numpy and scipy
+                parallelism is NOT disabled. If you really want to use a single core for the simulations, you must first call
+                :py:func:`~smrt.core.lib.set_max_numerical_threads` with 1 as argument and then call Model.run with
+                parallel_computation=False.
             :param runner: a 'runner' is a function (or more likely a class with a __call__ method) that takes a function and a
                 list/generator of simulations, executes the function on each simulation and returns a list of results.
                 'parallel_computation' allows to select between two default (basic) runners (sequential and joblib).
-                Use 'runner' for more advanced parallel distributed computations.
+                Use 'runner' for more advanced parallel distributed computations. To develop a costum runner, see the implementation of 
+                :py:class:`JoblibParallelRunner` for instance.
             :returns: result of the calculation(s) as a :py:class:`Results` instance
         """
 

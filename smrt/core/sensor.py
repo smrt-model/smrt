@@ -190,15 +190,17 @@ class Sensor(SensorBase):
 """
         super().__init__()
 
-        if frequency is not None and wavelength is not None:
-            smrt_warn("Sensor requires either frequency or wavelength argument, not both")
-        if wavelength is not None:
-            self.wavelength = wavelength
-        else:
-            self.frequency = frequency
+        if frequency is not None:
+            if wavelength is not None:
+                smrt_warn("Sensor requires either frequency or wavelength argument, not both")
 
-        if isinstance(self.frequency, Sequence):
-            self.frequency = np.array(self.frequency).squeeze()
+            self.frequency = np.asarray(frequency).squeeze() if isinstance(frequency, Sequence) else frequency
+            self.wavelength = C_SPEED / self.frequency
+        elif wavelength is not None:
+            self.wavelength = np.asarray(wavelength).squeeze() if isinstance(wavelength, Sequence) else wavelength
+            self.frequency = C_SPEED / self.wavelength
+        else:
+            raise SMRTError("Either frequency or wavelength is required")
 
         self.channel_map = channel_map or dict()
 
@@ -241,18 +243,6 @@ class Sensor(SensorBase):
             self.mu_s = np.cos(self.theta_inc)
 
     @property
-    def wavelength(self):
-        if hasattr(self, "_wls"):
-            return self._wls  # avoid calculation and numerical rounding error when wavelength has been explicitely set
-        else:
-            return C_SPEED / self.frequency
-
-    @wavelength.setter
-    def wavelength(self, wls):
-        self._wls = wls
-        self.frequency = C_SPEED / wls
-
-    @property
     def wavenumber(self):
         return 2 * np.pi / self.wavelength
 
@@ -272,7 +262,7 @@ class Sensor(SensorBase):
         # Check frequency range. Below 300 MHz is an indication the units may be wrong
         # Not documented as it will not be called by the user.
 
-        frequency_min = min(np.atleast_1d(self.frequency))
+        frequency_min = np.min(np.atleast_1d(self.frequency))
 
         if frequency_min < 300e6:
             # Checks frequency is above 300 MHz
@@ -350,8 +340,9 @@ class Altimeter(Sensor):
 
     """
 
-    def __init__(self, frequency, altitude, beamwidth, pulse_bandwidth, sigma_p=None, off_nadir_angle=0, beam_asymmetry=0,
-                 ngate=1024, nominal_gate=40, theta_inc_deg=0., polarization_inc=None, polarization=None, channel=None):
+    def __init__(self, frequency, altitude, beamwidth, pulse_bandwidth, sigma_p=None, antenna_gain=1, off_nadir_angle=0,
+                 beam_asymmetry=0, ngate=1024, nominal_gate=40, theta_inc_deg=0., polarization_inc=None, polarization=None,
+                 channel=None):
 
         channel_map = {channel: dict()} if channel is not None else dict()
 

@@ -131,22 +131,17 @@ class Rayleigh(object):
         return P * coef
 
     def ft_even_phase_basedonJin(self, mu_s, mu_i, m_max, npol=None):
-        """Rayleigh phase matrix.
+        """Rayleigh phase matrix. These are the Fourier decomposed phase matrices for modes m = 0, 1, 2. It is based on
+        Y.Q. Jin
 
-        These are the Fourier decomposed phase matrices for modes m = 0, 1, 2.
-        It is based on Y.Q. Jin
+        Coefficients within the phase function are::
 
-        Coefficients within the phase function are:
-        ::
+            M  = [Pvvp  Pvhp]
+                 [Phvp  Phhp]
 
-        M  = [Pvvp  Pvhp]
-             [Phvp  Phhp]
-
-        Inputs are:
         :param m: mode for decomposed phase matrix (0, 1, 2)
         :param mu: vector of cosines of incidence angle
-
-        Returns P: phase matrix
+        :returns: the phase matrix
 
         """
         assert mu_s is mu_i  # temporary hack, to be propagated
@@ -222,23 +217,18 @@ class Rayleigh(object):
 
 
     def ft_even_phase_tsang(self, mu_s, mu_i, m_max, npol=None):
-        """Rayleigh phase matrix.
+        """Rayleigh phase matrix. These are the Fourier decomposed phase matrices for modes m = 0, 1, 2.
+        Equations are from p128 Tsang Application and Theory 200 and sympy calculations.
 
-        These are the Fourier decomposed phase matrices for modes m = 0, 1, 2.
-        Equations are from p128 Tsang Application and Theory 200 and sympy calculations
+        Coefficients within the phase function are::
 
-        Coefficients within the phase function are:
-        ::
+            M  = [P[v, v]  P[v, h] -P[v, u]]
+                 [P[h, v]  P[h, h] -P[h, u]]
+                 [P[u, v]  P[u, h] P[u, u]]
 
-        M  = [P[v, v]  P[v, h] -P[v, u]]
-             [P[h, v]  P[h, h] -P[h, u]]
-             [P[u, v]  P[u, h] P[u, u]]
-
-        Inputs are:
         :param m: mode for decomposed phase matrix (0, 1, 2)
         :param mu: vector of cosines of incidence angle
-
-        Returns P: phase matrix
+        :returns: thephase matrix
 
         """
 

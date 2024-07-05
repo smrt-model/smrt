@@ -3,7 +3,6 @@
 import pytest
 
 import numpy as np
-import scipy.integrate
 
 from smrt.emmodel.iba import IBA, derived_IBA
 from smrt.emmodel.rayleigh import Rayleigh

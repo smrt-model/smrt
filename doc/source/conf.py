@@ -69,7 +69,8 @@ extensions = [
     'sphinx.ext.coverage',
     'sphinx.ext.todo',
     'sphinx.ext.imgmath',
-    'sphinx.ext.autosummary'
+    'sphinx.ext.autosummary',
+    'sphinx_rtd_theme',
  ]
 
 autosummary_generate = True
@@ -79,7 +80,8 @@ autodoc_default_flags = ['members']
 
 
 # Mock imports if rtd cannot import them
-autodoc_mock_imports = ["collections", "warnings", "oct2py", "itertools", "inspect", "copy", "glob","pickle", "random", "time", "logging", "threading", "functools", "numbers"]
+autodoc_mock_imports = ["collections", "warnings", "oct2py", "itertools", "inspect", "copy", "glob", "pickle", "random","time",
+                        "logging", "threading", "functools", "numbers", "pyrtlib"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -99,7 +101,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'SMRT'
-copyright = u'2016, G. Picard, M. Sandells, H. Löwe'
+copyright = u'2016-2024, G. Picard, M. Sandells, H. Löwe'
 author = u'G. Picard, M. Sandells, H. Löwe'
 
 
@@ -175,7 +177,7 @@ todo_include_todos = True
 # a list of builtin themes.
 #
 #html_theme = 'bizstyle'
-html_theme = 'karma_sphinx_theme'
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -362,7 +364,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'smrt', u'SMRT Documentation',
+    (master_doc, 'smrt', u'SMRT API Documentation',
      [author], 1)
 ]
 
@@ -377,7 +379,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'SMRT', u'SMRT Documentation',
+    (master_doc, 'SMRT', u'SMRT API Documentation',
      author, 'SMRT', 'One line description of project.',
      'Miscellaneous'),
 ]

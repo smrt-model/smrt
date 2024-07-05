@@ -1,23 +1,19 @@
 smrt.emmodel package
 ====================
 
-Submodules
-----------
-
-smrt.emmodel.common module
---------------------------
-
-.. automodule:: smrt.emmodel.common
+.. automodule:: smrt.emmodel
    :members:
-   :undoc-members:
    :show-inheritance:
 
-smrt.emmodel.commontest module
-------------------------------
+.. contents:: Contents
+   :depth: 2
 
-.. automodule:: smrt.emmodel.commontest
+
+smrt.emmodel.iba module
+-----------------------
+
+.. automodule:: smrt.emmodel.iba
    :members:
-   :undoc-members:
    :show-inheritance:
 
 smrt.emmodel.dmrt\_qca\_shortrange module
@@ -25,7 +21,6 @@ smrt.emmodel.dmrt\_qca\_shortrange module
 
 .. automodule:: smrt.emmodel.dmrt_qca_shortrange
    :members:
-   :undoc-members:
    :show-inheritance:
 
 smrt.emmodel.dmrt\_qcacp\_shortrange module
@@ -33,23 +28,13 @@ smrt.emmodel.dmrt\_qcacp\_shortrange module
 
 .. automodule:: smrt.emmodel.dmrt_qcacp_shortrange
    :members:
-   :undoc-members:
    :show-inheritance:
 
-smrt.emmodel.iba module
------------------------
+smrt.emmodel.symsce_torquato21 module
+-------------------------------------------
 
-.. automodule:: smrt.emmodel.iba
+.. automodule:: smrt.emmodel.symsce_torquato21
    :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.emmodel.iba\_original module
----------------------------------
-
-.. automodule:: smrt.emmodel.iba_original
-   :members:
-   :undoc-members:
    :show-inheritance:
 
 smrt.emmodel.nonscattering module
@@ -57,7 +42,6 @@ smrt.emmodel.nonscattering module
 
 .. automodule:: smrt.emmodel.nonscattering
    :members:
-   :undoc-members:
    :show-inheritance:
 
 smrt.emmodel.prescribed\_kskaeps module
@@ -65,7 +49,6 @@ smrt.emmodel.prescribed\_kskaeps module
 
 .. automodule:: smrt.emmodel.prescribed_kskaeps
    :members:
-   :undoc-members:
    :show-inheritance:
 
 smrt.emmodel.rayleigh module
@@ -73,7 +56,6 @@ smrt.emmodel.rayleigh module
 
 .. automodule:: smrt.emmodel.rayleigh
    :members:
-   :undoc-members:
    :show-inheritance:
 
 smrt.emmodel.sft\_rayleigh module
@@ -81,53 +63,33 @@ smrt.emmodel.sft\_rayleigh module
 
 .. automodule:: smrt.emmodel.sft_rayleigh
    :members:
-   :undoc-members:
    :show-inheritance:
 
-smrt.emmodel.test\_iba module
------------------------------
+smrt.emmodel.iba\_original module
+---------------------------------
 
-.. automodule:: smrt.emmodel.test_iba
+.. automodule:: smrt.emmodel.iba_original
    :members:
-   :undoc-members:
    :show-inheritance:
 
-smrt.emmodel.test\_iba\_original module
----------------------------------------
+smrt.emmodel.sce_torquato21 module
+-------------------------------------------
 
-.. automodule:: smrt.emmodel.test_iba_original
+.. automodule:: smrt.emmodel.sce_torquato21
    :members:
-   :undoc-members:
    :show-inheritance:
 
-smrt.emmodel.test\_prescribed\_kskaeps module
----------------------------------------------
+smrt.emmodel.sce_torquato21_shortrange module
+----------------------------------------------
 
-.. automodule:: smrt.emmodel.test_prescribed_kskaeps
+.. automodule:: smrt.emmodel.sce_torquato21_shortrange
    :members:
-   :undoc-members:
    :show-inheritance:
 
-smrt.emmodel.test\_rayleigh module
-----------------------------------
+smrt.emmodel.sce_rechtsman08 module
+-------------------------------------------
 
-.. automodule:: smrt.emmodel.test_rayleigh
+.. automodule:: smrt.emmodel.sce_rechtsman08
    :members:
-   :undoc-members:
    :show-inheritance:
 
-smrt.emmodel.test\_sft\_rayleigh module
----------------------------------------
-
-.. automodule:: smrt.emmodel.test_sft_rayleigh
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: smrt.emmodel
-   :members:
-   :undoc-members:
-   :show-inheritance:

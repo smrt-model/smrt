@@ -14,12 +14,12 @@ warnings.warn("The wetsnow module is to be removed in a future version."
 
 @layer_properties("temperature", "liquid_water")
 def wetsnow_permittivity(frequency, temperature, liquid_water):
-    """ calculate the dielectric constant of wet particule of ice using Bohren and Huffman 1983 according to Ya Qi Jin, eq 8-69, 1996 p282
+    """Calculate the dielectric constant of wet particles of ice using Bohren and Huffman 1983 according to Ya Qi Jin, eq 8-69, 1996 p282.
 
     :param frequency: frequency in Hz
     :param temperature: temperature in K
-    :param liquid_water (fractional volume of water with respect to ice+water volume)
-    :returns: Complex permittivity of pure ice
+    :param liquid_water: (fractional volume of water with respect to ice+water volume)
+    :returns: complex permittivity of pure ice
 
     """
     # from http://books.google.com/books?id=Y_-113zIvgkC&pg=PA142&lpg=PA142&dq=effective+dielectric+constant+sphere+coated+small&source=bl&ots=ZVfwvkA0K1&sig=P7fHb0Jff8C-7-GrlEnWRZkkxY8&hl=en&ei=RHfDTrmjJYXj8AO3v7ScCw&sa=X&oi=book_result&ct=result&resnum=3&ved=0CDYQ6AEwAg#v=onepage&q=effective%20dielectric%20constant%20sphere%20coated%20small&f=false

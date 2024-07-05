@@ -81,7 +81,7 @@ class SCER08(SCEBase):
         """ Calculation of complex effective permittivity of the medium,
         which is given by Maxwell Garnet in the case of Rechtsman and Torquato, 2008
 
-        :returns effective_permittivity: complex effective permittivity of the medium
+        :returns: effective_permittivity: complex effective permittivity of the medium
 
         """
 

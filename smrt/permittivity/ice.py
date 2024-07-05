@@ -28,7 +28,7 @@ def ice_permittivity_maetzler06(frequency, temperature):
 
     :param frequency: frequency in Hz
     :param temperature: temperature in K
-    :returns: Complex permittivity of pure ice
+    :returns: complex permittivity of pure ice
 
     **Usage example**::
 
@@ -70,7 +70,7 @@ def ice_permittivity_maetzler06(frequency, temperature):
 
 @layer_properties("temperature")
 def ice_permittivity_maetzler98(frequency, temperature):
-    """computes permittivity of ice (accounting for ionic impurities in ice?), equations from Hufford (1991) as given in Maetzler (1998): 'Microwave properties of ice and snow', in B. Schmitt et al. (eds.): 'Solar system ices', p. 241-257, Kluwer.
+    """Computes permittivity of ice (accounting for ionic impurities in ice?), equations from Hufford (1991) as given in Maetzler (1998): 'Microwave properties of ice and snow', in B. Schmitt et al. (eds.): 'Solar system ices', p. 241-257, Kluwer.
 
     :param temperature: ice temperature in K
     :param frequency: Frequency in Hz"""
@@ -95,14 +95,14 @@ def ice_permittivity_maetzler98(frequency, temperature):
 
 @layer_properties("temperature")
 def ice_permittivity_maetzler87(frequency, temperature):
-    """ Calculates the complex ice dielectric constant depending on the frequency and temperature
+    """Calculates the complex ice dielectric constant depending on the frequency and temperature
 
     Based on Mätzler, C. and Wegmüller (1987). Dielectric properties of fresh-water ice at microwave frequencies.
     J. Phys. D: Appl. Phys. 20 (1987) 1623-1630.
 
     :param frequency: frequency in Hz
     :param temperature: temperature in K
-    :returns: Complex permittivity of pure ice
+    :returns: complex permittivity of pure ice
 
     **Usage example**::
 
@@ -147,14 +147,14 @@ def ice_permittivity_maetzler87(frequency, temperature):
 
 @layer_properties("temperature")
 def ice_permittivity_tiuri84(frequency, temperature):
-    """ Calculates the complex ice dielectric constant depending on the frequency and temperature
+    """Calculates the complex ice dielectric constant depending on the frequency and temperature
 
     Based on Tiuri et al. (1984). The Complex Dielectric Constant of Snow at Microwave Frequencies.
     IEEE Journal of Oceanic Engineering, vol. 9, no. 5., pp. 377-382
 
     :param frequency: frequency in Hz
     :param temperature: temperature in K
-    :returns: Complex permittivity of pure ice
+    :returns: complex permittivity of pure ice
 
     **Usage example**::
 

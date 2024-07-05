@@ -17,7 +17,9 @@ def seawater_permittivity_klein76(frequency, temperature, salinity):
        :param frequency: frequency in Hz
        :param temperature: water temperature in K
        :param salinity: water salinity in kg/kg (see PSU constant in smrt module)
-       Returns complex water permittivity for a frequency f."""
+       :returns: complex water permittivity for a frequency f.
+
+       """
 
     tempC = temperature - FREEZING_POINT
 
@@ -65,7 +67,9 @@ def seawater_permittivity_stogryn71(frequency, temperature):
 
     :param frequency: frequency in Hz
     :param temperature: water temperature in K
-    Returns complex water permittivity for a frequency f."""
+    :returns: complex water permittivity for a frequency f.
+
+    """
 
     # High-frequency dielectric constant of saline water
     eps_inf = permittivity_high_frequency_limit(temperature)
@@ -93,10 +97,14 @@ def seawater_permittivity_stogryn71(frequency, temperature):
 
 @layer_properties("temperature")
 def brine_permittivity_stogryn85(frequency, temperature):
-    """computes permittivity and loss of brine using equations given in Stogryn and Desargant (1985): 'The Dielectric Properties of Brine in Sea Ice at Microwave Frequencies', IEEE.
+    """Computes permittivity and loss of brine using equations given in Stogryn and Desargant (1985): 'The Dielectric
+    Properties of Brine in Sea Ice at Microwave Frequencies', IEEE.
 
     :param frequency: em frequency [Hz]
-    :param temperature: ice temperature in K"""
+    :param temperature: ice temperature in K
+    :returns: complex water permittivity for a frequency f.
+
+    """
 
     eps_static = static_brine_permittivity(temperature)  # limiting static permittivity
     tau = brine_relaxation_time(temperature)  # relaxation time
@@ -117,7 +125,9 @@ def seawater_permittivity_stogryn95(frequency, temperature, salinity):
     :param frequency: frequency in Hz
     :param temperature: water temperature in K
     :param salinity: water salinity in kg/kg (see PSU constant in smrt module)
-    Returns complex water permittivity for a frequency f."""
+    :returns: complex water permittivity for a frequency f.
+
+    """
 
     #   real, intent (in) :: f     ! [GHz]    Frequency (valid from 0 to 1000 GHz)
     #   real, intent (in) :: T     ! [°C]     Temperature

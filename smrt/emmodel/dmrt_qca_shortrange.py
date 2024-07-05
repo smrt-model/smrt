@@ -8,7 +8,7 @@ dangerous to use too small a stickiness value, especially if the grains are big.
 
 This model is only compatible with the SHS microstructure model.
 
-Examples:
+Examples::
 
     from smrt import make_snowpack, make_sensor
 
@@ -59,9 +59,9 @@ class DMRT_QCA_ShortRange(Rayleigh):
 
         :param sensor: sensor instance
         :param layer: layer instance
-        :dense_snow_correction: set how snow denser than half the ice density (ie. fractional volume larger than 0.5 is handled).
-        "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air.
-        "bridging" should be developed in the future.
+        :param dense_snow_correction: set how snow denser than half the ice density (ie. fractional volume larger than 0.5 is handled).
+            "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air.
+            "bridging" should be developed in the future.
     """
 
     def __init__(self, sensor, layer, dense_snow_correction="auto"):

@@ -3,7 +3,7 @@
 """Compute scattering from Improved Born Approximation theory as described in Mätzler 1998 and Mätzler and Wiesman 1999, except the
 absorption coefficient which is computed with Polden von Staten formulation instead of the Eq 24 in Mätzler 1998. See iba_original.py for
 a fully conforming IBA version.
- This model allows for different microstructural models provided that the Fourier transform of the correlation function
+This model allows for different microstructural models provided that the Fourier transform of the correlation function
 may be performed. All properties relate to a single layer.
 
 """
@@ -32,7 +32,7 @@ def derived_IBA(effective_permittivity_model=polder_van_santen):
 
     :param effective_permittivity_model: permittivity mixing formula.
 
-    :returns a new class inheriting from IBA but with patched methods
+    :returns: a new class inheriting from IBA but with patched methods
     """
 
     return derived_EMModel(IBA, effective_permittivity_model)
@@ -130,7 +130,7 @@ become a default in the future.""")
 
             .. note::
 
-                Requires mean squared field ratio(uses mean_sq_field_ratio method)
+                Requires mean squared field ratio (uses mean_sq_field_ratio method)
 
         """
         y2 = self.mean_sq_field_ratio()
@@ -212,7 +212,7 @@ become a default in the future.""")
         p, sin_half_scatt = rayleigh_scattering_matrix_and_angle(mu_s, mu_i, dphi, npol)
 
         # IBA phase function = rayleigh phase function * angular part of microstructure term
-        k_diff = 2. * self.k0 * np.sqrt(self._effective_permittivity) * sin_half_scatt
+        k_diff = 2. * self.k0 * np.sqrt(self._effective_permittivity).real * sin_half_scatt
 
         # Calculate microstructure term
         if hasattr(self.microstructure, 'ft_autocorrelation_function'):
@@ -231,16 +231,16 @@ become a default in the future.""")
 
         Coefficients within the phase function are
 
-        Passive case (m = 0 only) and active (m = 0): :
+        Passive case (m = 0 only) and active (m = 0)::
 
-            M=[Pvvp  Pvhp]
-                 [Phvp  Phhp]
+            M = [Pvvp  Pvhp]
+                [Phvp  Phhp]
 
         Active case (m > 0)::
 
-            M=[Pvvp Pvhp Pvup]
-                 [Phvp Phhp Phup]
-                 [Puvp Puhp Puup]
+            M = [Pvvp Pvhp Pvup]
+                [Phvp Phhp Phup]
+                [Puvp Puhp Puup]
 
 
         The IBA phase function is given in Mätzler, C. (1998). Improved Born approximation for
@@ -290,14 +290,18 @@ become a default in the future.""")
 
         The extinction coefficient is defined as the sum of scattering and absorption
         coefficients. However, the radiative transfer solver requires this in matrix form,
-        so this method is called by the solver.: param mu: 1-D array of cosines of radiation stream incidence angles: param npol: number of polarization: returns ke: extinction coefficient matrix[m:sup:`-1`]
+        so this method is called by the solver.
 
-            .. note::
+        :param mu: 1-D array of cosines of radiation stream incidence angles
+        :param npol: number of polarization:
+        :returns: extinction coefficient matrix[m:sup:`-1`]
 
-                Spherical isotropy assumed(all elements in matrix are identical).
+        .. note::
 
-                Size of extinction coefficient matrix depends on number of radiation
-                streams, which is set by the radiative transfer solver.
+            Spherical isotropy assumed(all elements in matrix are identical).
+
+            Size of extinction coefficient matrix depends on number of radiation
+            streams, which is set by the radiative transfer solver.
 
         """
 
@@ -326,7 +330,7 @@ class IBA_MM(IBA):
 
     def _mm_integrand(self, theta):
         # Calculate wavevector difference
-        k_diff = np.asarray(2. * self.k0 * np.sin(theta / 2.) * np.sqrt(self._effective_permittivity))
+        k_diff = np.asarray(2. * self.k0 * np.sin(theta / 2.) * np.sqrt(self._effective_permittivity).real)
 
         # Calculate microstructure term
         if hasattr(self.microstructure, 'ft_autocorrelation_function'):

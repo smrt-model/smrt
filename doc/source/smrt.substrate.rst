@@ -1,8 +1,13 @@
 smrt.substrate package
 ======================
 
-Submodules
-----------
+.. automodule:: smrt.substrate
+   :members:
+   :show-inheritance:
+
+.. contents:: Contents
+   :depth: 2
+
 
 smrt.substrate.flat module
 --------------------------
@@ -92,45 +97,6 @@ smrt.substrate.soil\_wegmuller module
    :undoc-members:
    :show-inheritance:
 
-smrt.substrate.test\_flat module
---------------------------------
-
-.. automodule:: smrt.substrate.test_flat
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.substrate.test\_reflector module
--------------------------------------
-
-.. automodule:: smrt.substrate.test_reflector
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.substrate.test\_rough\_choudhury79 module
-----------------------------------------------
-
-.. automodule:: smrt.substrate.test_rough_choudhury79
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.substrate.test\_soil\_qnh module
--------------------------------------
-
-.. automodule:: smrt.substrate.test_soil_qnh
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.substrate.test\_soil\_wegmuller module
--------------------------------------------
-
-.. automodule:: smrt.substrate.test_soil_wegmuller
-   :members:
-   :undoc-members:
-   :show-inheritance:
 
 smrt.substrate.transparent module
 ---------------------------------
@@ -140,10 +106,3 @@ smrt.substrate.transparent module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: smrt.substrate
-   :members:
-   :undoc-members:
-   :show-inheritance:

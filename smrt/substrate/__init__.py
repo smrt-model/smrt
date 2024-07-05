@@ -1,8 +1,8 @@
 
 """
 
-This directory contains different options to represent the substrate, that is the lower boundary conditions of the radiation transfer equation.
-This is usually the soil or ice or water but can be an aluminium plate or an absorber.
+This package contains different options to represent the substrate, that is the lower boundary conditions of the radiative transfer equation.
+This is usually the soil, ice or water but can also be an aluminium plate or an absorber.
 
 To create a substrate, use/implement an helper function such as :py:func:`~smrt.inputs.make_soil.make_soil`. This function is able to 
 automatically load a specific soil model .

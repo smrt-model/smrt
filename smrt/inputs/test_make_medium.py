@@ -4,7 +4,7 @@ import pytest
 import numpy as np
 from smrt.permittivity.ice import ice_permittivity_maetzler06
 
-from .make_medium import make_snowpack, make_ice_column, make_medium, make_transparent_volume
+from .make_medium import make_snowpack, make_ice_column, make_medium, make_transparent_volume, make_water_body
 from ..core.error import SMRTError
 from ..interface.flat import Flat
 from ..interface.transparent import Transparent
@@ -156,6 +156,27 @@ def test_make_transparent_volume():
     assert sp.layers[0].thickness == 0
     assert sp.layers[0].frac_volume == 0
     assert sp.layers[0].microstructure_model.__name__ == "Homogeneous"
+
+
+def test_make_water_body():
+    sp = make_water_body()
+
+    # test that the snowpack has one empty layer
+    assert len(sp.layers) == 1
+    assert sp.layers[0].thickness > 100
+    assert sp.layers[0].frac_volume == 0
+    assert sp.layers[0].microstructure_model.__name__ == "Homogeneous"
+
+
+def test_make_water_body_with_foam():
+    sp = make_water_body(foam_frac_volume=0.01)
+
+    # test that the snowpack has one empty layer
+    assert len(sp.layers) == 1
+    assert sp.layers[0].thickness > 100
+    assert sp.layers[0].frac_volume == 0.01
+    assert sp.layers[0].microstructure_model.__name__ == "StickyHardSpheres"
+
 
 @pytest.fixture
 def mixing_formula():
