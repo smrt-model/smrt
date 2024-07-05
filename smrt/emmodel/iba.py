@@ -212,7 +212,7 @@ become a default in the future.""")
         p, sin_half_scatt = rayleigh_scattering_matrix_and_angle(mu_s, mu_i, dphi, npol)
 
         # IBA phase function = rayleigh phase function * angular part of microstructure term
-        k_diff = 2. * self.k0 * np.sqrt(self._effective_permittivity) * sin_half_scatt
+        k_diff = 2. * self.k0 * np.sqrt(self._effective_permittivity).real * sin_half_scatt
 
         # Calculate microstructure term
         if hasattr(self.microstructure, 'ft_autocorrelation_function'):
@@ -330,7 +330,7 @@ class IBA_MM(IBA):
 
     def _mm_integrand(self, theta):
         # Calculate wavevector difference
-        k_diff = np.asarray(2. * self.k0 * np.sin(theta / 2.) * np.sqrt(self._effective_permittivity))
+        k_diff = np.asarray(2. * self.k0 * np.sin(theta / 2.) * np.sqrt(self._effective_permittivity).real)
 
         # Calculate microstructure term
         if hasattr(self.microstructure, 'ft_autocorrelation_function'):
