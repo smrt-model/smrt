@@ -44,7 +44,7 @@ The downloaded file is copied in a temporary directory, unless the `era5_directo
 recommended to avoid repetitive downloads.
 
 If interested in several locations, it is more efficient to download a single file with the full extent following the PyRTlib documentation:
-https://satclop.github.io/pyrtlib/en/main/generated/pyrtlib.apiwebservices.ERA5Reanalysis.request_data.html and then use the 'ncfile' argument:
+https://satclop.github.io/pyrtlib/en/main/generated/pyrtlib.apiwebservices.ERA5Reanalysis.request_data.html and then use the 'ncfile' argument::
 
     from smrt import make_atmosphere
 
