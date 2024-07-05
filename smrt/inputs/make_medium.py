@@ -673,9 +673,9 @@ def make_water_layer(layer_thickness,
     lay = Layer(float(layer_thickness),
                 medium="water",
                 microstructure_model=get_microstructure_model(microstructure_model),
-                frac_volume=1 - foam_frac_volume,
+                frac_volume=foam_frac_volume,
                 temperature=float(temperature),
-                permittivity_model=(1, water_permittivity_model),
+                permittivity_model=(water_permittivity_model, 1.),
                 salinity=float(salinity),
                 **kwargs)
 
