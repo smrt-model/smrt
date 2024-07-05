@@ -164,7 +164,7 @@ def test_make_water_body():
     # test that the snowpack has one empty layer
     assert len(sp.layers) == 1
     assert sp.layers[0].thickness > 100
-    assert sp.layers[0].frac_volume == 1
+    assert sp.layers[0].frac_volume == 0
     assert sp.layers[0].microstructure_model.__name__ == "Homogeneous"
 
 
@@ -174,7 +174,7 @@ def test_make_water_body_with_foam():
     # test that the snowpack has one empty layer
     assert len(sp.layers) == 1
     assert sp.layers[0].thickness > 100
-    assert sp.layers[0].frac_volume == 0.99
+    assert sp.layers[0].frac_volume == 0.01
     assert sp.layers[0].microstructure_model.__name__ == "StickyHardSpheres"
 
 
