@@ -5,7 +5,7 @@ Snow Microwave Radiative Transfer model
 [SMRT](https://www.smrt-model.science/) is a radiative transfer model to compute emission and backscatter from snowpack.
 
 Getting started is easy, follow the [instructions](https://www.smrt-model.science/getstarted.html) and explore the other repositories
-with examples in the ['smrt-model' github organization](https://github.com/smrt-model) or read the detailed ['documentation'](https://smrt.readthedocs.io/en/latest/).
+with examples in the ['smrt-model' github organization](https://github.com/smrt-model) or read the detailed ['documentation'](https://smrt.readthedocs.io/en/master/).
 
 If you want to try without installing anything on your computer, use free mybinder.org notenooks: [![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/smrt-model/smrt/master?filepath=examples/iba_onelayer.ipynb)
 
