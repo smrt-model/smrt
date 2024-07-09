@@ -45,3 +45,16 @@ def test_frequency_dependent_atmosphere():
     assert np.all(atmos.run(frequency=10e9, costheta=mu, npol=2).tb_up == 5)
     assert np.all(atmos.run(frequency=21e9, costheta=mu, npol=2).tb_down == 23)
     assert np.all(atmos.run(frequency=21e9, costheta=mu, npol=2).transmittance == 0.95)
+
+def test_dict_param_atmosphere():
+    #test if one atmo param can be dict or other not specify (defaut)
+
+    mu = np.cos(np.arange(0, 90))
+    atmos = SimpleIsotropicAtmosphere(tb_down={10e9: 15, 21e9: 23})
+
+    assert np.all(atmos.run(frequency=21e9, costheta=mu, npol=2).tb_down == 23)
+    assert np.all(atmos.run(frequency=10e9, costheta=mu, npol=2).tb_down == 15)
+    assert np.all(atmos.run(frequency=21e9, costheta=mu, npol=2).tb_up == 0)
+    assert np.all(atmos.run(frequency=10e9, costheta=mu, npol=2).tb_up == 0)
+    assert np.all(atmos.run(frequency=21e9, costheta=mu, npol=2).transmittance == 1)
+    assert np.all(atmos.run(frequency=10e9, costheta=mu, npol=2).transmittance == 1)
