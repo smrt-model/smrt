@@ -58,7 +58,7 @@ class SimpleIsotropicAtmosphere(AtmosphereBase):
     def run(self, frequency, costheta, npol):
 
         def create_array(x):
-            if isinstance(self.constant_tbdown, dict):
+            if isinstance(x, dict):
                 x = x[frequency]
             return np.full(len(costheta) * npol, x)
 
