@@ -35,7 +35,7 @@ def test_scattering_noabsorption():
     sp = setup_scattering_snowpack()
 
     sensor = envisat_ra2('Ku')
-    m = Model(Rayleigh, NadirLRMAltimetry)
+    m = Model(Rayleigh, NadirLRMAltimetry, rtsolver_options=dict(theta_inc_sampling=1))
     res = m.run(sensor, sp)
     print(np.sum(res.data))
 
