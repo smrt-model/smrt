@@ -24,7 +24,7 @@ def test_nonscattering_noabsorption():
     sp = setup_nonscattering_snowpack()
 
     sensor = envisat_ra2('Ku')
-    m = Model(NonScattering, NadirLRMAltimetry)
+    m = Model(NonScattering, NadirLRMAltimetry, rtsolver_options=dict(theta_inc_sampling=1))
     res = m.run(sensor, sp)
 
     assert np.all(res.sigma() == 0)
