@@ -357,3 +357,4 @@ class Altimeter(Sensor):
         self.nominal_gate = nominal_gate
         self.off_nadir_angle = off_nadir_angle
         self.beam_asymmetry = beam_asymmetry
+        self.antenna_gain = antenna_gain

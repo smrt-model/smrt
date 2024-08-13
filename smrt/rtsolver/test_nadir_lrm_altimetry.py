@@ -27,7 +27,7 @@ def test_nonscattering_noabsorption():
     m = Model(NonScattering, NadirLRMAltimetry, rtsolver_options=dict(theta_inc_sampling=1))
     res = m.run(sensor, sp)
 
-    assert np.all(res.sigma() == 0)
+    assert np.all(res.waveform() == 0)
 
 
 def test_scattering_noabsorption():
@@ -39,6 +39,6 @@ def test_scattering_noabsorption():
     res = m.run(sensor, sp)
     print(np.sum(res.data))
 
-    assert np.allclose(np.sum(res.sigma()), 4.25624771e-24)
+    assert np.allclose(np.sum(res.waveform()), 4.25624771e-24)
 
 

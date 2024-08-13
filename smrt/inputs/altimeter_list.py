@@ -1,5 +1,6 @@
 
 
+from math import pi
 from smrt.core.sensor import make_multi_channel_altimeter, altimeter
 from smrt.core.error import SMRTError
 
@@ -49,6 +50,7 @@ def sentinel3_sral(channel=None):
                    nominal_gate=44,
                    ngate=128,
                    beamwidth=1.35,
+                   antenna_gain=1,
                    ),
     }
 
@@ -66,6 +68,7 @@ def saral_altika():
                   nominal_gate=51,
                   ngate=128,
                   beamwidth=0.605,
+                  antenna_gain=1,
                   )
     return altimeter(channel='Ka', **params)
 
@@ -85,6 +88,7 @@ def cryosat2_lrm():
                   nominal_gate=50,  # Estimate - needs better definition
                   ngate=128,
                   beamwidth=1.2,
+                  antenna_gain=1,
                   )
     return altimeter(channel='Ku', **params)
 
@@ -95,7 +99,7 @@ def cryosat2_sin():
     Parameters from https://earth.esa.int/web/eoportal/satellite-missions/c-missions/cryosat-2
     Altitude from https://doi.org/10.1016/j.asr.2018.04.014
     Beam width is 1.08 along track and 1.2 across track. Unfortunately SMRT is not able to take into
-    account elliptical footprints yet.
+    account elliptical footprints yet in LRM
 
     """
 
@@ -105,6 +109,7 @@ def cryosat2_sin():
                   nominal_gate=164,  # Estimate - needs better definition
                   ngate=512,
                   beamwidth=1.2,
+                  antenna_gain=1,
                   )
     return altimeter(channel='Ku', **params)
 
@@ -126,6 +131,7 @@ def asiras_lam(altitude=None):
                   nominal_gate=41,  # Estimate - needs better definition
                   ngate=256,
                   beamwidth=2.2,
+                  antenna_gain=1,
                   )
     return altimeter(channel='Ku', **params)
 

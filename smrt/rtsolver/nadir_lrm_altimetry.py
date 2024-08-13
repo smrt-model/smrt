@@ -4,7 +4,7 @@ import scipy.signal
 
 from smrt.core.globalconstants import C_SPEED
 from smrt.core.error import SMRTError, smrt_warn
-from smrt.core.result import ActiveResult
+from smrt.core.result import AltimetryResult
 from smrt.rtsolver.waveform_model import Brown1977
 
 import xarray as xr
@@ -144,9 +144,9 @@ class NadirLRMAltimetry(object):
                 total = np.sum(waveform, axis=0)  # compute the total
 
             waveform = np.append(waveform, total[None, :], axis=0)  # add the total
-            res = ActiveResult(waveform[:, :, None, None], coords=[('contribution', ['surface', 'interfaces', 'volume', 'total'])] + coords)
+            res = AltimetryResult(waveform[:, :, None, None], coords=[('contribution', ['surface', 'interfaces', 'volume', 'total'])] + coords)
         else:
-            res = ActiveResult(waveform[:, None, None], coords=coords)
+            res = AltimetryResult(waveform[:, None, None], coords=coords)
 
         if len(self.z_gate) >= len(t_gate):
             # shorten

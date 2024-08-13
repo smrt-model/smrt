@@ -454,6 +454,23 @@ class ActiveResult(Result):
     #    #    yield Result(data)
 
 
+class AltimetryResult(ActiveResult):
+
+    def delay_doppler_map(self, **kwargs):
+        """Return the delay Doppler map"""
+        assert "fdoppler" in self.data.dims
+        return self.sigma(**kwargs)
+
+    def waveform(self, **kwargs):
+        """Return the waveform"""
+
+        if "fdoppler" in self.data.dims:
+            wf = self.sigma(**kwargs).sum(dim="fdoppler")
+        else:
+            wf = self.sigma(**kwargs)
+        return wf
+
+
 # DON'T ERASE THIS, this is not needed at this stage but could be.
 # This is ResultGroup is inspired from xarray, itself being inspired from pandas
 # There is probably a few rough corner, but it works.
