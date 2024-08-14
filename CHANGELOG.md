@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+	- add rtsolver() and emmodel() functions in Model.py to make more readible setting options in make_model. See the 	  Model.py documentation.
 
 ### Changed
 

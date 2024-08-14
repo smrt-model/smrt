@@ -1,5 +1,7 @@
 # coding: utf-8
 
+from typing import Optional, Type
+
 import sys
 import os
 import importlib
@@ -25,7 +27,7 @@ def register_package(pkg):
 
 
 @lru_cache(maxsize=128)
-def import_class(scope, modulename, classname=None):
+def import_class(scope: str, modulename: str, classname: Optional[str]=None) -> Type:
     """Import the modulename and return either the class named "classname" or the first class defined in the module if classname is None.
 
     :param scope: scope where to search for the module.
@@ -40,7 +42,7 @@ def import_class(scope, modulename, classname=None):
 
     # add user_directories
     for pkg in user_plugin_package:
-        #print(pkg + "." + modulename)
+        # print(pkg + "." + modulename)
         res = do_import_class(pkg + "." + modulename, classname)
         if res is not None:
             return res

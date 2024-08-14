@@ -1,4 +1,5 @@
 
+from typing import Type
 import os
 
 from collections.abc import Sequence
@@ -54,6 +55,33 @@ def is_sequence(x):
         isinstance(x, pd.DataFrame) or
         isinstance(x, pd.Series)
     ) and not isinstance(x, str)
+
+
+def class_specializer(domain: str, cls: str | Type, **options) -> Type:
+    """Return a subclass of cls (imported from the domain if cls is a string) that use the provided "options" for __init__. This is
+    equivalent to functools.partial but for a class.
+
+    This is the same idea as: https://stackoverflow.com/questions/38911146/python-equivalent-of-functools-partial-for-a-class-constructor
+"""
+    if isinstance(cls, str):
+        from smrt.core.plugin import import_class  # lazy import
+        cls = import_class(domain, cls)
+
+    def __init__(self, *args, **other_options):
+        cls.__init__(self, *args, **options, **other_options)
+
+    old_doc = getattr(cls, "__doc__")
+    if old_doc is None:
+        old_doc = "No original documentation."
+
+    attributes = {
+        '__init__': __init__,
+        '__doc__':  f'{old_doc}\n\nThis class was specialized with the following options: {options}',
+        '__module__': cls.__module__,
+    }
+    new_name = f'Specialized {getattr(cls, "__name__", "X")}'
+    specialized_cls = type(new_name, (cls,), attributes)
+    return specialized_cls
 
 
 def len_atleast_1d(x):
