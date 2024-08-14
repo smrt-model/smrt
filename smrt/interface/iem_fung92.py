@@ -6,10 +6,11 @@ Use of this code requires special attention because of two issues:
 
 1) it only computes the backscatter diffuse reflection as described in Fung et al. 1992, the specular reflection
 and the coherent transmission. It does not compute the full bi-static diffuse reflection and transmission.
-As a consequence it is only suitable when single scattering is dominant, usually at low frequency when the medium
-is weakly scattering. This happends when the main mechanism is the backscatter from the interface attenuated by
-the medium.  Another case is when the rough surface is relatively smooth, the specular reflection is relatively
-strong and the energy can be scattered back by the medium (double bounce). For other situations, this code is not recommended.
+As a consequence it is only suitable for emissivity calculation and when single scattering is dominant, usually at low
+frequency when the medium is weakly scattering. This happends when the main mechanism is the backscatter from the
+interface attenuated by the medium.  Another case is when the rough surface is relatively smooth, the specular
+reflection is relatively strong and the energy can be scattered back by the medium (double bounce). For other
+situations, this code is not recommended.
 
 2) Additionaly, IEM is known to work for a limited range of roughness. Usually it is considered valid for ks < 3 and
 ks*kw < sqrt(eps) where k is the wavenumber, s the rms height and l the correlation length. The code print a warning
@@ -39,7 +40,8 @@ from .vector3 import vector3
 
 
 class IEM_Fung92(Interface):
-    """A moderate rough surface model with backscatter, specular reflection and transmission only. Use with care!
+    """A moderate rough surface model with backscatter, specular reflection and transmission only. It is not suitable
+    for emissivity calculations.Use with care!
 
 """
     args = ["roughness_rms", "corr_length"]
