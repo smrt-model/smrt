@@ -69,7 +69,8 @@ class GeometricalOpticsBackscatter(Interface):
         gamma = smrt_norm / (2 * self.mean_square_slope) * np.abs(R_normal)**2 / mu_i**5 * np.exp(- tantheta_i2 / (2 * self.mean_square_slope))
 
         if self.shadow_correction:
-            gamma *= 1 / (1 + shadow_function(self.mean_square_slope, 1 / np.sqrt(tantheta_i2)))
+             with np.errstate(divide='ignore'):
+                gamma *= 1 / (1 + shadow_function(self.mean_square_slope, 1 / np.sqrt(tantheta_i2)))
 
         reflection_coefficients = smrt_matrix.zeros((npol, len(mu_i)))
         reflection_coefficients[0] = gamma
