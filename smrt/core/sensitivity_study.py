@@ -1,6 +1,7 @@
 # coding: utf-8
 
-""" SensitivityStudy is used to easily conduct sensitivity studies. A more modern alternative is to use a pandas.DataFrame of snowpacks.
+""" SensitivityStudy is used to easily conduct sensitivity studies. This class may be depreciated in the future. A more
+modern alternative is to use a pandas.DataFrame of snowpacks.
 
 Example::
 
