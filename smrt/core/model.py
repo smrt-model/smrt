@@ -91,7 +91,7 @@ Example of usage::
 Both are equivalent and there is no plan to depreciate the original approach that has some nice use-cases.
 """
 
-from typing import Type
+from typing import Type, Union
 from collections.abc import Sequence, Mapping
 from dataclasses import dataclass
 import itertools
@@ -148,7 +148,7 @@ def make_model(
     return Model(emmodel, rtsolver, emmodel_options=emmodel_options, rtsolver_options=rtsolver_options)
 
 
-def rtsolver(rtsolver_class: str | Type, **options) -> Type:
+def rtsolver(rtsolver_class: Union[str, Type], **options) -> Type:
     """return a rtsolver subclass of cls (either given as a string or a class) where the provided options are applied to __init__.
     This function provides an alternative to setting `rtsolver_options` in :py:func:`make_model`).
 
@@ -158,7 +158,7 @@ def rtsolver(rtsolver_class: str | Type, **options) -> Type:
     return lib.class_specializer('rtsolver', rtsolver_class, **options)
 
 
-def emmodel(emmodel_class: str | Type, **options) -> Type:
+def emmodel(emmodel_class: Union[str, Type], **options) -> Type:
     """return a emmodel subclass of cls (either given as a string or a class) where the provided options are applied to __init__.
     This function provides an alternative to setting `emmodel_options` in :py:func:`make_model`).
 

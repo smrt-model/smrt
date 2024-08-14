@@ -1,5 +1,5 @@
 
-from typing import Type
+from typing import Type, Union
 import os
 
 from collections.abc import Sequence
@@ -57,7 +57,7 @@ def is_sequence(x):
     ) and not isinstance(x, str)
 
 
-def class_specializer(domain: str, cls: str | Type, **options) -> Type:
+def class_specializer(domain: str, cls: Union[str, Type], **options) -> Type:
     """Return a subclass of cls (imported from the domain if cls is a string) that use the provided "options" for __init__. This is
     equivalent to functools.partial but for a class.
 
