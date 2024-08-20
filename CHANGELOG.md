@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 	- add rtsolver() and emmodel() functions in Model.py to make more readible setting options in make_model. See the 	  Model.py documentation.
+	- depreciate Python 3.7 and lower, and add warning for future depreciation of Python 3.8 and 3.9. While 3.9 has a scheduled end of life for Oct 2025, type hinting is going to be implemented in SMRT soon, and the syntax provided by 3.10 is better than 3.9.
+	- add warning when salinity in snow is >0 but the permittivity formulation is not adapted. This is only a warning because in some situation the mixing formula set in the emmodel replaces the salinity in the materials permittivity formulation.
 
 ### Changed
 
@@ -52,9 +54,8 @@ none
 	- Strong Expansion theory is now implemented in SMRT (see Picard et al. 2022 TC)
 	- volumetric_liquid_water is a new (and recommended) way to set the amount of water in a layer using make_snowpack.
 	- the 'emmodel' argument in make_model can now be a dict mapping different emmodels for each sort of layer medium. Useful for snow + sea-ice for instance when the emmodels must be different for snow and ice.
-	- a new function in make_medium.py to create a water body (lake or open ocean): from smrt import make_water_body  
+	- a new function in make_medium.py to create a water body (lake or open ocean): from smrt import make_water_body
 
 
 ### Changed
 	- Fresnel coefficients for the reflection and transmission on flat interface are now calculated with a more rigorous equation for (very) lossly materials. This could affect some simulations with water but the effect is most > 60° incidence angle.
-

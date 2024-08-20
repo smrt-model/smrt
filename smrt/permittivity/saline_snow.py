@@ -1,12 +1,12 @@
-"""Mixing formulae relevant to saline snow. This module contains equations to compute the effective permittivity of saline snow. 
+"""Mixing formulae relevant to saline snow. This module contains equations to compute the effective permittivity of saline snow.
 
-These functions are to be used with py:meth:`~smrt.emmodel.iba.derived_IBA` or
-py:meth:`~smrt.emmodel.symsce_torquato21.derived_SymSCETK21` to change the default of most emmodels (IBA, DMRT, SFT
+These functions are to be used with :py:meth:`~smrt.emmodel.iba.derived_IBA` or
+:py:meth:`~smrt.emmodel.symsce_torquato21.derived_SymSCETK21` to change the default of most emmodels (IBA, DMRT, SFT
 Rayleigh, SCE) using the generic mixing formula Polder van Staten that automatically mixes the permittivities of the
 background (e.g.) and the scatterer materials (e.g. saline ice) to compute the effective permittivity of snow in a proportion
 determined by frac_volume.
 
-They should not be used to set the material permittivities as input of py:meth:`~smrt.smrt_inputs.make_snowpack` and
+They should not be used to set the material permittivities as input of :py:func:`~smrt.smrt_inputs.make_snowpack` and
 similar functions (because the emmodel would re-mix the already mixed materials with the background material).
 """
 
@@ -109,7 +109,7 @@ def saline_snow_permittivity_scharien(density, temperature, salinity, brine_perm
     :param temperature: snow temperature in K
     :param salinity: snow salinity in kg/kg (see PSU constant in smrt module)
     :param brine_permittivity: brine_permittivity
-    
+
     """
 
     # convert units

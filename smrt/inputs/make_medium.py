@@ -14,8 +14,8 @@ For example::
 creates a semi-infinite snowpack made of sticky hard spheres with radius 0.3mm and stickiness 0.2.
 The :py:obj:`~smrt.core.Snowpack` object is in the `sp` variable.
 
-Note that any layer with zero thickness is completely removed in most of these functions (as well as its top interface), 
-and a transparent layer is added if the resulting medium does not have any layer. This allows simulation of bare soil and bare ice 
+Note that any layer with zero thickness is completely removed in most of these functions (as well as its top interface),
+and a transparent layer is added if the resulting medium does not have any layer. This allows simulation of bare soil and bare ice
 more easily. It is important to understand that any layer with non-zero thickness, even much smaller than the wavelength, even
 10^-20 m, has an impact in the radiative transfer framework due to the reflection, transmission and refraction. In reality,
 and according to the wave theory such sub-wavelength layers and their interface should have reduced or close to zero impact.
@@ -63,17 +63,17 @@ def make_medium(data, surface=None, interface=None, substrate=None, **kwargs):
 
     if 'z' is given, the thickness is deduced using :py:meth:`~smrt.core.inputs.make_medium.compute_thickness_from_z`.
 
-    .. warning:: 
+    .. warning::
         Using this function is a bit dangerous as any unrecognized column names are silently ignored.
         For instance, a column named 'Temperature' is ignore (due to the uppercase), and the temperature in the snowpack
         will be set to its default value (273.15 K). This issue applies to any optional argument. Double ckeck the spelling of the columns.
 
-    .. note:: 
+    .. note::
         `make_medium` create layers using all the columns in the dataframe. It means that any column name becomes an attribute of
         the layer objects, even if not recognized/used by SMRT. This can be seen as an interesting feature to store information in layers,
         but this is also dangerous if column names collide with internal layer attributes or method names. For this reason,
-        this function is unsecure if the snowpack data are pulled from the internet. Always check the content of the file, and it is recommended 
-        to drop all the unnecessary columns with df.drop(columns=[...])) before calling make_medium. 
+        this function is unsecure if the snowpack data are pulled from the internet. Always check the content of the file, and it is recommended
+        to drop all the unnecessary columns with df.drop(columns=[...])) before calling make_medium.
 
 """
 
@@ -211,10 +211,10 @@ def make_snow_layer(layer_thickness,
     :param ice_permittivity_model: permittivity formulation of the scatterers (default is ice_permittivity_matzler87).
     :param background_permittivity_model: permittivity formulation for the background (default is air).
     :param volumetric_liquid_water: volume of liquid water with respect to the volume of snow (default=0).
-    :param liquid_water: May be depreciated in the future (use instead volumetric_liquid_water): volume of liquid water 
+    :param liquid_water: May be depreciated in the future (use instead volumetric_liquid_water): volume of liquid water
         with respect to ice+water volume (default=0). liquid_water = water_volume / (ice_volume + water_volume).
     :param salinity: salinity in kg/kg, for using PSU as unit see PSU constant in smrt module (default = 0).
-    :param medium: indicate which medium the layer is made of ("snow" is a default). 
+    :param medium: indicate which medium the layer is made of ("snow" is a default).
         It is used when emmodel is a dictionary mapping from medium to emmodels in :py:func:`~smrt.core.model.make_model`
     :param kwargs: other microstructure parameters are given as optional arguments (in Python words) but may be required (in SMRT words).
         See the documentation of the microstructure model.
@@ -227,6 +227,10 @@ def make_snow_layer(layer_thickness,
         # default ice permittivity model, use ice_permittivity_maetzler06 for dry snow and add support for wet snow
         from ..permittivity.wetice import wetice_permittivity_bohren83
         ice_permittivity_model = wetice_permittivity_bohren83
+
+    if (salinity > 0) and 'salinity' not in inspect.signature(ice_permittivity_model).parameters:
+        smrt_warn("The salinity of the layer is >0 but the permittivity formulation does not depend on salinity.  " +
+                  "See the module smrt.permittivity.saline_ice module.")
 
     eps_1 = background_permittivity_model
     eps_2 = ice_permittivity_model
@@ -457,7 +461,7 @@ def make_ice_layer(ice_type,
     of the specific microstructure model used.
 
     :param ice_type: Assumed ice type
-    :param layer_thickness: thickness of ice layer in m. 
+    :param layer_thickness: thickness of ice layer in m.
     :param temperature: temperature of layer in K
     :param salinity: (firstyear and multiyear) salinity in kg/kg (see PSU constant in smrt module)
     :param brine_inclusion_shape: (firstyear and multiyear) assumption for shape of brine inclusions (so far,
@@ -467,14 +471,14 @@ def make_ice_layer(ice_type,
     :param density: (multiyear) density of ice layer in kg m :sup:`-3`. If not given, density is calculated from temperature,
         salinity and ice porosity.
     :param porosity: (mutliyear and fresh) air porosity of ice layer (0..1). Default is 0.
-    :param ice_permittivity_model: (all) pure ice permittivity formulation 
+    :param ice_permittivity_model: (all) pure ice permittivity formulation
         (default is ice_permittivity_matzler06 for firstyear and fresh, and saline_ice_permittivity_pvs_mixing for multiyear)
-    :param brine_permittivity_model: (firstyear and multiyear) brine permittivity formulation 
+    :param brine_permittivity_model: (firstyear and multiyear) brine permittivity formulation
         (default is brine_permittivity_stogryn85)
     :param saline_ice_permittivity_model: (multiyear) model to mix ice and brine. The default uses polder van staten and
         ice_permittivity_model and brine_permittivity_model. It is highly recommanded to use the default.
     :param kwargs: other microstructure parameters are given as optional arguments (in Python words) but may be required (in SMRT words).
-    :param medium: indicate which medium the layer is made of ("ice" is a default). 
+    :param medium: indicate which medium the layer is made of ("ice" is a default).
         It is used when emmodel is a dictionary mapping from medium to emmodels in :py:func:`~smrt.core.model.make_model`
 
     See the documentation of the microstructure model.
@@ -501,7 +505,6 @@ def make_ice_layer(ice_type,
         porosity = np.clip(1. - density / bulk_ice_density(temperature, salinity, porosity=0), 0., 1.)
     else:
         raise SMRTError("Setting density and porosity is invalid")
-
 
     # specific setup
     if ice_type == "firstyear":
@@ -602,9 +605,9 @@ def make_water_body(layer_thickness=1000,
                     substrate=None):
     """Make a water body with a single layer of water at given temperature and salinity.
 
-    Note that water is a very strong absorber even fresh water, it is unlikely that the layers under a water body 
+    Note that water is a very strong absorber even fresh water, it is unlikely that the layers under a water body
     could be seen by microwaves. If really needed anyway, a multi-layer water body or
-    a water layer on another medium (e.g. ice) can be build using the addition operator. 
+    a water layer on another medium (e.g. ice) can be build using the addition operator.
 
     Note that water has a strong real permittivity and when used in
     combinaison with the DORT solver, it is recommended to increase the `n_max_stream` option of the solver to get
@@ -614,7 +617,7 @@ def make_water_body(layer_thickness=1000,
     :param temperature: temperature of layer in K
     :param salinity: salinity in kg/kg (see PSU constant in smrt module)
     :param water_permittivity_model: water permittivity formulation (default is seawater_permittivity_klein76)
-    :param foam_frac_volume: fractional volume of air bubbles in the water. See for instance Hwang et al. 2019. 
+    :param foam_frac_volume: fractional volume of air bubbles in the water. See for instance Hwang et al. 2019.
         https://doi.org/10.1175/JPO-D-19-0061.1 . Note that the permittivity mixing formula suggested in that paper is
         different from the Polder van Santen used in most emmodels in SMRT.
     :param foam_bubble_radius: effective radius of the foam bubbles. See for instance Golbraikh and Shtemler, 2018
@@ -655,7 +658,7 @@ def make_water_layer(layer_thickness,
     :param temperature: temperature of layer in K
     :param salinity: salinity in kg/kg (see PSU constant in smrt module)
     :param water_permittivity_model: water permittivity formulation (default is seawater_permittivity_klein76)
-    :param foam_frac_volume: fractional volume of air bubbles in the water. See for instance Hwang et al. 2019. 
+    :param foam_frac_volume: fractional volume of air bubbles in the water. See for instance Hwang et al. 2019.
         https://doi.org/10.1175/JPO-D-19-0061.1 . Note that the permittivity mixing formula suggested in that paper is
         different from the Polder van Santen used in most emmodels in SMRT.
     :param foam_bubble_radius: effective radius of the foam bubbles. See for instance Golbraikh and Shtemler, 2018
@@ -929,7 +932,7 @@ def warn_mixing_formula(permittivity_model, name):
 
     signature = inspect.signature(permittivity_model).parameters
     if ('density' in signature) or ('frac_volume' in signature):
-        warn(f"""The permittivity model set for the {name} argument seems to be a mixing formula. Such formula should
+        smrt_warn(f"""The permittivity model set for the {name} argument seems to be a mixing formula. Such formula should
         not be used in this function but rather using derived_IBA or derive_SymSCE or equivalent functions. Check the
         module documentation of the permittivity model.""",
              stacklevel=2)
