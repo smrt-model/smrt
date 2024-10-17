@@ -20,6 +20,7 @@ Examples::
 """
 
 # Stdlib import
+from warnings import warn
 
 # other import
 import numpy as np
@@ -39,9 +40,8 @@ def make_atmosphere(tb_down=0, tb_up=0, transmittance=1):
     """ Construct an atmosphere instance.
 
     """
-    raise DeprecationWarning(
-        """This function 'make_atmosphere' is going to be depreciated. Use smrt.inputs.make_medium.make_atmosphere or the
-short cut smrt.make_atmosphere instead.""")
+    warn("""This function 'make_atmosphere' is going to be depreciated. Use smrt.inputs.make_medium.make_atmosphere or the
+short cut smrt.make_atmosphere instead.""", DeprecationWarning)
 
     # create the instance
     return SimpleIsotropicAtmosphere(tb_down=tb_down, tb_up=tb_up, transmittance=transmittance)
@@ -66,5 +66,3 @@ class SimpleIsotropicAtmosphere(AtmosphereBase):
             tb_down=create_array(self.constant_tbdown),
             tb_up=create_array(self.constant_tbup),
             transmittance=create_array(self.constant_trans))
-
-
