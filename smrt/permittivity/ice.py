@@ -3,7 +3,6 @@
 from __future__ import print_function
 
 # Stdlib import
-import math
 
 # other import
 import numpy as np
@@ -39,7 +38,7 @@ def ice_permittivity_maetzler06(frequency, temperature):
 
         Ice permittivity is automatically calculated in smrt.inputs.make_medium.make_snow_layer() and
         is not set by the electromagnetic model module. An alternative
-        to ice_permittivity_maetzler06 may be specified as an argument to the make_snow_layer 
+        to ice_permittivity_maetzler06 may be specified as an argument to the make_snow_layer
         function. The usage example is provided for external reference or testing purposes.
 
 """
@@ -54,13 +53,13 @@ def ice_permittivity_maetzler06(frequency, temperature):
     Ereal = 3.1884 + 9.1e-4 * tempC
 
     theta = 300.0 / temperature - 1.0
-    alpha = (0.00504 + 0.0062 * theta) * math.exp(-22.1 * theta)
+    alpha = (0.00504 + 0.0062 * theta) * np.exp(-22.1 * theta)
 
     B1 = 0.0207
     B2 = 1.16e-11
     b = 335.
-    deltabeta = math.exp(- 9.963 + 0.0372 * tempC)
-    betam = (B1 / temperature) * (math.exp(b / temperature) / ((math.exp(b / temperature) - 1)**2)) + B2 * freqGHz**2
+    deltabeta = np.exp(- 9.963 + 0.0372 * tempC)
+    betam = (B1 / temperature) * (np.exp(b / temperature) / ((np.exp(b / temperature) - 1)**2)) + B2 * freqGHz**2
     beta = betam + deltabeta
 
     Eimag = alpha / freqGHz + beta * freqGHz
@@ -85,7 +84,7 @@ def ice_permittivity_maetzler98(frequency, temperature):
 
     # The Hufford model for the imaginary part:
     theta = 300. / temperature - 1.
-    alpha = (0.00504 + 0.0062 * theta) * math.exp(-22.1 * theta)
+    alpha = (0.00504 + 0.0062 * theta) * np.exp(-22.1 * theta)
     beta = (0.502 - 0.131 * theta / (1 + theta)) * 1e-4 + \
         (0.542e-6 * ((1 + theta) / (theta + 0.0073))**2)
 
@@ -177,7 +176,7 @@ def ice_permittivity_tiuri84(frequency, temperature):
     # Eq (6) - Imaginary part
     Eimag = 1.59e6 * \
         (0.52 * density_gm3 + 0.62*density_gm3**2) * \
-        (frequency**-1 + 1.23e-14 * frequency**.5) * math.exp(0.036 * tempC)
+        (frequency**-1 + 1.23e-14 * frequency**.5) * np.exp(0.036 * tempC)
 
     return Ereal + 1j * Eimag
 
@@ -198,7 +197,7 @@ def _ice_permittivity_HUT(frequency, temperature):
 
     # Real part: from Mätzler and Wegmuller (1987)
 
-    
+
 
     if np.any(temperature > 273):
         raise SMRTError(f"The ice temperature must be lower or equal to 273.0 K")
@@ -209,9 +208,9 @@ def _ice_permittivity_HUT(frequency, temperature):
     # NB frequencies in original equations are in GHz, here in Hz.
     freqGHz = frequency * 1e-9
     theta = (300.0 / temperature) - 1.0  # Floats needed for correct calculation in py2.7 but not needed in 3.x
-    alpha = (0.00504 + 0.0062 * theta) * math.exp(-22.1 * theta)
-    beta = (0.0207 / temperature) * (math.exp(335.0 / temperature) / (math.exp(335.0 / temperature) - 1.0)**2) + (
-        1.16e-11 * (freqGHz)**2 + math.exp(-10.02 + 0.0364 * (temperature - 273.0)))
+    alpha = (0.00504 + 0.0062 * theta) * np.exp(-22.1 * theta)
+    beta = (0.0207 / temperature) * (np.exp(335.0 / temperature) / (np.exp(335.0 / temperature) - 1.0)**2) + (
+        1.16e-11 * (freqGHz)**2 + np.exp(-10.02 + 0.0364 * (temperature - 273.0)))
     imag_permittivity_ice = alpha / freqGHz + beta * freqGHz
 
     return real_permittivity_ice + 1j * imag_permittivity_ice
@@ -238,9 +237,9 @@ def _ice_permittivity_DMRTML(frequency, temperature):
     # NB frequencies in original equations are in GHz, here in Hz.
     freqGHz = frequency * 1e-9
     theta = (300.0 / temperature) - 1.0  # Floats needed for correct calculation in py2.7 but not needed in 3.x
-    alpha = (0.00504 + 0.0062 * theta) * math.exp(-22.1 * theta)
-    beta = (0.0207 / temperature) * (math.exp(335.0 / temperature) / (math.exp(335.0 / temperature) - 1.0)**2) + (
-        1.16e-11 * (freqGHz)**2 + math.exp(-9.963 + 0.0372 * (temperature - 273.16)))
+    alpha = (0.00504 + 0.0062 * theta) * np.exp(-22.1 * theta)
+    beta = (0.0207 / temperature) * (np.exp(335.0 / temperature) / (np.exp(335.0 / temperature) - 1.0)**2) + (
+        1.16e-11 * (freqGHz)**2 + np.exp(-9.963 + 0.0372 * (temperature - 273.16)))
     imag_permittivity_ice = alpha / freqGHz + beta * freqGHz
 
     return real_permittivity_ice + 1j * imag_permittivity_ice
@@ -268,11 +267,11 @@ def _ice_permittivity_MEMLS(frequency, temperature, salinity):
     # NB frequencies in original equations are in GHz, here in Hz.
     freqGHz = frequency * 1e-9
     theta = (300.0 / temperature) - 1.0  # Floats needed for correct calculation in py2.7 but not needed in 3.x
-    alpha = (0.00504 + 0.0062 * theta) * math.exp(-22.1 * theta)
-    beta = (0.0207 / temperature) * (math.exp(335.0 / temperature) / (math.exp(335.0 / temperature) - 1.0)**2) + (
-        1.16e-11 * (freqGHz)**2 + math.exp(-9.963 + 0.0372 * (temperature - 273.0)))
+    alpha = (0.00504 + 0.0062 * theta) * np.exp(-22.1 * theta)
+    beta = (0.0207 / temperature) * (np.exp(335.0 / temperature) / (np.exp(335.0 / temperature) - 1.0)**2) + (
+        1.16e-11 * (freqGHz)**2 + np.exp(-9.963 + 0.0372 * (temperature - 273.0)))
     # Salinity modifications from equations 5.36 and 5.37 in Mätzler (2006)
-    salinity_effect = 1866.0 * math.exp(-0.317 * freqGHz) + (72.2 + 6.02 * freqGHz) * (273.16 - temperature)
+    salinity_effect = 1866.0 * np.exp(-0.317 * freqGHz) + (72.2 + 6.02 * freqGHz) * (273.16 - temperature)
     imag_permittivity_ice = alpha / freqGHz + beta * freqGHz + salinity / (0.013 * salinity_effect)
 
     return real_permittivity_ice + 1j * imag_permittivity_ice
