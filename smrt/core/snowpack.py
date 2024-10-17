@@ -35,15 +35,16 @@ class Snowpack(object):
 
 """
 
-    def __init__(self, layers=None, interfaces=None, substrate=None, atmosphere=None):
+    def __init__(self, layers=None, interfaces=None, substrate=None, atmosphere=None, terrain_info=None):
         super().__init__()
 
-        self.layers = layers if layers is not None else list()
+        self.layers = layers if layers is not None else list()  # list of the layers
         self.update_layer_number()
 
-        self.interfaces = interfaces if interfaces is not None else list()
-        self.substrate = substrate
+        self.interfaces = interfaces if interfaces is not None else list()  # list of the interface
+        self.substrate = substrate  # substrate at the bottom of the snowpack
         self.atmosphere = atmosphere  # this is temporary as in the future atmosphere will/may be normal layers
+        self.terrain_info = terrain_info  # provide information about the terrain
 
     @property
     def nlayer(self):
@@ -108,7 +109,7 @@ class Snowpack(object):
         """return the vertical profile of property_name. The property is searched either in the layer, microstructure or interface.
 
         :param property_name: name of the property
-        :param where: where to search the property. Can be 'all', 'layer', 'microstructure', or 'interface' 
+        :param where: where to search the property. Can be 'all', 'layer', 'microstructure', or 'interface'
         :param raise_attributeerror: raise an attribute error if the attribute is not found
 """
         if property_name == "bottom_layer_depths":
@@ -166,7 +167,7 @@ class Snowpack(object):
 
     def copy(self):
         """make a shallow copy of a snowpack by copying the list of layers and interfaces but not the layers and interfaces themselves which are still shared with the original snowpack.
-        This method allows the user to create a new snowpack and remove, append or replace some layers or interfaces afterward. It does not allow to alter the layers or interfaces without 
+        This method allows the user to create a new snowpack and remove, append or replace some layers or interfaces afterward. It does not allow to alter the layers or interfaces without
         changing the original snowpack. See py:meth:~deepcopy.
 """
         new_sp = copy.copy(self)
@@ -222,7 +223,7 @@ class Snowpack(object):
 
         :Example:
 
-        # duplicate the top layer:    
+        # duplicate the top layer:
         newsp = sp.layers[0] + wetsp
 
 """
@@ -326,6 +327,7 @@ class Snowpack(object):
 
         # convert class in class name
         df = df.applymap(lambda x: x.__name__ if isinstance(x, type) else x)
+        # df = df.map(lambda x: x.__name__ if isinstance(x, type) else x)  # for pandas >2.1.0
 
         # use multi index
         df.columns = pd.MultiIndex.from_tuples(df.columns)
@@ -342,4 +344,3 @@ class Snowpack(object):
         """use by IPython notebook to display a snowpack in a pretty format"""
 
         return 'Snowpack: ' + self.to_dataframe().to_html(notebook=True, na_rep='--', justify='start')
-
