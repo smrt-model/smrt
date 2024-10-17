@@ -25,7 +25,7 @@ def amsre(channel=None, frequency=None, polarization=None, theta=55):
     This function can be used to simulate all 12 AMSR-E channels i.e. frequencies of 6.925, 10.65, 18.7, 23.8, 36.5 and 89 GHz
     at both polarizations H and V. Alternatively single channels can be specified with 3-character identifiers. 18 and 19 GHz can
     be used interchangably to represent 18.7 GHz, similarly either 36 and 37 can be used to represent the 36.5 GHz channel.
-    Note that if you need both H and V polarization (at 37 GHz for instance), use channel="37" instead of channel=["37V", "37H"] 
+    Note that if you need both H and V polarization (at 37 GHz for instance), use channel="37" instead of channel=["37V", "37H"]
     as this will result in a more efficient simulation, because most rtsolvers anyway compute both polarizations in one shot.
 
     :param channel: single channel identifier
@@ -61,7 +61,7 @@ def amsr2(channel=None, frequency=None, polarization=None, theta=55):
     This function can be used to simulate all 14 AMSR2 channels i.e. frequencies of 6.925, 10.65, 18.7, 23.8, 36.5 and 89 GHz
     at both polarizations H and V. Alternatively single channels can be specified with 3-character identifiers. 18 and 19 GHz can
     be used interchangably to represent 18.7 GHz, similarly either 36 and 37 can be used to represent the 36.5 GHz channel.
-    Note that if you need both H and V polarization (at 37 GHz for instance), use channel="37" instead of channel=["37V", "37H"] 
+    Note that if you need both H and V polarization (at 37 GHz for instance), use channel="37" instead of channel=["37V", "37H"]
     as this will result in a more efficient simulation, because most rtsolvers anyway compute both polarizations in one shot.
 
     :param channel: single channel identifier
@@ -98,7 +98,7 @@ def cimr(channel=None, frequency=None, polarization=None, theta=55):
     This function can be used to simulate all 10 CIMR channels i.e. frequencies of 1.4, 6.9, 10.6, 18.7, 36.5 GHz
     at both polarizations H and V. Alternatively single channels can be specified with 3-character identifiers. 18 and 19 GHz can
     be used interchangably to represent 18.7 GHz, similarly either 36 and 37 can be used to represent the 36.5 GHz channel.
-    Note that if you need both H and V polarization (at 37 GHz for instance), use channel="37" instead of channel=["37V", "37H"] 
+    Note that if you need both H and V polarization (at 37 GHz for instance), use channel="37" instead of channel=["37V", "37H"]
     as this will result in a more efficient simulation, because most rtsolvers anyway compute both polarizations in one shot.
 
     :param channel: single channel identifier
@@ -279,6 +279,14 @@ def smap(mode, theta=40):
         raise SMRTError('mode must by A (active) or P (passive')
 
 
+def cristal_amrcr(channel):
+
+    """3-frequencies:18.7, 23.8 and 34 GHz.
+    An experimental high-frequency component, HRMR is alongside for higher resolution, see HRMR page for details.
+    Evolution of the AMR flown on JASON 2 and 3  """
+    raise NotImplementedError()
+
+
 def filter_channel_map(channel_map, channel):
 
     if isinstance(channel, str):
@@ -286,6 +294,8 @@ def filter_channel_map(channel_map, channel):
     channel_map = {ch: channel_map[ch] for ch in channel}
 
     return channel_map
+
+
 
 
 def extract_configuration(channel_map):
