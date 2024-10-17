@@ -4,7 +4,7 @@ dynamic = ["version"]
 description = "The Snow Microwave Radiative Transfer (SMRT) model is a highly modular model to compute the thermal emission and backscattering coefficient of snowpacks and other cryospheric bodies in the microwave domain."
 authors = [
             {name = "Ghislain Picard", email = "ghislain.picard@univ-grenoble-alpes.fr"},
-            {name = "Melody Sandells", email = "melody.sandells@gmail.com"}, 
+            {name = "Melody Sandells", email = "melody.sandells@gmail.com"},
             {name = "Henning Löwe", email = "loewe@slf.ch"},
             ]
 readme = "README.md"
@@ -51,8 +51,9 @@ packages = ['smrt']
 [tool.ruff]
 line-length = 120
 target-version = "py310"
+ignore = ["E741"]
 
 [tool.ruff.pydocstyle]
-convention = "numpy"
+convention = "numpy"   # TODO: changed to google
 
 [tool.setuptools_scm]
