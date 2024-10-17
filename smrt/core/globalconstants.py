@@ -29,6 +29,9 @@ C_SPEED = 299792458.
 PERMITTIVITY_OF_FREE_SPACE = 1 / (4e-7 * np.pi * C_SPEED ** 2)
 EARTH_RADIUS = 6371000.  # volumetric mean radius of the earth
 
+LOG2 = 0.6931471805599453  # often used in altimetry
+LOG4 = 1.3862943611198906  # often used in altimetry
+
 GHz = 1e9    # G in fact
 cm = 1e-2    # centimeter
 mm = 1e-3    # millimeter
