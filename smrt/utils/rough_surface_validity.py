@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 colors = {'kirchoff': '#87CEEB', 'IEM': '#FF6F61', 'SPM': '#32CD32', 'SSA': '#FFD700', 'GO': '#708090'}
 
 def validity_diagram(sensor=None, snowpack=None, interface=None, rms_height=None, correlation_length=None, frequency=None, ax=None):
-    """plot a validity diagram for the rough surface model (assumign a Gaussian surgface) with the rughness of the
+    """plot a validity diagram for the rough surface model (assuming a Gaussian surface) with the roughness of the
     snowpack (and/or the interface, or provides RMS and correlation values).
 
     :param sensor: sensor with a single or multiple frequencies.
@@ -95,16 +95,21 @@ def validity_diagram(sensor=None, snowpack=None, interface=None, rms_height=None
         interface = [interface]
 
     if snowpack is not None:
-        interface += snowpack.interfaces + list(snowpack.substrate)
+        interface += snowpack.interfaces + [snowpack.substrate]
 
+    correlation_length = [correlation_length] if isinstance(correlation_length, float) else correlation_length
     correlation_length = list(correlation_length) if correlation_length is not None else []
+  
+    rms_height = [rms_height] if isinstance(rms_height, float) else rms_height 
     rms_height = list(rms_height) if rms_height is not None else []
 
-    correlation_length += [getattr(i, "correlation_length", np.nan) for i in interface]
-    rms_height += [getattr(i, "rms_height", np.nan) for i in interface]
+    correlation_length += [getattr(i, "corr_length", np.nan) for i in interface]
+    rms_height += [getattr(i, "roughness_rms", np.nan) for i in interface]
 
+    [print(f'rougness pair (rms, corr_length) plotted : {rms, lc}') for rms, lc in zip(rms_height, correlation_length)]
+    
     if sensor is not None:
-        frequency = np.array(sensor.frequencies)
+        frequency = sensor.frequency
     elif frequency is None:
         raise SMRTError("Either sensor or frequency must be provided")
 
@@ -119,7 +124,7 @@ def validity_diagram(sensor=None, snowpack=None, interface=None, rms_height=None
         #print(kl_p, ks_p)
 
         label = f'{freq * 1e-9} GHz'
-        ax.loglog(kl_p, ks_p, 'o', label=label, color='black')
+        ax.loglog(kl_p, ks_p, 'o', label=label)
 
     ax.set_xlim((min(np.min(kl), np.min(kl_p)),
                  max(np.max(kl), np.max(kl_p))))
