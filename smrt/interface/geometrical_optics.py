@@ -2,8 +2,8 @@
 
 """
 Implement the interface boundary condition under the Geometrical Approximation between layers charcterized by their effective permittivities.
-This approximation is suitable for surface with roughness much larger than the roughness scales, typically k*s >> 1 and k*l >> 1, where s the rms heigth and l 
-the correlation length. The precise validity range must be investigated by the user, this code does not raise any warning. An important charcateristic of 
+This approximation is suitable for surface with roughness much larger than the roughness scales, typically k*s >> 1 and k*l >> 1, where s the rms heigth and l
+the correlation length. The precise validity range must be investigated by the user, this code does not raise any warning. An important charcateristic of
 this approximation is that the scattering do not directly depend on frequency, the only (probably weak) dependence is through the permittivities of the media.
 
 The model is parameterized by the mean_square_slope which can be calculated as mean_square_slope = 2*s**2/l**2 for surface with a Gaussian autocorrelation function.
@@ -49,7 +49,7 @@ class GeometricalOptics(Interface):
         return smrt_matrix(0)
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
-        """compute the reflection coefficients for an array of incident, scattered and azimuth angles 
+        """compute the reflection coefficients for an array of incident, scattered and azimuth angles
            in medium 1. Medium 2 is where the beam is transmitted.
 
         :param eps_1: permittivity of the medium where the incident beam is propagating.
@@ -377,7 +377,7 @@ class GeometricalOptics(Interface):
         mu = np.linspace(1e-7, 1, n_mu, endpoint=True)
         dphi = np.linspace(0, 2 * np.pi, n_phi, endpoint=False)
 
-        R = self.diffuse_reflection_matrix(10e9, eps_1, eps_2, mu, mu_i, dphi, 2)
+        R = self.diffuse_reflection_matrix(frequency, eps_1, eps_2, mu, mu_i, dphi, 2)
 
         return self._integrate_coefficients(mu, dphi, R)
 
@@ -389,7 +389,7 @@ class GeometricalOptics(Interface):
         mu = np.linspace(1e-7, 1, n_mu, endpoint=True)
         dphi = np.linspace(0, 2 * np.pi, n_phi, endpoint=False)
 
-        T = self.diffuse_transmission_matrix(10e9, eps_1, eps_2, mu, mu_i, dphi, 2)
+        T = self.diffuse_transmission_matrix(frequency, eps_1, eps_2, mu, mu_i, dphi, 2)
 
         return self._integrate_coefficients(mu, dphi, T)
 
