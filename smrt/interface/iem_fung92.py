@@ -13,17 +13,17 @@ reflection is relatively strong and the energy can be scattered back by the medi
 situations, this code is not recommended.
 
 2) Additionaly, IEM is known to work for a limited range of roughness. Usually it is considered valid for ks < 3 and
-ks*kw < sqrt(eps) where k is the wavenumber, s the rms height and l the correlation length. The code print a warning
+ks*kl < sqrt(eps) where k is the wavenumber, s the rms height and l the correlation length. The code print a warning
 when out of this range. There is also limitation for smooth surfaces but no warning is printed.
 
    **Usage example:**::
 
         # rms height and corr_length values work at 10 GHz
-        substrate = make_soil("iem_fung92", "dobson85", temperature=260, 
+        substrate = make_soil("iem_fung92", "dobson85", temperature=260,
                                             roughness_rms=1e-3,
                                             corr_length=5e-2,
                                             autocorrelation_function="exponential",
-                                            moisture=moisture, 
+                                            moisture=moisture,
                                             clay=clay, sand=sand, drymatter=drymatter)
 
 

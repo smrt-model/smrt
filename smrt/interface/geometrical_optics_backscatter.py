@@ -41,7 +41,7 @@ class GeometricalOpticsBackscatter(Interface):
 
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
-        """compute the reflection coefficients for an array of incident, scattered and azimuth angles 
+        """compute the reflection coefficients for an array of incident, scattered and azimuth angles
            in medium 1. Medium 2 is where the beam is transmitted.
 
         :param eps_1: permittivity of the medium where the incident beam is propagating.
@@ -120,6 +120,3 @@ class GeometricalOpticsBackscatter(Interface):
         transmission_matrix[1] = 1 - total_reflection[1]
 
         return transmission_matrix
-
-
-

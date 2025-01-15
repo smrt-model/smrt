@@ -1,5 +1,5 @@
 """
-The :py:mod:`~smrt.core` package contains the SMRT machinery. It provides the infrastructure that provides basic objects
+The :py:mod:`~smrt.core` package contains the SMRT machinery. It provides the infrastructure that defines basic objects
 and orchestrates the "science" modules in the other packages (such as :py:mod:`smrt.emmodel` or :py:mod:`smrt.rtsolver`).
 
 Amongst all, we suggest looking at the documentation of the :py:class:`~smrt.core.result.Result` object.

@@ -25,7 +25,7 @@ class NadirLRMAltimetry(object):
 
     :param oversampling: integer number defining the number of subgates used for the computation in each altimeter gate.
         This is equivalent to multiply the bandwidth by this number. It is used to perform more accurate computation.
-    :param return_oversampled: by default the backscatter is returned for each gate. If set to True, the oversampled waveform 
+    :param return_oversampled: by default the backscatter is returned for each gate. If set to True, the oversampled waveform
         is returned instead. See the 'oversampling' argument.
     :param return_contributions: return volume, surface and interface backscatter contributions in addition to the total backscatter.
     :param skip_pfs_convolution: return the vertical backscatter without the convolution by the PFS, if set to True.
@@ -267,7 +267,7 @@ class NadirLRMAltimetry(object):
         return z[:-1], dz, b_gate, b_layer[:-1], b_interface
 
     def vertical_scattering_distribution(self, return_contributions, mu_i=1.0):
-        """Compute the vertical backscattering distribution due to "grain" or volume scattering (symbol pvg in Eq 9 in Lacroix 2008) and 
+        """Compute the vertical backscattering distribution due to "grain" or volume scattering (symbol pvg in Eq 9 in Lacroix 2008) and
         "interfaces" or 'surface' scattering (symbol pvl in Eq 9 in Lacroix 2008)
 
         :param mu: cosine of the incidence angles. Only the dependence on the surface scattering depend on mu_i
@@ -319,6 +319,7 @@ class NadirLRMAltimetry(object):
         eps_upper_interface = np.insert(eps[:-1], 0, 1.)
         mu_upper_interface = np.sqrt(1 - (1 - mu_i[None, :]) / eps_upper_interface[:, None]).real
 
+        # TODO: add the coherent component
         layer_echo = [i.diffuse_reflection_matrix(self.sensor.frequency, eps_1, eps_2,
                                                   mu_s=mu, mu_i=mu, dphi=np.pi, npol=2).diagonal[0].squeeze() / eps_1.real
                       for i, eps_1, eps_2, mu in zip(self.snowpack.interfaces, eps_upper_interface, eps, mu_upper_interface)]
@@ -326,6 +327,7 @@ class NadirLRMAltimetry(object):
 
         if self.snowpack.substrate is not None:
             mu2 = np.sqrt(1 - (1 - mu_i) / eps[-1]).real
+            # TODO: add the coherent component
             layer_echo += [self.snowpack.substrate.diffuse_reflection_matrix(
                 self.sensor.frequency, eps[-1],
                 mu_s=mu2, mu_i=mu2, dphi=np.pi, npol=2).diagonal[0].squeeze() / eps[-1].real]
