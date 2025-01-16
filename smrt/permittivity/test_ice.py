@@ -9,8 +9,8 @@ from smrt.permittivity.ice import ice_permittivity_maetzler06, \
                                     ice_permittivity_tiuri84,\
                                     _ice_permittivity_HUT,\
                                     _ice_permittivity_DMRTML,\
-                                    _ice_permittivity_MEMLS
-
+                                    _ice_permittivity_MEMLS,\
+                                    _ice_permittivity_hufford91_maetzler87
 from smrt.core.error import SMRTError
 
 # Input temperature array functionality removed. If ever needed, use numpy instead of math in ice.py, but slower.
@@ -167,3 +167,10 @@ def test_imaginary_ice_permittivity_output_matzler_temp_270_freq_10GHz():
 def test_salty_imaginary_ice_permittivity_output_matzler_temp_270_freq_10GHz():
     eps = _ice_permittivity_MEMLS(10e9, 270, 50)
     np.testing.assert_allclose(eps.imag, 7.74334595964606, atol=1e-8)
+
+
+# Test output of hufford version
+def test_real_ice_permittivity_output_hufford():
+    eps = _ice_permittivity_hufford91_maetzler87(10e9, 270)
+    np.testing.assert_allclose(eps.real, 3.18567)
+    np.testing.assert_allclose(eps.imag, 0.0009650945, atol=1e-8)
