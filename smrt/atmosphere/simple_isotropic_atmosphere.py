@@ -49,7 +49,7 @@ short cut smrt.make_atmosphere instead.""", DeprecationWarning)
 
 class SimpleIsotropicAtmosphere(AtmosphereBase):
 
-    def __init__(self, tb_down=0, tb_up=0, transmittance=1):
+    def __init__(self, tb_down=0., tb_up=0., transmittance=1.):
 
         self.constant_tbdown = tb_down
         self.constant_tbup = tb_up
