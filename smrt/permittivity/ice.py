@@ -278,7 +278,7 @@ def _ice_permittivity_MEMLS(frequency, temperature, salinity):
 
 
 @layer_properties("temperature")
-def _ice_permittivity_Hufford91_Maetzler87(frequency, temperature):
+def _ice_permittivity_hufford91_maetzler87(frequency, temperature):
     # This gives exact agreement with the MEMLS_ice model version used in Rückert et al., 2023
     # Real part of imaginary follows Mätzler and Wegmuller (1987) (Dielectric properties of freshwater ice at microwave frequencies, 10.1088/0022-3727/20/12/013)
     # imaginary part from Hufford 1991 (A model for the complex permittivity of ice at frequencies below 1 THz, 10.1007/BF01008898)
