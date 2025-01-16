@@ -215,3 +215,34 @@ def calculate_freezing_temperature(salinity):
 
     #return freezing temperature in K:
     return T_freeze + 273.15 
+
+@layer_properties("temperature", "salinity")
+def sea_ice_brine_volume_function_stogryn_1987(temperature, salinity):
+    """computes brine volume fraction using coefficients from Stogryn (1987): 'An analysis of the tensor dielectric constant of sea ice at microwave frequencies' (10.1109/TGRS.1987.289814),
+    :param temperature: ice temperature in K
+    :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
+    
+    example usage: make_ice_column('firstyear', thickness=thickness, microstructure_model='exponential', 
+                     temperature=temperature, salinity=salinity, corr_length=corr_length, water_salinity=34,
+                         brine_volume_fraction=sea_ice_brine_volume_function_stogryn_1987(temperature, salinity))
+    """
+    out = []
+    for i, temp in enumerate(temperature):
+        sal = salinity[i]
+        t = temp - 273.15 ##get temperature in degree Celsius
+        if t>=-2.06:
+            p = -2.28 -52.56/t
+        elif (t>=-8.2):
+            p = 0.930 -45.917/t
+        elif (t>=-22.9):
+            p = 1.189 -43.795/t
+        elif (t>=-36.8):
+            p = 21.9921+2968.56/t + 153039/t^2 + 3502798/t^3 + 3.0401e7/t^4
+        else: #if (t>=-43.2) or nan or whatever
+            p = 2.8167 + 0.09494*t +0.9603e-3*t**2
+        rho_ice = 917 / 1e3 - 1.403e-4 * t  # density of pure ice from Pounder, 1965
+        brine_density = 1.02814 - 0.88128e-2 *t -0.9298e-4*t**2 #Stogryn 1987, equation (3) in g/cm³
+
+        Vb = rho_ice/(rho_ice/((sal*p))+rho_ice-brine_density) #    Equation 4
+        out = np.append(out, Vb)
+    return out
