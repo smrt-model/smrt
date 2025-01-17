@@ -222,11 +222,18 @@ def sea_ice_brine_volume_function_stogryn_1987(temperature, salinity):
     :param temperature: ice temperature in K
     :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
     
-    example usage: make_ice_column('firstyear', thickness=thickness, microstructure_model='exponential', 
-                     temperature=temperature, salinity=salinity, corr_length=corr_length, water_salinity=34,
-                         brine_volume_fraction=sea_ice_brine_volume_function_stogryn_1987(temperature, salinity))
+    example usage: 
+    salinity = 33*PSU
+    temperature = 270
+    make_ice_column('firstyear', thickness=[1.0], microstructure_model='exponential', 
+                     temperature=temperature, salinity=salinity, corr_length=[0.2e-3], water_salinity=34,
+                         brine_volume_fraction=sea_ice_brine_volume_function_stogryn_1987(temperature,salinity))
     """
     out = []
+    if isinstance(temperature, (int, float)):
+        temperature = [temperature]
+    if isinstance(salinity, (int, float)):
+        salinity = [salinity]
     for i, temp in enumerate(temperature):
         sal = salinity[i]
         t = temp - 273.15 ##get temperature in degree Celsius
