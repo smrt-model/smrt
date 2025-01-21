@@ -230,7 +230,7 @@ def brine_volume_function_stogryn_1987(temperature, salinity):
     temperature = 270
     make_ice_column('firstyear', thickness=[1.0], microstructure_model='exponential', 
                      temperature=temperature, salinity=salinity, corr_length=[0.2e-3], water_salinity=34,
-                         brine_volume_fraction=sea_ice_brine_volume_function_stogryn_1987(temperature,salinity))
+                         brine_volume_fraction=brine_volume_function_stogryn_1987(temperature,salinity))
     note: example usage might change 
     """
     
@@ -241,13 +241,21 @@ def brine_volume_function_stogryn_1987(temperature, salinity):
     
     # Handle the different conditions for p based on temperature (tempC)
     p = np.zeros_like(tempC)
-    p[(tempC >= -2.06)] = -2.28 - 52.56 / tempC[(tempC >= -2.06)]
-    p[(tempC >= -8.2) & (tempC < -2.06)] = 0.930 - 45.917 / tempC[(tempC >= -8.2) & (tempC < -2.06)]
-    p[(tempC >= -22.9) & (tempC < -8.2)] = 1.189 - 43.795 / tempC[(tempC >= -22.9) & (tempC < -8.2)]
-    p[(tempC >= -36.8) & (tempC < -22.9)] = 21.9921 + 2968.56 / tempC[(tempC >= -36.8) & (tempC < -22.9)] +\
-    153039 / tempC[(tempC >= -36.8) & (tempC < -22.9)]**2 + 3502798 / tempC[(tempC >= -36.8) & (tempC < -22.9)]**3 +\
-    3.0401e7 / tempC[(tempC >= -36.8) & (tempC < -22.9)]**4
-    p[(tempC < -43.2)] = 2.8167 + 0.09494 * tempC[(tempC < -43.2)] + 0.9603e-3 * tempC[(tempC < -43.2)]**2
+    
+    # Define the conditions
+    range1 = tempC >= -2.06
+    range2 = (tempC >= -8.2) & (tempC < -2.06)
+    range3 = (tempC >= -22.9) & (tempC < -8.2)
+    range4 = (tempC >= -36.8) & (tempC < -22.9)
+    range5 = tempC < -43.2
+
+    # Apply the conditions and compute the corresponding values for p
+    p[range1] = -2.28 - 52.56 / tempC[range1]
+    p[range2] = 0.930 - 45.917 / tempC[range2]
+    p[range3] = 1.189 - 43.795 / tempC[range3]
+    p[range4] = 21.9921 + 2968.56 / tempC[range4] + 153039 / tempC[range4]**2 + \
+                3502798 / tempC[range4]**3 + 3.0401e7 / tempC[range4]**4
+    p[range5] = 2.8167 + 0.09494 * tempC[range5] + 0.9603e-3 * tempC[range5]**2
 
     # Compute the density of ice in gcm-3 and brine density in gcm-3 
     rho_ice = 917 / 1e3 - 1.403e-4 * tempC # density of pure ice in gcm-3 from Pounder, 1965
