@@ -275,3 +275,37 @@ def _ice_permittivity_MEMLS(frequency, temperature, salinity):
     imag_permittivity_ice = alpha / freqGHz + beta * freqGHz + salinity / (0.013 * salinity_effect)
 
     return real_permittivity_ice + 1j * imag_permittivity_ice
+
+
+@layer_properties("temperature")
+def ice_permittivity_hufford91_maetzler87(frequency, temperature):
+    """ Calculates the complex ice dielectric constant depending on the frequency and temperature.
+    Real part of permittivity follows Mätzler and Wegmuller (1987): 
+    Dielectric properties of freshwater ice at microwave frequencies, 10.1088/0022-3727/20/12/013.
+    The imaginary part is based on Hufford 1991: 
+    A model for the complex permittivity of ice at frequencies below 1 THz, 10.1007/BF01008898. 
+    The Hufford model is derived for frequencies up to 1000 GHz and temperatures from -40°C to 0°C.
+    This gives exact agreement with the MEMLS_ice model version used in Rückert et al., 2023.
+    
+    :param frequency: Frequency in Hz
+    :param temperature: ice temperature in K
+    :returns: complex permittivity of pure ice
+    """
+
+    # Raise exception if temperature is zero
+    if np.any(temperature > FREEZING_POINT):
+        raise SMRTError(f"The ice temperature must be lower or equal to {FREEZING_POINT}K")
+
+    # Real part: from Mätzler and Wegmuller (1987)
+    real_permittivity_ice = 3.1884 + 9.1e-4 * (temperature - 273.0)
+
+    # frequencies in original equations are in GHz, here in Hz.
+    freqGHz = frequency * 1e-9
+    # Equations 4, 6,7,11 in Hufford 1991:
+    theta = 300 / temperature - 1.0
+    alpha = (0.00504 + 0.0062 * theta) *math.exp(-22.1 * theta)
+    beta = ((0.502 - 0.131 * theta) / (1 + theta)) * 1e-4 + (0.542e-6 * ((1 + theta) /
+         (theta + 0.0073))**2)
+    imag_permittivity_ice = (alpha / freqGHz) + (beta * freqGHz)
+
+    return real_permittivity_ice + 1j * imag_permittivity_ice
