@@ -303,7 +303,7 @@ def ice_permittivity_hufford91_maetzler87(frequency, temperature):
     freqGHz = frequency * 1e-9
     # Equations 4, 6,7,11 in Hufford 1991:
     theta = 300 / temperature - 1.0
-    alpha = (0.00504 + 0.0062 * theta) *math.exp(-22.1 * theta)
+    alpha = (0.00504 + 0.0062 * theta) * np.exp(-22.1 * theta)
     beta = ((0.502 - 0.131 * theta) / (1 + theta)) * 1e-4 + (0.542e-6 * ((1 + theta) /
          (theta + 0.0073))**2)
     imag_permittivity_ice = (alpha / freqGHz) + (beta * freqGHz)
