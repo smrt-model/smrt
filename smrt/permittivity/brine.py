@@ -247,7 +247,8 @@ def brine_volume_function_stogryn_1987(temperature, salinity):
     range2 = (tempC >= -8.2) & (tempC < -2.06)
     range3 = (tempC >= -22.9) & (tempC < -8.2)
     range4 = (tempC >= -36.8) & (tempC < -22.9)
-    range5 = tempC < -43.2
+    range5 = tempC < -36.8
+
 
     # Apply the conditions and compute the corresponding values for p
     p[range1] = -2.28 - 52.56 / tempC[range1]
