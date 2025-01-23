@@ -43,7 +43,7 @@ from smrt.core.layer import get_microstructure_model, Layer
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.core import lib
 from smrt.permittivity.ice import ice_permittivity_maetzler06  # default pure ice permittivity model
-from smrt.permittivity.brine import brine_volume
+from smrt.permittivity.brine import brine_volume_cox83_lepparanta88
 from smrt.permittivity.saline_water import seawater_permittivity_klein76, brine_permittivity_stogryn85
 from smrt.permittivity.saline_ice import saline_ice_permittivity_pvs_mixing
 
@@ -340,6 +340,7 @@ def make_ice_column(ice_type,
                     brine_inclusion_shape='spheres',
                     salinity=0.,
                     brine_volume_fraction=None,
+                    brine_volume_model=None,
                     brine_permittivity_model=None,
                     ice_permittivity_model=None,
                     saline_ice_permittivity_model=None,
@@ -372,6 +373,8 @@ def make_ice_column(ice_type,
         nor brine_volume_fraction are given, the ice column is considered to consist of fresh water ice.
     :param brine_volume_fraction: brine / liquid water fraction in sea ice, optional parameter, if not given brine volume fraction is
         calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
+    :param brine_volume_model: function use to compute brine_volume from temperature and salinity.
+        if not given the function :py:func:`~smrt.permittivity.brine.brine_volume_cox83` is used.
     :param density: density of ice layer in kg m :sup:`-3`
     :param porosity: porosity of ice layer (0 - 1). Default is 0.
     :param add_water_substrate: Adds a substrate made of water below the ice column.
@@ -421,6 +424,7 @@ def make_ice_column(ice_type,
                                microstructure_model=lib.get(microstructure_model, i),
                                brine_inclusion_shape=lib.get(brine_inclusion_shape, i),
                                brine_volume_fraction=lib.get(brine_volume_fraction, i),
+                               brine_volume_model=lib.get(brine_volume_model, i),
                                porosity=lib.get(porosity, i),
                                density=lib.get(density, i),
                                brine_permittivity_model=lib.get(brine_permittivity_model, i),
@@ -448,9 +452,10 @@ def make_ice_layer(ice_type,
                    microstructure_model,
                    brine_inclusion_shape='spheres',
                    brine_volume_fraction=None,
+                   brine_volume_model=None,
+                   brine_permittivity_model=None,
                    porosity=0,
                    density=None,
-                   brine_permittivity_model=None,
                    ice_permittivity_model=None,
                    saline_ice_permittivity_model=None,
                    medium="ice",
@@ -468,13 +473,15 @@ def make_ice_layer(ice_type,
         "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions), and "mix_spheres_needles" are implemented)
     :param brine_volume_fraction: (firstyear and multiyear) brine / liquid water fraction in sea ice, optional parameter,
         if not given brine volume fraction is calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
+    :param brine_volume_model: function use to compute brine_volume from temperature and salinity.
+        if not given the function :py:func:`~smrt.permittivity.brine.brine_volume_cox83` is used.
+    :param brine_permittivity_model: (firstyear and multiyear) brine permittivity formulation
+        (default is brine_permittivity_stogryn85)
     :param density: (multiyear) density of ice layer in kg m :sup:`-3`. If not given, density is calculated from temperature,
         salinity and ice porosity.
     :param porosity: (mutliyear and fresh) air porosity of ice layer (0..1). Default is 0.
     :param ice_permittivity_model: (all) pure ice permittivity formulation
         (default is ice_permittivity_matzler06 for firstyear and fresh, and saline_ice_permittivity_pvs_mixing for multiyear)
-    :param brine_permittivity_model: (firstyear and multiyear) brine permittivity formulation
-        (default is brine_permittivity_stogryn85)
     :param saline_ice_permittivity_model: (multiyear) model to mix ice and brine. The default uses polder van staten and
         ice_permittivity_model and brine_permittivity_model. It is highly recommanded to use the default.
     :param kwargs: other microstructure parameters are given as optional arguments (in Python words) but may be required (in SMRT words).
@@ -487,9 +494,12 @@ def make_ice_layer(ice_type,
 """
 
     # common setup
+    if brine_volume_model is None:
+        brine_volume_model = brine_volume_cox83_lepparanta88
+
     if ice_type in ['firstyear', 'multiyear']:
         if brine_volume_fraction is None:
-            brine_volume_fraction = brine_volume(temperature, salinity)
+            brine_volume_fraction = brine_volume_model(temperature, salinity)
 
         if brine_permittivity_model is None:
             brine_permittivity_model = brine_permittivity_stogryn85  # default brine permittivity model
@@ -580,6 +590,7 @@ def make_ice_layer(ice_type,
                 permittivity_model=(eps_1, eps_2),
                 inclusion_shape=inclusion_shape,
                 salinity=float(salinity),
+                brine_volume_model=brine_volume_model, # to propagate if needed
                 **kwargs)
 
     if brine_volume_fraction is not None:
