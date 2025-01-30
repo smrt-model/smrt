@@ -324,7 +324,7 @@ def compute_A2_local(Q, microstructure):
     r = np.linspace(0, maxr, n + 1)
 
     y = r * microstructure.autocorrelation_function(r)
-    integrale1 = scipy.integrate.romb(y, maxr / n)
+    integrale1 = scipy.integrate.romb(y.real, maxr / n)
 
     A2 = 2 * Q**2 * (integrale1 + 1j / (4 * np.pi) * microstructure.ft_autocorrelation_function(0) * Q)
 
