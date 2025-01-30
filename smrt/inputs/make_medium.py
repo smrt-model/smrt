@@ -371,10 +371,10 @@ def make_ice_column(ice_type,
         (i.e. elongated ellipsoidal inclusions), and "mix" (a mix of the two) are implemented.
     :param salinity: salinity of ice/water in kg/kg (see PSU constant in smrt module). Default is 0. If neither salinity
         nor brine_volume_fraction are given, the ice column is considered to consist of fresh water ice.
-    :param brine_volume_fraction: brine / liquid water fraction in sea ice, optional parameter, if not given brine volume fraction is
-        calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
-    :param brine_volume_model: function use to compute brine_volume from temperature and salinity.
-        if not given the function :py:func:`~smrt.permittivity.brine.brine_volume_cox83` is used.
+    :param brine_volume_fraction: brine / liquid water fraction in sea ice. Can be a value or a function depending on temperature and salinity.
+        See the module :py:mod:`smrt.permittivity.brine` for available options.
+        This parameter is optional, if not given brine volume fraction is calculated from temperature and salinity in
+        :py:func:`~.smrt.permittivity.brine.brine_volume_cox83_lepparanta88`.
     :param density: density of ice layer in kg m :sup:`-3`
     :param porosity: porosity of ice layer (0 - 1). Default is 0.
     :param add_water_substrate: Adds a substrate made of water below the ice column.
@@ -424,7 +424,6 @@ def make_ice_column(ice_type,
                                microstructure_model=lib.get(microstructure_model, i),
                                brine_inclusion_shape=lib.get(brine_inclusion_shape, i),
                                brine_volume_fraction=lib.get(brine_volume_fraction, i),
-                               brine_volume_model=lib.get(brine_volume_model, i),
                                porosity=lib.get(porosity, i),
                                density=lib.get(density, i),
                                brine_permittivity_model=lib.get(brine_permittivity_model, i),
@@ -452,7 +451,6 @@ def make_ice_layer(ice_type,
                    microstructure_model,
                    brine_inclusion_shape='spheres',
                    brine_volume_fraction=None,
-                   brine_volume_model=None,
                    brine_permittivity_model=None,
                    porosity=0,
                    density=None,
@@ -471,10 +469,10 @@ def make_ice_layer(ice_type,
     :param salinity: (firstyear and multiyear) salinity in kg/kg (see PSU constant in smrt module)
     :param brine_inclusion_shape: (firstyear and multiyear) assumption for shape of brine inclusions (so far,
         "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions), and "mix_spheres_needles" are implemented)
-    :param brine_volume_fraction: (firstyear and multiyear) brine / liquid water fraction in sea ice, optional parameter,
-        if not given brine volume fraction is calculated from temperature and salinity in ~.smrt.permittivity.brine_volume_fraction
-    :param brine_volume_model: function use to compute brine_volume from temperature and salinity.
-        if not given the function :py:func:`~smrt.permittivity.brine.brine_volume_cox83` is used.
+    :param brine_volume_fraction: brine / liquid water fraction in sea ice. Can be a value or a function depending on temperature and salinity.
+        See the module :py:mod:`smrt.permittivity.brine` for available options.
+        This parameter is optional, if not given brine volume fraction is calculated from temperature and salinity in
+        :py:func:`~.smrt.permittivity.brine.brine_volume_cox83_lepparanta88`.
     :param brine_permittivity_model: (firstyear and multiyear) brine permittivity formulation
         (default is brine_permittivity_stogryn85)
     :param density: (multiyear) density of ice layer in kg m :sup:`-3`. If not given, density is calculated from temperature,
@@ -494,12 +492,12 @@ def make_ice_layer(ice_type,
 """
 
     # common setup
-    if brine_volume_model is None:
-        brine_volume_model = brine_volume_cox83_lepparanta88
-
     if ice_type in ['firstyear', 'multiyear']:
         if brine_volume_fraction is None:
-            brine_volume_fraction = brine_volume_model(temperature, salinity)
+            brine_volume_fraction = brine_volume_cox83_lepparanta88(temperature, salinity)
+        if callable(brine_volume_fraction):
+            # call it and get a value
+            brine_volume_fraction = brine_volume_fraction(temperature, salinity)
 
         if brine_permittivity_model is None:
             brine_permittivity_model = brine_permittivity_stogryn85  # default brine permittivity model
@@ -590,7 +588,6 @@ def make_ice_layer(ice_type,
                 permittivity_model=(eps_1, eps_2),
                 inclusion_shape=inclusion_shape,
                 salinity=float(salinity),
-                brine_volume_model=brine_volume_model, # to propagate if needed
                 **kwargs)
 
     if brine_volume_fraction is not None:
@@ -728,7 +725,7 @@ def bulk_ice_density(temperature, salinity, porosity):
     """
     Computes bulk density of sea ice (in kg m :sup:`-3`), when considering the influence from  brine, solid salts, and
     air bubbles in the ice. Formulation from Cox & Weeks (1983): Equations for determining the gas and brine volumes in sea ice samples,
-    J Glac. Developed for temperatures between -2--30°C. For higher temperatures (>2°C) is used the formulation from
+    J Glac. Developed for temperatures between -2--30째C. For higher temperatures (>2째C) is used the formulation from
     Lepparanta & Manninen (1988): The brine and gas content of sea ice with attention to low salinities and high temperatures.
 
     :param temperature: Temperature in K

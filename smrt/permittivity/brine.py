@@ -1,3 +1,6 @@
+"""This module contains function to compute various properties of brines.
+"""
+
 import warnings
 
 import numpy as np
@@ -36,20 +39,7 @@ def brine_relaxation_time(temperature):
     return tau_brine
 
 
-@layer_properties("temperature")
-def static_brine_permittivity(temperature):
-    """Computes  static dielectric constant of brine, Stogryn and Desargant, 1985
-
-    :param temperature: thermometric temperature [K]
-
-    """
-
-    tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
-    eps_static = (939.66 - 19.068 * tempC) / (10.737 - tempC)  # Static dielectric constant of saline water
-    return eps_static
-
-
-def calculate_brine_salinity(temperature):
+def brine_salinity(temperature):
     """Computes the salinity of brine (in ppt) for a given temperature (Cox and Weeks, 1975)
 
     :param temperature: snow temperature in K
@@ -68,6 +58,19 @@ def calculate_brine_salinity(temperature):
 
 
 @layer_properties("temperature")
+def static_brine_permittivity(temperature):
+    """Computes  static dielectric constant of brine, Stogryn and Desargant, 1985
+
+    :param temperature: thermometric temperature [K]
+
+    """
+
+    tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
+    eps_static = (939.66 - 19.068 * tempC) / (10.737 - tempC)  # Static dielectric constant of saline water
+    return eps_static
+
+
+@layer_properties("temperature")
 def permittivity_high_frequency_limit(temperature):
     """Computes permittivity.
 
@@ -78,6 +81,58 @@ def permittivity_high_frequency_limit(temperature):
     tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
     eps_inf = (82.79 + 8.19 * tempC**2) / (15.68 + tempC**2)
     return eps_inf
+
+
+def water_freezing_temperature(salinity):
+    """Calculates temperature at which saline water freezes using polynomial fits
+    of the Gibbs function given in TEOS-10: The international thermodynamic equation
+    of seawater - 2010 ('http://www.teos-10.org/pubs/TEOS-10_Manual.pdf).
+    The error of this fit ranges between -5e-4 K and 6e-4 K when compared with the
+    temperature calculated from the exact in-situ freezing temperature, which is found
+    by a Newton-Raphson iteration of the equality of the chemical potentials of water
+    in seawater and in ice.
+
+    :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)"""
+
+    # Coefficients for polynomial:
+    c0 = 0.017947064327968736
+    c1 = -6.076099099929818
+    c2 = 4.883198653547851
+    c3 = -11.88081601230542
+    c4 = 13.34658511480257
+    c5 = -8.722761043208607
+    c6 = 2.082038908808201
+    c7 = -7.389420998107497
+    c8 = -2.110913185058476
+    c9 = 0.2295491578006229
+    c10 = -0.9891538123307282
+    c11 = -0.08987150128406496
+    c12 = 0.3831132432071728
+    c13 = 1.054318231187074
+    c14 = 1.065556599652796
+    c15 = -0.7997496801694032
+    c16 = 0.3850133554097069
+    c17 = -2.078616693017569
+    c18 = 0.8756340772729538
+    c19 = -2.079022768390933
+    c20 = 1.596435439942262
+    c21 = 0.1338002171109174
+    c22 = 1.242891021876471
+
+    p = 10.1325  # pressure at sea level in dbar
+    s_r = salinity * 1e1
+    x = np.sqrt(s_r)
+    p_r = p * 1e-4
+
+    # freezing temperature in deg Celsius:
+    T_freeze = (c0 + s_r * (c1 + x * (c2 + x * (c3 + x * (c4 + x * (c5 + c6 * x))))) +
+                p_r * (c7 + p_r * (c8 + c9 * p_r)) +
+                s_r * p_r * (c10 + p_r * (c12 + p_r * (c15 + c21 * s_r))+ s_r * (c13 + c17 * p_r + c19 * s_r)+
+                x * (c11 + p_r * (c14 + c18 * p_r) + s_r * (c16 + c20 * p_r + c22 * s_r)))
+    )  # fmt: skip
+
+    # return freezing temperature in K:
+    return T_freeze + 273.15
 
 
 def brine_volume_cox83_lepparanta88(temperature, salinity, porosity=0, bulk_density=None):
@@ -92,7 +147,7 @@ def brine_volume_cox83_lepparanta88(temperature, salinity, porosity=0, bulk_dens
 
     """
 
-    if temperature > calculate_freezing_temperature(salinity):
+    if temperature > water_freezing_temperature(salinity):
         return 1.0  # if temperature of ice is above freezing temperature, which
     # is determined by salinity of the ice, brine volume fraction is set to 1, meaning that the saline ice is liquid (= saline water)
 
@@ -156,7 +211,7 @@ def brine_volume_cox83_lepparanta88(temperature, salinity, porosity=0, bulk_dens
 
     Vb = salinity / PSU * bulk_density * 1e-3 / F1  # brine volume fraction (Cox and Weeks, 1983)
 
-    if Vb > 1.0 and abs(temperature - calculate_freezing_temperature(salinity)) < 0.1:
+    if Vb > 1.0 and abs(temperature - water_freezing_temperature(salinity)) < 0.1:
         Vb = 1.0  # the polynomial equations for
         # calculating brine volume fraction reach and exceed values of 1 slightly for temperatures slightly lower than the
         # calculated freezing temperature. If we are close to the freezing point (difference < 0.1K), we just set brine volume
@@ -178,6 +233,7 @@ def brine_volume(*args, **kwargs):
     return brine_volume_cox83_lepparanta88(*args, **kwargs)
 
 
+
 def brine_volume_frankenstein67(temperature, salinity):
     """Computes brine volume fraction using the simpliest equation of Frankenstein and Garner 1967: 'Frankenstein G,
     Garner R. Equations for Determining the Brine Volume of Sea Ice from −0.5° to −22.9°C. Journal of Glaciology.
@@ -194,59 +250,6 @@ def brine_volume_frankenstein67(temperature, salinity):
     return Vb
 
 
-@layer_properties("salinity")
-def calculate_freezing_temperature(salinity):
-    """Calculates temperature at which saline water freezes using polynomial fits
-    of the Gibbs function given in TEOS-10: The international thermodynamic equation
-    of seawater - 2010 ('http://www.teos-10.org/pubs/TEOS-10_Manual.pdf).
-    The error of this fit ranges between -5e-4 K and 6e-4 K when compared with the
-    temperature calculated from the exact in-situ freezing temperature, which is found
-    by a Newton-Raphson iteration of the equality of the chemical potentials of water
-    in seawater and in ice.
-
-    :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)"""
-
-    # Coefficients for polynomial:
-    c0 = 0.017947064327968736
-    c1 = -6.076099099929818
-    c2 = 4.883198653547851
-    c3 = -11.88081601230542
-    c4 = 13.34658511480257
-    c5 = -8.722761043208607
-    c6 = 2.082038908808201
-    c7 = -7.389420998107497
-    c8 = -2.110913185058476
-    c9 = 0.2295491578006229
-    c10 = -0.9891538123307282
-    c11 = -0.08987150128406496
-    c12 = 0.3831132432071728
-    c13 = 1.054318231187074
-    c14 = 1.065556599652796
-    c15 = -0.7997496801694032
-    c16 = 0.3850133554097069
-    c17 = -2.078616693017569
-    c18 = 0.8756340772729538
-    c19 = -2.079022768390933
-    c20 = 1.596435439942262
-    c21 = 0.1338002171109174
-    c22 = 1.242891021876471
-
-    p = 10.1325  # pressure at sea level in dbar
-    s_r = salinity * 1e1
-    x = np.sqrt(s_r)
-    p_r = p * 1e-4
-
-    # freezing temperature in deg Celsius:
-    T_freeze = (c0 + s_r * (c1 + x * (c2 + x * (c3 + x * (c4 + x * (c5 + c6 * x))))) +
-                p_r * (c7 + p_r * (c8 + c9 * p_r)) +
-                s_r * p_r * (c10 + p_r * (c12 + p_r * (c15 + c21 * s_r))+ s_r * (c13 + c17 * p_r + c19 * s_r)+
-                x * (c11 + p_r * (c14 + c18 * p_r) + s_r * (c16 + c20 * p_r + c22 * s_r)))
-    )  # fmt: skip
-
-    #return freezing temperature in K:
-    return T_freeze + 273.15
-
-@layer_properties("temperature", "salinity")
 def brine_volume_function_stogryn_1987(temperature, salinity):
     """computes brine volume fraction using coefficients from Stogryn (1987):
     'An analysis of the tensor dielectric constant of sea ice at microwave frequencies' (10.1109/TGRS.1987.289814),
@@ -283,13 +286,12 @@ def brine_volume_function_stogryn_1987(temperature, salinity):
     p[range1] = -2.28 - 52.56 / tempC[range1]
     p[range2] = 0.930 - 45.917 / tempC[range2]
     p[range3] = 1.189 - 43.795 / tempC[range3]
-    p[range4] = 21.9921 + 2968.56 / tempC[range4] + 153039 / tempC[range4]**2 + \
-                3502798 / tempC[range4]**3 + 3.0401e7 / tempC[range4]**4
-    p[range5] = 2.8167 + 0.09494 * tempC[range5] + 0.9603e-3 * tempC[range5]**2
+    p[range4] = 21.9921 + 2968.56 / tempC[range4] + 153039 / tempC[range4] ** 2 + 3502798 / tempC[range4] ** 3 + 3.0401e7 / tempC[range4] ** 4  # fmt: skip
+    p[range5] = 2.8167 + 0.09494 * tempC[range5] + 0.9603e-3 * tempC[range5] ** 2
 
     # Compute the density of ice in gcm-3 and brine density in gcm-3
-    rho_ice = 917 / 1e3 - 1.403e-4 * tempC # density of pure ice in gcm-3 from Pounder, 1965
-    brine_density = 1.02814 - 0.88128e-2 * tempC - 0.9298e-4 * tempC**2 #Stogryn 1987, equation (3) in gcm-3
+    rho_ice = 917 / 1e3 - 1.403e-4 * tempC  # density of pure ice in gcm-3 from Pounder, 1965
+    brine_density = 1.02814 - 0.88128e-2 * tempC - 0.9298e-4 * tempC**2  # Stogryn 1987, equation (3) in gcm-3
 
     # Compute the brine volume (Vb) using the equation
     Vb = rho_ice / (rho_ice / (salinity * p) + rho_ice - brine_density)
