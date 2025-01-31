@@ -24,7 +24,7 @@ def seawater_permittivity_klein76(frequency, temperature, salinity):
     tempC = temperature - FREEZING_POINT
 
     Sppt = salinity / PSU
-    
+
     # Millero and Leung 1976
     tempF = - (0.0575 * Sppt - 1.710523e-3 * Sppt**1.5 + 2.154996e-4 * Sppt**2)
     if np.any(tempC < tempF - 0.1):  # take into account a small tolerance
@@ -201,3 +201,151 @@ def seawater_permittivity_stogryn95(frequency, temperature, salinity):
     term3 = 1j * sigma * 17.97510 / freqGHz
 
     return eps_inf + term1 + term2 + term3
+
+
+@layer_properties("temperature", "salinity")
+def seawwater_permittivity_boutin21_2function(frequency, temperature, salinity):
+    """Compute the permittivity using BVZ 2 from Boutin et al. (2023, IEEE TGRS, doi : 10.1109/TGRS.2023.3257923) Equations (7) and (8)
+
+    BVZ 2functions' has been derived from L-Band GW2020 measurements,  following the assumptions of Somaraju and Trumpf
+    (2006). It reasonnably fits P-Band dielectric constants laboratory measurements over the 0-150 pss range (Levine et al. 2025,
+    IEEE TGRS). With respect to the BV (Boutin et al. 2020) model, the following changes have been performed:
+
+    Conductivity=pss78 conductivity-salinity relationship from TEOS10
+    tau=tauMW(1+gSST) instead of tau=tauMW
+    alpha=(par(1)-par(2).SST)
+
+    This function requires the Gibbs SeaWater Oceanographic Toolbox package (gsw): https://github.com/TEOS-10/GSW-python
+
+    :param frequency: em frequency [Hz]
+    :param temperature: ice temperature in K
+    :returns: complex water permittivity for a frequency f.
+
+    """
+    import gsw
+
+    # Input variables
+    sst = temperature - FREEZING_POINT  # sst_in  # Ensure this is defined before running
+    s = salinity / PSU# s_in  # Ensure this is defined before running
+    freq = frequency / GHz  # Ensure this is defined before running
+
+    # Define constants
+
+
+    PG = np.array([0.000132507806856, -0.003428956751222, 0.012693072655708])
+    par = np.array([0.002975810548577, 0.000010686101917])
+    f0 = 17.97510
+
+    x = np.array([5.7230e+00, 2.2379e-02, -7.1237e-04, 5.0478e+00, -7.0315e-02, 6.0059e-04,
+                   3.6143e+00, 2.8841e-02, 1.3652e-01, 1.4825e-03, 2.4166e-04])
+
+    z = np.array([-3.56417e-03, 4.74868e-06, 1.15574e-05, 2.39357e-03, -3.13530e-05,
+                   2.52477e-07, -6.28908e-03, 1.76032e-04, -9.22144e-05, -1.99723e-02,
+                   1.81176e-04, -2.04265e-03, 1.57883e-04])
+
+    # Compute gSST
+    gSST = PG[0] * sst**2 + PG[1] * sst + PG[2]
+
+    # Compute SST powers
+    sst2 = sst**2
+    sst3 = sst2 * sst
+    sst4 = sst3 * sst
+    sst5 = sst4 * sst
+
+    # Compute salinity powers
+    s2 = s**2
+    s3 = s2 * s
+
+    # Pure water parameters
+    e0 = (3.70886e4 - 8.2168e1 * sst) / (4.21854e2 + sst)  # Stogryn et al. (1995)
+    e1 = x[0] + x[1] * sst + x[2] * sst2  # eps1
+    tnu1 = (45.00 + sst) / (x[3] + x[4] * sst + x[5] * sst2)  # nu1
+
+    # Saline water conductivity (TEOS-10)
+    sig = gsw.C_from_SP(s, sst, 0) * 0.1  # Convert from mS/cm to S/m
+
+    # Permittivity calculations
+    a0 = 1 - s * (par[0] - sst * par[1])
+    e0s = a0 * e0  # Adjusted epss
+    n1s = tnu1 * (1 + gSST)  # Adjusted nu1
+    e1s = e1  # e1 remains unchanged
+
+    # Compute relative permittivity (epsr)
+    epsr = (e0s - e1s) / (1.0 + 1j * (freq / n1s)) + e1s - 1j * sig * f0 / freq
+
+    return epsr
+
+
+
+@layer_properties("temperature", "salinity")
+def seawwater_permittivity_boutin21_3function(frequency, temperature, salinity):
+    """Compute the permittivity using BVZ 2 from Boutin et al. (2023, IEEE TGRS, doi : 10.1109/TGRS.2023.3257923) Equations (9,10,11)
+
+    Model derived from L-Band GW2020 measurements and validated wit SMOS SSS retrievals. In order to better fit GW2020
+    measurements, and with respect to Somaraju and Trumpf (2006) assumptions. An additional dependency of alpha with S
+    has been introduced. This parametization is not valid outside the 0-38pss range. With respect to the BV (Boutin et
+    al. 2020) model, the following changes have been performed:
+
+    Conductivity=pss78 conductivity-salinity relationship (TEOS10)
+    tau=tauMW(1+gSST) instead of tau=tauMW
+    alpha=(par(1)-par(2).SST)(1+hSSS)
+    gSST and hSSS are polynomial functions of SST and SSS respectively
+    par(1) and par(2) : linear fit parameters of alpha
+
+    Notations and fresh parameters as in MW (Meissner and Wentz (2004))
+
+    This function requires the Gibbs SeaWater Oceanographic Toolbox package (gsw): https://github.com/TEOS-10/GSW-python
+
+    :param frequency: em frequency [Hz]
+    :param temperature: ice temperature in K
+    :returns: complex water permittivity for a frequency f.
+
+    """
+
+    import gsw
+
+    # Input variables
+    sst = temperature - FREEZING_POINT  # sst_in  # Ensure this is defined before running
+    s = salinity / PSU# s_in  # Ensure this is defined before running
+    freq = frequency / GHz  # Ensure this is defined before running
+
+    # Constants
+    PG = np.array([0.000131313421124, -0.003388740176732, 0.012975352323248])
+    PH = np.array([0.000011254875895, -0.000744492408123, 0.010461893723666, 0.013179577518089])
+    par = np.array([0.003100950226871, 0.000010994028738])
+    f0 = 17.97510
+    x = np.array([5.7230, 0.022379, -0.00071237, 5.0478, -0.070315, 0.00060059, 3.6143,
+                  0.028841, 0.13652, 0.0014825, 0.00024166])
+    z = np.array([-0.00356417, 0.00000474868, 0.0000115574, 0.00239357, -0.000031353,
+                  0.000000252477, -0.00628908, 0.000176032, -0.0000922144, -0.0199723,
+                  0.000181176, -0.00204265, 0.000157883])
+
+
+    gSST = PG[0] * sst**2 + PG[1] * sst + PG[2]
+    hSSS = PH[0] * s**3 + PH[1] * s**2 + PH[2] * s + PH[3]
+
+    sst2 = sst**2
+    sst3 = sst2 * sst
+
+    s2 = s**2
+    s3 = s2 * s
+
+    # Pure water parameters
+    e0 = (3.70886e4 - 8.2168e1 * sst) / (4.21854e2 + sst)
+    e1 = x[0] + x[1] * sst + x[2] * sst2
+    n1 = (45.00 + sst) / (x[3] + x[4] * sst + x[5] * sst2)
+
+    # Conductivity TEOS10
+    sig = gsw.C_from_SP(s, sst, 0) * 0.1  # Convert mS/cm to S/m
+
+    # Permittivity
+    a0 = 1 - s * (par[0] - sst * par[1]) * (1 + hSSS)
+    e0s = a0 * e0
+    n1s = n1 * (1 + gSST)
+    e1s = e1
+
+    # Complex permittivity calculation
+    j = 1j  # Imaginary unit
+    epsr = (e0s - e1s) / (1.0 + j * (freq / n1s)) + e1s - j * sig * f0 / freq
+
+    return epsr
