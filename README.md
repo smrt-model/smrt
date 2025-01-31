@@ -71,11 +71,13 @@ Copyright (c) 2016-2022 Ghislain Picard, Melody Sandells, Henning Löwe.
 Other contributions
 --------------------
 
- - Nina Maass
- - Ludovic Brucker
- - Marion Leduc-Leballeur
- - Mai Winstrup
- - Carlo Marin
- - Justin Murfitt
- - Julien Meloche
-
+ - Nina Maass: initial implementation of the sea-ice functions
+ - Ludovic Brucker: initial implementation of the saline snow functions
+ - Mai Winstrup: initial implementation of the sea-ice functions
+ - Marion Leduc-Leballeur: test&debuging (snow and ice)
+ - Carlo Marin:  debuging of the wet permittivities.
+ - Fanny Larue: debuging (LRM altimetry)
+ - Justin Murfitt: debuging (lake-ice, LRM altimetry)
+ - Julien Meloche: debuging (snow). Help to user
+ - Janna Rücker: implementation of new sea-ice functions
+ - Jacqueline Boutin: implementation of new sea-ice permittivity functions
