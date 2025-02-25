@@ -1247,7 +1247,7 @@ def compute_stream_uniform(n_max_stream, permittivity, permittivity_substrate):
     mean_resolution = np.mean(np.diff(mu1[k_most_refringent]))
 
     # compute the other streams
-    mu2_most_refringent = np.arange(mu1[k_most_refringent][-1], 0.01, mean_resolution)
+    mu2_most_refringent = np.arange(mu1[k_most_refringent][-1], 0.02, mean_resolution)
     # calculate real part of the index. It is an approximation.
     # See for instance "Semiconductor Physics, Quantum Electronics & Optoelectronics. 2001. V. 4, N 3. P. 214-218."
     real_index = np.real(np.sqrt(permittivity[k_most_refringent] / permittivity[:]))
