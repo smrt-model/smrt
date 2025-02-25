@@ -206,6 +206,7 @@ class DORT(object):
         # store other diagnostic information
         layer_index = 'layer', range(snowpack.nlayer)
         other_data = {
+            'stream_angles': xr.DataArray(np.rad2deg(np.arccos(outmu)), coords=[range(len(outmu))]),
             'effective_permittivity': xr.DataArray(self.effective_permittivity, coords=[layer_index]),
             'ks': xr.DataArray([getattr(em, "ks", np.nan) for em in emmodels], coords=[layer_index]),
             'ka': xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index]),

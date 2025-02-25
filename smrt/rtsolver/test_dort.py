@@ -84,6 +84,17 @@ def test_2layer_pack():
     m.run(sensor, sp).sigmaVV()
 
 
+def test_output_stream():
+    # Will throw error if doesn't run
+    sp = setup_2layer_snowpack()
+    sensor = active(13e9, 45)
+    m = Model(NonScattering, DORT)
+    res = m.run(sensor, sp)
+
+    print(res.other_data["stream_angles"])
+    assert np.allclose(res.other_data["stream_angles"], np.array([41.91460595, 45.86542465]))
+
+
 def test_shallow_snowpack():
     warnings.filterwarnings('error', message=".*optically shallow.*", module=".*dort")
 
