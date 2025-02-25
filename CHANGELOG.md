@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 	- depreciate Python 3.7 and lower, and add warning for future depreciation of Python 3.8 and 3.9. While 3.9 has a scheduled end of life for Oct 2025, type hinting is going to be implemented in SMRT soon, and the syntax provided by 3.10 is better than 3.9.
 	- add warning when salinity in snow is >0 but the permittivity formulation is not adapted. This is only a warning because in some situation the mixing formula set in the emmodel replaces the salinity in the materials permittivity formulation.
 	- add the stream angles in the output of the DORT simulations. If res is the results of a simulation, use: results.other_data['stream_angles']
+	- add a new mode to compute stream angles. It is more uniform that the gaussian quadrature. In principle less efficient but allows calculation at grazzing incidence angles.
 
 ### Changed
 
