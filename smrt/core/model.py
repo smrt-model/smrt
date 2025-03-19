@@ -48,6 +48,8 @@ The `res` variable has now a coordinate `time` and res.TbV() returns a timeserie
 
 Using `pandas.Series` offers an even more elegant way to run SMRT and assemble the results of all the simulations.
 
+Example::
+
     thickness_list = np.arange(0, 10, 1)
     snowpacks = pd.Series([make_snowpack(thickness=t, ........) for t in thickness_list], index=thickness_list)
     # snowpacks is a pandas Series of snowpack objects with the thickness as index
@@ -64,6 +66,8 @@ The `res` variable is a dataframe with the thickness as index and the channels o
 Using `pandas.DataFrame` is similar. One column must contain Snowpack objects (see snowpack_column argument).
 The results of the simulations are automatically joined with this dataframe and returned by
 :py:meth:`~smrt.core.result.PassiveResults.to_dataframe` or :py:meth:`~smrt.core.result.ActiveResults.to_dataframe`.
+
+Example::
 
     # df is a DataFrame with several parameters in each row.
 
