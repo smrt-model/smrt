@@ -6,13 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
-	- add rtsolver() and emmodel() functions in Model.py to make more readible setting options in make_model. See the 	  Model.py documentation.
-	- depreciate Python 3.7 and lower, and add warning for future depreciation of Python 3.8 and 3.9. While 3.9 has a scheduled end of life for Oct 2025, type hinting is going to be implemented in SMRT soon, and the syntax provided by 3.10 is better than 3.9.
-	- add warning when salinity in snow is >0 but the permittivity formulation is not adapted. This is only a warning because in some situation the mixing formula set in the emmodel replaces the salinity in the materials permittivity formulation.
-	- add the stream angles in the output of the DORT simulations. If res is the results of a simulation, use: results.other_data['stream_angles']
-	- add a new mode to compute stream angles. It is more uniform that the gaussian quadrature. In principle less efficient but allows calculation at grazzing incidence angles.
 
 ### Changed
+
+
+## [v1.4]
+### Added
+	- Add a warning when snow salinity is greater than zero, but the permittivity formulation does not account for    salinity. This is only a warning since, in some cases, the mixing formula in the **emmodel** overrides the salinity in the material's permittivity formulation.  
+	- Include stream angles in the output of DORT simulations. To access them in the results of a simulation (`res`), use: `res.other_data['stream_angles']`
+
+	- Introduce a new mode for computing stream angles. This method is more uniform than Gaussian quadrature and, while less efficient, enables calculations at very high grazing incidence angles (close to 89°). Use this mode when such extreme angles are required.
+
+	- Add make_rtsolver() and make_emmodel() to improve the readability of setting options in make_model. Refer to the core/model.py documentation for details. get_emmodel() is depreciated and the old make_emmodel() function is renamed make_emmodel_instance() but is not recommended to be used. Adapt the code to use the new make_emmodel function.
+
+### Changed
+	- depreciate Python 3.8 and lower, and add warning for future depreciation of Python 3.9. While 3.9 has a scheduled end of life for Oct 2025, type hinting is going to be implemented in SMRT soon, and the syntax provided by 3.10 is better than 3.9.
 
 
 ## [v1.3]

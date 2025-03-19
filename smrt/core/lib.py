@@ -67,6 +67,9 @@ def class_specializer(domain: str, cls: Union[str, Type], **options) -> Type:
         from smrt.core.plugin import import_class  # lazy import
         cls = import_class(domain, cls)
 
+    if not options:
+        return cls
+
     def __init__(self, *args, **other_options):
         cls.__init__(self, *args, **options, **other_options)
 

@@ -80,23 +80,21 @@ The `res` variable is a `pandas.DataFrame` equal to df  +  the results at all se
 
 Most rtsolvers and some emmodels take arguments (usually optional but still useful) that can be specified in two ways in
 make_model. Either using the `rtsolver_options` and `emmodel_options` arguments of that function or using the functions
-:py:func:`rtsolver` and :py:func:`emmodel` to build a new class where the prescribed option are applied by default.
+:py:func:`make_rtsolver` and :py:func:`make_emmodel` to build a new class where the prescribed options are applied by default.
 
-Example of usage::
+Examples of usage::
 
     make_model("iba", "dort", rtsolver_options=dict(n_max_stream=128))   # original approach to specify options
 
-    make_model("iba", rtsolver("dort", n_max_stream=128))                # newer approach that is more readible
+    make_model("iba", make_rtsolver("dort", n_max_stream=128))                # newer approach that is more readible
 
-Both are equivalent and there is no plan to depreciate the original approach that has some nice use-cases.
+Both are equivalent. There is no plan to depreciate the original approach that has some nice use-cases.
 """
 
 from typing import Type, Union
 from collections.abc import Sequence, Mapping
-from dataclasses import dataclass
 import itertools
 import inspect
-import copy
 
 import pandas as pd
 
@@ -148,43 +146,54 @@ def make_model(
     return Model(emmodel, rtsolver, emmodel_options=emmodel_options, rtsolver_options=rtsolver_options)
 
 
-def rtsolver(rtsolver_class: Union[str, Type], **options) -> Type:
+def make_rtsolver(rtsolver_class: Union[str, Type], **options) -> Type:
     """return a rtsolver subclass of cls (either given as a string or a class) where the provided options are applied to __init__.
     This function provides an alternative to setting `rtsolver_options` in :py:func:`make_model`).
 
     Example::
-        make_model(..., rtsolver("dort", n_max_stream=128))
+        make_model(..., make_rtsolver("dort", n_max_stream=128))
     """
     return lib.class_specializer('rtsolver', rtsolver_class, **options)
 
 
-def emmodel(emmodel_class: Union[str, Type], **options) -> Type:
+def make_emmodel(emmodel_class: Union[str, Type], **options) -> Type:
     """return a emmodel subclass of cls (either given as a string or a class) where the provided options are applied to __init__.
     This function provides an alternative to setting `emmodel_options` in :py:func:`make_model`).
 
     Example::
-        make_model(emmodel("iba", dense_snow_correction=True), ...)
+        make_model(make_emmodel("iba", dense_snow_correction=True), ...)
     """
     return lib.class_specializer('emmodel', emmodel_class, **options)
 
 
 def get_emmodel(emmodel):
     """return an emmodel class from the file name 'emmodel'"""
+
+    raise DeprecationWarning("This function will be remove soon, use make_emmodel instead.")
     if isinstance(emmodel, str):
         emmodel = import_class('emmodel', emmodel)
     assert inspect.isclass(emmodel)
     return emmodel
 
 
-def make_emmodel(emmodel, sensor, layer, **emmodel_options):
-    """create a new emmodel instance based on the emmodel class or string
+def make_emmodel_instance(emmodel, sensor, layer, **emmodel_options):
+    """create a new emmodel instance based on the emmodel class or string. This function used to be called `make_emmodel`
+    but has been renamed from SMRT v1.4 and will soon be depreciated. It is recommended to use instead::
+
+        em = make_emmodel(emmodel)(sensor, layer, **emmodel_options)
+
+    or::
+
+        emmodel_class = make_emmodel(emmodel)
+        em = emodel_class(sensor, layer, **emmodel_options)
+
     :param emmodel: type of emmodel to use. Can be given by the name of a file/module in the emmodel directory (as a string) or a class.
     :param sensor: sensor to use for the calculation.
     :param layer: layer to use for the calculation
     """
 
     # instantiate
-    emmodel = get_emmodel(emmodel)  # get the class
+    emmodel = make_emmodel(emmodel)  # get the class
     if not isinstance(sensor, SensorBase):
         raise SMRTError("the first argument of 'run' must be a sensor")
     return emmodel(sensor, layer, **emmodel_options)  # create a emmodel
@@ -202,11 +211,11 @@ class Model(object):
         super().__init__()
 
         if lib.is_sequence(emmodel):
-            self.emmodel = [get_emmodel(em) for em in emmodel]
+            self.emmodel = [make_emmodel(em) for em in emmodel]
         elif isinstance(emmodel, Mapping):
-            self.emmodel = {k: get_emmodel(em) for k, em in emmodel.items()}
+            self.emmodel = {k: make_emmodel(em) for k, em in emmodel.items()}
         else:
-            self.emmodel = get_emmodel(emmodel)
+            self.emmodel = make_emmodel(emmodel)
 
         if isinstance(rtsolver, str):
             self.rtsolver = import_class('rtsolver', rtsolver)
@@ -446,7 +455,7 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
 
         # create a list of emmodel instances (ready to run)
         emmodel_instances = [
-            make_emmodel(emmodel, sensor, layer, **emmodel_options)
+            make_emmodel_instance(emmodel, sensor, layer, **emmodel_options)
             for emmodel, emmodel_options, layer in zip(emmodel_list, emmodel_options_list, snowpack.layers)
         ]
 

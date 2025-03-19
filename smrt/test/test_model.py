@@ -6,7 +6,7 @@ import xarray as xr
 import pytest
 
 from smrt.inputs.make_medium import make_snowpack
-from smrt.core.model import Model, make_model, rtsolver
+from smrt.core.model import Model, make_model, make_rtsolver
 from smrt.core.result import PassiveResult
 from smrt.rtsolver.dort import DORT
 from smrt.emmodel.dmrt_qca_shortrange import DMRT_QCA_ShortRange
@@ -101,7 +101,7 @@ def test_make_model_options(onelayer_snowpack):
 
 
 def test_make_model_options_alternative(onelayer_snowpack):
-    m = make_model('dmrt_qcacp_shortrange', rtsolver(FakeRTSolver, x=1))
+    m = make_model('dmrt_qcacp_shortrange', make_rtsolver(FakeRTSolver, x=1))
 
     sensor = amsre()
     res = m.run(sensor, onelayer_snowpack)

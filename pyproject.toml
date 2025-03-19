@@ -9,14 +9,14 @@ authors = [
             ]
 readme = "README.md"
 license = {file = "LICENSE"}
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "numpy >= 1.13, < 2",
+    "numpy >= 1.13, <= 2.0.1",
     "pandas>=0.20.3",
     "scipy>=1.0.0",
     "xarray>=0.10.3",
