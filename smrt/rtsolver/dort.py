@@ -14,25 +14,27 @@ layer. The number of outgoing streams in the air is usually smaller, sometimes t
 profile). It is important not to set too low a value for n_max_streams. E.g. 32 is usually fine, 64 or 128 are better
 but simulations will be much slower.
 
-Note:: The DORT solver is very robust in passive mode but may raise exception in active mode due to a matrix
-diagonlisation problem. The exception provides detailed information on how to address this issue. Two new
-diagonalisation approches were added in Jan 2024. They are activated by setting the diagonalization_method optional
-argument (see :py:meth:`smrt.core.make_model`). The first method (diagonalization_method='shur') replaces the
-scipy.linalg.eig function by a shur decomposition followed by a diagionalisation of the shur matrix. Whule
-scipy.linalg.eig performs such a shur decomposition internally in any case, it seems that explicitly calling the shur
-decomposition beforehand improves the stability. Nevertheless to really solve the problem, the second method
-(diagonalization_method='shur_forcedtriu') consists in removing the 2x2 and 3x3 blocks in the shur matrix, ie. forcing
-the shur matrix to be upper triangular (triu in numpy jargon (=zeroing the lower part of this
-matrix). This problem is due to the structure of the matrix to be diagonalized and the formulation of the DORT method in the polarimetric 
-configuration. Eigenvalues come by triplets and can be very close to each other for the three H, V, U Stockes components
-when scattering is becoming small (or equiv. the azimuth mode 'm' is large). As a consequence of the Gershgorin theorem,
-this results in slightly complex eigenvalues (i.e. eigenvalues with very small imaginary part) that comes from 2x2 or
-3x3 blocks in the shur decomposition. This would not be a problem if the eigenvectors were correctly estimated, but this
-is not the case. It is indeed difficult to find the correct orientation of eigenvectors associated to very close
-eigenvalues. To overcome the problem, the solution is to remove the 2x2 and 3x3 blocks. In principle, it would be safer
-to check that these blocks are nearly diagonal but this is not done in the current implementation. The user is
-reponsabible to commute between the options until it works. After sufficient successfull reports by user will be received the last
-method (forcedtriu) will certainly be the defaut.
+Note:: 
+
+    The DORT solver is very robust in passive mode but may raise exception in active mode due to a matrix
+    diagonlisation problem. The exception provides detailed information on how to address this issue. Two new
+    diagonalisation approches were added in Januray 2024. They are activated by setting the diagonalization_method optional
+    argument (see :py:meth:`smrt.core.make_model`). The first method (diagonalization_method='shur') replaces the
+    scipy.linalg.eig function by a shur decomposition followed by a diagionalisation of the shur matrix. While
+    scipy.linalg.eig performs such a shur decomposition internally in any case, it seems that explicitly calling the shur
+    decomposition beforehand improves the stability. Nevertheless to really solve the problem, the second method
+    (diagonalization_method='shur_forcedtriu') consists in removing the 2x2 and 3x3 blocks from the shur matrix, ie. forcing
+    the shur matrix to be upper triangular (triu in numpy jargon =zeroing the lower part of this
+    matrix). This problem is due to the structure of the matrix to be diagonalized and the formulation of the DORT method in the polarimetric 
+    configuration. The eigenvalues come by triplets and can be very close to each other for the three H, V, U Stockes components
+    when scattering is becoming small (or equiv. the azimuth mode 'm' is large). As a consequence of the Gershgorin theorem,
+    this results in slightly complex eigenvalues (i.e. eigenvalues with very small imaginary part) that comes from 2x2 or
+    3x3 blocks in the shur decomposition. This would not be a problem if the eigenvectors were correctly estimated, but this
+    is not the case. It is indeed difficult to find the correct orientation of eigenvectors associated to very close
+    eigenvalues. To overcome the problem, the solution is to remove the 2x2 and 3x3 blocks. In principle, it would be safer
+    to check that these blocks are nearly diagonal but this is not done in the current implementation. The user is
+    reponsabible to switch between the options until it works. After sufficient successfull reports by user will be received the last
+    method (forcedtriu) will certainly be the defaut.
 
 """
 
