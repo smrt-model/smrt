@@ -14,9 +14,7 @@ layer. The number of outgoing streams in the air is usually smaller, sometimes t
 profile). It is important not to set too low a value for n_max_streams. E.g. 32 is usually fine, 64 or 128 are better
 but simulations will be much slower.
 
-Note:: 
-
-    The DORT solver is very robust in passive mode but may raise exception in active mode due to a matrix
+.. note:: The DORT solver is very robust in passive mode but may raise exception in active mode due to a matrix
     diagonlisation problem. The exception provides detailed information on how to address this issue. Two new
     diagonalisation approches were added in Januray 2024. They are activated by setting the diagonalization_method optional
     argument (see :py:meth:`smrt.core.make_model`). The first method (diagonalization_method='shur') replaces the
@@ -72,6 +70,7 @@ class DORT(object):
         with the scattering coefficient, but only when the difference is moderate (0.7 to 1.3).
         If set to "force" the normalization is always performed. This option is dangerous because it may hide bugs or unappropriate
         input parameters (typically too big grains). If set to False, no normalization is performed.
+    :param stream_mode: TODO: add documentation
     :param error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
         If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
         the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.

@@ -23,7 +23,7 @@ It is the responsability of the user to ensure that such thin layers (less than 
 the snowpack. Alternatively setting the `process_coherent_layers` option when using the
 `smrt.rtsolver.dort` solver allows to deal with sub-wavelength layers provided they are isolated between two thick layers.
 
-Note that `make_snowpack` is directly imported from `smrt` instead of `smrt.inputs.make_medium`. This feature is for convenience.
+Note that `make_snowpack` is directly imported from `smrt` instead of :py:func:`smrt.inputs.make_medium`. This feature is for convenience.
 
 """
 
@@ -725,7 +725,7 @@ def bulk_ice_density(temperature, salinity, porosity):
     """
     Computes bulk density of sea ice (in kg m :sup:`-3`), when considering the influence from  brine, solid salts, and
     air bubbles in the ice. Formulation from Cox & Weeks (1983): Equations for determining the gas and brine volumes in sea ice samples,
-    J Glac. Developed for temperatures between -2--30째C. For higher temperatures (>2째C) is used the formulation from
+    J Glac. Developed for temperatures between -2--30°C. For higher temperatures (>2°C) is used the formulation from
     Lepparanta & Manninen (1988): The brine and gas content of sea ice with attention to low salinities and high temperatures.
 
     :param temperature: Temperature in K
