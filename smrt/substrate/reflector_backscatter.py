@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """ Implement a reflective boundary conditions with prescribed reflection coefficient in the specular direction, and backscatter coefficient.
-The reflection is set to a value or a function of theta. Azimuthal symmetry is assumed (no dependence on phi). 
+The reflection is set to a value or a function of theta. Azimuthal symmetry is assumed (no dependence on phi).
 
 The `specular_reflection` parameter can be a scalar, a function or a dictionary.
 
@@ -84,14 +84,15 @@ class ReflectorBackscatter(Substrate):
 
             for m in range(m_max + 1):
                 if m == 0:
-                    coef = 0.5
-                elif (m % 2) == 1:
-                    coef = -1.0
-                else:
                     coef = 1.0
-                coef /= 4 * np.pi * mu_i    # SMRT requires scattering coefficient / 4 * pi
+                elif (m % 2) == 1:
+                    coef = -2.0
+                else:
+                    coef = 2.0
 
-                coef /= m_max + 0.5  # ad hoc normalization to get the right backscatter. This is a trick to deal with the dirac.
+                coef /= 1 + 2 * m_max  # this normalization is used to spread the energy in the backscatter over all modes
+
+                coef /= 4 * np.pi * mu_i    # convert the backscattering coefficient into scattering
 
                 diffuse_refl_coeff[0, m, :] += coef * self._get_refl(self.backscattering_coefficient['VV'], mu_i)
                 diffuse_refl_coeff[1, m, :] += coef * self._get_refl(self.backscattering_coefficient['HH'], mu_i)

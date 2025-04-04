@@ -185,12 +185,13 @@ class IEM_Fung92(Interface):
 
         for m in range(m_max + 1):
             if m == 0:
-                coef = 0.5
+                coef = 1
             elif (m % 2) == 1:
-                coef = -1.0
+                coef = -2.0
             else:
-                coef = 1.0
-            coef /= m_max + 0.5  # ad hoc normalization to get the right backscatter. This is a trick to deal with the dirac.
+                coef = 2.0
+
+            coef /= 1 + 2 * m_max  # this normalization is used to spread the energy in the backscatter over all modes
 
             diffuse_refl_coeff[:, m, :] = coef * gamma[:, :]
 
