@@ -351,6 +351,27 @@ class smrt_matrix(object):
             return np.moveaxis(np.diagonal(np.diagonal(self.values, axis1=-2, axis2=-1)), -1, 0)  # diagonal in incidence angle and pola
             # the moveaxis is necessary to put back the pola indice at the first position because diagonal move the diagonale "index" to the end of the array.
 
+    def to_dense(self):
+            if self.mtype in ["dense5", "dense4"]:
+                return self.copy()
+            elif self.mtype == "diagonal4":
+                pola, inc = self.values.shape
+
+                mat = np.diagflat(self.values).reshape((pola, pola, inc, inc))
+                return smrt_matrix(mat, mtype='dense4')
+
+            elif self.mtype == "diagonal5":
+                pola, mode, inc = self.values.shape
+
+                # in numba with two loops it would be much faster
+                mat = np.stack([np.diagflat(self.values[:, i, :]).reshape((pola, pola, inc, inc)) for i in range(mode)])
+                mat = np.moveaxis(mat, 0, 2)
+
+                return smrt_matrix(mat, mtype='dense5')
+            else:
+                raise NotImplementedError
+
+
     def sel(self, **kwargs):
 
         if 'mode' in kwargs:
@@ -444,9 +465,14 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
 
     npol = p.npol
 
+    if len(p.values.shape) != 5:
+        p = p.to_dense()
+
     # mirror the phase function
     assert len(p.values.shape) == 5
     p_mirror = p.values[:, :, -2:0:-1, :, :].copy()
+
+
     if npol >= 3:
         p_mirror[0:2, 2] = -p_mirror[0:2, 2]
         p_mirror[2, 0:2] = -p_mirror[2, 0:2]
@@ -460,16 +486,18 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
 
     ft_even_p = smrt_matrix.empty((npol, npol, m_max + 1, p.shape[-2], p.shape[-1]))
 
+    #
     # m=0 mode
     ft_even_p[:, :, 0] = ft_p[:, :, 0].real * (1.0 / nsamples)
 
+    #
     # m>=1 modes
+    delta = 2.0 / nsamples # the factor 2 comes from the change exp -> cos, i.e. exp(-ix) + exp(+ix)= 2 cos(x)
+
     if npol == 2:
-        # the factor 2 comes from the change exp -> cos, i.e. exp(-ix) + exp(+ix)= 2 cos(x)
-        ft_even_p[:, :, 1:] = ft_p[:, :, 1:m_max + 1].real * (2.0 / nsamples)
+        ft_even_p[:, :, 1:] = ft_p[:, :, 1:m_max + 1].real * delta
 
     else:
-        delta = 2.0 / nsamples
         ft_even_p[0:2, 0:2, 1:] = ft_p[0:2, 0:2, 1:m_max + 1].real * delta
 
         # For the even matrix:
