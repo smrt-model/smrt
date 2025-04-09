@@ -27,7 +27,7 @@ class PyRTlibClimatologyAtmosphere(PyRTlibAtmosphereBase):
                     profile = k
                     break
             else:
-                raise SMRTError(f"The requested atmospheric profile '{profile}' isn't among the available profiles: {", ".join(atmp.atm_profiles().values())}")
+                raise SMRTError(f"The requested atmospheric profile '{profile}' isn't among the available profiles: {', '.join(atmp.atm_profiles().values())}")
 
         self.z, self.p, d, self.t, md = atmp.gl_atm(profile)
         gkg = ppmv2gkg(md[:, atmp.H2O], atmp.H2O)
