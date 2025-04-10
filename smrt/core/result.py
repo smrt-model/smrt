@@ -455,20 +455,37 @@ class ActiveResult(Result):
 
 
 class AltimetryResult(ActiveResult):
-
     def delay_doppler_map(self, **kwargs):
         """Return the delay Doppler map"""
         assert "fdoppler" in self.data.dims
         return self.sigma(**kwargs)
 
     def waveform(self, **kwargs):
-        """Return the waveform"""
+        """Return the waveform.
+
+        For simulations with return_contributions, this function returns the total only by default. Use explicit
+        contribution="all"" to get all the contributions or contribution='...' to access each contribution.
+
+        :param **kwargs: any dimension to select. See xarray.DataArray.sel.
+        """
+
+        if ("contribution" in kwargs):
+            if kwargs["contribution"] == "all":
+                del kwargs["contribution"]
+        else:
+            if("contribution" in self.data.dims):
+                kwargs["contribution"] = "total"
+
+        wf = self.sigma(**kwargs)
 
         if "fdoppler" in self.data.dims:
             wf = self.sigma(**kwargs).sum(dim="fdoppler")
-        else:
-            wf = self.sigma(**kwargs)
+
         return wf
+
+    def contributions(self):
+        """return the list of the contribution dimension. Raise an exception if the contribution does not exist."""
+        return self.data.contribution.values
 
 
 # DON'T ERASE THIS, this is not needed at this stage but could be.
