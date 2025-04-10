@@ -45,14 +45,16 @@ class Snowpack(object):
 
     @property
     def nlayer(self):
-        """return the number of layers
-"""
+        """return the number of layers"""
         return len(self.layers)
 
     @property
+    def thickness(self):
+        return sum(lay.thickness for lay in self.layers)
+
+    @property
     def layer_thicknesses(self):
-        """return the thickness of each layer
-"""
+        """return the thickness of each layer"""
         return [lay.thickness for lay in self.layers]  # TODO Ghi: caching
 
     @property
@@ -157,19 +159,41 @@ class Snowpack(object):
     def delete(self, ilayer):
         """delete a layer and the upper interface
 
-    :param ilayer: index of the layer
-"""
+        :param ilayer: index of the layer
+        """
         self.layers.pop(ilayer)
         self.interfaces.pop(ilayer)
 
-    def copy(self):
-        """make a shallow copy of a snowpack by copying the list of layers and interfaces but not the layers and interfaces themselves which are still shared with the original snowpack.
-        This method allows the user to create a new snowpack and remove, append or replace some layers or interfaces afterward. It does not allow to alter the layers or interfaces without
+    def delete_bottom(self, ilayer):
+        """delete the bottom of the snowpack from layer n. Delete also the substrate.
+
+        :param ilayer: index of the first layer to delete.
+        """
+        assert ilayer < self.nlayer
+        self.layers = self.layers[0:ilayer]
+        self.interfaces = self.layers[0:ilayer]
+        self.substrate = None
+
+    def copy(self, cut_bottom=None):
+        """make a shallow copy of a snowpack by copying the list of layers and interfaces but not the layers and
+        interfaces themselves which are still shared with the original snowpack.
+        This method allows the user to create a new snowpack and remove, append or replace some layers or interfaces
+        afterward. It does not allow to alter the layers or interfaces without
         changing the original snowpack. See py:meth:~deepcopy.
-"""
+
+        :param cut_bottom: if cut_bottom is a number, all layers below the layer indexed by  'cut_bottom' are remove as well as the substrate
+        """
+
         new_sp = copy.copy(self)
-        new_sp.layers = copy.copy(self.layers)
-        new_sp.interfaces = copy.copy(self.interfaces)
+
+        if cut_bottom is None:
+            cut_bottom = self.nlayer
+        else:
+            assert cut_bottom < self.nlayer
+            new_sp.substrate = None
+
+        new_sp.layers = copy.copy(self.layers[0:cut_bottom])
+        new_sp.interfaces = copy.copy(self.interfaces[0:cut_bottom])
         return new_sp
 
     def deepcopy(self):
