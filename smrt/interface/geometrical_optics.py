@@ -382,7 +382,7 @@ class GeometricalOptics(Interface):
 
     def transmission_coefficients(self, frequency, eps_1, eps_2, mu_i):
         # for debugging only at this stage
-        n_mu = 512 + 1
+        n_mu = 128 + 1
         n_phi = 128
 
         mu = np.linspace(1e-7, 1, n_mu, endpoint=True)
