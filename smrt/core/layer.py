@@ -71,7 +71,7 @@ class Layer(object):
         else:
             microstructure_params = {}
 
-        # other params
+        # other params are set in the layer itself
         for k in kwargs:
             if k in microstructure_params:
                 continue

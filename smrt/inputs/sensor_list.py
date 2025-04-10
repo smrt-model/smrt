@@ -33,9 +33,7 @@ def amsre(channel=None, frequency=None, polarization=None, theta=55):
 
     :returns: :py:class:`Sensor` instance
 
-    **Usage example:**
-
-    ::
+    Example::
 
         from smrt import sensor
         radiometer = sensor.amsre()  # Simulates all channels
@@ -69,9 +67,7 @@ def amsr2(channel=None, frequency=None, polarization=None, theta=55):
 
     :returns: :py:class:`Sensor` instance
 
-    **Usage example:**
-
-    ::
+    Usage example::
 
         from smrt import sensor
         radiometer = sensor.amsre()  # Simulates all channels

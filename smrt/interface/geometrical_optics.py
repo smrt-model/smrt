@@ -1,5 +1,3 @@
-
-
 """
 Implement the interface boundary condition under the Geometrical Approximation between layers charcterized by their effective permittivities.
 This approximation is suitable for surface with roughness much larger than the roughness scales, typically k*s >> 1 and k*l >> 1, where s the rms heigth and l
@@ -24,9 +22,8 @@ from smrt.core.interface import Interface
 
 
 class GeometricalOptics(Interface):
-    """A very rough surface.
+    """A very rough surface."""
 
-"""
     args = ["mean_square_slope"]
     optional_args = {"shadow_correction": True}
 
@@ -44,7 +41,7 @@ class GeometricalOptics(Interface):
         :param npol: number of polarization
 
         :return: the reflection matrix
-"""
+        """
 
         return smrt_matrix(0)
 
@@ -58,7 +55,7 @@ class GeometricalOptics(Interface):
         :param npol: number of polarization
 
         :return: the reflection matrix
-"""
+        """
         mu_i = np.atleast_1d(self.clip_mu(mu_i))[np.newaxis, np.newaxis, :]
         mu_s = np.atleast_1d(self.clip_mu(mu_s))[np.newaxis, :, np.newaxis]
         dphi = np.atleast_1d(dphi)[:, np.newaxis, np.newaxis]
@@ -73,13 +70,13 @@ class GeometricalOptics(Interface):
         ks = vector3.from_xyz(sin_s * cos_phi, sin_s * sin_phi, mu_s)
 
         # compute the local reflection Fresnel coefficient
-        kd = ki - ks   # in principe: *sqrt(eps_1), but in the following it appears everywhere as a ratio
+        kd = ki - ks  # in principe: *sqrt(eps_1), but in the following it appears everywhere as a ratio
 
         n = kd / (np.sign(kd.z) * kd.norm)  # EQ 2.1.123 #equivalent to np.vector3(kd_x / kd_z, kd_y / kd_z, 1)
 
         mu_local = -vector3.dot(n, ki)
-        assert(np.all(mu_local >= 0))
-        assert(np.all(mu_local <= 1.0001))  # compare with some tolerance
+        assert np.all(mu_local >= 0)
+        assert np.all(mu_local <= 1.0001)  # compare with some tolerance
         Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, self.clip_mu(mu_local))
 
         # define polarizations
@@ -106,7 +103,7 @@ class GeometricalOptics(Interface):
         vi_ks = vector3.dot(vi, ks) / cross_ki_ks_norm
         vi_ks[colinear] = 0
 
-        fvv = abs2(hs_ki * hi_ks * Rh + vs_ki * vi_ks * Rv)   # Eqs 2.1.122 in Tsang_tomeIII
+        fvv = abs2(hs_ki * hi_ks * Rh + vs_ki * vi_ks * Rv)  # Eqs 2.1.122 in Tsang_tomeIII
         fhh = abs2(vs_ki * vi_ks * Rh + hs_ki * hi_ks * Rv)
 
         fhv = abs2(vs_ki * hi_ks * Rh - hs_ki * vi_ks * Rv)
@@ -166,7 +163,7 @@ class GeometricalOptics(Interface):
         :param npol: number of polarization
 
         :return: the transmission matrix
-"""
+        """
 
         return smrt_matrix(0)
 
@@ -181,15 +178,17 @@ class GeometricalOptics(Interface):
         :param npol: number of polarization
 
         :return: the transmission matrix
-"""
+        """
         n_2 = np.sqrt(eps_2)
         n_1 = np.sqrt(eps_1)
 
         eta1_eta = n_1 / n_2  # eta1 is the impedance in medium 2 and eta in medium 1. Impedance is sqrt(permeability/permittivity)
 
         if abs(eta1_eta - 1) < 1e-6:
-            raise NotImplementedError("the case of successive layers with identical index (%g) is not implemented" % n_2)
-            return 1 / (4 * np.pi)   # return the identity matrix. The coef is to be checked.
+            raise NotImplementedError(
+                "the case of successive layers with identical index (%g) is not implemented" % n_2
+            )
+            return 1 / (4 * np.pi)  # return the identity matrix. The coef is to be checked.
 
         mu_i = np.atleast_1d(self.clip_mu(mu_i))[np.newaxis, np.newaxis, :]
         mu_t = np.atleast_1d(self.clip_mu(mu_t))[np.newaxis, :, np.newaxis]
@@ -205,7 +204,7 @@ class GeometricalOptics(Interface):
         kt = vector3.from_xyz(sin_t * cos_phi, sin_t * sin_phi, -mu_t)
 
         # compute the local transmission Fresnel coefficient
-        ktd = ki * n_1.real - kt * n_2.real   # Eq 2.1.87
+        ktd = ki * n_1.real - kt * n_2.real  # Eq 2.1.87
 
         n = ktd / (np.sign(ktd.z) * ktd.norm)  # Eq 2.1.128
 
@@ -241,11 +240,11 @@ class GeometricalOptics(Interface):
         vt_ki[colinear] = 0  # checked with sympy
 
         hi_kt = vector3.dot(hi, kt) / cross_ki_kt_norm
-        hi_kt[colinear] = 1    # checked with sympy
+        hi_kt[colinear] = 1  # checked with sympy
         vi_kt = vector3.dot(vi, kt) / cross_ki_kt_norm
-        vi_kt[colinear] = 0    # checked with sympy
+        vi_kt[colinear] = 0  # checked with sympy
 
-        Wvv = abs2(ht_ki * hi_kt * (1 + Rh) + vt_ki * vi_kt * (1 + Rv) * eta1_eta)   # Eqs 2.1.130 in Tsang_tomeIII
+        Wvv = abs2(ht_ki * hi_kt * (1 + Rh) + vt_ki * vi_kt * (1 + Rv) * eta1_eta)  # Eqs 2.1.130 in Tsang_tomeIII
         Whh = abs2(vt_ki * vi_kt * (1 + Rh) + ht_ki * hi_kt * (1 + Rv) * eta1_eta)
 
         Whv = abs2(-vt_ki * hi_kt * (1 + Rh) + ht_ki * vi_kt * (1 + Rv) * eta1_eta)
@@ -289,7 +288,7 @@ class GeometricalOptics(Interface):
         ks = vector3.from_xyz(sin_s * cos_phi, sin_s * sin_phi, mu_s)
 
         # compute the local reflection Fresnel coefficient
-        kd = ki - ks   # in principe: *sqrt(eps_1), but in the following it appears everywhere as a ratio
+        kd = ki - ks  # in principe: *sqrt(eps_1), but in the following it appears everywhere as a ratio
 
         n = kd / (np.sign(kd.z) * kd.norm)  # EQ 2.1.223 #equivalent to np.vector3(kd_x / kd_z, kd_y / kd_z, 1)
 
@@ -330,7 +329,7 @@ class GeometricalOptics(Interface):
         kt = vector3.from_xyz(sin_t * cos_phi, sin_t * sin_phi, -mu_t)
 
         # compute the local transmission Fresnel coefficient
-        ktd = n_1.real * ki - n_2.real * kt   # Eq 2.1.87
+        ktd = n_1.real * ki - n_2.real * kt  # Eq 2.1.87
 
         n = ktd / (np.sign(ktd.z) * ktd.norm)  # Eq 2.1.128
 
@@ -394,18 +393,16 @@ class GeometricalOptics(Interface):
         return self._integrate_coefficients(mu, dphi, T)
 
     def _integrate_coefficients(self, mu, dphi, x):
-
         # integrate the pola first, then the azimuth and last the mu
         x = x.values.sum(axis=(0, 2))
 
-        # x is not pola_inc, mu_inc
+        # x is not pola_inc, mu_inc
         # return scipy.integrate.simps(x, mu, axis=0) * (dphi[1] - dphi[0])  # use simpson method if n_mu is not 2**n + 1
         return scipy.integrate.romb(x, dx=mu[1] - mu[0], axis=1) * (dphi[1] - dphi[0])
 
 
 def shadow_function(mean_square_slope, cotan):
-
     # sqrt(1/pi) = 0.5641895835477563
 
     rel_cotan = cotan / (1.4142135623730951 * np.sqrt(mean_square_slope))  # sqrt(2)*s / mu, Eq. 2.1.154
-    return 0.5 * (0.5641895835477563 / rel_cotan * np.exp(-rel_cotan**2) - scipy.special.erfc(rel_cotan))
+    return 0.5 * (0.5641895835477563 / rel_cotan * np.exp(-(rel_cotan**2)) - scipy.special.erfc(rel_cotan))
