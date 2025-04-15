@@ -1,12 +1,17 @@
 
 
 """
-Implement the interface boundary condition under the Geometrical Approximation between layers charcterized by their effective permittivities. This code is
-for backscatter only, that is, to use as a substrate and at low frequency when the backscatter is the main mecahnism, and conversely when mulitple scattering
-and double bounce between snow and substrate are negligible. In any other case, it is recommended to use :py:class:`~smrt.interface.geometrical_optics.GeometricalOptics`.
+Implement the interface boundary condition under the Geometrical Approximation between layers characterized by their
+effective permittivities. This code is for backscatter only, that is, to use as a substrate and at low frequency when
+the backscatter is the main mecahnism, and conversely when mulitple scattering and double bounce between snow and
+substrate are negligible. In other case, it is recommended to use
+:py:mod:`~smrt.interface.geometrical_optics`.
 
-The transmitted energy is also computed in an approximate way suitable for 1st order scattering. We use energy conservation to compute the total transmitted energy
-and consider that all this energy is transmitted in the refraction (specular) direction.
+The transmitted energy is also computed in an approximate way suitable for first order scattering such as
+:py:mod:``smrt.rtsolver.nadir_lrm_altimetry`. It uses energy conservation to compute the total transmitted energy and
+consider that all this energy is transmitted in the refracted direction. This approach compensate for the deficiencies of 
+first order scattering RT solvers.
+
 """
 
 import numpy as np

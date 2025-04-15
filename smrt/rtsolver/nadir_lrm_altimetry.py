@@ -1,3 +1,19 @@
+"""Nadir LRM Mode Altimetry rtsolver computes waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the
+given snowpack and sensor (or complex terrain soon). I was based on Adams and Brown 1998 and Lacroix et al. 2008. Both
+models differ in the specific choices for the scattering and backscatter of the interface, but are similar in the way
+the waveform is calculated, which concerns the solver here.
+
+Approximations:
+ - Backscatter is computed assuming only first order scattering. The propagation is then simply governed by extinction
+ - Near nadir / small angle approximation: to compute delay, the paths in the snow are along the z-axis. We neglect the off-nadir delay.*
+ This error is likely to be small (except for very deep penetration).
+
+.. note: 
+    With this RT solver, if using Geometrical Optics for rough surface/interface modeling, it is strongly advised to use
+    :py:mod:`~smrt.interface.geometrical_optics_backscatter` instead of :py:mod:`~smrt.interface.geometrical_optics` for
+    the reason explained in the documentation of those modules.
+
+ """
 
 import numpy as np
 import scipy.signal
@@ -9,19 +25,11 @@ from smrt.rtsolver.waveform_model import Brown1977
 
 import xarray as xr
 
-"""
-Approximation:
 
-In the medium:
- - Backscatter is computed assuming only first order scattering. The propagation is then simply givern by extinction
- - Small angle approximation: to compute delay, the paths in the snow are along the z-axis. We neglect the off-nadir delay.*
- This error is likely to be small (except for very deep penetration).
- """
 
 
 class NadirLRMAltimetry(object):
-    """Solver based on Adams and Brown 1998 and Lacroix et al. 2008. Both models differ in the specific choices for the scattering and
-    backscatter of the interface, but are similar in the way the waveform is calculated, which concerns the solver here.
+    """Nadir LRM Mode Altimetry rtsolver
 
     :param oversampling: integer number defining the number of subgates used for the computation in each altimeter gate.
         This is equivalent to multiply the bandwidth by this number. It is used to perform more accurate computation.

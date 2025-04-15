@@ -9,6 +9,13 @@ Other equations may exist for other autocorrelation function.
 
 This implementation is largely based on Tsang and Kong, Scattering of Electromagnetic Waves: Advanced Topics, 2001 (Tsang_tomeIII in the following)
 
+
+.. note::
+    This implementation set coherent reflection and transmission to zero, which is expected theoretically for a very rough surface.
+    However, first order radiative transfer solvers (such a nadir_lrm_altimetry) do not work well in this case because
+    the transmission through the layers is neglected. In such case, it is recommended to use
+    :py:mod:`smrt.interface.geometrical_optics_backscatter` which provides an approximation that set the coherent
+    transmission based on energy conservation assuming all the transmitted energy is in the refracted direction.
 """
 
 import numpy as np
