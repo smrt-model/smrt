@@ -36,7 +36,7 @@ from smrt.core.lib import smrt_matrix, abs2
 from smrt.core.interface import Interface
 from smrt.core.globalconstants import C_SPEED
 from smrt.core.error import SMRTError
-from .vector3 import vector3
+from smrt.core.vector3 import vector3
 
 
 class IEM_Fung92(Interface):

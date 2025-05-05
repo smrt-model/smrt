@@ -7,10 +7,8 @@ from smrt.core.lib import abs2, smrt_matrix, len_atleast_1d
 from smrt.core.error import SMRTError
 
 
-def rayleigh_scattering_matrix_and_angle_tsang00(mu_s, mu_i, dphi, npol=2):
-    """compute the Rayleigh matrix and half scattering angle. Based on Tsang theory and application p271 Eq 7.2.16
-
-"""
+def vectorize_angles(mu_s, mu_i, dphi):
+    """return angular cosines and sinus with proper dimensions, ready for vectorized calculations."""
 
     mu_s = np.atleast_1d(mu_s)[np.newaxis, :, np.newaxis]
     mu_i = np.atleast_1d(mu_i)[np.newaxis, np.newaxis, :]
@@ -21,6 +19,15 @@ def rayleigh_scattering_matrix_and_angle_tsang00(mu_s, mu_i, dphi, npol=2):
     dphi = np.atleast_1d(dphi)
     sinphi = np.sin(dphi)[:, np.newaxis, np.newaxis]
     cosphi = np.cos(dphi)[:, np.newaxis, np.newaxis]
+
+    return mu_s, sin_s, mu_i, sin_i, cosphi, sinphi
+
+
+def rayleigh_scattering_matrix_and_angle_tsang00(mu_s, mu_i, dphi, npol=2):
+    """compute the Rayleigh matrix and half scattering angle. Based on Tsang theory and application p271 Eq 7.2.16
+
+"""
+    mu_s, sin_s, mu_i, sin_i, cosphi, sinphi = vectorize_angles(mu_s, mu_i, dphi)
 
     # Tsang theory and application p127 Eq 3.2.47
     fvv = cosphi * mu_s * mu_i + sin_s * sin_i
@@ -398,4 +405,3 @@ class GenericFTPhaseMixin(object):
             return self.phase(mu_s, mu_i, dphi, npol)
 
         return generic_ft_even_matrix(phase_function, m_max)  # order is pola_s, pola_i, m, mu_s, mu_i
-

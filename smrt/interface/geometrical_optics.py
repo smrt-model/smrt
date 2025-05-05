@@ -24,7 +24,7 @@ import scipy.integrate
 
 from smrt.core.fresnel import fresnel_coefficients
 from smrt.core.lib import smrt_matrix, abs2, generic_ft_even_matrix
-from smrt.interface.vector3 import vector3
+from smrt.core.vector3 import vector3
 from smrt.core.interface import Interface
 
 
