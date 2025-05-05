@@ -51,4 +51,4 @@ class SFT_Rayleigh(Rayleigh):
         Eeff = eg + k0**2 * delta * (2 * I1 / 3 - 1j * I2 / kg - I3 / 3 + I4 / (k0**2 * eg))
 
         self.ka = 2 * k0 * np.sqrt(eg).imag
-        self.ks = 2 * k0 * np.sqrt(Eeff).imag - self.ka
+        self._ks = 2 * k0 * np.sqrt(Eeff).imag - self.ka

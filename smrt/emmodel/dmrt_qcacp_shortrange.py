@@ -119,8 +119,8 @@ class DMRT_QCACP_ShortRange(Rayleigh):
         beta = 2 * math.pi / lmda * 2 * cmath.sqrt(Eeff).imag
 
         self._effective_permittivity = Eeff
-        self.ks = albedo * beta
-        self.ka = beta - self.ks
+        self._ks = albedo * beta
+        self.ka = beta - self._ks
 
     def basic_check(self):
         # TODO Ghi: check the microstructure model is compatible.

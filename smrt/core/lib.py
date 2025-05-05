@@ -226,6 +226,14 @@ class smrt_matrix(object):
                     raise SMRTError("Unsupported matrix size")
             self.mtype = mtype
 
+    @property
+    def trace(self):
+        return np.sum(self.diagonal)
+
+    @property
+    def meantrace(self):
+        return np.mean(self.diagonal)
+
     @staticmethod
     def empty(dims, mtype=None):
         mat = np.empty(dims)

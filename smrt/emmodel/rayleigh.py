@@ -1,6 +1,6 @@
 # coding: utf-8
 
-""" Compute Rayleigh scattering. This theory requires the scatterers to be smaller than the wavelength and 
+""" Compute Rayleigh scattering. This theory requires the scatterers to be smaller than the wavelength and
 the medium to be sparsely populated (eq. very low density in the case of snow).
 
 This model is only compatible with the Independent Sphere microstructure model
@@ -11,11 +11,11 @@ import numpy as np
 
 from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
-from ..core.lib import smrt_matrix, len_atleast_1d
-from .common import rayleigh_scattering_matrix_and_angle, extinction_matrix
+from ..core.lib import smrt_matrix
+from .common import rayleigh_scattering_matrix_and_angle, IsotropicScatteringMixin
 
 
-class Rayleigh(object):
+class Rayleigh(IsotropicScatteringMixin):
     """
     """
 
@@ -41,7 +41,7 @@ class Rayleigh(object):
 
         k0 = 2 * np.pi / lmda
 
-        self.ks = f * 2 * abs((eps - e0) / (eps + 2 * e0))**2 * radius**3 * e0**2 * k0**4
+        self._ks = f * 2 * abs((eps - e0) / (eps + 2 * e0))**2 * radius**3 * e0**2 * k0**4
         self.ka = f * 9 * k0 * eps.imag * abs(e0 / (eps + 2 * e0))**2 + (1 - f) * e0.imag * k0
 
     def basic_check(self):
@@ -126,7 +126,7 @@ class Rayleigh(object):
             P[h, u, :] = -P[h, u, :]  # minus comes from even phase function
 
         # this normalisation is compatible with the 1/4pi normalisation used for the RT equation.
-        coef = 3 * self.ks / 2   # no*fo^2 / Ks (see TsangI 3.2.49)
+        coef = 3 * self._ks / 2   # no*fo^2 / Ks (see TsangI 3.2.49)
 
         return P * coef
 
@@ -167,7 +167,7 @@ class Rayleigh(object):
         if npol > 3:
             P[h, u, 0] = 0
 
-        if npol > 3: 
+        if npol > 3:
             P[u, v, 0] = 0
             P[u, h, 0] = 0
             P[u, u, 0] = 0
@@ -211,7 +211,7 @@ class Rayleigh(object):
             P[h, u, :] = -P[h, u, :]  # minus comes from even phase function
 
         # this normalisation is compatible with the 1/4pi normalisation used for the RT equation.
-        coef = 3 * self.ks / 2   # no*fo^2 / Ks (see TsangI 3.2.49)
+        coef = 3 * self._ks / 2   # no*fo^2 / Ks (see TsangI 3.2.49)
 
         return P * coef
 
@@ -303,7 +303,7 @@ class Rayleigh(object):
             P[h, u, :] = -P[h, u, :]  # minus comes from even phase function
 
         # this normalisation is compatible with the 1/4pi normalisation used for the RT equation.
-        coef = 3 * self.ks / 2   # no*fo^2 / Ks (see TsangI 3.2.49)
+        coef = 3 * self._ks / 2   # no*fo^2 / Ks (see TsangI 3.2.49)
 
         return P * coef
 
@@ -315,29 +315,7 @@ class Rayleigh(object):
 
         p, sin_half_scatt = rayleigh_scattering_matrix_and_angle(mu_s, mu_i, dphi, npol)
 
-        return smrt_matrix(1.5 * self.ks * p)
-
-    def ke(self, mu, npol=2):
-        """return the extinction coefficient matrix
-
-        The extinction coefficient is defined as the sum of scattering and absorption
-        coefficients. However, the radiative transfer solver requires this in matrix form,
-        so this method is called by the solver.
-
-            :param mu: 1-D array of cosines of radiation stream incidence angles
-            :param npol: number of polarizations
-            :returns ke: extinction coefficient matrix [m :sup:`-1`]
-
-            .. note::
-
-                Spherical isotropy assumed (all elements in matrix are identical).
-
-                Size of extinction coefficient matrix depends on number of radiation
-                streams, which is set by the radiative transfer solver.
-
-        """
-
-        return extinction_matrix(self.ks + self.ka, mu=mu, npol=npol)
+        return smrt_matrix(1.5 * self._ks * p)
 
     def effective_permittivity(self):
         return self._effective_permittivity

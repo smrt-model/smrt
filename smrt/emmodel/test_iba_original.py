@@ -89,7 +89,7 @@ def test_ks_pc_is_0p3_mm():
     em = setup_func_em(testpack)
     # Allow 5% error
     memls_ks = 4.13718676e+00
-    assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
+    assert abs(em.ks(0).meantrace - memls_ks) < tolerance_pc * em.ks(0).meantrace
 
 
 def test_ks_pc_is_0p25_mm():
@@ -97,8 +97,8 @@ def test_ks_pc_is_0p25_mm():
     em = setup_func_em(testpack)
     # Allow 5% error
     memls_ks = 2.58158887e+00
-    # eq_(em.ks, memls_ks)
-    assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
+    # eq_(em.ks(0), memls_ks)
+    assert abs(em.ks(0).meantrace - memls_ks) < tolerance_pc * em.ks(0).meantrace
 
 
 def test_ks_pc_is_0p2_mm():
@@ -106,7 +106,7 @@ def test_ks_pc_is_0p2_mm():
     em = setup_func_em(testpack)
     # Allow 5% error
     memls_ks = 1.41304849e+00
-    assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
+    assert abs(em.ks(0).meantrace - memls_ks) < tolerance_pc * em.ks(0).meantrace
 
 
 def test_ks_pc_is_0p15_mm():
@@ -114,7 +114,7 @@ def test_ks_pc_is_0p15_mm():
     em = setup_func_em(testpack)
     # Allow 5% error
     memls_ks = 6.30218291e-01
-    assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
+    assert abs(em.ks(0).meantrace - memls_ks) < tolerance_pc * em.ks(0).meantrace
 
 
 def test_ks_pc_is_0p1_mm():
@@ -122,7 +122,7 @@ def test_ks_pc_is_0p1_mm():
     em = setup_func_em(testpack)
     # Allow 5% error
     memls_ks = 1.94727497e-01
-    assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
+    assert abs(em.ks(0).meantrace - memls_ks) < tolerance_pc * em.ks(0).meantrace
 
 
 def test_ks_pc_is_0p2_mm():
@@ -130,7 +130,7 @@ def test_ks_pc_is_0p2_mm():
     em = setup_func_em(testpack)
     # Allow 5% error
     memls_ks = 2.49851702e-02
-    assert abs(em.ks - memls_ks) < tolerance_pc * em.ks
+    assert abs(em.ks(0).meantrace - memls_ks) < tolerance_pc * em.ks(0).meantrace
 
 
 def test_energy_conservation_exp():
@@ -186,16 +186,16 @@ def test_energy_conservation_shs_active():
 def test_iba_vs_rayleigh_passive_m0():
     em_iba, em_ray = setup_func_rayleigh()
     mu = setup_mu(1. / 64)
-    assert (abs(em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks
-                - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks) < tolerance_pc).all()
+    assert (abs(em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks(0).meantrace
+                - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks(0).meantrace) < tolerance_pc).all()
 
 
 def test_iba_vs_rayleigh_active_m0():
     # Have to set npol = 2 for m=0 mode in active otherwise rayleigh will produce 3x3 matrix
     em_iba, em_ray = setup_func_rayleigh()
     mu = setup_mu(1. / 64, bypass_exception=True)
-    assert (abs(em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks
-                - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks) < tolerance_pc).all()
+    assert (abs(em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks(0).meantrace
+                - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks(0).meantrace) < tolerance_pc).all()
 
 
 def test_iba_vs_rayleigh_active_m1():
@@ -203,8 +203,8 @@ def test_iba_vs_rayleigh_active_m1():
     mu = setup_mu(1. / 64, bypass_exception=True)
     # Clear cache
     em_iba.cached_mu = None
-    assert (abs(em_iba.ft_even_phase(mu, mu, 1, npol=3)[:, :, 1] / em_iba.ks
-                - em_ray.ft_even_phase(mu, mu, 1, npol=3)[:, :, 1] / em_ray.ks) < tolerance_pc).all()
+    assert (abs(em_iba.ft_even_phase(mu, mu, 1, npol=3)[:, :, 1] / em_iba.ks(0).meantrace
+                - em_ray.ft_even_phase(mu, mu, 1, npol=3)[:, :, 1] / em_ray.ks(0).meantrace) < tolerance_pc).all()
 
 
 def test_iba_vs_rayleigh_active_m2():
@@ -212,13 +212,13 @@ def test_iba_vs_rayleigh_active_m2():
     mu = setup_mu(1. / 64, bypass_exception=True)
 
     def check(i, j):
-        print(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_iba.ks,
-            abs(em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_ray.ks))
-        assert abs((abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_iba.ks)
-                    - abs(em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_ray.ks)) < tolerance_pc).all()
+        print(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_iba.ks(0).meantrace,
+            abs(em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_ray.ks(0).meantrace))
+        assert abs((abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_iba.ks(0).meantrace)
+                    - abs(em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_ray.ks(0).meantrace)) < tolerance_pc).all()
 
-        assert (abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_iba.ks
-                    - em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_ray.ks) < tolerance_pc).all()
+        assert (abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_iba.ks(0).meantrace
+                    - em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_ray.ks(0).meantrace) < tolerance_pc).all()
 
     check(0, 0)
     check(0, 1)

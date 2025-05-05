@@ -106,8 +106,8 @@ class DMRT_QCA_ShortRange(Rayleigh):
                       "Mie calculations.")
 
         self._effective_permittivity = Eeff
-        self.ks = Ks
-        self.ka = beta - self.ks
+        self._ks = Ks
+        self.ka = beta - self._ks
 
     def basic_check(self):
         # TODO Ghi: check the microstructure model is compatible.

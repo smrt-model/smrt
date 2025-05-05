@@ -17,8 +17,8 @@ import scipy.fftpack
 from ..core.error import SMRTError, smrt_warn
 from ..core.globalconstants import C_SPEED
 from ..permittivity.generic_mixing_formula import polder_van_santen, depolarization_factors
-from ..core.lib import smrt_matrix, generic_ft_even_matrix, len_atleast_1d
-from .common import rayleigh_scattering_matrix_and_angle, AdjustableEffectivePermittivityMixins, derived_EMModel, extinction_matrix
+from ..core.lib import smrt_matrix, generic_ft_even_matrix
+from .common import rayleigh_scattering_matrix_and_angle, AdjustableEffectivePermittivityMixin, IsotropicScatteringMixin, GenericFTPhaseMixin, derived_EMModel
 
 #
 # For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
@@ -38,8 +38,9 @@ def derived_IBA(effective_permittivity_model=polder_van_santen):
     return derived_EMModel(IBA, effective_permittivity_model)
 
 
-class IBA(AdjustableEffectivePermittivityMixins):
-
+class IBA(AdjustableEffectivePermittivityMixin,
+          IsotropicScatteringMixin,
+          GenericFTPhaseMixin):
     """
     Improved Born Approximation electromagnetic model class.
 
@@ -120,10 +121,10 @@ become a default in the future.""")
         # Absorption coefficient for general lossy medium under assumption of low-loss medium.
         self.ka = self.compute_ka()
 
-        self.ks = self.compute_ks()
+        self._ks = self.compute_ks()
 
-        if not (self.ks >= 0):
-            print("ks, the scattering coefficient has an invalid value '%g' in layer nb '%i'" % (self.ks, getattr(layer, 'number', 0)))
+        if not (self._ks >= 0):
+            print("ks, the scattering coefficient has an invalid value '%g' in layer nb '%i'" % (self._ks, getattr(layer, 'number', 0)))
 
     def compute_iba_coeff(self):
         """ Calculate angular independent IBA coefficient: used in both scattering coefficient and phase function calculations
@@ -223,48 +224,6 @@ become a default in the future.""")
 
         return smrt_matrix(ft_corr_fn * self.iba_coeff * p)
 
-    def ft_even_phase(self, mu_s, mu_i, m_max, npol=None):
-        """ Calculation of the Fourier decomposed IBA phase function.
-
-        This method calculates the Improved Born Approximation phase matrix for all
-        Fourier decomposition modes and return the output.
-
-        Coefficients within the phase function are
-
-        Passive case (m = 0 only) and active (m = 0)::
-
-            M = [Pvvp  Pvhp]
-                [Phvp  Phhp]
-
-        Active case (m > 0)::
-
-            M = [Pvvp Pvhp Pvup]
-                [Phvp Phhp Phup]
-                [Puvp Puhp Puup]
-
-
-        The IBA phase function is given in Mätzler, C. (1998). Improved Born approximation for
-        scattering of radiation in a granular medium. *Journal of Applied Physics*, 83(11),
-        6111-6117. Here, calculation of the phase matrix is based on the phase matrix in
-        the 1-2 frame, which is then rotated according to the incident and scattering angles,
-        as described in e.g. *Thermal Microwave Radiation: Applications for Remote Sensing, Mätzler(2006)*.
-        Fourier decomposition is then performed to separate the azimuthal dependency from the incidence angle dependency.: param mu_s: 1-D array of cosine of viewing radiation stream angles(set by solver): param mu_i: 1-D array of cosine of incident radiation stream angles(set by solver): param m_max: maximum Fourier decomposition mode needed: param npol: number of polarizations considered(set from sensor characteristics)
-
-        """
-
-        if npol is None:
-            npol = self.npol  # npol is set from sensor mode except in call to energy conservation test
-
-        # Raise exception if mu = 1 ever called for active: p13, p23, p31, p32 signs incorrect
-        if np.any(mu_i == 1) and npol > 2:
-            raise SMRTError("Phase matrix signs for sine elements of mode m = 2 incorrect")
-
-        # compute the phase function
-        def phase_function(dphi):
-            return self.phase(mu_s, mu_i, dphi, npol)
-
-        return generic_ft_even_matrix(phase_function, m_max)  # order is pola_s, pola_i, m, mu_s, mu_i
-
     def compute_ka(self):
         """ IBA absorption coefficient calculated from the low-loss assumption of a general lossy medium.
 
@@ -284,28 +243,6 @@ become a default in the future.""")
         # This is therefore the default in SMRT. The fully MEMLS compatible IBA is in iba_original.py
 
         return 2 * self.k0 * np.sqrt(self._effective_permittivity).imag
-
-    def ke(self, mu, npol=2):
-        """ IBA extinction coefficient matrix
-
-        The extinction coefficient is defined as the sum of scattering and absorption
-        coefficients. However, the radiative transfer solver requires this in matrix form,
-        so this method is called by the solver.
-
-        :param mu: 1-D array of cosines of radiation stream incidence angles
-        :param npol: number of polarization:
-        :returns: extinction coefficient matrix[m:sup:`-1`]
-
-        .. note::
-
-            Spherical isotropy assumed(all elements in matrix are identical).
-
-            Size of extinction coefficient matrix depends on number of radiation
-            streams, which is set by the radiative transfer solver.
-
-        """
-
-        return extinction_matrix(self.ks + self.ka, mu=mu, npol=npol)
 
 
 class IBA_MM(IBA):

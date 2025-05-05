@@ -13,11 +13,11 @@ import numpy as np
 # local import
 from ..core.globalconstants import C_SPEED
 from ..core.lib import smrt_matrix, len_atleast_1d
-from .common import extinction_matrix
+from .common import extinction_matrix, IsotropicScatteringMixin
 from ..permittivity.generic_mixing_formula import polder_van_santen
 
 
-class NonScattering(object):
+class NonScattering(IsotropicScatteringMixin):
     """
     """
 
@@ -36,7 +36,7 @@ class NonScattering(object):
 
         self.ka = 2 * self.k0 * np.sqrt(self.effective_permittivity()).imag
         # no scattering
-        self.ks = 0
+        self._ks = 0
 
     def basic_check(self):
         # Need to be defined

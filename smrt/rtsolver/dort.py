@@ -23,7 +23,7 @@ but simulations will be much slower.
     decomposition beforehand improves the stability. Nevertheless to really solve the problem, the second method
     (diagonalization_method='shur_forcedtriu') consists in removing the 2x2 and 3x3 blocks from the shur matrix, ie. forcing
     the shur matrix to be upper triangular (triu in numpy jargon =zeroing the lower part of this
-    matrix). This problem is due to the structure of the matrix to be diagonalized and the formulation of the DORT method in the polarimetric 
+    matrix). This problem is due to the structure of the matrix to be diagonalized and the formulation of the DORT method in the polarimetric
     configuration. The eigenvalues come by triplets and can be very close to each other for the three H, V, U Stockes components
     when scattering is becoming small (or equiv. the azimuth mode 'm' is large). As a consequence of the Gershgorin theorem,
     this results in slightly complex eigenvalues (i.e. eigenvalues with very small imaginary part) that comes from 2x2 or
@@ -81,7 +81,7 @@ class DORT(object):
         which is acceptable in most case, because the layer is thin. To use this option and more generally
         to investigate ice lenses, it is recommended to read MEMLS documentation on this topic.
     :param prune_deep_snowpack: this value is the optical depth from which the layers are discarded in the calculation.
-        It is to be use to accelerate the calculations for deep snowpacks or at high frequencies when the 
+        It is to be use to accelerate the calculations for deep snowpacks or at high frequencies when the
         contribution of the lowest layers is neglegible. The optical depth is a good criteria to determine this limit.
         A value of about 6 is recommended. Use with care, especially values lower than 6.
     """
@@ -202,14 +202,12 @@ class DORT(object):
             #coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola)] + coords
             coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola), ('polarization', pola)]
 
-        result = make_result(sensor, intensity, coords)
-
         # store other diagnostic information
         layer_index = 'layer', range(snowpack.nlayer)
         other_data = {
             'stream_angles': xr.DataArray(np.rad2deg(np.arccos(outmu)), coords=[range(len(outmu))]),
             'effective_permittivity': xr.DataArray(self.effective_permittivity, coords=[layer_index]),
-            'ks': xr.DataArray([getattr(em, "ks", np.nan) for em in emmodels], coords=[layer_index]),
+            'ks': xr.DataArray([np.mean(em.ks(outmu) if hasattr(em, "ks") and callable(em.ks) else getattr(em, "ks", np.nan)) for em in emmodels], coords=[layer_index]),
             'ka': xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index]),
             'thickness': xr.DataArray(self.snowpack.layer_thicknesses, coords=[layer_index]),
         }
@@ -804,7 +802,7 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
             raise SMRTError("Diagonalization of the schur decomposition failed.\n" + self.diagonalization_error_message())
 
         E = Z @ E
-    
+
         # if m >= 0: #== 2:
 
         #     #print(m, T)
@@ -856,7 +854,7 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
             print("E:", E[mask], "beta:", beta[np.any(mask, axis=0)])
 
             raise SMRTError('n'.join(reasons) + '\n' + self.diagonalization_error_message())
-            
+
         if np.iscomplexobj(E):
             mask = abs(E.imag) > np.linalg.norm(E) * 1e-5
             if np.any(mask):
@@ -877,8 +875,8 @@ to reduce the grain size. If the phase_normalization option in DORT was desactiv
 to reactivate it.
 
 - almost diagonal matrix. Such a matrix often arises in active mode when m_max is quite high. However it can
-also arises in passive mode or with low m_max. To solve this issue  you can try to 
-activate the diagonalization_method="shur" option and if it does not work the more radical diagonalization_method="shur_forcedtriu". 
+also arises in passive mode or with low m_max. To solve this issue  you can try to
+activate the diagonalization_method="shur" option and if it does not work the more radical diagonalization_method="shur_forcedtriu".
 These options are experimental, please report your results (both success and failure).
 diagonalization_method="shur_forcedtriu" should become the default if success are reported.
 Alternatively you could reduce the m_max option progressively but high values of m_max give more accurate results in
@@ -1174,7 +1172,7 @@ def compute_stream_gaussian(n_max_stream, permittivity, permittivity_substrate, 
     # weight(1,k)=1-0.5 * (mu(1,k)+mu(2,k))
     # weight(nsk,k)=0.5 * (mu(nsk-1,k)+mu(nsk,k))
     # weight(2:nsk-1,k)=0.5 * (mu(1:nsk-2,k)-mu(3:nsk,k))
-    
+
     streams.weight = compute_weight(streams.mu)
 
     # ### calculate the angles (=node) in the air
@@ -1201,7 +1199,7 @@ def compute_stream_gaussian(n_max_stream, permittivity, permittivity_substrate, 
 def compute_stream_uniform(n_max_stream, permittivity, permittivity_substrate):
 
     # """Compute the angles of each layer. Use a regular step in angle in the air, then deduce the angles in the other layers
-    # using Snell-law. Then, in the most refringent layer, add regular stream up to close to 0, and then propagate back this second 
+    # using Snell-law. Then, in the most refringent layer, add regular stream up to close to 0, and then propagate back this second
     # set of angles in the other layers using Snell-law and accounting for the total reflections
 
     #     :param n_max_stream: number of stream
@@ -1212,7 +1210,7 @@ def compute_stream_uniform(n_max_stream, permittivity, permittivity_substrate):
 
     streams = Streams()
     streams.n_air = n_max_stream
-    
+
     nlayer = len(permittivity)
 
     #
@@ -1229,18 +1227,18 @@ def compute_stream_uniform(n_max_stream, permittivity, permittivity_substrate):
         return streams
 
     #  calculate the nodes and weights of all the other layers
-    
+
     # calculate real part of the index. It is an approximation.
     # See for instance "Semiconductor Physics, Quantum Electronics & Optoelectronics. 2001. V. 4, N 3. P. 214-218."
     real_index = np.real(np.sqrt(1 / permittivity[:]))
-    
+
     # calculate the angles (=node)
     relsin = real_index[:, np.newaxis] * np.sqrt(1 - streams.outmu[np.newaxis, :]**2)
 
     # deduce the first set of streams
     mu1 = np.sqrt(1 - relsin**2)
 
-    # now compute the additional streams. 
+    # now compute the additional streams.
     # get the most_refringent layer
     k_most_refringent = np.argmax(permittivity)
 
@@ -1252,27 +1250,27 @@ def compute_stream_uniform(n_max_stream, permittivity, permittivity_substrate):
     # calculate real part of the index. It is an approximation.
     # See for instance "Semiconductor Physics, Quantum Electronics & Optoelectronics. 2001. V. 4, N 3. P. 214-218."
     real_index = np.real(np.sqrt(permittivity[k_most_refringent] / permittivity[:]))
-    
+
     # calculate the angles (=node)
     relsin = real_index[:, np.newaxis] * np.sqrt(1 - mu2_most_refringent[np.newaxis, :]**2)
-    
+
     real_reflection = relsin < 1  # mask where real reflection occurs
 
     # compute the second set of angles
     mu2 = np.zeros((nlayer, len(mu2_most_refringent)), dtype=np.float64)
     mu2[real_reflection] = np.sqrt(1 - relsin[real_reflection]**2)
-    
+
     # assemble the two sets
     streams.mu =  [np.hstack((mu1[l], mu2[l, real_reflection[l, :]])) for l in range(nlayer)]
     # calculate the number of streams per layer
     streams.n = n_max_stream + np.sum(real_reflection, axis=1)
-    
+
     assert(all(streams.n > 2))
-    
+
     # compute the weights
     streams.weight = compute_weight(streams.mu)
     streams.outweight = compute_outweight(streams.outmu)
-    
+
     # compute the number of stream in the substrate
     streams.n_substrate = compute_n_stream_substrate(permittivity, permittivity_substrate, streams.mu)
 
