@@ -27,6 +27,13 @@ Examples::
     # return a perfect absorber / black body.
     ref = make_reflector(temperature=260, specular_reflection=0)
 
+    # use a function as a function of the cosine of the incidence angle
+
+    def reflection_function(mu):
+        return 0.5 * mu
+
+    ref = make_reflector(specular_reflection=reflection_function)
+
 .. note::
 
     the backscatter coefficient argument is not implemented/documented yet.

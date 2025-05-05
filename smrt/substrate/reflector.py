@@ -54,17 +54,14 @@ def make_reflector(temperature=None, specular_reflection=None):
 class Reflector(Substrate):
 
     args = []
-    optional_args = {'specular_reflection': None, 'backscatter_coefficient': None}
+    optional_args = {'specular_reflection': None}
 
     def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
 
         if npol > 2:
             raise NotImplementedError("active model is not yet implemented, need modification for the third component")
 
-        if self.backscatter_coefficient is not None:
-            raise NotImplementedError("backscatter_coefficient to be implemented")
-
-        if self.specular_reflection is None and self.backscatter_coefficient is None:
+        if self.specular_reflection is None:
             self.specular_reflection = 1
 
         spec_refl_coeff = smrt_matrix.zeros((npol, len(mu1)))
@@ -76,7 +73,7 @@ class Reflector(Substrate):
 
     def emissivity_matrix(self, frequency, eps_1, mu1, npol):
 
-        if self.specular_reflection is None and self.backscatter_coefficient is None:
+        if self.specular_reflection is None:
             self.specular_reflection = 1
 
         if npol > 2:
