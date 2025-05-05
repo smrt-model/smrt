@@ -8,7 +8,7 @@ Approximations:
  - Near nadir / small angle approximation: to compute delay, the paths in the snow are along the z-axis. We neglect the off-nadir delay.*
  This error is likely to be small (except for very deep penetration).
 
-.. note: 
+.. note:
     With this RT solver, if using Geometrical Optics for rough surface/interface modeling, it is strongly advised to use
     :py:mod:`~smrt.interface.geometrical_optics_backscatter` instead of :py:mod:`~smrt.interface.geometrical_optics` for
     the reason explained in the documentation of those modules.

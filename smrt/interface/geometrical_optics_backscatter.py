@@ -9,7 +9,7 @@ substrate are negligible. In other case, it is recommended to use
 
 The transmitted energy is also computed in an approximate way suitable for first order scattering such as
 :py:mod:``smrt.rtsolver.nadir_lrm_altimetry`. It uses energy conservation to compute the total transmitted energy and
-consider that all this energy is transmitted in the refracted direction. This approach compensate for the deficiencies of 
+consider that all this energy is transmitted in the refracted direction. This approach compensate for the deficiencies of
 first order scattering RT solvers.
 
 """

@@ -9,10 +9,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+	- EMModel.ks is now a function to handle non isotropic scatterers
 
 ## [v1.4]
 ### Added
-	- Add a warning when snow salinity is greater than zero, but the permittivity formulation does not account for    salinity. This is only a warning since, in some cases, the mixing formula in the **emmodel** overrides the salinity in the material's permittivity formulation.  
+	- Add a warning when snow salinity is greater than zero, but the permittivity formulation does not account for    salinity. This is only a warning since, in some cases, the mixing formula in the **emmodel** overrides the salinity in the material's permittivity formulation.
 	- Include stream angles in the output of DORT simulations. To access them in the results of a simulation (`res`), use: `res.other_data['stream_angles']`
 
 	- Introduce a new mode for computing stream angles. This method is more uniform than Gaussian quadrature and, while less efficient, enables calculations at very high grazing incidence angles (close to 89°). Use this mode when such extreme angles are required.
