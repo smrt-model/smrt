@@ -4,56 +4,64 @@ import numpy as np
 from smrt.core.error import SMRTError
 
 from smrt.core.globalconstants import FREEZING_POINT, GHz, PERMITTIVITY_OF_FREE_SPACE, PSU
-from .brine import brine_conductivity, brine_relaxation_time, permittivity_high_frequency_limit, \
-    static_brine_permittivity
+from .brine import (
+    brine_conductivity_stogryn85,
+    brine_relaxation_time_stogryn85,
+    permittivity_high_frequency_limit_stogryn85,
+    static_brine_permittivity_stogryn85,
+)
 from ..core.layer import layer_properties
 
 
 @layer_properties("temperature", "salinity")
 def seawater_permittivity_klein76(frequency, temperature, salinity):
     """Calculates permittivity (dielectric constant) of water using an empirical relationship described
-       by Klein and Swift (1976).
+    by Klein and Swift (1976).
 
-       :param frequency: frequency in Hz
-       :param temperature: water temperature in K
-       :param salinity: water salinity in kg/kg (see PSU constant in smrt module)
-       :returns: complex water permittivity for a frequency f.
+    :param frequency: frequency in Hz
+    :param temperature: water temperature in K
+    :param salinity: water salinity in kg/kg (see PSU constant in smrt module)
+    :returns: complex water permittivity for a frequency f.
 
-       """
+    """
 
     tempC = temperature - FREEZING_POINT
 
     Sppt = salinity / PSU
 
     # Millero and Leung 1976
-    tempF = - (0.0575 * Sppt - 1.710523e-3 * Sppt**1.5 + 2.154996e-4 * Sppt**2)
+    tempF = -(0.0575 * Sppt - 1.710523e-3 * Sppt**1.5 + 2.154996e-4 * Sppt**2)
     if np.any(tempC < tempF - 0.1):  # take into account a small tolerance
-        raise SMRTError(f"The water temperature must be higher than the freezing point at the given salinity (here {tempF + FREEZING_POINT:.2f} K).")
+        raise SMRTError(
+            f"The water temperature must be higher than the freezing point at the given salinity (here {tempF + FREEZING_POINT:.2f} K)."
+        )
 
     omega = 2 * np.pi * frequency
     eps_inf = 4.9  # limiting high frequency value
 
     # calculate static dielectric constant of saline water:
-    eps_s_T = 87.134 - 1.949e-1 * tempC - 1.276e-2 * tempC ** 2 + 2.491e-4 * tempC ** 3
-    a_ST = 1. + 1.613e-5 * Sppt * tempC - 3.656e-3 * Sppt + 3.210e-5 * Sppt ** 2 - 4.232e-7 * Sppt ** 3
+    eps_s_T = 87.134 - 1.949e-1 * tempC - 1.276e-2 * tempC**2 + 2.491e-4 * tempC**3
+    a_ST = 1.0 + 1.613e-5 * Sppt * tempC - 3.656e-3 * Sppt + 3.210e-5 * Sppt**2 - 4.232e-7 * Sppt**3
     eps_static = eps_s_T * a_ST
 
     # calculate tau = relaxation time of saline water:
-    tau_T0 = 1.768e-11 - 6.086e-13 * tempC + 1.104e-14 * tempC ** 2 - 8.111e-17 * tempC ** 3
-    b_ST = 1. + 2.282e-5 * Sppt * tempC - 7.638e-4 * Sppt - 7.760e-6 * Sppt ** 2 + 1.105e-8 * Sppt ** 3
+    tau_T0 = 1.768e-11 - 6.086e-13 * tempC + 1.104e-14 * tempC**2 - 8.111e-17 * tempC**3
+    b_ST = 1.0 + 2.282e-5 * Sppt * tempC - 7.638e-4 * Sppt - 7.760e-6 * Sppt**2 + 1.105e-8 * Sppt**3
     tau = tau_T0 * b_ST
 
     # calculate sigma = ionic conductivity of dissolved salts:
     delta = 25 - tempC
-    beta = 2.0333e-2 + 1.266e-4 * delta + 2.464e-6 * delta ** 2 - Sppt * \
-           (1.849e-5 - 2.551e-7 * delta + 2.551e-8 * delta ** 2)
-    sigma_25S = Sppt * (0.182521 - 1.46192e-3 * Sppt + 2.09324e-5 * Sppt ** 2 - 1.28205e-7 * Sppt ** 3)
+    beta = (
+        2.0333e-2 + 1.266e-4 * delta + 2.464e-6 * delta**2 - Sppt * (1.849e-5 - 2.551e-7 * delta + 2.551e-8 * delta**2)
+    )
+    sigma_25S = Sppt * (0.182521 - 1.46192e-3 * Sppt + 2.09324e-5 * Sppt**2 - 1.28205e-7 * Sppt**3)
     sigma = sigma_25S * np.exp(-delta * beta)
 
     # Debye type relaxation equation:
     # Similar equation form as in saline_ice.py: brine_permittivity_stogryn85
-    eps_water = eps_inf + (eps_static - eps_inf) / (1 - 1j *
-                                                    omega * tau) + 1j * sigma / (omega * PERMITTIVITY_OF_FREE_SPACE)
+    eps_water = (
+        eps_inf + (eps_static - eps_inf) / (1 - 1j * omega * tau) + 1j * sigma / (omega * PERMITTIVITY_OF_FREE_SPACE)
+    )
     return eps_water
 
 
@@ -69,28 +77,34 @@ def seawater_permittivity_stogryn71(frequency, temperature):
     :param temperature: water temperature in K
     :returns: complex water permittivity for a frequency f.
 
+    References:
+    A. Stogryn, "Equations for Calculating the Dielectric Constant of Saline Water (Correspondence)," in IEEE
+    Transactions on Microwave Theory and Techniques, vol. 19, no. 8, pp. 733-736, Aug. 1971, doi:
+    10.1109/TMTT.1971.1127617
+
     """
 
     # High-frequency dielectric constant of saline water
-    eps_inf = permittivity_high_frequency_limit(temperature)
+    eps_inf = permittivity_high_frequency_limit_stogryn85(temperature)
 
     # Static dielectric constant of saline water
-    eps_static = static_brine_permittivity(temperature)
+    eps_static = static_brine_permittivity_stogryn85(temperature)
 
     # Angular frequency
     omega_brine = 2 * np.pi * frequency
 
     # Relaxation time
-    tau_brine = brine_relaxation_time(temperature)
+    tau_brine = brine_relaxation_time_stogryn85(temperature)
 
     # Ionic conductivity
-    sigma_brine = brine_conductivity(temperature)
+    sigma_brine = brine_conductivity_stogryn85(temperature)
 
     # Output dielectric constant of brine using Stogryn, 1971 formulation (Ulaby et al., 1986 p. 2046)
     freqGHz = frequency / GHz
     real_brine = eps_inf + ((eps_static - eps_inf) / (1 + (tau_brine * freqGHz) ** 2))
     imag_brine = (tau_brine * freqGHz) * ((eps_static - eps_inf) / (1 + (tau_brine * freqGHz) ** 2)) + (
-            sigma_brine / (omega_brine * PERMITTIVITY_OF_FREE_SPACE))
+        sigma_brine / (omega_brine * PERMITTIVITY_OF_FREE_SPACE)
+    )
 
     return real_brine + 1j * imag_brine
 
@@ -106,13 +120,15 @@ def brine_permittivity_stogryn85(frequency, temperature):
 
     """
 
-    eps_static = static_brine_permittivity(temperature)  # limiting static permittivity
-    tau = brine_relaxation_time(temperature)  # relaxation time
-    sigma = brine_conductivity(temperature)  # ionic conductivity of dissolved salts
-    eps_inf = permittivity_high_frequency_limit(temperature)  # limiting high frequency value
-    brine_permittivity = eps_inf + (eps_static - eps_inf) / (1. - tau * frequency / GHz *
-                                                             1j) + sigma / (
-                                 2. * np.pi * PERMITTIVITY_OF_FREE_SPACE * frequency) * 1j
+    eps_static = static_brine_permittivity_stogryn85(temperature)  # limiting static permittivity
+    tau = brine_relaxation_time_stogryn85(temperature)  # relaxation time
+    sigma = brine_conductivity_stogryn85(temperature)  # ionic conductivity of dissolved salts
+    eps_inf = permittivity_high_frequency_limit_stogryn85(temperature)  # limiting high frequency value
+    brine_permittivity = (
+        eps_inf
+        + (eps_static - eps_inf) / (1.0 - tau * frequency / GHz * 1j)
+        + sigma / (2.0 * np.pi * PERMITTIVITY_OF_FREE_SPACE * frequency) * 1j
+    )
     return brine_permittivity
 
 

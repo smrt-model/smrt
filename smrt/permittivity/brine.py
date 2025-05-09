@@ -10,25 +10,33 @@ from smrt.core.globalconstants import DENSITY_OF_ICE, FREEZING_POINT, PSU
 from ..core.layer import layer_properties
 
 
-def brine_conductivity(temperature):
+def brine_conductivity_stogryn85(temperature):
     """Computes ionic conductivity of dissolved salts, Stogryn and Desargant, 1985
 
     :param temperature: thermometric temperature [K]
+
+    References:
+        Stogryn, A., & Desargant, G. (1985). The dielectric properties of brine in sea ice at microwave frequencies. IEEE
+        Transactions on Antennas and Propagation, 33(5), 523–532. https://doi.org/10.1109/tap.1985.1143610
 
     """
 
     tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
     if tempC >= -22.9:
-        sigma = -tempC * np.exp(0.5193 + 0.08755 * tempC)
+        sigma = -tempC * np.exp(0.5193 + 0.08755 * tempC)  # Eq 7
     else:  # tempC < -22.9
-        sigma = -tempC * np.exp(1.0334 + 0.1100 * tempC)
+        sigma = -tempC * np.exp(1.0334 + 0.1100 * tempC)  # Eq 7
     return sigma
 
 
-def brine_relaxation_time(temperature):
+def brine_relaxation_time_stogryn85(temperature):
     """Computes relaxation time of brine, Stogryn and Desargant, 1985
 
     :param temperature: thermometric temperature [K]
+
+    References:
+        Stogryn, A., & Desargant, G. (1985). The dielectric properties of brine in sea ice at microwave frequencies. IEEE
+        Transactions on Antennas and Propagation, 33(5), 523–532. https://doi.org/10.1109/tap.1985.1143610
 
     """
 
@@ -40,7 +48,8 @@ def brine_relaxation_time(temperature):
 
 
 def brine_salinity(temperature):
-    """Computes the salinity of brine (in ppt) for a given temperature (Cox and Weeks, 1975)
+    """Computes the salinity of brine (in ppt) for a given temperature. The origin of this code is unknown, to be
+    investigate. It was attributed to (Cox and Weeks, 1975) in earlier commits but their Eq 15 is different.
 
     :param temperature: snow temperature in K
     :returns: salinity_brine in ppt
@@ -58,28 +67,36 @@ def brine_salinity(temperature):
 
 
 @layer_properties("temperature")
-def static_brine_permittivity(temperature):
-    """Computes  static dielectric constant of brine, Stogryn and Desargant, 1985
+def static_brine_permittivity_stogryn85(temperature):
+    """Computes  static dielectric constant of brine, after Stogryn and Desargant, 1985
 
     :param temperature: thermometric temperature [K]
+
+    References:
+        Stogryn, A., & Desargant, G. (1985). The dielectric properties of brine in sea ice at microwave frequencies. IEEE
+        Transactions on Antennas and Propagation, 33(5), 523–532. https://doi.org/10.1109/tap.1985.1143610
 
     """
 
     tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
-    eps_static = (939.66 - 19.068 * tempC) / (10.737 - tempC)  # Static dielectric constant of saline water
+    eps_static = (939.66 - 19.068 * tempC) / (10.737 - tempC)  # Static dielectric constant of saline water # Eq 10
     return eps_static
 
 
 @layer_properties("temperature")
-def permittivity_high_frequency_limit(temperature):
+def permittivity_high_frequency_limit_stogryn85(temperature):
     """Computes permittivity.
 
-    :param temperature: ice or snow temperature in K
+    :param temperature: ice or snow temperature in K, after Stogryn and Desargant, 1985
+
+    References:
+        Stogryn, A., & Desargant, G. (1985). The dielectric properties of brine in sea ice at microwave frequencies. IEEE
+        Transactions on Antennas and Propagation, 33(5), 523–532. https://doi.org/10.1109/tap.1985.1143610
 
     """
 
     tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
-    eps_inf = (82.79 + 8.19 * tempC**2) / (15.68 + tempC**2)
+    eps_inf = (82.79 + 8.19 * tempC**2) / (15.68 + tempC**2) # Eq 11
     return eps_inf
 
 

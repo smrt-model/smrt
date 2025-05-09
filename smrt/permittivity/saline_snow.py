@@ -15,8 +15,8 @@ import warnings
 import numpy as np
 
 from smrt.core.globalconstants import DENSITY_OF_ICE, FREEZING_POINT, GHz, PERMITTIVITY_OF_FREE_SPACE, PSU
-from .brine import brine_conductivity, brine_relaxation_time, brine_salinity, \
-    permittivity_high_frequency_limit, static_brine_permittivity
+from .brine import brine_conductivity_stogryn85, brine_relaxation_time_stogryn85, brine_salinity_stogryn85, \
+    permittivity_high_frequency_limit_stogryn85, static_brine_permittivity_stogryn85
 from .saline_water import seawater_permittivity_stogryn71, seawater_permittivity_stogryn95
 from ..core.error import SMRTError
 from ..core.layer import layer_properties
@@ -47,13 +47,13 @@ def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salin
     tempC = temperature - FREEZING_POINT
 
     eps_drysnow = 1 + 2.55 * (density / 1e3)
-    eps_inf = permittivity_high_frequency_limit(temperature)
-    eps_static = static_brine_permittivity(temperature)
+    eps_inf = permittivity_high_frequency_limit_stogryn85(temperature)
+    eps_static = static_brine_permittivity_stogryn85(temperature)
     omega_brine = 2 * np.pi * frequency
-    tau_brine = brine_relaxation_time(temperature)
+    tau_brine = brine_relaxation_time_stogryn85(temperature)
     fr = 1 / tau_brine
-    sigma_brine = brine_conductivity(temperature)
-    brine_sal = brine_salinity(temperature)
+    sigma_brine = brine_conductivity_stogryn85(temperature)
+    brine_sal = brine_salinity_stogryn85(temperature)
 
     # Initial brine volume
     initial_brine_volume = salinity * (-49.185 / tempC + 0.532)
@@ -121,7 +121,7 @@ def saline_snow_permittivity_scharien(density, temperature, salinity, brine_perm
     density_ice = DENSITY_OF_ICE - 0.1403 * tempC
 
     # density of brine in snow requires brine salinity in ppt.(Cox and Weeks, 1975)
-    brine_sal = brine_salinity(temperature)
+    brine_sal = brine_salinity_stogryn85(temperature)
     density_brine = 1000 + 0.8 * brine_sal
 
     # initial brine volume
