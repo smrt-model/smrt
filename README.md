@@ -11,6 +11,8 @@ If you want to try without installing anything on your computer, use free mybind
 
 If you want to try SMRT without coding, use [SMRT-App](https://snow.univ-grenoble-alpes.fr/smrt-app/).
 
+You can also explore the documentation and find code examples via the [AI Wiki](https://deepwiki.com/smrt-model/smrt). Please let us know your experience of using this via [discussions](https://github.com/smrt-model/smrt/discussions).
+
 Quick Installation
 --------------------
 
