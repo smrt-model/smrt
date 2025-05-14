@@ -65,6 +65,58 @@ def brine_salinity(temperature):
 
     return salinity_brine
 
+def brine_salinity_coxandweeks75(temperature):
+    """Computes the salinity of brine (in ppt) for a given temperature (Cox and Weeks, 1975, equation 15)
+
+    :param temperature: snow temperature in K
+    :returns: salinity_brine in ppt
+    Reference: Cox, G. F. N., Wilford F. Weeks, and Cold Regions Research and Engineering Laboratory (U.S.). 1975. 
+    Brine Drainage and Initial Salt Entrapment in Sodium Chloride Ice. Hanover, N.H.: 
+    U.S. Dept. of Defense, Dept. of the Army, Corps of Engineers, Cold Regions Research and Engineering Laboratory.
+    """
+    tempC = temperature - FREEZING_POINT
+
+    salinity_brine = -17.5730 * tempC - 0.381246 * tempC**2 - 0.0032866 * tempC**3
+
+    return salinity_brine
+    
+
+def brine_salinity_assur60poe72(temperature):
+    """Computes the salinity of brine (in psu) for a given temperature 
+    (Assur, 1960; Poe et al., 1972; as cited in Ulaby&Long 2014 (equation 4.46))
+     Validity range:
+    -43.2°C <= temperature in K <= -2°C
+    :param temperature: snow temperature in K
+    :returns: salinity_brine in psu
+    Reference: Ulaby, Fawwaz, and David Long. Microwave Radar and Radiometric Remote Sensing. 
+    University of Michigan Press, 2014. https://doi.org/10.3998/0472119356.
+
+    """
+    temperature = np.array(temperature)
+    # Convert temperature from Kelvin to Celsius
+    tempC = temperature - FREEZING_POINT
+
+    salinity_brine = np.zeros_like(tempC)
+    ## Check the valid range
+    if np.any(tempC > -2):
+        raise SMRTError("the brine_salinity_poe72 parameterization is only valid for temperatures <= -2°C")
+    if np.any(tempC < -43.2):
+        raise SMRTError("the brine_salinity_poe72 parameterization is only valid for temperatures >= -43.2°C")
+    # Handle the different conditions for salinity_brine based on temperature (tempC)
+    # Define the conditions
+    range1 = (tempC >= -8.2) & (tempC <= -2.0)
+    range2 = (tempC >= -22.9) & (tempC < -8.2)
+    range3 = (tempC >= -36.8) & (tempC < -22.9)
+    range4 = (tempC >= -43.2) & (tempC < -36.8)
+
+    # Apply the conditions and compute the corresponding values for p
+    salinity_brine[range1] = 1.725 - 18.756 * tempC[range1] - 0.3964 * tempC[range1]**2
+    salinity_brine[range2] = 57.041 - 9.929 * tempC[range2] - 0.16204 * tempC[range2]**2 - 0.002396 * tempC[range2]**3
+    salinity_brine[range3] = 242.94 + 1.5299 * tempC[range3] + 0.0429 * tempC[range3]**2
+    salinity_brine[range4] = 508.18 + 14.535 * tempC[range4] + 0.2018 * tempC[range4]**2
+  
+    return salinity_brine 
+    
 
 @layer_properties("temperature")
 def static_brine_permittivity_stogryn85(temperature):
