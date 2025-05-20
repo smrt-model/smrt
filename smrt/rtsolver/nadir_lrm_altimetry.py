@@ -164,7 +164,7 @@ class NadirLRMAltimetry(object):
             self.z_gate = np.append(self.z_gate, np.full(len(t_gate) - len(self.z_gate), np.nan))
 
         # that's a hack... we should make an AltimetryResult class
-        res.z_gate = xr.DataArray(self.z_gate, coords=[('t_gate', t_gate + self.sensor.nominal_gate / self.sensor.pulse_bandwidth)])
+        res.z_gate = xr.DataArray(self.z_gate, coords=[('delay', t_gate + self.sensor.nominal_gate / self.sensor.pulse_bandwidth)])
         return res
 
     def convolve_with_PFS_PTR_PDF(self, t_gate, backscatter, t_inc_sample):
