@@ -19,35 +19,34 @@ from .error import SMRTError, smrt_warn
 
 
 def passive(frequency, theta, polarization=None, channel_map=None, name=None):
-    """Generic configuration for passive microwave sensor.
-
+    """
+    Generic configuration for passive microwave sensor.
+    
     Return a :py:class:`Sensor` for a microwave radiometer with given frequency, incidence angle and polarization
 
-    :param frequency: frequency in Hz
-    :param theta: viewing angle or list of viewing angles in degrees from vertical. Note that some RT solvers compute all
-        viewing angles whatever this configuration because it is internally needed part of the multiple scattering calculation.
-        It it therefore often more efficient to call the model once with many viewing angles instead of calling it many times
-        with a single angle.
-    :param polarization: H and/or V polarizations. Both polarizations is the default. Note that most RT solvers compute all
-        the polarizations whatever this configuration because the polarizations are coupled in the RT equation.
-    :type polarization: list of characters
-    :param channel_map: map channel names (keys) to configuration (values). A configuration is a dict with frequency, polarization and other
-        such parameters to be used by Result to select the results.
-    :type channel_map: dict
-    :param name: name of the sensor
-    :type name: string
+    Args:
+        frequency: frequency in Hz
+        theta: viewing angle or list of viewing angles in degrees from vertical. Note that some RT solvers compute all
+    viewing angles whatever this configuration because it is internally needed part of the multiple scattering calculation.
+    It it therefore often more efficient to call the model once with many viewing angles instead of calling it many times
+    with a single angle.
+        polarization (list of characters, optional): H and/or V polarizations. Both polarizations is the default. Note that most RT solvers compute all
+    the polarizations whatever this configuration because the polarizations are coupled in the RT equation.
+        channel_map (dict, optional): map channel names (keys) to configuration (values). A configuration is a dict with frequency, polarization and other
+    such parameters to be used by Result to select the results. (Default value = None)
+        name (string, optional): name of the sensor (Default value = None)
 
-    :returns: :py:class:`Sensor` instance
-
-    **Usage example:**
-
-    ::
-
+    Returns:
+        py:class:`Sensor` instance
+        
+        **Usage example:**
+        
+        ::
+        
         from smrt import sensor_list
         radiometer = sensor_list.passive(18e9, 50)
         radiometer = sensor_list.passive(18e9, 50, "V")
         radiometer = sensor_list.passive([18e9,36.5e9], [50,55], ["V","H"])
-
     """
 
     if polarization is None:
@@ -62,8 +61,15 @@ def passive(frequency, theta, polarization=None, channel_map=None, name=None):
 
 def channel_map_for_radar(frequency=None, polarization="HV", order="fp"):
     """
-    return a channel_map to convert channel name to frequency and polarization. This function assumes the frequency is coded as a two-digit number
-    in GHz with leading 0 if necessary. The polarization is after the frequency if order is 'fp' and before if order is 'pf'.
+    
+
+    Args:
+        frequency:  (Default value = None)
+        polarization:  (Default value = "HV")
+        order:  (Default value = "fp")
+
+    Returns:
+        in GHz with leading 0 if necessary. The polarization is after the frequency if order is 'fp' and before if order is 'pf'.
     """
 
     if frequency is None:
@@ -97,40 +103,38 @@ def channel_map_for_radar(frequency=None, polarization="HV", order="fp"):
 def active(
     frequency, theta_inc, theta=None, phi=None, polarization_inc=None, polarization=None, channel_map=None, name=None
 ):
-    """Configuration for active microwave sensor.
-
+    """
+    Configuration for active microwave sensor.
+    
     Return a :py:class:`Sensor` for a radar with given frequency, incidence and viewing angles and polarization
-
+    
     If polarizations are not specified, quad-pol is the default (VV, VH, HV and HH).
     If the angle of incident radiation is not specified, *backscatter* will be simulated
 
-    :param frequency: frequency in Hz
-    :param theta_inc: incident angle in degrees from the vertical
-    :param theta: viewing zenith angle in degrees from the vertical. By default, it is equal to theta_inc which corresponds
-        to the backscatter direction
-    :param phi: viewing azimuth angle in degrees from the incident direction. By default, it is pi which corresponds
-        to the backscatter direction
-    :param polarization_inc: list of polarizations of the incidence wave ('H' or 'V' or both.)
-    :type polarization_inc: list of 1-character strings
-    :param polarization: list of viewing polarizations ('H' or 'V' or both)
-    :type polarization: list of 1-character strings
-    :param channel_map: map channel names (keys) to configuration (values). A configuration is a dict with frequency, polarization and other
-        such parameters to be used by Result to select the results.
-    :type channel_map: dict
-    :param name: name of the sensor
-    :type name: string
+    Args:
+        frequency: frequency in Hz
+        theta_inc: incident angle in degrees from the vertical
+        theta: viewing zenith angle in degrees from the vertical. By default, it is equal to theta_inc which corresponds
+    to the backscatter direction
+        phi: viewing azimuth angle in degrees from the incident direction. By default, it is pi which corresponds
+    to the backscatter direction
+        polarization_inc (list of 1-character strings, optional): list of polarizations of the incidence wave ('H' or 'V' or both.) (Default value = None)
+        polarization (list of 1-character strings, optional): list of viewing polarizations ('H' or 'V' or both) (Default value = None)
+        channel_map (dict, optional): map channel names (keys) to configuration (values). A configuration is a dict with frequency, polarization and other
+    such parameters to be used by Result to select the results. (Default value = None)
+        name (string, optional): name of the sensor (Default value = None)
 
-    :returns: :py:class:`Sensor` instance
-
-    **Usage example:**
-
-    ::
-
+    Returns:
+        py:class:`Sensor` instance
+        
+        **Usage example:**
+        
+        ::
+        
         from smrt import sensor_list
         scatterometer = sensor_list.active(frequency=18e9, theta_inc=50)
         scatterometer = sensor_list.active(18e9, 50, 50, 0, "V", "V")
         scatterometer = sensor_list.active([18e9,36.5e9], theta=50, theta_inc=50, polarization_inc=["V", "H"], polarization=["V", "H"])
-
     """
 
     # if polarization is None or polarization == '4P':
@@ -183,7 +187,8 @@ class SensorBase(object):
 
 
 class Sensor(SensorBase):
-    """Configuration for sensor.
+    """
+    Configuration for sensor.
     Use of the functions :py:func:`passive`, :py:func:`active`, or the sensor specific functions
     e.g. :py:func:`amsre` are recommended to access this class.
 
@@ -298,10 +303,11 @@ class Sensor(SensorBase):
                 yield axis, values
 
     def iterate(self, axis):
-        """Iterate over the configuration for the given axis.
+        """
+        Iterate over the configuration for the given axis.
 
-        :param axis: one of the attribute of the sensor (frequency, ...) to iterate along
-
+        Args:
+            axis: one of the attribute of the sensor (frequency, ...) to iterate along
         """
         values = getattr(self, axis)
 
@@ -355,7 +361,8 @@ class SensorList(SensorBase):
 
 
 class Altimeter(Sensor):
-    """Configuration for altimeter.
+    """
+    Configuration for altimeter.
     Use of the functions :py:func:`altimeter`, or the sensor specific functions
     e.g. :py:func:`envisat_ra2` are recommended to access this class.
 

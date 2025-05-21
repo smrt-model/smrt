@@ -15,8 +15,9 @@ user_plugin_package = []
 
 
 def register_package(pkg):
-    global user_plugin_package
-
+    """
+    Check that the package can be imported. It must have an __init__.py.
+    """
     # check that the package can be imported. It must have an __init__.py
     try:
         module = importlib.import_module(pkg)
@@ -28,12 +29,13 @@ def register_package(pkg):
 
 @lru_cache(maxsize=128)
 def import_class(scope: str, modulename: str, classname: Optional[str]=None) -> Type:
-    """Import the modulename and return either the class named "classname" or the first class defined in the module if classname is None.
+    """
+    Import the modulename and return either the class named "classname" or the first class defined in the module if classname is None.
 
     :param scope: scope where to search for the module.
     :param modulename: name of the module to load.
     :param classname: name of the class to read from the module.
-"""
+    """
 
     if (".." in modulename) or (modulename[0] == '.'):
         raise SMRTError("modulename error. Relative import is not allowed")
@@ -60,6 +62,12 @@ def import_class(scope: str, modulename: str, classname: Optional[str]=None) -> 
 
 
 def do_import_class(modulename, classname):
+    """
+    Check the module and import the class.
+
+    :param modulename: Name of the module to import.
+    :param classname: Name of the class to retrieve from the module.
+    """
 
     # check the module
     #spec = importlib.util.find_spec(modulename)
