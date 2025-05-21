@@ -90,16 +90,10 @@ class Layer(object):
 
     @property
     def frac_volume(self):
-        """float: Fractional volume of the microstructure."""
         return self.microstructure.frac_volume  # get the frac_volume back from the microstructure
 
     @frac_volume.setter
     def frac_volume(self, f):
-        """Sets the fractional volume in the microstructure.
-
-        Args:
-            f (float): Fractional volume to set.
-        """
         self.microstructure.frac_volume = f  # set the frac_volume in the microstructure
 
     def permittivity(self, i, frequency):
@@ -198,26 +192,20 @@ class Layer(object):
         #     callback(self, name)
 
     def update(self, **kwargs):
-        """Updates the attributes of the layer.
-
-        This method is used when recalculation of the state of the object is necessary.
-
-        Args:
-            **kwargs: Attributes to update.
+        """update the attributes. This method is to be used when recalculation of the state of the object
+        is necessary. See for instance :py:class:`~smrt.inputs.make_medium.SnowLayer`.
         """
         for k, v in kwargs.items():
             setattr(self, k, v)
 
 
 def get_microstructure_model(modulename, classname=None):
-    """Returns the class corresponding to the microstructure_model defined in the module.
+    """return the class corresponding to the microstructure_model defined in modulename.
 
-    Args:
-        modulename (str): Name of the Python module in smrt/microstructure_model.
-        classname (str, optional): Name of the class. Defaults to None.
+    This function import the correct module if possible and return the class.
+    It is used internally and should not be needed for normal usage.
 
-    Returns:
-        type: The class corresponding to the microstructure model.
+    :param modulename: name of the python module in smrt/microstructure_model
     """
     # import the module
     return import_class("microstructure_model", modulename)
@@ -230,19 +218,45 @@ def make_microstructure_model(modelname_or_class, **kwargs):
         modelname_or_class (str or type): Name of the module or directly the class.
         **kwargs: Arguments needed for the specific autocorrelation.
 
-    Returns:
-        object: Instance of the autocorrelation model with the given parameters.
+    :returns: instance of the autocorrelation `modelname` with the parameters given in `**kwargs`
 
-    Example:
-        To import the StickyHardSpheres class with a sphere radius of 1mm, stickiness of 0.5, and fractional volume of 0.3:
+:Example:
 
-        ```python
-        shs = make_autocorrelation("StickyHardSpheres", radius=0.001, stickiness=0.5, frac_volume=0.3)
-        ```
-    """
+To import the StickyHardSpheres class with spheres radius of 1mm, stickiness of 0.5 and fractional_volume of 0.3::
+
+    shs = make_autocorrelation("StickyHardSpheres", radius=0.001, stickiness=0.5, frac_volume=0.3)
+
+"""
+
     if isinstance(modelname_or_class, str):
         cls = get_microstructure_model(modelname_or_class)
     else:
         cls = modelname_or_class
 
-    return
+    return cls(kwargs)  # sent as an array as need by the constructor.
+
+
+def layer_properties(*required_arguments, optional_arguments=None, **kwargs):
+    """This decorator is used for the permittivity functions (or any other functions) to inject layer's attributes as arguments.
+The decorator declares the layer properties needed to call the function and the optional ones.
+This allows permittivity functions to use any property of the layer, as long as it is defined. """
+
+    def wrapper(f):
+        @wraps(f)
+        def newf(*args, layer_to_inject=None, **kwargs):
+            if layer_to_inject is not None:
+                args = list(args)  # make it mutable
+                assert isinstance(layer_to_inject, Layer)  # this is not stricly required
+
+                for ra in required_arguments:
+                    if hasattr(layer_to_inject, ra):
+                        kwargs[ra] = getattr(layer_to_inject, ra)  # add the layer's attributes as named arguments (avoid problems)
+                    else:
+                        raise Exception("The layer must have the '%s' attribute to call the function %s " % (ra, str(f)))
+                if optional_arguments:
+                    for ra in optional_arguments:
+                        if hasattr(layer_to_inject, ra):
+                            kwargs[ra] = getattr(layer_to_inject, ra)  # add the layer's over the eventual default arguments
+            return f(*args, **kwargs)
+        return newf
+    return wrapper
