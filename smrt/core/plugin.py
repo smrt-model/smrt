@@ -15,9 +15,8 @@ user_plugin_package = []
 
 
 def register_package(pkg):
-    """
-    Check that the package can be imported. It must have an __init__.py.
-    """
+    global user_plugin_package
+
     # check that the package can be imported. It must have an __init__.py
     try:
         module = importlib.import_module(pkg)
@@ -62,12 +61,6 @@ def import_class(scope: str, modulename: str, classname: Optional[str]=None) -> 
 
 
 def do_import_class(modulename, classname):
-    """
-    Check the module and import the class.
-
-    :param modulename: Name of the module to import.
-    :param classname: Name of the class to retrieve from the module.
-    """
 
     # check the module
     #spec = importlib.util.find_spec(modulename)

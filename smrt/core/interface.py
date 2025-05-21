@@ -14,14 +14,16 @@ from smrt.core import lib
 
 
 def make_interface(inst_class_or_modulename, broadcast=True, **kwargs):
-    """return an instance corresponding to the interface model with the provided arguments.
-
+    """
+    return an instance corresponding to the interface model with the provided arguments.
+    
     This function imports the interface module if necessary and
     return an instance of the interface class with the provided arguments in \\**kwargs.
 
-    :param inst_class_or_modulename: a class, and instance or the name of the python module in smrt/interface
-    :param \\**kwargs: all the arguments required by the interface class
-
+    Args:
+        inst_class_or_modulename: a class, and instance or the name of the python module in smrt/interface
+        broadcast:  (Default value = True)
+        **kwargs: 
     """
 
     # import the module
@@ -48,9 +50,11 @@ def make_interface(inst_class_or_modulename, broadcast=True, **kwargs):
 
 
 class Interface(object):
-    """ Abstract class for interface between layer and substrate at the bottom of the snowpack.
-It provides argument handling.
-"""
+    """
+    Abstract class for interface between layer and substrate at the bottom of the snowpack.
+    It provides argument handling.
+
+    """
     args = []
     optional_args = {}
 
@@ -75,9 +79,11 @@ It provides argument handling.
 
 
 class SubstrateBase(object):
-    """ Abstract class for substrate at the bottom of the snowpack.
-It provides calculation of the permittivity constant for soil case. Argument handline is delegated to the instance of the interface
-"""
+    """
+    Abstract class for substrate at the bottom of the snowpack.
+    It provides calculation of the permittivity constant for soil case. Argument handline is delegated to the instance of the interface
+
+    """
 
     def __init__(self, temperature=None, permittivity_model=None):
         """ Build the substrate at the base of the snowpack
@@ -96,8 +102,13 @@ It provides calculation of the permittivity constant for soil case. Argument han
         self.permittivity_model = permittivity_model  # this is a function, so it automatically becomes a method of substrate
 
     def permittivity(self, frequency):
-        """compute the permittivity for the given frequency using permittivity_model. This method returns None when no permittivity model is
-        available. This must be handled by the calling code and interpreted suitably."""
+        """
+        compute the permittivity for the given frequency using permittivity_model. This method returns None when no permittivity model is
+        available. This must be handled by the calling code and interpreted suitably.
+
+        Args:
+            frequency: 
+        """
 
         if self.permittivity_model is None:
             return None
@@ -117,7 +128,12 @@ It provides calculation of the permittivity constant for soil case. Argument han
 
 
 def substrate_from_interface(interface_cls):
-    """this decorator transform an interface class into a substrate class with automatic method"""
+    """
+    this decorator transform an interface class into a substrate class with automatic method
+
+    Args:
+        interface_cls: 
+    """
 
     def decorator(cls):
         def __init__(self, temperature=None, permittivity_model=None, **kwargs):
@@ -192,7 +208,14 @@ class Substrate(SubstrateBase, Interface):
 
 
 def get_substrate_model(substrate_model):
-    """return the class corresponding to the substrate model called name.
-    This function imports the correct module if possible and returns the class"""
+    """
+    Returns the class corresponding to the substrate model called name.
+
+    Args:
+        substrate_model: 
+
+    Returns:
+        This function imports the correct module if possible and returns the class
+    """
 
     return import_class("substrate", substrate_model)

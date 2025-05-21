@@ -21,9 +21,6 @@ def fresnel_coefficients_old(eps_1, eps_2, mu1):
 
     Returns:
         : rv, rh, mu2 the cosine of the angle in medium 2
-
-    Raises:
-
     """
     n = np.sqrt(eps_2 / eps_1)
     b = 1.0 - (1.0 - mu1**2) / n**2
@@ -55,9 +52,6 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=Fals
 
     Returns:
         : rv, rh, mu2 the cosine of the angle in medium 2
-
-    Raises:
-
     """
     # y is the axis normal to the interface (usually z, but here it is y!)
 
@@ -117,9 +111,6 @@ def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1, full_output=False
 
     Returns:
         : rv, rh, mu2 the cosine of the angle in medium 2
-
-    Raises:
-
     """
     # y is the axis normal to the interface (usually z, but here it is y!)
 
@@ -176,11 +167,6 @@ def snell_angle(eps_1, eps_2, mu1):
         eps_1: 
         eps_2: 
         mu1: 
-
-    Returns:
-
-    Raises:
-
     """
 
     # incident wavenumber
@@ -205,9 +191,6 @@ def brewster_angle(eps_1, eps_2):
 
     Returns:
         : angle in radians
-
-    Raises:
-
     """
     return np.arctan(np.sqrt(eps_2 / eps_1).real)
 
@@ -224,9 +207,6 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
 
     Returns:
         : a matrix or the diagional depending on `return_as_diagonal`
-
-    Raises:
-
     """
 
     mu1 = np.atleast_1d(mu1)
@@ -258,9 +238,6 @@ def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol):
 
     Returns:
         : a matrix or the diagional depending on `return_as_diagonal`
-
-    Raises:
-
     """
 
     mu1 = np.atleast_1d(mu1)
