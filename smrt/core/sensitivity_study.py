@@ -37,13 +37,14 @@ class SensitivityStudy(object):
 
 
 def sensitivity_study(name, values, snowpacks):
-    """create a sensitivity study
+    """
+    create a sensitivity study
 
-    :param name: name of the variable to investigate
-    :param values: values taken by the variable
-    :param snowpacks: list of snowpacks. Can be a sequence or a function that takes one argument and return a snowpack.
-        In the latter case, the function is called for each values to build the list of snowpacks
-
+    Args:
+        name: name of the variable to investigate
+        values: values taken by the variable
+        snowpacks: list of snowpacks. Can be a sequence or a function that takes one argument and return a snowpack.
+    In the latter case, the function is called for each values to build the list of snowpacks
     """
 
     if callable(snowpacks):
