@@ -1,10 +1,9 @@
 """A model in SMRT is composed of the electromagnetic scattering theory (:py:mod:`smrt.emmodel`) and
 the radiative transfer solver (:py:mod:`smrt.rtsolver`).
-The :py:mod:`smrt.emmodel` is responsible for computation of the scattering and absorption coefficients and the phase function of a layer.
-It is applied to each layer and it is even possible
-to choose different emmodel for each layer (for instance for a complex medium made of different materials: snow, soil, water, atmosphere, ...).
-The :py:mod:`smrt.rtsolver` is responsible for propagation of the incident or emitted energy through the layers, up to the surface, and eventually
-through the atmosphere.
+
+The :py:mod:`smrt.emmodel` computes the scattering and absorption coefficients and the phase function of a layer.
+It is applied to each layer, and it is even possible to choose different emmodels for each layer (e.g., for a complex medium made of different materials: snow, soil, water, atmosphere, ...).
+The :py:mod:`smrt.rtsolver` propagates the incident or emitted energy through the layers, up to the surface, and eventually through the atmosphere.
 
 To build a model, use the :py:meth:`make_model` function with the type of emmodel and type of rtsolver as arguments.
 Then call the :py:meth:`Model.run` method of the model instance by specifying the sensor (:py:class:`smrt.core.sensor.Sensor`),

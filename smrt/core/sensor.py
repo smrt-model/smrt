@@ -1,11 +1,11 @@
 # coding: utf-8
 
-"""The sensor configuration includes all the information describing the sensor viewing geometry (incidence, ...)
+"""
+The sensor configuration includes all the information describing the sensor viewing geometry (incidence, ...)
 and operating parameters (frequency, polarization, ...). The easiest and recommended way to create a :py:class:`Sensor` instance is
 to use one of the convenience functions such as :py:func:`~smrt.inputs.sensor_list.passive`, :py:func:`~smrt.inputs.sensor_list.active`, :py:func:`~smrt.inputs.sensor_list.amsre`, etc.
 Adding a function for a new or unlisted sensor can be done in :py:mod:`~smrt.inputs.sensor_list` if the sensor is common and of general interest.
 Otherwise, we recommend to add these functions in your own files (outside of smrt directories).
-
 """
 
 import copy

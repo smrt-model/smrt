@@ -4,8 +4,8 @@
 It also contains a `microstructure` attribute that holds the microstructural properties (e.g. radius, corr_length, etc).
 The class of this attribute defines the microstructure model to use (see :py:mod:`smrt.microstructure_model` package).
 
-To create a single layer, it is recommended to use the function :py:func:`~smrt.inputs.make_medium.make_snow_layer` rather than the class constructor. However it is usually more convenient
-to create a snowpack using :py:func:`~smrt.inputs.make_medium.make_snowpack`.
+To create a single layer, it is recommended to use the function :py:func:`~smrt.inputs.make_medium.make_snow_layer` rather than the class constructor. 
+However, it is usually more convenient to create a snowpack using :py:func:`~smrt.inputs.make_medium.make_snowpack`.
 
 .. admonition:: **For developers**
 

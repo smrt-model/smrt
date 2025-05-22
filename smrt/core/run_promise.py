@@ -127,7 +127,7 @@ class RunPromise(object):
     def save(self, directory=None, filename=None):
 
         if (filename is None) == (directory is None):
-            raise RuntimeError"Either directory or filename must be given")
+            raise RuntimeError("Either directory or filename must be given")
 
         if filename is None:
             uid = uuid4()
