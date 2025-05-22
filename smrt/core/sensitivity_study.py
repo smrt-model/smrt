@@ -1,13 +1,13 @@
 # coding: utf-8
 
-""" SensitivityStudy is used to easily conduct sensitivity studies. This class may be depreciated in the future. A more
+"""
+SensitivityStudy is used to easily conduct sensitivity studies. This class may be depreciated in the future. A more
 modern alternative is to use a pandas.DataFrame of snowpacks.
 
 Example::
 
     times = [datetime(2012, 1, 1), datetime(2012, 1, 5), , datetime(2012, 1, 10)]
     snowpacks = SensitivityStudy("time", times, [snowpack_1jan, snowpack_5jan, snowpack_10jan])
-
 
     res = model.run(sensor, snowpacks)
 
@@ -16,7 +16,6 @@ For instance result.TbV(theta=53) returns a time-series of brightness temperatur
 plots this timeseries::
 
     plot(times, result.TbV(theta=53))
-
 """
 
 import numpy as np
