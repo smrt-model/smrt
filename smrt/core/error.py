@@ -1,4 +1,6 @@
-"""Definition of the Exception specific to SMRT."""
+""" 
+Definition of the Exception specific to SMRT.
+"""
 
 import warnings
 
@@ -6,14 +8,16 @@ from numpy import stack
 
 
 class SMRTError(Exception):
-    """Error raised by the model"""
-
+    """ 
+    Error raised by the model.
+    """
     pass
 
 
 class SMRTWarning(Warning):
-    """Warning raised by the model"""
-
+    """ 
+    Warning raised by the model.
+    """
     pass
 
 

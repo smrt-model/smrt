@@ -1,5 +1,5 @@
 """
-fresnel coefficients formulae used in the packages :py:mod:`smrt.interface` and :py:mod:`smrt.substrate`.
+Fresnel coefficients formulae used in the packages :py:mod:`smrt.interface` and :py:mod:`smrt.substrate`.
 
 """
 
@@ -9,8 +9,8 @@ from smrt.core.lib import smrt_matrix, abs2
 
 def fresnel_coefficients_old(eps_1, eps_2, mu1):
     """
-    compute the reflection in two polarizations (H and V). The equations are only valid for lossless media.
-    Applying these equations for (strongly) lossy media result in (large) errors. Don't use it. It is here for reference only.
+    Computes the reflection in two polarizations (H and V). The equations are only valid for lossless media.
+    Applying these equations for (strongly) lossy media results in (large) errors. Don't use it. It is here for reference only.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
     reflection coefficient.
 
@@ -35,7 +35,7 @@ def fresnel_coefficients_old(eps_1, eps_2, mu1):
 
 def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=False):
     """
-    compute the reflection in two polarizations (H and V) for lossly media with the "classical Fresnel" based
+    Computes the reflection in two polarizations (H and V) for lossly media with the "classical Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
     Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
     
@@ -95,11 +95,11 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=Fals
 
 def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1, full_output=False):
     """
-    compute the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
+    Computes the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
     Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
     
-    The 'rigorous' derivation respect the energy conservation even for strongly loosly media.
+    The 'rigorous' derivation respects the energy conservation even for strongly loosly media.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
     reflection coefficient.
 
@@ -161,7 +161,7 @@ fresnel_coefficients = fresnel_coefficients_maezawa09_rigorous
 
 def snell_angle(eps_1, eps_2, mu1):
     """
-    compute mu2 the cos(angle) in the second medium according to Snell's law.
+    Computes mu2 the cos(angle) in the second medium according to Snell's law.
 
     Args:
         eps_1: 
@@ -183,7 +183,7 @@ def snell_angle(eps_1, eps_2, mu1):
 
 def brewster_angle(eps_1, eps_2):
     """
-    compute the brewster angle
+    Computes the brewster angle.
 
     Args:
         eps_1: permittivity of medium 1.
@@ -197,7 +197,7 @@ def brewster_angle(eps_1, eps_2):
 
 def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
     """
-    compute the fresnel power reflection matrix for/in medium 1 laying above medium 2.
+    Computes the fresnel power reflection matrix for/in medium 1 laying above medium 2.
 
     Args:
         eps_1: permittivity of medium 1.
@@ -228,7 +228,7 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
 
 def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol):
     """
-    compute the fresnel power reflection matrix for/in medium 1 laying above medium 2.
+    Computes the fresnel power reflection matrix for/in medium 1 laying above medium 2.
 
     Args:
         eps_1: permittivity of medium 1.

@@ -37,7 +37,7 @@ class SensitivityStudy(object):
 
 def sensitivity_study(name, values, snowpacks):
     """
-    create a sensitivity study
+    Creates a sensitivity study
 
     Args:
         name: name of the variable to investigate

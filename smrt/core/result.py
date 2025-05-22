@@ -1,6 +1,7 @@
 # coding: utf-8
 
-"""The results of RT Solver are hold by the :py:class:`Result` class. This class provides several functions
+"""
+The results of RT Solver are hold by the :py:class:`Result` class. This class provides several functions
 to access to the Stokes Vector and Muller matrix in a simple way. Most notable ones are :py:meth:`Result.TbV` and :py:meth:`Result.TbH`
 for the passive mode calculations and :py:meth:`Result.sigmaHH` and :py:meth:`Result.sigmaVV`. :py:meth:`Result.to_dataframe` is also
 very convenient for the sensors with a channel map (all specific satellite sensors have such a map,
@@ -31,7 +32,7 @@ For instance result.TbV(theta=53) returns a time-series of brightness temperatur
 plots this timeseries::
 
     plot(times, result.TbV(theta=53))
-
+    
 """
 
 # Stdlib import

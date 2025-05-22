@@ -9,7 +9,8 @@ from .filelock import FileLock, Timeout
 
 
 def honour_all_promises(directory_or_filename, save_result_to=None, show_progress=True, force_compute=True):
-    """Honour many promises and save the results
+    """
+    Honours many promises and save the results
 
     :param directory_or_filename: can be a directory, a filename or a list of them
     :param save_result_to: directory where to save the results. If None, the results are not saved. The results are always returned as a list by this function.
@@ -53,7 +54,8 @@ def honour_all_promises(directory_or_filename, save_result_to=None, show_progres
 
 
 def honour_promise(filename, save_result_to=None, force_compute=True):
-    """Honour a promise and optionally save the result.
+    """
+    Honours a promise and optionally save the result.
 
     :param filename: file name of the promise
     :param save_result_to: directory where to save the result.

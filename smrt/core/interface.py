@@ -1,6 +1,7 @@
 # coding: utf-8
 
-"""This package implements the base class for all the substrate models.
+"""
+This package implements the base class for all the substrate models.
 To create a substrate, it is recommended to use help functions such as :py:func:`~smrt.inputs.make_soil.make_soil`
 rather than the class constructor.
 
@@ -15,10 +16,10 @@ from smrt.core import lib
 
 def make_interface(inst_class_or_modulename, broadcast=True, **kwargs):
     """
-    return an instance corresponding to the interface model with the provided arguments.
+    Returns an instance corresponding to the interface model with the provided arguments.
     
     This function imports the interface module if necessary and
-    return an instance of the interface class with the provided arguments in \\**kwargs.
+    returns an instance of the interface class with the provided arguments in \\**kwargs.
 
     Args:
         inst_class_or_modulename: a class, and instance or the name of the python module in smrt/interface
@@ -59,7 +60,8 @@ class Interface(object):
     optional_args = {}
 
     def __init__(self, **kwargs):
-        """ Build the interface
+        """
+        Builds the interface.
 
         :param **kwargs: parameters such as roughness_rms, corr_length, Q, N, etc are required or optional depending on the model.
         See the document of the model.
@@ -86,11 +88,12 @@ class SubstrateBase(object):
     """
 
     def __init__(self, temperature=None, permittivity_model=None):
-        """ Build the substrate at the base of the snowpack
+        """
+        Builds the substrate at the base of the snowpack.
 
         :param temperature: temperature of the base of the snowpack. Can be the effective temperature if the substrate is slightly transparent
 
-        :param permittivity_model: a function that return the permittivity as a function of frequency and temperature. Can also be a numerical value.
+        :param permittivity_model: a function that returns the permittivity as a function of frequency and temperature. Can also be a numerical value.
 
         :param **kwargs: other parameters such as roughness_rms, corr_length, Q, N, etc are required or optional depending on the model. See the document of the model.
 
@@ -103,7 +106,7 @@ class SubstrateBase(object):
 
     def permittivity(self, frequency):
         """
-        compute the permittivity for the given frequency using permittivity_model. This method returns None when no permittivity model is
+        Computes the permittivity for the given frequency using permittivity_model. This method returns None when no permittivity model is
         available. This must be handled by the calling code and interpreted suitably.
 
         Args:

@@ -1,22 +1,23 @@
 # coding: utf-8
 
-""" Global constants used throughout the model are defined here and imported as needed.
-    The constants are:
+""" 
+Global constants used throughout the model are defined here and imported as needed.
+The constants are:
 
-    =====================   ===============================   =================================================
-    Parameter               Description                       Value
-    =====================   ===============================   =================================================
-    DENSITY_OF_ICE          Density of pure ice at 273.15K    916.7 kg m :sup:`-3`
-    FREEZING_POINT          Freezing point of pure water      273.15 K
-    C_SPEED                 Speed of light in a vacuum        2.99792458 x 10 :sup:`8` ms :sup:`-1`
-    PERMITTIVITY_OF_AIR     Relative permittivity of air      1
-    =====================   ===============================   =================================================
+=====================   ===============================   =================================================
+Parameter               Description                       Value
+=====================   ===============================   =================================================
+DENSITY_OF_ICE          Density of pure ice at 273.15K    916.7 kg m :sup:`-3`
+FREEZING_POINT          Freezing point of pure water      273.15 K
+C_SPEED                 Speed of light in a vacuum        2.99792458 x 10 :sup:`8` ms :sup:`-1`
+PERMITTIVITY_OF_AIR     Relative permittivity of air      1
+=====================   ===============================   =================================================
 
-    **Usage example:**
+**Usage example:**
 
-        ::
+    ::
 
-            from smrt.core.globalconstants import DENSITY_OF_ICE
+        from smrt.core.globalconstants import DENSITY_OF_ICE
 """
 
 import numpy as np

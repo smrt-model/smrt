@@ -1,4 +1,5 @@
-"""A model in SMRT is composed of the electromagnetic scattering theory (:py:mod:`smrt.emmodel`) and
+"""
+A model in SMRT is composed of the electromagnetic scattering theory (:py:mod:`smrt.emmodel`) and
 the radiative transfer solver (:py:mod:`smrt.rtsolver`).
 
 The :py:mod:`smrt.emmodel` computes the scattering and absorption coefficients and the phase function of a layer.
@@ -113,7 +114,7 @@ def make_model(
     emmodel, rtsolver=None, emmodel_options=None, rtsolver_options=None, emmodel_kwargs=None, rtsolver_kwargs=None
 ):
     """
-    create a new model with a given EM model and RT solver. The model is then ready to be run using the :py:meth:`Model.run` method.
+    Creates a new model with a given EM model and RT solver. The model is then ready to be run using the :py:meth:`Model.run` method.
     This function is the privileged way to create models compared to class instantiation.
     It supports automatic import of the emmodel and rtsolver modules.
 
@@ -151,7 +152,7 @@ def make_model(
 
 def make_rtsolver(rtsolver_class: Union[str, Type], **options) -> Type:
     """
-    return a rtsolver subclass of cls (either given as a string or a class) where the provided options are applied to __init__.
+    Returns a rtsolver subclass of cls (either given as a string or a class) where the provided options are applied to __init__.
 
     Args:
         rtsolver_class (Union[str, Type]): 
@@ -168,7 +169,7 @@ def make_rtsolver(rtsolver_class: Union[str, Type], **options) -> Type:
 
 def make_emmodel(emmodel_class: Union[str, Type], **options) -> Type:
     """
-    return a emmodel subclass of cls (either given as a string or a class) where the provided options are applied to __init__.
+    Returns a emmodel subclass of cls (either given as a string or a class) where the provided options are applied to __init__.
 
     Args:
         emmodel_class (Union[str, Type]): 
@@ -185,7 +186,7 @@ def make_emmodel(emmodel_class: Union[str, Type], **options) -> Type:
 
 def get_emmodel(emmodel):
     """
-    return an emmodel class from the file name 'emmodel'
+    Returns an emmodel class from the file name 'emmodel'.
 
     Args:
         emmodel: 
@@ -200,7 +201,7 @@ def get_emmodel(emmodel):
 
 def make_emmodel_instance(emmodel, sensor, layer, **emmodel_options):
     """
-    create a new emmodel instance based on the emmodel class or string. This function used to be called `make_emmodel`
+    Creates a new emmodel instance based on the emmodel class or string. This function used to be called `make_emmodel`
     but has been renamed from SMRT v1.4 and will soon be depreciated. It is recommended to use instead::
     
         em = make_emmodel(emmodel)(sensor, layer, **emmodel_options)
@@ -225,10 +226,14 @@ def make_emmodel_instance(emmodel, sensor, layer, **emmodel_options):
 
 
 class Model(object):
-    """This class drives the whole calculation"""
+    """
+    Drives the whole calculation.
+    """
 
     def __init__(self, emmodel, rtsolver, emmodel_options=None, rtsolver_options=None):
-        """create a new model. It is not recommended to instantiate Model class directly. Instead use the :py:meth:`make_model` function."""
+        """
+        Creates a new model. It is not recommended to instantiate Model class directly. Instead use the :py:meth:`make_model` function.
+        """
 
         # emmodel can be a single value (class or string), an array with the same size as snowpack layers array, or a
         # mapping between an emmodel for each layer medium
@@ -256,7 +261,7 @@ class Model(object):
 
     def set_rtsolver_options(self, options=None, **kwargs):
         """
-        set the option for the rtsolver
+        Sets the option for the rtsolver.
 
         Args:
             options:  (Default value = None)
@@ -271,7 +276,7 @@ class Model(object):
 
     def set_emmodel_options(self, options=None, **kwargs):
         """
-        set the options for the emmodel
+        Sets the options for the emmodel.
 
         Args:
             options:  (Default value = None)
@@ -296,7 +301,7 @@ class Model(object):
         runner=None,
     ):
         """
-        Run the model for the given sensor configuration and return the results
+        Runs the model for the given sensor configuration and returns the results.
 
         Args:
             sensor: sensor to use for the calculation. Can be a list of the same size as the snowpack list.
@@ -433,7 +438,7 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
 
         def prepare_recursive(sensor, sensor_configurations, snowpack):
             """
-            Return the cross product of sensor x snowpack
+            Returns the cross product of sensor x snowpack.
 
             Args:
                 sensor: 
@@ -541,7 +546,7 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
 
 class SequentialRunner(object):
     """
-    Run the simulations sequentially on a single (local) core. This is the most simple way to run smrt simulations, but the
+    Runs the simulations sequentially on a single (local) core. This is the most simple way to run smrt simulations, but the
     efficiency is poor.
 
     """
@@ -570,7 +575,9 @@ class SequentialRunner(object):
 
 
 class JoblibParallelRunner(object):
-    """Run the simulations on the local machine on all the cores, using the joblib library for parallelism."""
+    """
+    Runs the simulations on the local machine on all the cores, using the joblib library for parallelism.
+    """
 
     def __init__(self, progressbar, backend='loky', n_jobs=-1, max_numerical_threads=1):
         """Joblib is a lightweight library for embarasingly parallel task.
