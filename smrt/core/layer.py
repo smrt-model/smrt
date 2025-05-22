@@ -1,6 +1,7 @@
 # coding: utf-8
 
-""" :py:class:`Layer` instance contains all the properties for a single snow layer (e.g. temperature, frac_volume, etc).
+""" 
+:py:class:`Layer` instance contains all the properties for a single snow layer (e.g. temperature, frac_volume, etc).
 It also contains a `microstructure` attribute that holds the microstructural properties (e.g. radius, corr_length, etc).
 The class of this attribute defines the microstructure model to use (see :py:mod:`smrt.microstructure_model` package).
 
@@ -39,7 +40,8 @@ class Layer(object):
     def __init__(self, thickness, microstructure_model=None,
                  temperature=FREEZING_POINT, permittivity_model=None, inclusion_shape=None,
                  **kwargs):
-        """Build a snow layer.
+        """
+        Builds a snow layer.
 
         Args:
             thickness (float): Thickness of the snow layer in meters.
@@ -85,7 +87,9 @@ class Layer(object):
 
     @property
     def ssa(self):
-        """Returns the SSA, computing it if necessary."""
+        """
+        Returns the SSA, computing it if necessary.
+        """
         if not hasattr(self, '_ssa') or self._ssa is None:
             self._ssa = self.microstructure.compute_ssa()
         return self._ssa
@@ -168,7 +172,6 @@ class Layer(object):
         """
         Returns the layer with inverted autocorrelation and inverted permittivities.
 
-
         Returns:
             Layer: A new layer object with inverted properties.
 
@@ -203,7 +206,7 @@ class Layer(object):
 
     def update(self, **kwargs):
         """
-        update the attributes. This method is to be used when recalculation of the state of the object
+        Updates the attributes. This method is to be used when recalculation of the state of the object
         is necessary. See for instance :py:class:`~smrt.inputs.make_medium.SnowLayer`.
 
         Args:
@@ -215,9 +218,9 @@ class Layer(object):
 
 def get_microstructure_model(modulename, classname=None):
     """
-    return the class corresponding to the microstructure_model defined in modulename.
+    Returns the class corresponding to the microstructure_model defined in modulename.
     
-    This function import the correct module if possible and return the class.
+    This function imports the correct module if possible and returns the class.
     It is used internally and should not be needed for normal usage.
 
     Args:

@@ -61,8 +61,6 @@ def passive(frequency, theta, polarization=None, channel_map=None, name=None):
 
 def channel_map_for_radar(frequency=None, polarization="HV", order="fp"):
     """
-    
-
     Args:
         frequency:  (Default value = None)
         polarization:  (Default value = "HV")
@@ -206,7 +204,8 @@ class Sensor(SensorBase):
         name=None,
         wavelength=None,
     ):
-        """Build a Sensor. Setting theta_inc to None means passive mode
+        """
+        Builds a Sensor. Setting theta_inc to None means passive mode
 
         :param frequency: Microwave frequency in Hz
         :param theta_inc_deg: zenith angle in degrees of incident radiation emitted from the active sensor
@@ -279,7 +278,8 @@ class Sensor(SensorBase):
 
     @property
     def mode(self):
-        """returns the mode of observation: "A" for active or "P" for passive."""
+        """
+        Returns the mode of observation: "A" for active or "P" for passive."""
 
         if self.theta_inc is None:
             return "P"
@@ -304,7 +304,7 @@ class Sensor(SensorBase):
 
     def iterate(self, axis):
         """
-        Iterate over the configuration for the given axis.
+        Iterates over the configuration for the given axis.
 
         Args:
             axis: one of the attribute of the sensor (frequency, ...) to iterate along
