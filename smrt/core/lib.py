@@ -58,11 +58,12 @@ def is_sequence(x):
 
 
 def class_specializer(domain: str, cls: Union[str, Type], **options) -> Type:
-    """Return a subclass of cls (imported from the domain if cls is a string) that use the provided "options" for __init__. This is
+    """
+    Returns a subclass of cls (imported from the domain if cls is a string) that use the provided "options" for __init__. This is
     equivalent to functools.partial but for a class.
 
     This is the same idea as: https://stackoverflow.com/questions/38911146/python-equivalent-of-functools-partial-for-a-class-constructor
-"""
+    """
     if isinstance(cls, str):
         from smrt.core.plugin import import_class  # lazy import
         cls = import_class(domain, cls)
@@ -95,9 +96,11 @@ def len_atleast_1d(x):
 
 
 class smrt_diag(object):
-    """Scipy.sparse is very slow for diagonal matrix and numpy has no good support for linear algebra. This diag class
+    """
+    Scipy.sparse is very slow for diagonal matrix and numpy has no good support for linear algebra. This diag class
     implements simple diagonal object without numpy subclassing (but without much features).
-    It seems that proper subclassing numpy and overloading matmul is a very difficult problem."""
+    It seems that proper subclassing numpy and overloading matmul is a very difficult problem.
+    """
 
     __array_ufunc__ = None
 
@@ -191,12 +194,12 @@ class smrt_diag(object):
 
 
 class smrt_matrix(object):
-    """SMRT uses two formats of matrix: one most suitable to implement emmodel where equations are different for each
+    """
+    SMRT uses two formats of matrix: one most suitable to implement emmodel where equations are different for each
     polarization and another one suitable for DORT computation where stream and polarization are collapsed in one
     dimension to allow matrix operation. In addition, the reflection and transmission matrix are often diagonal matrix,
     which needs to be handled because it saves space and allow much faster operations. This class implemented all these
     features.
-
     """
 
     def __init__(self, mat, mtype=None):
@@ -262,12 +265,12 @@ class smrt_matrix(object):
         return is_equal_zero(self)
 
     def compress(self, mode=None, auto_reduce_npol=False):
-        """compress a matrix. This comprises several actions:
+        """
+        Compresses a matrix. This comprises several actions:
         1) select one mode, if relevant (dense5, and diagonal5).
         2) reduce the number of polarization from 3 to 2 if mode==0 and auto_reduce_npol=True.
         3) convert the format of the matrix to compressed numpy, involving a change of the dimension order (pola and streams are merged).
-
-"""
+        """
         if self.mtype == "0":
             return np.float64(0.)  # 0, but can be used as a numpy thing
 
@@ -415,7 +418,9 @@ def is_zero_scalar(m):
 
 
 def is_equal_zero(m):
-    """return true if the smrt matrix is null"""
+    """
+    Returns true if the smrt matrix is null
+    """
 
     if isinstance(m, smrt_diag):
         m = m.diagonal()
@@ -435,7 +440,8 @@ else:
 
 
 def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
-    """ Calculation of the Fourier decomposed of the phase or reflection or transmission matrix provided by the function.
+    """
+    Calculation of the Fourier decomposed of the phase or reflection or transmission matrix provided by the function.
 
     This method calculates the Fourier decomposition modes and return the output.
 
@@ -452,9 +458,9 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
              [Phvp Phhp Phup]
              [Puvp Puhp Puup]
 
-    :param phase_function: must be a function taking dphi as input. It is assumed that phi is symmetrical (it is in cos(phi))
-    :param m_max: maximum Fourier decomposition mode needed
-
+    Args:
+        phase_function: must be a function taking dphi as input. It is assumed that phi is symmetrical (it is in cos(phi))
+        m_max: maximum Fourier decomposition mode needed
     """
 
     # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
@@ -519,9 +525,11 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
 
 
 def set_max_numerical_threads(nthreads):
-    """set the maximum number of threads for a few known library. This is useful to disable parallel computing in
-SMRT when using parallel computing to call multiple // SMRT runs. This avoid over-committing the CPUs and results
-in much better performance. Inspire from joblib."""
+    """
+    Sets the maximum number of threads for a few known library. This is useful to disable parallel computing in
+    SMRT when using parallel computing to call multiple // SMRT runs. This avoid over-committing the CPUs and results
+    in much better performance. Inspire from joblib.
+    """
 
     nthreads = str(nthreads)
     os.environ['MKL_NUM_THREADS'] = nthreads

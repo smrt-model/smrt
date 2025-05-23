@@ -16,7 +16,6 @@ However, it is usually more convenient to create a snowpack using :py:func:`~smr
     constructor as in :py:func:`~smrt.inputs.make_medium.make_snow_layer` and then add your properties with lay.myproperty=xxx, ... See the example of liquid water in :py:func:`~smrt.inputs.make_medium.make_snow_layer`.
     This approach avoids specialization of the Layer class. The new function can be in any file (inc. out of smrt directories), and should be added in :py:mod:`~smrt.inputs.make_medium`
     if it is of general interest and written in a generic way, that is, covers many use cases for many users with default arguments, etc.
-
 """
 
 from functools import wraps
@@ -34,7 +33,6 @@ class Layer(object):
     Contains the properties for a single layer including the microstructure attribute which holds the microstructure properties.
     
     To create a layer, it is recommended to use the functions `make_snow_layer` or similar.
-
     """
 
     def __init__(self, thickness, microstructure_model=None,
@@ -149,7 +147,6 @@ class Layer(object):
 
         Raises:
             SMRTError: If any of the checks fail.
-
         """
         if self.layer_thickness <= 0:
             raise SMRTError("Layer thickness must be positive")
@@ -177,7 +174,6 @@ class Layer(object):
 
         Raises:
             SMRTError: If the microstructure model does not support inversion.
-
         """
         obj = copy.deepcopy(self)
         if not hasattr(self.microstructure, "inverted_medium"):

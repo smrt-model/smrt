@@ -189,7 +189,6 @@ class Sensor(SensorBase):
     Configuration for sensor.
     Use of the functions :py:func:`passive`, :py:func:`active`, or the sensor specific functions
     e.g. :py:func:`amsre` are recommended to access this class.
-
     """
 
     def __init__(
@@ -207,16 +206,17 @@ class Sensor(SensorBase):
         """
         Builds a Sensor. Setting theta_inc to None means passive mode
 
-        :param frequency: Microwave frequency in Hz
-        :param theta_inc_deg: zenith angle in degrees of incident radiation emitted from the active sensor
-        :param polarization_inc. List of single character (H or V) for the incident wave
-        :param theta_deg: zenith angle in degrees at which the observation is made
-        :param phi_deg: azimuth angle at which the observation is made
-        :param polarization: List of single character (H or V)
-        :param channel_map: map channel names (keys) to configuration (values). A configuration is a dict with frequency, polarization and other
+        Args:
+        frequency: Microwave frequency in Hz
+        theta_inc_deg: zenith angle in degrees of incident radiation emitted from the active sensor
+        polarization_inc. List of single character (H or V) for the incident wave
+        theta_deg: zenith angle in degrees at which the observation is made
+        phi_deg: azimuth angle at which the observation is made
+        polarization: List of single character (H or V)
+        channel_map: map channel names (keys) to configuration (values). A configuration is a dict with frequency, polarization and other
             such parameters to be used by Result to select the results.
-        :param name: name of the sensor
-        :param wavelength: wavelength of the sensor. Can be set instead of the frequency.
+        name: name of the sensor
+        wavelength: wavelength of the sensor. Can be set instead of the frequency.
         """
         super().__init__()
 
@@ -279,7 +279,8 @@ class Sensor(SensorBase):
     @property
     def mode(self):
         """
-        Returns the mode of observation: "A" for active or "P" for passive."""
+        Returns the mode of observation: "A" for active or "P" for passive.
+        """
 
         if self.theta_inc is None:
             return "P"
@@ -365,7 +366,6 @@ class Altimeter(Sensor):
     Configuration for altimeter.
     Use of the functions :py:func:`altimeter`, or the sensor specific functions
     e.g. :py:func:`envisat_ra2` are recommended to access this class.
-
     """
 
     def __init__(

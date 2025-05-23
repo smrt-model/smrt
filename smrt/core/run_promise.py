@@ -12,15 +12,16 @@ def honour_all_promises(directory_or_filename, save_result_to=None, show_progres
     """
     Honours many promises and save the results
 
-    :param directory_or_filename: can be a directory, a filename or a list of them
-    :param save_result_to: directory where to save the results. If None, the results are not saved. The results are always returned as a list by this function.
-    :param show_progress: print progress of the calculation.
-    :param force_computate: If False and if a result or lock file is present, the computation is skipped. The order of promise processing is randomized
+    Args:
+    directory_or_filename: can be a directory, a filename or a list of them
+    save_result_to: directory where to save the results. If None, the results are not saved. The results are always returned as a list by this function.
+    show_progress: print progress of the calculation.
+    force_computate: If False and if a result or lock file is present, the computation is skipped. The order of promise processing is randomized
      to allow more efficient parallel computation using many calls of this function on the same directory. A lock file is used between the start of a computation and 
      writting the result in order to prevent from running several times the same computation. If the process is interupted (e.g. walltime on clusters), the lock file may persist and prevent any future computation. In this case,
      lock files must be manually deleted.
      IF False, the `save_result_to` argument must be set to a valid directory where the results. 
-"""
+    """
 
     if isinstance(directory_or_filename, str):
         directory_or_filename = [directory_or_filename]
@@ -57,10 +58,11 @@ def honour_promise(filename, save_result_to=None, force_compute=True):
     """
     Honours a promise and optionally save the result.
 
-    :param filename: file name of the promise
-    :param save_result_to: directory where to save the result.
-    :param force_compute: see `honour_all_promise`.
-"""
+    Args:
+    filename: file name of the promise
+    save_result_to: directory where to save the result.
+    force_compute: see `honour_all_promise`.
+    """
 
     promise = load_promise(filename)
 

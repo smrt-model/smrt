@@ -580,12 +580,14 @@ class JoblibParallelRunner(object):
     """
 
     def __init__(self, progressbar, backend='loky', n_jobs=-1, max_numerical_threads=1):
-        """Joblib is a lightweight library for embarasingly parallel task.
+        """
+        Joblib is a lightweight library for embarasingly parallel task.
 
-        :param progressbar: show a progress bar if True
-        :param backend: see joblib documentation. The default 'loky' is the recommended backend.
-        :param n_jobs: see joblib documentation. The default is to use all the cores.
-        :param max_numerical_threads: :py:func:`~smrt.core.lib.set_max_numerical_threads`. The default avoid miximing different
+        Args:
+        progressbar: show a progress bar if True
+        backend: see joblib documentation. The default 'loky' is the recommended backend.
+        n_jobs (int): see joblib documentation. The default is to use all the cores.
+        max_numerical_threads: :py:func:`~smrt.core.lib.set_max_numerical_threads`. The default avoid miximing different
         parallelism techniques.
 
         """
