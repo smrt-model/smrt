@@ -1,6 +1,5 @@
 """
 Fresnel coefficients formulae used in the packages :py:mod:`smrt.interface` and :py:mod:`smrt.substrate`.
-
 """
 
 import numpy as np

@@ -14,8 +14,6 @@ Example::
     # argument of this function (but is required in practice)
 
     sp = make_snowpack([10], "exponential", [350], corr_length=[3e-3])
-
-
 """
 
 import copy
@@ -285,7 +283,8 @@ class Snowpack(object):
 
         .. note:: if a layer is added on top (at bottom), the top (bottom) interface is duplicated.
 
-        :param other: the snowpack, a layer or a substrate to add to the first argument.
+        Args:
+        other: the snowpack, a layer or a substrate to add to the first argument.
 
         :Example:
 
