@@ -263,8 +263,8 @@ class PassiveResult(Result):
         See xarray slicing with sel method (to document). It is also posisble to select by channel if the sensor has a channel_map.
 
         Args:
-        channel: channel to select
-        \\**kwargs: any parameter to slice the results.
+            channel: channel to select
+            \\**kwargs: any parameter to slice the results.
         """
         return _strongsqueeze(self.sel_data(channel=channel, **kwargs))
 
@@ -289,7 +289,7 @@ class PassiveResult(Result):
         the channel_axis is "column" if the channel map exit, otherwise is None.
 
         Args:
-        channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
+            channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
         """
         if channel_axis == "auto":
             channel_axis = "column" if self.channel_map else None
@@ -404,7 +404,7 @@ class ActiveResult(Result):
         not corresponding to a channel and applies to any sensor even those without channel_map.
 
         Args:
-        channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
+            channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
         """
 
         return super().return_as_dataframe(
@@ -434,7 +434,7 @@ class ActiveResult(Result):
         the channel_axis is "column" if the channel map exit, otherwise is None.
 
         Args:
-        channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
+            channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
         """
         if channel_axis == "auto":
             channel_axis = "column" if self.channel_map else None
@@ -525,7 +525,7 @@ class AltimetryResult(ActiveResult):
         contribution="all"" to get all the contributions or contribution='...' to access each contribution.
 
         Args:
-        **kwargs: any dimension to select. See xarray.DataArray.sel.
+            **kwargs: any dimension to select. See xarray.DataArray.sel.
         """
 
         if ("contribution" in kwargs):
@@ -606,12 +606,12 @@ def concat_results(result_list, coord):
     is specified with coord
 
     Args:
-    result_list: list of results returned by :py:meth:`smrt.core.model.Model.run` or other functions.
-    coord: a tuple (dimension_name, dimension_values) for the new dimension. Dimension_values must be a sequence or
+        result_list: list of results returned by :py:meth:`smrt.core.model.Model.run` or other functions.
+        coord: a tuple (dimension_name, dimension_values) for the new dimension. Dimension_values must be a sequence or
         array with the same length as result_list.
 
     Returns: 
-    :py:class:`Result` instance
+        :py:class:`Result` instance
     """
 
     if isinstance(coord, tuple):
