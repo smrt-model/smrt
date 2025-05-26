@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 
 	- EMModel.ks is now a function to handle non isotropic scatterers
+	- the coordinate t_gate is renamed delay in nadir_lrm_altimetry.
 
 ## [v1.4]
 ### Added
