@@ -71,6 +71,7 @@ extensions = [
     'sphinx.ext.imgmath',
     'sphinx.ext.autosummary',
     'sphinx_rtd_theme',
+    'sphinx.ext.napoleon'
  ]
 
 autosummary_generate = True
