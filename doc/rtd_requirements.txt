@@ -1,6 +1,6 @@
 # These packages are needed for proper readthedocs import of documentation
 Sphinx>=1.6
-sphinx-contrib-napoleon
+sphinxcontrib-napoleon
 numpy
 six
 xarray
