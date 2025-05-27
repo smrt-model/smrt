@@ -67,9 +67,7 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
             return compute_A2_nonlocal(Q, microstructure)
 
     def compute_A2A2inv(self):
-        """ Compute A2 using equation 26
-
-        """
+        """Compute A2 using equation 26"""
 
         assert self.symmetrical
 
@@ -160,26 +158,27 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         return self._ks / (ks_int / 4.)  # Ding et al. (2010), normalised by (1/4pi)
 
     def ks_integrand(self, mu):
-        """ This is the scattering function for the IBA model.
-
+        """
+        This is the scattering function for the IBA model.
+        
         It uses the phase matrix in the 1-2 frame. With incident angle chosen to be 0, the scattering
         angle becomes the scattering zenith angle:
-
+        
         .. math::
-
+        
             \\Theta = \\theta
-
-
+        
+        
         Scattering coefficient is determined by integration over the scattering angle (0 to \\pi)
 
-        :param mu: cosine of the scattering angle (single angle)
-
+        Args:
+            mu: cosine of the scattering angle (single angle)
+        
         .. math::
-
-            ks\\_int = p11 + p22
-
+        
+        ks\\_int = p11 + p22
+        
         The integration is performed outside this method.
-
         """
 
         # Set up scattering geometry for 1-2 frame
@@ -206,9 +205,15 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         return ks_int.real
 
     def phase(self, mu_s, mu_i, dphi, npol=2):
-        """ IBA Phase function (not decomposed).
+        """
+        IBA Phase function (not decomposed).
 
-"""
+        Args:
+            mu_s: 
+            mu_i: 
+            dphi: 
+            npol:  (Default value = 2)
+        """
 
         if not hasattr(self, "_phase_norm"):
             self._phase_norm = self.compute_phase_norm()
@@ -228,15 +233,16 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         return smrt_matrix(self._phase_norm * ft_corr_fn * p)
 
     def compute_ka(self):
-        """ SCE absorption coefficient calculated from the low-loss assumption of a general lossy medium.
-
+        """
+        SCE absorption coefficient calculated from the low-loss assumption of a general lossy medium.
+        
         Calculates ka from wavenumber in free space (determined from sensor), and effective permittivity
         of the medium.
-
+        
         :return ka: absorption coefficient [m :sup:`-1`]
-
+        
         .. note::
-
+        
             This may not be suitable for high density material
 
         """
