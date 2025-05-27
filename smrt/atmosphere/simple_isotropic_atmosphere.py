@@ -37,8 +37,13 @@ from ..core.atmosphere import AtmosphereBase, AtmosphereResult
 
 
 def make_atmosphere(tb_down=0, tb_up=0, transmittance=1):
-    """ Construct an atmosphere instance.
+    """
+    Construct an atmosphere instance.
 
+    Args:
+        tb_down:  (Default value = 0)
+        tb_up:  (Default value = 0)
+        transmittance:  (Default value = 1)
     """
     warn("""This function 'make_atmosphere' is going to be depreciated. Use smrt.inputs.make_medium.make_atmosphere or the
 short cut smrt.make_atmosphere instead.""", DeprecationWarning)
