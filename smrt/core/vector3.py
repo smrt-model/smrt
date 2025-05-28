@@ -1,4 +1,3 @@
-
 import numpy as np
 
 class vector3(object):

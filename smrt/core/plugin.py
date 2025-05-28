@@ -28,12 +28,14 @@ def register_package(pkg):
 
 @lru_cache(maxsize=128)
 def import_class(scope: str, modulename: str, classname: Optional[str]=None) -> Type:
-    """Import the modulename and return either the class named "classname" or the first class defined in the module if classname is None.
+    """
+    Imports the modulename and return either the class named "classname" or the first class defined in the module if classname is None.
 
-    :param scope: scope where to search for the module.
-    :param modulename: name of the module to load.
-    :param classname: name of the class to read from the module.
-"""
+    Args:
+    scope: scope where to search for the module.
+    modulename: name of the module to load.
+    classname: name of the class to read from the module.
+    """
 
     if (".." in modulename) or (modulename[0] == '.'):
         raise SMRTError("modulename error. Relative import is not allowed")

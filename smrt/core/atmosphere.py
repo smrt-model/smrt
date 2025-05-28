@@ -13,9 +13,17 @@ class AtmosphereBase(object):
     # has no special properties yet, we just use the type.
 
     def __add__(self, other):
-        """Return a new snowpack made by setting the atmosphere
+        """
+        Returns a new snowpack made by setting the atmosphere.
 
-        :param other: the snowpack to add.
+        Args:
+            other: The snowpack to add.
+
+        Returns:
+            Snowpack: A new snowpack with the atmosphere set.
+
+        Raises:
+            SMRTError: If the other object is not a Snowpack.
         """
 
         if not isinstance(other, Snowpack):

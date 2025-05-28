@@ -1,6 +1,5 @@
 """
-fresnel coefficients formulae used in the packages :py:mod:`smrt.interface` and :py:mod:`smrt.substrate`.
-
+Fresnel coefficients formulae used in the packages :py:mod:`smrt.interface` and :py:mod:`smrt.substrate`.
 """
 
 import numpy as np
@@ -8,17 +7,20 @@ from smrt.core.lib import smrt_matrix, abs2
 
 
 def fresnel_coefficients_old(eps_1, eps_2, mu1):
-    """compute the reflection in two polarizations (H and V). The equations are only valid for lossless media.
-    Applying these equations for (strongly) lossy media result in (large) errors. Don't use it. It is here for reference only.
+    """
+    Computes the reflection in two polarizations (H and V). The equations are only valid for lossless media.
+    Applying these equations for (strongly) lossy media results in (large) errors. Don't use it. It is here for reference only.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
     reflection coefficient.
 
-    :param eps_1: permittivity of medium 1.
-    :param eps_2: permittivity of medium 2.
-    :param mu1: cosine zenith angle in medium 1.
+    Args:
+        eps_1: permittivity of medium 1.
+        eps_2: permittivity of medium 2.
+        mu1: cosine zenith angle in medium 1.
 
-    :returns: rv, rh, mu2 the cosine of the angle in medium 2
-"""
+    Returns:
+        : rv, rh, mu2 the cosine of the angle in medium 2
+    """
     n = np.sqrt(eps_2 / eps_1)
     b = 1.0 - (1.0 - mu1**2) / n**2
 
@@ -31,21 +33,25 @@ def fresnel_coefficients_old(eps_1, eps_2, mu1):
 
 
 def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=False):
-    """compute the reflection in two polarizations (H and V) for lossly media with the "classical Fresnel" based
-    on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media. 
+    """
+    Computes the reflection in two polarizations (H and V) for lossly media with the "classical Fresnel" based
+    on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
     Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
-
+    
     The classical derivation does not respect energy conservation, especially the transmittivity.
     Don't use it. It is here for reference only.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
     reflection coefficient.
 
-    :param eps_1: permittivity of medium 1.
-    :param eps_2: permittivity of medium 2.
-    :param mu1: cosine zenith angle in medium 1.
+    Args:
+        eps_1: permittivity of medium 1.
+        eps_2: permittivity of medium 2.
+        mu1: cosine zenith angle in medium 1.
+        full_output: (Default value = False)
 
-    :returns: rv, rh, mu2 the cosine of the angle in medium 2
-"""
+    Returns:
+        : rv, rh, mu2 the cosine of the angle in medium 2
+    """
     # y is the axis normal to the interface (usually z, but here it is y!)
 
     # incident wavenumber
@@ -87,20 +93,24 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=Fals
 
 
 def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1, full_output=False):
-    """compute the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
-    on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media. 
+    """
+    Computes the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
+    on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
     Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
-
-    The 'rigorous' derivation respect the energy conservation even for strongly loosly media.
+    
+    The 'rigorous' derivation respects the energy conservation even for strongly loosly media.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
     reflection coefficient.
 
-    :param eps_1: permittivity of medium 1.
-    :param eps_2: permittivity of medium 2.
-    :param mu1: cosine zenith angle in medium 1.
+    Args:
+        eps_1: permittivity of medium 1.
+        eps_2: permittivity of medium 2.
+        mu1: cosine zenith angle in medium 1.
+        full_output: (Default value = False)
 
-    :returns: rv, rh, mu2 the cosine of the angle in medium 2
-"""
+    Returns:
+        : rv, rh, mu2 the cosine of the angle in medium 2
+    """
     # y is the axis normal to the interface (usually z, but here it is y!)
 
     # incident wavenumber
@@ -149,7 +159,14 @@ fresnel_coefficients = fresnel_coefficients_maezawa09_rigorous
 
 
 def snell_angle(eps_1, eps_2, mu1):
-    """compute mu2 the cos(angle) in the second medium according to Snell's law."""
+    """
+    Computes mu2 the cos(angle) in the second medium according to Snell's law.
+
+    Args:
+        eps_1: 
+        eps_2: 
+        mu1: 
+    """
 
     # incident wavenumber
     n1 = np.sqrt(eps_1)
@@ -164,26 +181,32 @@ def snell_angle(eps_1, eps_2, mu1):
 
 
 def brewster_angle(eps_1, eps_2):
-    """compute the brewster angle
+    """
+    Computes the brewster angle.
 
-    :param eps_1: permittivity of medium 1.
-    :param eps_2: permittivity of medium 2.
+    Args:
+        eps_1: permittivity of medium 1.
+        eps_2: permittivity of medium 2.
 
-    :returns: angle in radians
-"""
+    Returns:
+        : angle in radians
+    """
     return np.arctan(np.sqrt(eps_2 / eps_1).real)
 
 
 def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
-    """compute the fresnel power reflection matrix for/in medium 1 laying above medium 2.
+    """
+    Computes the fresnel power reflection matrix for/in medium 1 laying above medium 2.
 
-    :param npol: number of polarizations to return.
-    :param eps_1: permittivity of medium 1.
-    :param eps_2: permittivity of medium 2.
-    :param mu1: cosine zenith angle in medium 1.
+    Args:
+        eps_1: permittivity of medium 1.
+        eps_2: permittivity of medium 2.
+        mu1: cosine zenith angle in medium 1.
+        npol: number of polarizations to return.
 
-    :returns: a matrix or the diagional depending on `return_as_diagonal`
-"""
+    Returns:
+        : a matrix or the diagional depending on `return_as_diagonal`
+    """
 
     mu1 = np.atleast_1d(mu1)
     assert len(mu1.shape) == 1  # 1D array
@@ -203,15 +226,18 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
 
 
 def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol):
-    """compute the fresnel power reflection matrix for/in medium 1 laying above medium 2.
+    """
+    Computes the fresnel power reflection matrix for/in medium 1 laying above medium 2.
 
-    :param npol: number of polarizations to return.
-    :param eps_1: permittivity of medium 1.
-    :param eps_2: permittivity of medium 2.
-    :param mu1: cosine zenith angle in medium 1.
+    Args:
+        eps_1: permittivity of medium 1.
+        eps_2: permittivity of medium 2.
+        mu1: cosine zenith angle in medium 1.
+        npol: number of polarizations to return.
 
-    :returns: a matrix or the diagional depending on `return_as_diagonal`
-"""
+    Returns:
+        : a matrix or the diagional depending on `return_as_diagonal`
+    """
 
     mu1 = np.atleast_1d(mu1)
     assert len(mu1.shape) == 1  # 1D array
