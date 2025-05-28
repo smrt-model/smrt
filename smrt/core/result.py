@@ -514,7 +514,7 @@ class AltimetryResult(ActiveResult):
         """
         Returns the delay Doppler map
         """
-        assert "fdoppler" in self.data.dims
+        assert "doppler_frequency" in self.data.dims
         return self.sigma(**kwargs)
 
     def waveform(self, **kwargs):
@@ -537,8 +537,8 @@ class AltimetryResult(ActiveResult):
 
         wf = self.sigma(**kwargs)
 
-        if "fdoppler" in self.data.dims:
-            wf = self.sigma(**kwargs).sum(dim="fdoppler")
+        if "doppler_frequency" in self.data.dims:
+            wf = self.sigma(**kwargs).sum(dim="doppler_frequency")
 
         return wf
 
