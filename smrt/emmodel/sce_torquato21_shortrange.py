@@ -1,9 +1,9 @@
 # coding: utf-8
 
-"""Compute scattering with the the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021 
+"""Compute scattering with the the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021
 This SCE is the quasi-static version, called "local approximation" in Torquato and "short range" in Tsang's books
 It applies to low frequency or small scatterers.
-Because of this assumption, local and non-local are undistinguishable, so that Rechtmans and Torquato, 2008 
+Because of this assumption, local and non-local are undistinguishable, so that Rechtmans and Torquato, 2008
 also provides a good reference for this implementation.
 """
 
@@ -13,7 +13,7 @@ also provides a good reference for this implementation.
 
 # local import
 from smrt.permittivity.generic_mixing_formula import maxwell_garnett_for_spheres
-from .common import AdjustableEffectivePermittivityMixins, derived_EMModel
+from .common import AdjustableEffectivePermittivityMixin, derived_EMModel
 from .sce_common import SCEBase
 
 #
@@ -34,7 +34,7 @@ def derived_SCETK21_ShortRange(effective_permittivity_model):
     return derived_EMModel(SCETK21_ShortRange, effective_permittivity_model)
 
 
-class SCETK21_ShortRange(AdjustableEffectivePermittivityMixins, SCEBase):
+class SCETK21_ShortRange(AdjustableEffectivePermittivityMixin, SCEBase):
 
     """
         To be documented

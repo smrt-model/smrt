@@ -46,7 +46,7 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
 
         if self.symmetrical:
             self.A2A2inv = self.compute_A2A2inv()
-            self._ke, self.ks = self.compute_ke_ks_symmetrical()
+            self._ke, self._ks = self.compute_ke_ks_symmetrical()
         else:
             if self.scaled:
                 eps_HS = permittivity_hashin_shtrikman(self.frac_volume, self.e0, self.eps)
