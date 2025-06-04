@@ -79,7 +79,7 @@ class GeometricalOptics(Interface):
         # compute the local reflection Fresnel coefficient
         kd = ki - ks  # in principe: *sqrt(eps_1), but in the following it appears everywhere as a ratio
 
-        n = kd / (np.sign(kd.z) * kd.norm)  # EQ 2.1.123 #equivalent to np.vector3(kd_x / kd_z, kd_y / kd_z, 1)
+        n = kd / (np.sign(kd.z) * kd.norm())  # EQ 2.1.123 #equivalent to np.vector3(kd_x / kd_z, kd_y / kd_z, 1)
 
         mu_local = -vector3.dot(n, ki)
         assert np.all(mu_local >= 0)
@@ -94,7 +94,7 @@ class GeometricalOptics(Interface):
         vi = vector3.from_xyz(-mu_i, 0, -sin_i)
 
         # compute the dot products
-        cross_ki_ks_norm = vector3.cross(ki, ks).norm
+        cross_ki_ks_norm = vector3.cross(ki, ks).norm()
         colinear = cross_ki_ks_norm < 1e-4
         # avoid warning due to divide error, the colinear case is solved independantly:
         cross_ki_ks_norm[colinear] = 1
@@ -124,7 +124,7 @@ class GeometricalOptics(Interface):
 
         smrt_norm = 1 / (4 * np.pi)  # divide by 4*pi because this is the norm for SMRT
 
-        coef = smrt_norm / (2 * self.mean_square_slope) / mu_i * kd.norm2**2 / kd.z**4 * \
+        coef = smrt_norm / (2 * self.mean_square_slope) / mu_i * kd.norm2()**2 / kd.z**4 * \
             np.exp(-(kd.x**2 + kd.y**2) / (2 * kd.z**2 * self.mean_square_slope))  # Eq. 2.1.124
 
 
@@ -213,7 +213,7 @@ class GeometricalOptics(Interface):
         # compute the local transmission Fresnel coefficient
         ktd = ki * n_1.real - kt * n_2.real  # Eq 2.1.87
 
-        n = ktd / (np.sign(ktd.z) * ktd.norm)  # Eq 2.1.128
+        n = ktd / (np.sign(ktd.z) * ktd.norm())  # Eq 2.1.128
 
         n_kt = -vector3.dot(n, kt)
         n_ki = -vector3.dot(n, ki)
@@ -235,7 +235,7 @@ class GeometricalOptics(Interface):
         vi = vector3.from_xyz(-mu_i, 0, -sin_i)
 
         # compute the cosines
-        cross_ki_kt_norm = vector3.cross(ki, kt).norm
+        cross_ki_kt_norm = vector3.cross(ki, kt).norm()
         colinear = cross_ki_kt_norm < 1e-4
         # avoid warning due to divide error, the colinear case is solved independantly:
         cross_ki_kt_norm[colinear] = 1
@@ -266,7 +266,7 @@ class GeometricalOptics(Interface):
 
         smrt_norm = 1 / (4 * np.pi)   # SMRT requires scattering coefficient / 4 * pi
 
-        coef = smrt_norm * 2 * eps_2 * ktd.norm2 * n_kt**2 / (eta1_eta * self.mean_square_slope * mu_i * ktd.z**4) * \
+        coef = smrt_norm * 2 * eps_2 * ktd.norm2() * n_kt**2 / (eta1_eta * self.mean_square_slope * mu_i * ktd.z**4) * \
             np.exp(-(ktd.x**2 + ktd.y**2) / (2 * ktd.z**2 * self.mean_square_slope))   # Eq. 2.1.130   NB: k1^2 -> eps_2
 
         if self.shadow_correction:
@@ -297,7 +297,7 @@ class GeometricalOptics(Interface):
         # compute the local reflection Fresnel coefficient
         kd = ki - ks  # in principe: *sqrt(eps_1), but in the following it appears everywhere as a ratio
 
-        n = kd / (np.sign(kd.z) * kd.norm)  # EQ 2.1.223 #equivalent to np.vector3(kd_x / kd_z, kd_y / kd_z, 1)
+        n = kd / (np.sign(kd.z) * kd.norm())  # EQ 2.1.223 #equivalent to np.vector3(kd_x / kd_z, kd_y / kd_z, 1)
 
         mu_local = -vector3.dot(n, ki)
 
@@ -310,7 +310,7 @@ class GeometricalOptics(Interface):
         hi_ks = vector3.dot(hi, ks)
         vi_ks = vector3.dot(vi, ks)
 
-        coef = 1 / (2 * np.pi * self.mean_square_slope) * kd.norm2**2 / (4 * mu_i * vector3.cross(ki, ks).norm2 * kd.z**4) * \
+        coef = 1 / (2 * np.pi * self.mean_square_slope) * kd.norm2()**2 / (4 * mu_i * vector3.cross(ki, ks).norm2() * kd.z**4) * \
             np.exp(- (kd.x**2 + kd.y**2) / (2 * kd.z**2 * self.mean_square_slope))  # Eq. 2.1.124
 
         return coef * (hi_ks**2 * abs2(Rh) + vi_ks**2 * abs2(Rv)), \
@@ -338,7 +338,7 @@ class GeometricalOptics(Interface):
         # compute the local transmission Fresnel coefficient
         ktd = n_1.real * ki - n_2.real * kt  # Eq 2.1.87
 
-        n = ktd / (np.sign(ktd.z) * ktd.norm)  # Eq 2.1.128
+        n = ktd / (np.sign(ktd.z) * ktd.norm())  # Eq 2.1.128
 
         # compute Fresnel coefficients at stationary point
         n_kt = -vector3.dot(n, kt)
@@ -363,8 +363,8 @@ class GeometricalOptics(Interface):
         Tv = (hi_kt**2) * (1 - abs2(Rh)) + (vi_kt**2) * (1 - abs2(Rv))
         Th = (vi_kt**2) * (1 - abs2(Rh)) + (hi_kt**2) * (1 - abs2(Rv))
 
-        coef = eps_2 / (2 * np.pi * self.mean_square_slope) * ktd.norm2 * n_kt * n_ki  \
-            / (mu_i * vector3.cross(ki, kt).norm2 * ktd.z**4) * \
+        coef = eps_2 / (2 * np.pi * self.mean_square_slope) * ktd.norm2() * n_kt * n_ki  \
+            / (mu_i * vector3.cross(ki, kt).norm2() * ktd.z**4) * \
             np.exp(- (ktd.x**2 + ktd.y**2) / (2 * ktd.z**2 * self.mean_square_slope))   # Eq. 2.1.130 NB: k1^2 -> eps_2
 
         if self.shadow_correction:
