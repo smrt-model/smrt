@@ -22,7 +22,7 @@ Examples::
     transmittance=[0.95, 0.90, 0.80])
 
     # Frequency-dependent
-    atmos = make_atmosphere("simple_atmosphere", theta={37e9: [10, 40, 90]}, tb_down={37e9: [20., 25, 40]}, tb_up={37e9: [18., 23, 38]})
+    atmos = make_atmosphere("simple_atmosphere", theta=[10, 40, 90], tb_down={37e9: [20., 25, 40]}, tb_up={37e9: [18., 23, 38]}, transmittance={37e9: [0.95, 0.90, 0.80]})
 
 """
 
@@ -42,17 +42,28 @@ class SimpleAtmosphere(AtmosphereBase):
 
         if len(theta) < 2:
             raise SMRTError("theta must contains at least two values (0° and close to 90° recommended).")
+        
+        # Raise error if length of tb_down / tb_up / transmittance != length of theta?
 
         costheta = np.cos(np.deg2rad(theta))
 
         # sort by increasing costheta
         i = np.argsort(costheta)
-
+        
         self.theta = np.array(theta)[i]
         self.costheta = np.array(costheta)[i]
-        self.tbdown = np.array(tb_down)[i]
-        self.tbup = np.array(tb_up)[i]
-        self.trans = np.array(transmittance)[i]
+        if isinstance(tb_down, dict):
+            self.tbdown = {key: np.array(value)[i] for key, value in zip(tb_down.keys(), tb_down.values())}
+        else:
+            self.tbdown = np.array(tb_down)[i]
+        if isinstance(tb_up, dict):
+            self.tbup = {key: np.array(value)[i] for key, value in zip(tb_up.keys(), tb_up.values())}
+        else:
+            self.tbup = np.array(tb_up)[i]
+        if isinstance(transmittance, dict):
+            self.trans = {key: np.array(value)[i] for key, value in zip(transmittance.keys(), transmittance.values())}
+        else:
+            self.trans = np.array(transmittance)[i]
 
     def run(self, frequency, costheta, npol):
 
