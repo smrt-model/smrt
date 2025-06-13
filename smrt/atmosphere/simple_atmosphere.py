@@ -1,13 +1,14 @@
 # coding: utf-8
-"""Implement a one-layer atmosphere with prescribed frequency-dependent emission (up and down) and transmittance.
+"""
+Implements a one-layer atmosphere with prescribed frequency-dependent emission (up and down) and transmittance.
 
- TB and transmissivity are given as array of incidence and optional as frequency-dependent dictionnary.
+TB and transmissivity are given as array of incidence and optionally as frequency-dependent dictionary.
 
- In the current implementation, there are two constraints:
- - All the parametres (theta, tbub, tbdown and transmission) must be 1D list or arrays of the same length
- - the provided theta angles must cover the widest range possible in [0°, 90°] given that only interpolation is implemented at this stage.
-    When the RT solver calls this atmosphere, the requested cosines must be within the range of provided theta values.
-    Ideally 0° and 90° should be provided.
+In the current implementation, there are two constraints:
+- All the parameters (theta, tbub, tbdown and transmission) must be 1D list or arrays of the same length.
+- The provided theta angles must cover the widest range possible in [0°, 90°] given that only interpolation is implemented at this stage.
+  When the RT solver calls this atmosphere, the requested cosines must be within the range of provided theta values.
+  Ideally 0° and 90° should be provided.
 
  To make an atmosphere, it is recommended to use the helper function :py:func:`~smrt.inputs.make_model.make_atmosphere`.
 
@@ -19,7 +20,7 @@ Examples::
 
     # Incident dependent only
     atmos = make_atmosphere("simple_atmosphere", theta=[0, 40, 89], tb_down=[20., 25, 40], tb_up=[18., 23, 38],
-    transmittance=[0.95, 0.90, 0.80])
+                            transmittance=[0.95, 0.90, 0.80])
 
     # Frequency-dependent
     atmos = make_atmosphere("simple_atmosphere", theta={37e9: [10, 40, 90]}, tb_down={37e9: [20., 25, 40]}, tb_up={37e9: [18., 23, 38]})
