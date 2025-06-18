@@ -220,7 +220,7 @@ class DORT(object):
             "effective_permittivity": xr.DataArray(self.effective_permittivity, coords=[layer_index]),
             "ks": xr.DataArray(
                 [
-                    np.mean(em.ks(outmu) if hasattr(em, "ks") and callable(em.ks) else getattr(em, "ks", np.nan))
+                    np.mean(em.ks(outmu).values if hasattr(em, "ks") and callable(em.ks) else getattr(em, "ks", np.nan))
                     for em in emmodels
                 ],
                 coords=[layer_index],
