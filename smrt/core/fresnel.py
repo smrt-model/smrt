@@ -37,7 +37,7 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=Fals
     Computes the reflection in two polarizations (H and V) for lossly media with the "classical Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
     Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
-    
+
     The classical derivation does not respect energy conservation, especially the transmittivity.
     Don't use it. It is here for reference only.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
@@ -97,7 +97,7 @@ def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1, full_output=False
     Computes the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
     Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
-    
+
     The 'rigorous' derivation respects the energy conservation even for strongly loosly media.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
     reflection coefficient.
@@ -163,9 +163,9 @@ def snell_angle(eps_1, eps_2, mu1):
     Computes mu2 the cos(angle) in the second medium according to Snell's law.
 
     Args:
-        eps_1: 
-        eps_2: 
-        mu1: 
+        eps_1:
+        eps_2:
+        mu1:
     """
 
     # incident wavenumber
@@ -219,7 +219,7 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
     reflection_coefficients[1] = abs2(rh)
 
     if npol >= 3:
-        reflection_coefficients[2] = (rv * np.conj(rh)).real   # TsangI  Eq 7.2.93  
+        reflection_coefficients[2] = (rv * np.conj(rh)).real   # TsangI  Eq 7.2.93
         # It is not sure this equation is valid for strongly loosly materails
 
     return reflection_coefficients
@@ -227,7 +227,7 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
 
 def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol):
     """
-    Computes the fresnel power reflection matrix for/in medium 1 laying above medium 2.
+    Computes the fresnel power transmission matrix for/in medium 1 lying above medium 2.
 
     Args:
         eps_1: permittivity of medium 1.
