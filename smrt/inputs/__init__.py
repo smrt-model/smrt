@@ -1,9 +1,8 @@
-
-
 """
 This package includes modules to create the medium and sensor configuration required for the simulations.
 The recommended way to build these objects::
 
+Example:
     from smrt import make_snowpack, sensor_list
 
     sp = make_snowpack([1000], density=[300], microstructure_model='sticky_hard_spheres', radius=[0.3e-3], stickiness=0.2)
