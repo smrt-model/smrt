@@ -1,16 +1,14 @@
 """Run the simulations using Celery on a cluster. This requires  setup on the cluster
 (see the Celery documentation https://docs.celeryproject.org/).
 
-Example::
-
+Example:
     from smrt.runner.celery import CeleryParallelRunner
 
-    runner = CeleryParallelRunner()   # run with the default broker redis://localhost:6379/0 but any url can be provided, as well as a Celery object
+    runner = CeleryParallelRunner()   # Run with the default broker redis://localhost:6379/0 but any url can be provided, as well as a Celery object
 
     m = make_model(...)
 
     m.run(sensor, snowpack, runner=runner)
-
 """
 
 
@@ -34,9 +32,9 @@ class CeleryParallelRunner(object):
     def __init__(self, broker="redis://localhost:6379", chunk=10):
         """prepare a dask runner.
 
-        :param broker: the url or a Celery object (app)
-        :param chunk: size of the chunk to transmit to the runner
-
+        Args:
+            broker (str or Celery): The url or a Celery object (app).
+            chunk (int): Size of the chunk to transmit to the runner.
         """
 
         super().__init__()
