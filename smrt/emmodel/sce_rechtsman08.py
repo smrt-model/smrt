@@ -1,9 +1,7 @@
 # coding: utf-8
 
-"""Compute scattering with the Strong-Contrast Expansion (SCE) from Rechtsman and Torquato, 2008 adapted by Ghislain Picard (unpublished at time of writting).
-This SCE is the local version valid for quasi-static frequency (i.e. low frequency or small scatterers). A non-local version has been devised
-recently 
-
+"""Compute scattering with the Strong-Contrast Expansion (SCE) from Rechtsman and Torquato, 2008 adapted by Ghislain Picard (unpublished at time of writing).
+This SCE is the local version valid for quasi-static frequency (i.e. low frequency or small scatterers). A non-local version has been devised recently.
 """
 
 # Stdlib import
@@ -26,7 +24,7 @@ from .sce_common import SCEBase
 class SCER08(SCEBase):
 
     """
-        To be documented
+    To be documented.
     """
 
     def __init__(self, sensor, layer):
@@ -81,8 +79,8 @@ class SCER08(SCEBase):
         """ Calculation of complex effective permittivity of the medium,
         which is given by Maxwell Garnet in the case of Rechtsman and Torquato, 2008
 
-        :returns: effective_permittivity: complex effective permittivity of the medium
-
+        Returns:
+            float: Effective permittivity.
         """
 
         return maxwell_garnett_for_spheres(self.frac_volume, self.e0, self.eps)

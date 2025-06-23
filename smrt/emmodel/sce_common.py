@@ -1,4 +1,6 @@
-""" This is an abstract base class for the Strong Expansion theory and its various approximations. It is not to be used by the end-user."""
+"""This is an abstract base class for the Strong Expansion theory and its various approximations.
+It is not to be used by the end-user.
+"""
 
 # Stdlib import
 

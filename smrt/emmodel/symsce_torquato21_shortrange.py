@@ -1,7 +1,7 @@
 # coding: utf-8
 
-"""Compute scattering with the symmetrized  version of the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021 
-This SCE is the quasi-static version, called "local approximation" in Torquato and "short range" in Tsang's books
+"""Compute scattering with the symmetrized version of the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021.
+This SCE is the quasi-static version, called "local approximation" in Torquato and "short range" in Tsang's books.
 It applies to low frequency or small scatterers.
 Because of this assumption, local and non-local are undistinguishable, so that Rechtmans and Torquato, 2008 
 also provides a good reference for this implementation. The only difference is in fact the symmetrization.
@@ -24,11 +24,13 @@ from .sce_common import SCEBase
 
 
 def derived_SymSCETK21_ShortRange(effective_permittivity_model):
-    """return a new SymSCE_ShortRange model with variant from the default SymSCE_ShortRange.
+    """Return a new SymSCE_ShortRange model with variant from the default SymSCE_ShortRange.
 
-    :param effective_permittivity_model: permittivity mixing formula.
+    Args:
+        effective_permittivity_model: Permittivity mixing formula.
 
-    :returns a new class inheriting from SymSCE_ShortRange but with patched methods
+    Returns:
+        class: A new class inheriting from SymSCE_ShortRange but with patched methods.
     """
 
     return derived_EMModel(SymSCETK21_ShortRange, effective_permittivity_model)
@@ -37,7 +39,7 @@ def derived_SymSCETK21_ShortRange(effective_permittivity_model):
 class SymSCETK21_ShortRange(AdjustableEffectivePermittivityMixins, SCEBase):
 
     """
-        To be documented
+    To be documented.
     """
 
     # default effective_permittivity_model is polder_van_santen according to the SymSCE theory

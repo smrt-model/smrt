@@ -24,23 +24,22 @@ class IBA_original(IBA):
     the size of the phase matrix as redundant information is not calculated for the
     passive case.
 
-    :param sensor: object containing sensor characteristics
-    :param layer: object containing snow layer characteristics (single layer)
-
+    Args:
+        sensor: Object containing sensor characteristics.
+        layer: Object containing snow layer characteristics (single layer).
     """
 
     def compute_ka(self):
-        """ IBA absorption coefficient calculated from the low-loss assumption of a general lossy medium.
+        """IBA absorption coefficient calculated from the low-loss assumption of a general lossy medium.
 
         Calculates ka from wavenumber in free space (determined from sensor), and effective permittivity
-        of the medium (snow layer property)
+        of the medium (snow layer property).
 
-        :returns: absorption coefficient [m :sup:`-1`]
+        Returns:
+            float: Absorption coefficient [m^-1].
 
-        .. note::
-
-            This may not be suitable for high density material
-
+        Note:
+            This may not be suitable for high density material.
         """
 
         # equation from Matzler 1998 (original IBA98 paper) and Matzler and Wiesmann 1999

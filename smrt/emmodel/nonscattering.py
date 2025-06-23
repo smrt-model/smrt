@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""Non-scattering medium can be applied to medium without heteoreneity (like water or pure ice layer).
-
+"""Non-scattering medium can be applied to medium without heterogeneity (like water or pure ice layer).
 """
 
 # Stdlib import
