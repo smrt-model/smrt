@@ -1,9 +1,11 @@
 # coding: utf-8
 
-"""Exponential autocorrelation function model of the microstructure. This microstructure model is used by MEMLS when IBA is selected.
+"""
+Implements the exponential autocorrelation function model of the microstructure. This microstructure model is used by MEMLS when IBA is selected.
 
-parameters: frac_volume, corr_length
-
+Args:
+    frac_volume (float): Fractional volume.
+    corr_length (float): Correlation length.
 """
 
 import numpy as np

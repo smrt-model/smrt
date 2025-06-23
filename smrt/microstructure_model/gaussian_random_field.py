@@ -1,9 +1,12 @@
 # coding: utf-8
 
-"""Gaussian Random field model of the microstructure.
+"""
+Implements the Gaussian Random field model of the microstructure.
 
-parameters: frac_volume, corr_length, repeat_distance
-
+Args:
+    frac_volume (float): Fractional volume.
+    corr_length (float): Correlation length.
+    repeat_distance (float): Repeat distance.
 """
 
 import numpy as np

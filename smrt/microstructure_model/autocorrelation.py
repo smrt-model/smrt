@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-This module contains the base classes for the microstructure classes.
+Contains the base classes for the microstructure classes.
 **It is not used directly**.
 """
 

@@ -1,9 +1,10 @@
 # coding: utf-8
 
-"""Homogeneous microstructure. This microstructure model is to be used with non-scattering emmodel.
+"""
+Implements the homogeneous microstructure. This microstructure model is to be used with non-scattering emmodel.
 
-parameters: none
-
+Args:
+    None
 """
 
 # local import
