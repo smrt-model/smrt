@@ -1,7 +1,5 @@
-
-
 """
-Implement the coherent flat pseudo-interface, as in MEMLS. This interface is obtained by collapsing one layer and two interfaces into a single interface. Scattering in the layer is neglected.
+Implements the coherent flat pseudo-interface, as in MEMLS. This interface is obtained by collapsing one layer and two interfaces into a single interface. Scattering in the layer is neglected.
 
 
 """
@@ -46,9 +44,10 @@ def process_coherent_layers(snowpack, emmodel_list, sensor):
 
 
 class CoherentFlat(object):
-    """A flat surface. The reflection is in the specular direction and the coefficient is calculated with the Fresnel coefficients
+    """
+    Represents a flat surface. The reflection is in the specular direction and the coefficient is calculated with the Fresnel coefficients.
 
-"""
+    """
     args = []
     optional_args = {}
 
@@ -61,16 +60,19 @@ class CoherentFlat(object):
         self.permittivity = permittivity
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """compute the reflection coefficients for an array of incidence angles (given by their cosine)
-           in medium 1. Medium 2 is where the beam is transmitted.
+        """
+        Computes the reflection coefficients for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
 
-        :param eps_1: permittivity of the medium where the incident beam is propagating.
-        :param eps_2: permittivity of the other medium.
-        :param mu1: array of cosine of incident angles.
-        :param npol: number of polarization.
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
 
-        :return: the reflection matrix
-"""
+        Returns:
+            The reflection matrix.
+        """
 
         R01_v, R01_h, R1t_v, R1t_h, exp_kd, exp_2kd, mu_t = self._prepare_computation(frequency, eps_1, eps_2, mu1)
 
@@ -91,17 +93,19 @@ class CoherentFlat(object):
         return smrt_matrix(0)
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """compute the transmission coefficients for the azimuthal mode m
-           and for an array of incidence angles (given by their cosine)
-           in medium 1. Medium 2 is where the beam is transmitted.
+        """
+        Computes the transmission coefficients for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
 
-        :param eps_1: permittivity of the medium where the incident beam is propagating.
-        :param eps_2: permittivity of the other medium.
-        :param mu1: array of cosine of incident angles.
-        :param npol: number of polarization.
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
 
-        :return: the transmission matrix
-"""
+        Returns:
+            The transmission matrix.
+        """
 
         R01_v, R01_h, R1t_v, R1t_h, exp_kd, exp_2kd, mu_t = self._prepare_computation(frequency, eps_1, eps_2, mu1)
 

@@ -1,5 +1,3 @@
-
-
 """
 Implement the interface boundary condition under IEM formulation provided by Fung et al. 1992. in IEEE TGRS.
 Use of this code requires special attention because of two issues:
@@ -16,17 +14,14 @@ situations, this code is not recommended.
 ks*kl < sqrt(eps) where k is the wavenumber, s the rms height and l the correlation length. The code print a warning
 when out of this range. There is also limitation for smooth surfaces but no warning is printed.
 
-   Example::
-
-        # rms height and corr_length values work at 10 GHz
-        substrate = make_soil("iem_fung92", "dobson85", temperature=260,
+Example:
+    # rms height and corr_length values work at 10 GHz
+    substrate = make_soil("iem_fung92", "dobson85", temperature=260,
                                             roughness_rms=1e-3,
                                             corr_length=5e-2,
                                             autocorrelation_function="exponential",
                                             moisture=moisture,
                                             clay=clay, sand=sand, drymatter=drymatter)
-
-
 """
 
 import numpy as np
@@ -40,26 +35,29 @@ from smrt.core.vector3 import vector3
 
 
 class IEM_Fung92(Interface):
-    """A moderate rough surface model with backscatter, specular reflection and transmission only. It is not suitable
-    for emissivity calculations.Use with care!
+    """
+    Represents a moderate rough surface model with backscatter, specular reflection and transmission only. It is not suitable for emissivity calculations. Use with care!
 
-"""
+    """
     args = ["roughness_rms", "corr_length"]
     optional_args = {"autocorrelation_function": "exponential",
                      "warning_handling": "print",
                      "series_truncation": 10}
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """compute the reflection coefficients for an array of incidence angles (given by their cosine)
-           in medium 1. Medium 2 is where the beam is transmitted.
+        """
+        Computes the reflection coefficients for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
 
-        :param eps_1: permittivity of the medium where the incident beam is propagating.
-        :param eps_2: permittivity of the other medium
-        :param mu1: array of cosine of incident angles
-        :param npol: number of polarization
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
 
-        :return: the reflection matrix
-"""
+        Returns:
+            The reflection matrix.
+        """
         k2 = (2 * np.pi * frequency / C_SPEED) ** 2 * abs2(eps_1)
         # Eq: 2.1.94 in Tsang 2001 Tome I
         return fresnel_reflection_matrix(eps_1, eps_2, mu1, npol) * np.exp(-4 * k2 * self.roughness_rms**2 * mu1**2)
@@ -82,16 +80,21 @@ class IEM_Fung92(Interface):
 
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol, debug=False):
-        """compute the reflection coefficients for an array of incident, scattered and azimuth angles
-           in medium 1. Medium 2 is where the beam is transmitted.
+        """
+        Computes the reflection coefficients for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the beam is transmitted.
 
-        :param eps_1: permittivity of the medium where the incident beam is propagating.
-        :param eps_2: permittivity of the other medium
-        :param mu1: array of cosine of incident angles
-        :param npol: number of polarization
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu_s: Array of cosine of scattered angles.
+            mu_i: Array of cosine of incident angles.
+            dphi: Azimuth angles.
+            npol: Number of polarization.
 
-        :return: the reflection matrix
-"""
+        Returns:
+            The reflection matrix.
+        """
         mu_s = np.atleast_1d(mu_s)
         mu_i = np.atleast_1d(mu_i)
 
@@ -198,17 +201,19 @@ class IEM_Fung92(Interface):
         return diffuse_refl_coeff
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """compute the transmission coefficients for the azimuthal mode m
-           and for an array of incidence angles (given by their cosine)
-           in medium 1. Medium 2 is where the beam is transmitted.
+        """
+        Computes the transmission coefficients for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
 
-        :param eps_1: permittivity of the medium where the incident beam is propagating.
-        :param eps_2: permittivity of the other medium
-        :param mu1: array of cosine of incident angles
-        :param npol: number of polarization
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
 
-        :return: the transmission matrix
-"""
+        Returns:
+            The transmission matrix.
+        """
         k0 = 2 * np.pi * frequency / C_SPEED
 
         k_iz = k0 * np.sqrt(eps_1).real * mu1

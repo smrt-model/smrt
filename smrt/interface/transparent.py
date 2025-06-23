@@ -1,4 +1,4 @@
-"""A transparent interface (no reflection). Useful for the unit-test mainly.
+"""Implements a transparent interface (no reflection). Useful mainly for unit tests.
 
 """
 
@@ -11,17 +11,19 @@ class Transparent(object):
     optional_args = {}
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
+        """
+        Computes the reflection coefficients for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
 
-        """compute the reflection coefficients for the azimuthal mode m
-           and for an array of incidence angles (given by their cosine)
-           in medium 1. Medium 2 is where the beam is transmitted.
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
 
-        :param eps_1: permittivity of the medium where the incident beam is propagating.
-        :param eps_2: permittivity of the other medium
-        :param mhu1: array of cosine of incident angles
-        :param npol: number of polarization
-
-"""
+        Returns:
+            The reflection matrix.
+        """
         assert len(mu1.shape) == 1  # 1D array
 
         return smrt_matrix.zeros((npol, len(mu1)))
@@ -30,17 +32,19 @@ class Transparent(object):
         return smrt_matrix(0)
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """compute the transmission coefficients for the azimuthal mode m
-           and for an array of incidence angles (given by their cosine)
-           in medium 1. Medium 2 is where the beam is transmitted.
+        """
+        Computes the transmission coefficients for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
 
-        :param eps_1: permittivity of the medium where the incident beam is propagating.
-        :param eps_2: permittivity of the other medium
-        :param mu1: array of cosine of incident angles
-        :param npol: number of polarization
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
 
-        :return: the transmission matrix
-"""
+        Returns:
+            The transmission matrix.
+        """
         return smrt_matrix.ones((npol, len_atleast_1d(mu1)))
 
     def diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):

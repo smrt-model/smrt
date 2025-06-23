@@ -1,5 +1,3 @@
-
-
 """
 Implement the interface boundary condition under the Geometrical Approximation between layers characterized by their
 effective permittivities. This code is for backscatter only, that is, to use as a substrate and at low frequency when
@@ -7,10 +5,7 @@ the backscatter is the main mecahnism, and conversely when mulitple scattering a
 substrate are negligible. In other case, it is recommended to use
 :py:mod:`~smrt.interface.geometrical_optics`.
 
-The transmitted energy is also computed in an approximate way suitable for first order scattering such as
-:py:mod:``smrt.rtsolver.nadir_lrm_altimetry`. It uses energy conservation to compute the total transmitted energy and
-consider that all this energy is transmitted in the refracted direction. This approach compensate for the deficiencies of
-first order scattering RT solvers.
+The transmitted energy is also computed in an approximate way suitable for first order scattering such as smrt.rtsolver.nadir_lrm_altimetry. It uses energy conservation to compute the total transmitted energy and considers that all this energy is transmitted in the refracted direction. This approach compensates for the deficiencies of first order scattering RT solvers.
 
 """
 
@@ -23,38 +18,47 @@ from smrt.interface.geometrical_optics import shadow_function, GeometricalOptics
 
 
 class GeometricalOpticsBackscatter(Interface):
-    """A very rough surface.
+    """
+    Represents a very rough surface.
 
-"""
+    """
     args = ["mean_square_slope"]
     optional_args = {"shadow_correction": True}
 
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """compute the reflection coefficients for an array of incidence angles (given by their cosine)
-           in medium 1. Medium 2 is where the beam is transmitted.
+        """
+        Computes the reflection coefficients for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
 
-        :param eps_1: permittivity of the medium where the incident beam is propagating.
-        :param eps_2: permittivity of the other medium
-        :param mu1: array of cosine of incident angles
-        :param npol: number of polarization
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
 
-        :return: the reflection matrix
+        Returns:
+            The reflection matrix.
 """
 
         return smrt_matrix(0)
 
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
-        """compute the reflection coefficients for an array of incident, scattered and azimuth angles
-           in medium 1. Medium 2 is where the beam is transmitted.
+        """
+        Computes the reflection coefficients for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the beam is transmitted.
 
-        :param eps_1: permittivity of the medium where the incident beam is propagating.
-        :param eps_2: permittivity of the other medium
-        :param mu1: array of cosine of incident angles
-        :param npol: number of polarization
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu_s: Array of cosine of scattered angles.
+            mu_i: Array of cosine of incident angles.
+            dphi: Azimuth angles.
+            npol: Number of polarization.
 
-        :return: the reflection matrix
+        Returns:
+            The reflection matrix.
 """
         mu_s = np.atleast_1d(mu_s)
         mu_i = np.atleast_1d(mu_i)
@@ -105,17 +109,18 @@ class GeometricalOpticsBackscatter(Interface):
         return diffuse_refl_coeff
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """compute the transmission coefficients for an array of incidence angles (given by their cosine)
-           in medium 1. Medium 2 is where the beam is transmitted. While Geometrical Optics, we here consider that power not reflected
-           is scattered in the specular transmitted direction. This is an approximation which is reasonable in the context of a "1st order"
-           geometrical optics.
+        """
+        Computes the transmission coefficients for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted. While Geometrical Optics, it here considers that power not reflected is scattered in the specular transmitted direction. This is an approximation which is reasonable in the context of a "1st order" geometrical optics.
 
-        :param eps_1: permittivity of the medium where the incident beam is propagating.
-        :param eps_2: permittivity of the other medium
-        :param mu1: array of cosine of incident angles
-        :param npol: number of polarization
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
 
-        :return: the transmission matrix
+        Returns:
+            The transmission matrix.
 """
         go = GeometricalOptics(mean_square_slope=self.mean_square_slope, shadow_function=self.shadow_correction)
         total_reflection = go.reflection_coefficients(frequency, eps_1, eps_2, mu1)

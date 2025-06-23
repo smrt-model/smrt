@@ -1,21 +1,13 @@
 """
-Implement the interface boundary condition under the Geometrical Approximation between layers charcterized by their effective permittivities.
-This approximation is suitable for surface with roughness much larger than the roughness scales, typically k*s >> 1 and k*l >> 1, where s the rms heigth and l
-the correlation length. The precise validity range must be investigated by the user, this code does not raise any warning. An important charcateristic of
-this approximation is that the scattering do not directly depend on frequency, the only (probably weak) dependence is through the permittivities of the media.
+Implements the interface boundary condition under the Geometrical Approximation between layers characterized by their effective permittivities. This approximation is suitable for surfaces with roughness much larger than the roughness scales, typically k*s >> 1 and k*l >> 1, where s is the rms height and l is the correlation length. The precise validity range must be investigated by the user, this code does not raise any warning. An important characteristic of this approximation is that the scattering does not directly depend on frequency, the only (probably weak) dependence is through the permittivities of the media.
 
 The model is parameterized by the mean_square_slope which can be calculated as mean_square_slope = 2*s**2/l**2 for surface with a Gaussian autocorrelation function.
 Other equations may exist for other autocorrelation function.
 
-This implementation is largely based on Tsang and Kong, Scattering of Electromagnetic Waves: Advanced Topics, 2001 (Tsang_tomeIII in the following)
+This implementation is largely based on Tsang and Kong, Scattering of Electromagnetic Waves: Advanced Topics, 2001 (Tsang_tomeIII in the following).
 
-
-.. note::
-    This implementation set coherent reflection and transmission to zero, which is expected theoretically for a very rough surface.
-    However, first order radiative transfer solvers (such a nadir_lrm_altimetry) do not work well in this case because
-    the transmission through the layers is neglected. In such case, it is recommended to use
-    :py:mod:`smrt.interface.geometrical_optics_backscatter` which provides an approximation that set the coherent
-    transmission based on energy conservation assuming all the transmitted energy is in the refracted direction.
+Note:
+    This implementation sets coherent reflection and transmission to zero, which is expected theoretically for a very rough surface. However, first order radiative transfer solvers (such as nadir_lrm_altimetry) do not work well in this case because the transmission through the layers is neglected. In such case, it is recommended to use smrt.interface.geometrical_optics_backscatter which provides an approximation that sets the coherent transmission based on energy conservation assuming all the transmitted energy is in the refracted direction.
 """
 
 import numpy as np
@@ -29,7 +21,10 @@ from smrt.core.interface import Interface
 
 
 class GeometricalOptics(Interface):
-    """A very rough surface."""
+    """
+    Represents a very rough surface.
+
+    """
 
     args = ["mean_square_slope"]
     optional_args = {"shadow_correction": True}
@@ -39,29 +34,37 @@ class GeometricalOptics(Interface):
         return np.clip(mu, 0.1, 1)
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """compute the reflection coefficients for an array of incidence angles (given by their cosine)
-           in medium 1. Medium 2 is where the beam is transmitted.
+        """
+        Computes the reflection coefficients for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
 
-        :param eps_1: permittivity of the medium where the incident beam is propagating.
-        :param eps_2: permittivity of the other medium
-        :param mu1: array of cosine of incident angles
-        :param npol: number of polarization
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
 
-        :return: the reflection matrix
+        Returns:
+            The reflection matrix.
         """
 
         return smrt_matrix(0)
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
-        """compute the reflection coefficients for an array of incident, scattered and azimuth angles
-           in medium 1. Medium 2 is where the beam is transmitted.
+        """
+        Computes the reflection coefficients for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the beam is transmitted.
 
-        :param eps_1: permittivity of the medium where the incident beam is propagating.
-        :param eps_2: permittivity of the other medium
-        :param mu1: array of cosine of incident angles
-        :param npol: number of polarization
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu_s: Array of cosine of scattered angles.
+            mu_i: Array of cosine of incident angles.
+            dphi: Azimuth angles.
+            npol: Number of polarization.
 
-        :return: the reflection matrix
+        Returns:
+            The reflection matrix.
         """
         mu_i = np.atleast_1d(self.clip_mu(mu_i))[np.newaxis, np.newaxis, :]
         mu_s = np.atleast_1d(self.clip_mu(mu_s))[np.newaxis, :, np.newaxis]
@@ -160,31 +163,37 @@ class GeometricalOptics(Interface):
         return generic_ft_even_matrix(transmission_function, m_max, nsamples=256)
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """compute the transmission coefficients for the azimuthal mode m
-           and for an array of incidence angles (given by their cosine)
-           in medium 1. Medium 2 is where the beam is transmitted.
+        """
+        Computes the transmission coefficients for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
 
-        :param eps_1: permittivity of the medium where the incident beam is propagating.
-        :param eps_2: permittivity of the other medium
-        :param mu1: array of cosine of incident angles
-        :param npol: number of polarization
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
 
-        :return: the transmission matrix
+        Returns:
+            The transmission matrix.
         """
 
         return smrt_matrix(0)
 
     def diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_t, mu_i, dphi, npol):
-        """compute the transmission coefficients for an array of incident, scattered and azimuth angles
-           in medium 1. Medium 2 is where the beam is transmitted.
+        """
+        Computes the transmission coefficients for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the beam is transmitted.
 
-        :param eps_1: permittivity of the medium where the incident beam is propagating.
-        :param eps_2: permittivity of the other medium
-        :param mu_i: array of cosine of incident angles
-        :param mu_t: array of cosine of transmitted wave angles
-        :param npol: number of polarization
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu_t: Array of cosine of transmitted wave angles.
+            mu_i: Array of cosine of incident angles.
+            dphi: Azimuth angles.
+            npol: Number of polarization.
 
-        :return: the transmission matrix
+        Returns:
+            The transmission matrix.
         """
         n_2 = np.sqrt(eps_2)
         n_1 = np.sqrt(eps_1)
@@ -279,8 +288,20 @@ class GeometricalOptics(Interface):
         return transmission_coefficients * coef.real
 
     def reflection_integrand_for_energy_conservation_test(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi):
-        """function relevant to compute energy conservation. See p87 in Tsang_tomeIII.
-"""
+        """
+        Computes the function relevant to compute energy conservation. See p87 in Tsang_tomeIII.
+
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu_s: Array of cosine of scattered angles.
+            mu_i: Array of cosine of incident angles.
+            dphi: Azimuth angles.
+
+        Returns:
+            Tuple of coefficients for energy conservation.
+        """
         mu_i = np.atleast_1d(self.clip_mu(mu_i))[np.newaxis, np.newaxis, :]
         mu_s = np.atleast_1d(self.clip_mu(mu_s))[np.newaxis, :, np.newaxis]
         dphi = np.atleast_1d(dphi)[:, np.newaxis, np.newaxis]
@@ -317,8 +338,20 @@ class GeometricalOptics(Interface):
             coef * (vi_ks**2 * abs2(Rh) + hi_ks**2 * abs2(Rv))
 
     def transmission_integrand_for_energy_conservation_test(self, frequency, eps_1, eps_2, mu_t, mu_i, dphi):
-        """function relevant to compute energy conservation. See p87 in Tsang_tomeIII.
-"""
+        """
+        Computes the function relevant to compute energy conservation. See p87 in Tsang_tomeIII.
+
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu_t: Array of cosine of transmitted wave angles.
+            mu_i: Array of cosine of incident angles.
+            dphi: Azimuth angles.
+
+        Returns:
+            Tuple of coefficients for energy conservation.
+        """
         n_2 = np.sqrt(eps_2)
         n_1 = np.sqrt(eps_1)
 
