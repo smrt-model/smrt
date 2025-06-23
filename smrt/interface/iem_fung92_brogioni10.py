@@ -32,7 +32,3 @@ class IEM_Fung92_Briogoni10(IEM_Fung92):
         else:
             Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
         return Rv, Rh
-            Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, 1)
-        else:
-            Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
-        return Rv, Rh
