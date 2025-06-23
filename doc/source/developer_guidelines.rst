@@ -105,6 +105,23 @@ or::
 
 to run nosetests with the pep8 checks. As we have allowed 140 characters per line, the E501 longer line warning needs to be suppressed.
 
+Documentation
+-------------
+
+All functions must be documented with a docstring, enabling automatic documentation generation.
+
+We are moving towards using Markdown for docstrings and the Google style guide for documenting function arguments and results.
+This is not the case yet for all files but new code should be written with respect to this rule.
+
+Docstrings must start on the line following the triple quotes with a capital letter. For functions and methods, the first word is a third person singular verb.
+
+Private methods have no documentation. This could be changed to naming private functions with _ so that sphinx does not get it but developers can access the doc.
+
+Other rules
+-----------
+
+Use f-strings (see also the Python tutorial) to format strings with variables from the code. Only use concatenation (+) between strings in exceptional cases.
+
 Sphinx
 ---------
 Documentation is done in-code, and is automatically generated with `Sphinx <http://www.sphinx-doc.org/en/stable/>`_. If no new modules are added, generate the rst and html documentation from the in-code Sphinx comments, by typing (whilst in smrt/doc directory)::
