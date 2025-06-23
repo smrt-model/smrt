@@ -34,7 +34,6 @@ Examples::
         return 0.5 * mu
 
     ref = make_reflector(specular_reflection=reflection_function)
-    ```
 
 Note:
     The backscatter coefficient argument is not implemented or documented yet. Modeling substrate with prescribed backscatter value with the DORT solver is an approximate trick, and the result is only approximately the prescribed value even for a transparent snowpack.
