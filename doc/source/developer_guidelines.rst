@@ -110,7 +110,8 @@ Documentation
 
 All functions must be documented with a docstring, enabling automatic documentation generation.
 
-We use Markdown for docstrings (see Documentation) and the Google style guide for documenting function arguments and results.
+We are moving towards using Markdown for docstrings and the Google style guide for documenting function arguments and results.
+This is not the case yet for all files but new code should be written with respect to this rule.
 
 Docstrings must start on the line following the triple quotes with a capital letter. For functions and methods, the first word is a third person singular verb.
 
