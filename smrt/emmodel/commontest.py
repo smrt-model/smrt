@@ -12,8 +12,8 @@ def test_energy_conservation(em, tolerance_pc, npol=None, subset=16):
     Args:
         em: the electromagnetic model that has been set up
         tolerance_pc: relative tolerance
-        npol:  (Default value = None)
-        subset:  (Default value = 16)
+        npol: (Default value = None)
+        subset: (Default value = 16)
     """
 
     # Default test is for 2 pol matrix
