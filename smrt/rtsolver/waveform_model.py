@@ -1,4 +1,3 @@
-
 import numpy as np
 import scipy.special
 
@@ -10,9 +9,15 @@ class WaveformModel(object):
 
 
 class Brown1977(WaveformModel):
-    """Antenna Gain formulation used by Brown 1977. The formula is exp(2/gamma * sin(theta)**2) for the perfect nadir case,
-but is also available with off-nadir angles.
-"""
+    """Implements the Antenna Gain formulation used by Brown 1977.
+
+    The formula is exp(2/gamma * sin(theta)**2) for the perfect nadir case,
+    but is also available with off-nadir angles.
+
+    Args:
+        sensor: Sensor object.
+        numerical_convolution (bool): Whether to use numerical convolution.
+    """
     __name__ = "brown_1977"
 
     def __init__(self, sensor, numerical_convolution=False):
@@ -66,12 +71,16 @@ but is also available with off-nadir angles.
                 * scipy.special.i0(4 / self.gamma * np.sqrt(e) * np.sin(2 * theta))
 
     def PFS_PTR_PDF(self, tau, sigma_surface=0, surface_slope=0):
-        """compute the convolution of the PFS and PTR
+        """Computes the convolution of the PFS and PTR.
 
-        :param sensor: sensor to apply the antenna gain
-        :param tau: time to which to compute the PFSxPTR
-        :param sigma_surface: RMS height of the surface topography (meter)
-"""
+        Args:
+            tau: Time to which to compute the PFSxPTR.
+            sigma_surface (float): RMS height of the surface topography (meter).
+            surface_slope (float): Surface slope.
+
+        Returns:
+            ndarray: Convoluted PFS and PTR.
+        """
 
         sqrt2 = 1.4142135623731
         sigma_c = np.sqrt(self.sensor.pulse_sigma**2 + (2 * sigma_surface / C_SPEED)**2)
@@ -101,7 +110,9 @@ but is also available with off-nadir angles.
 
 
 class Newkrik1992(WaveformModel):
-    """Antenna Gain formulation proposed by Newkrik and Brown, 1992. Compared to the classical Bronw 1977, it takes into account 
+    """Implements the Antenna Gain formulation proposed by Newkrik and Brown, 1992.
+
+    Compared to the classical Brown 1977, it takes into account 
     the asymmetry of the antenna pattern in the co and cross-track direction.
 
 """
