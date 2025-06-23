@@ -1,4 +1,4 @@
-"""This module contains function to compute various properties of brines.
+"""Contains functions to compute various properties of brines.
 """
 
 import warnings
@@ -13,7 +13,8 @@ from ..core.layer import layer_properties
 def brine_conductivity_stogryn85(temperature):
     """Computes ionic conductivity of dissolved salts, Stogryn and Desargant, 1985
 
-    :param temperature: thermometric temperature [K]
+    Args:
+        temperature: thermometric temperature [K]
 
     References:
         Stogryn, A., & Desargant, G. (1985). The dielectric properties of brine in sea ice at microwave frequencies. IEEE
@@ -32,7 +33,8 @@ def brine_conductivity_stogryn85(temperature):
 def brine_relaxation_time_stogryn85(temperature):
     """Computes relaxation time of brine, Stogryn and Desargant, 1985
 
-    :param temperature: thermometric temperature [K]
+    Args:
+        temperature: thermometric temperature [K]
 
     References:
         Stogryn, A., & Desargant, G. (1985). The dielectric properties of brine in sea ice at microwave frequencies. IEEE
@@ -51,8 +53,11 @@ def brine_salinity(temperature):
     """Computes the salinity of brine (in ppt) for a given temperature. The origin of this code is unknown, to be
     investigate. It was attributed to (Cox and Weeks, 1975) in earlier commits but their Eq 15 is different.
 
-    :param temperature: snow temperature in K
-    :returns: salinity_brine in ppt
+    Args:
+        temperature: snow temperature in K
+
+    Returns:
+        salinity_brine in ppt
     """
     tempC = temperature - FREEZING_POINT
 
@@ -68,8 +73,12 @@ def brine_salinity(temperature):
 def brine_salinity_coxandweeks75(temperature):
     """Computes the salinity of brine (in ppt) for a given temperature (Cox and Weeks, 1975, equation 15)
 
-    :param temperature: snow temperature in K
-    :returns: salinity_brine in ppt
+    Args:
+        temperature: snow temperature in K
+
+    Returns:
+        salinity_brine in ppt
+
     Reference: Cox, G. F. N., Wilford F. Weeks, and Cold Regions Research and Engineering Laboratory (U.S.). 1975. 
     Brine Drainage and Initial Salt Entrapment in Sodium Chloride Ice. Hanover, N.H.: 
     U.S. Dept. of Defense, Dept. of the Army, Corps of Engineers, Cold Regions Research and Engineering Laboratory.
@@ -86,8 +95,12 @@ def brine_salinity_assur60poe72(temperature):
     (Assur, 1960; Poe et al., 1972; as cited in Ulaby&Long 2014 (equation 4.46))
      Validity range:
     -43.2°C <= temperature in K <= -2°C
-    :param temperature: snow temperature in K
-    :returns: salinity_brine in psu
+    Args:
+        temperature: snow temperature in K
+
+    Returns:
+        salinity_brine in psu
+
     Reference: Ulaby, Fawwaz, and David Long. Microwave Radar and Radiometric Remote Sensing. 
     University of Michigan Press, 2014. https://doi.org/10.3998/0472119356.
 
@@ -122,7 +135,8 @@ def brine_salinity_assur60poe72(temperature):
 def static_brine_permittivity_stogryn85(temperature):
     """Computes  static dielectric constant of brine, after Stogryn and Desargant, 1985
 
-    :param temperature: thermometric temperature [K]
+    Args:
+        temperature: thermometric temperature [K]
 
     References:
         Stogryn, A., & Desargant, G. (1985). The dielectric properties of brine in sea ice at microwave frequencies. IEEE
@@ -139,7 +153,8 @@ def static_brine_permittivity_stogryn85(temperature):
 def permittivity_high_frequency_limit_stogryn85(temperature):
     """Computes permittivity.
 
-    :param temperature: ice or snow temperature in K, after Stogryn and Desargant, 1985
+    Args:
+        temperature: ice or snow temperature in K, after Stogryn and Desargant, 1985
 
     References:
         Stogryn, A., & Desargant, G. (1985). The dielectric properties of brine in sea ice at microwave frequencies. IEEE
@@ -161,7 +176,10 @@ def water_freezing_temperature(salinity):
     by a Newton-Raphson iteration of the equality of the chemical potentials of water
     in seawater and in ice.
 
-    :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)"""
+    Args:
+        salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
+
+    """
 
     # Coefficients for polynomial:
     c0 = 0.017947064327968736
@@ -209,10 +227,11 @@ def brine_volume_cox83_lepparanta88(temperature, salinity, porosity=0, bulk_dens
     J. of Glac. if ice temperature is below -2 deg C or coefficients determined by Lepparanta and Manninen (1988):
     'The brine and gas content of sea ice with attention to low salinities and high temperatures' for warmer temperatures.
 
-    :param temperature: ice temperature in K
-    :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
-    :param porosity: fractional air volume in ice (0..1). Default is 0.
-    :param bulk_density: density of bulk ice in kg m :sup:`-3`
+    Args:
+        temperature: ice temperature in K
+        salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
+        porosity: fractional air volume in ice (0..1). Default is 0.
+        bulk_density: density of bulk ice in kg m :sup:`-3`
 
     """
 
@@ -308,8 +327,9 @@ def brine_volume_frankenstein67(temperature, salinity):
     Garner R. Equations for Determining the Brine Volume of Sea Ice from −0.5° to −22.9°C. Journal of Glaciology.
     1967;6(48):943-944. https://doi.org:/10.3189/S0022143000020244'
 
-    :param temperature: ice temperature in K
-    :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
+    Args:
+        temperature: ice temperature in K
+        salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
     """
 
     S_ice = salinity  # convert from kg/kg to PSU
@@ -324,8 +344,9 @@ def brine_volume_function_stogryn_1987(temperature, salinity):
     'An analysis of the tensor dielectric constant of sea ice at microwave frequencies' (10.1109/TGRS.1987.289814),
     where the values are compared to measurements from 0 to -32 ° C and frequencies from 0.1 to 40 GHz.
 
-    :param temperature: ice temperature in K
-    :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
+    Args:
+        temperature: ice temperature in K
+        salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
 
     Example usage:
     salinity = 33*PSU

@@ -18,10 +18,16 @@ def seawater_permittivity_klein76(frequency, temperature, salinity):
     """Calculates permittivity (dielectric constant) of water using an empirical relationship described
     by Klein and Swift (1976).
 
-    :param frequency: frequency in Hz
-    :param temperature: water temperature in K
-    :param salinity: water salinity in kg/kg (see PSU constant in smrt module)
-    :returns: complex water permittivity for a frequency f.
+    Args:
+        frequency: frequency in Hz
+        temperature: water temperature in K
+        salinity: water salinity in kg/kg (see PSU constant in smrt module)
+
+    Returns:
+        complex water permittivity for a frequency f.
+
+    Raises:
+        SMRTError: If the water temperature is lower than the freezing point at the given salinity.
 
     """
 
@@ -73,14 +79,17 @@ def seawater_permittivity_stogryn71(frequency, temperature):
 
     Source: Matlab code, Ludovic Brucker
 
-    :param frequency: frequency in Hz
-    :param temperature: water temperature in K
-    :returns: complex water permittivity for a frequency f.
+    Args:
+        frequency: frequency in Hz
+        temperature: water temperature in K
+
+    Returns:
+        complex water permittivity for a frequency f.
 
     References:
-    A. Stogryn, "Equations for Calculating the Dielectric Constant of Saline Water (Correspondence)," in IEEE
-    Transactions on Microwave Theory and Techniques, vol. 19, no. 8, pp. 733-736, Aug. 1971, doi:
-    10.1109/TMTT.1971.1127617
+        A. Stogryn, "Equations for Calculating the Dielectric Constant of Saline Water (Correspondence)," in IEEE
+        Transactions on Microwave Theory and Techniques, vol. 19, no. 8, pp. 733-736, Aug. 1971, doi:
+        10.1109/TMTT.1971.1127617
 
     """
 
@@ -114,9 +123,12 @@ def brine_permittivity_stogryn85(frequency, temperature):
     """Computes permittivity and loss of brine using equations given in Stogryn and Desargant (1985): 'The Dielectric
     Properties of Brine in Sea Ice at Microwave Frequencies', IEEE.
 
-    :param frequency: em frequency [Hz]
-    :param temperature: ice temperature in K
-    :returns: complex water permittivity for a frequency f.
+    Args:
+        frequency: em frequency [Hz]
+        temperature: ice temperature in K
+
+    Returns:
+        complex water permittivity for a frequency f.
 
     """
 
@@ -138,10 +150,13 @@ def seawater_permittivity_stogryn95(frequency, temperature, salinity):
 
     source: Stogryn 1995 + http://rime.aos.wisc.edu/MW/models/src/eps_sea_stogryn.f90; Matlab code, Ludovic Brucker
 
-    :param frequency: frequency in Hz
-    :param temperature: water temperature in K
-    :param salinity: water salinity in kg/kg (see PSU constant in smrt module)
-    :returns: complex water permittivity for a frequency f.
+    Args:
+        frequency: frequency in Hz
+        temperature: water temperature in K
+        salinity: water salinity in kg/kg (see PSU constant in smrt module)
+
+    Returns:
+        complex water permittivity for a frequency f.
 
     """
 
@@ -233,9 +248,12 @@ def seawwater_permittivity_boutin21_2function(frequency, temperature, salinity):
 
     This function requires the Gibbs SeaWater Oceanographic Toolbox package (gsw): https://github.com/TEOS-10/GSW-python
 
-    :param frequency: em frequency [Hz]
-    :param temperature: ice temperature in K
-    :returns: complex water permittivity for a frequency f.
+    Args:
+        frequency: em frequency [Hz]
+        temperature: ice temperature in K
+
+    Returns:
+        complex water permittivity for a frequency f.
 
     """
     import gsw
@@ -312,9 +330,12 @@ def seawwater_permittivity_boutin21_3function(frequency, temperature, salinity):
 
     This function requires the Gibbs SeaWater Oceanographic Toolbox package (gsw): https://github.com/TEOS-10/GSW-python
 
-    :param frequency: em frequency [Hz]
-    :param temperature: ice temperature in K
-    :returns: complex water permittivity for a frequency f.
+    Args:
+        frequency: em frequency [Hz]
+        temperature: ice temperature in K
+
+    Returns:
+        complex water permittivity for a frequency f.
 
     """
 

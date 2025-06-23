@@ -14,12 +14,15 @@ def wetice_permittivity_bohren83(frequency, temperature, liquid_water):
 
     See also: K L CHOPRA and G B REDDY, Praman.a- Optically selective coatings, J. Phys., Vol. 27, Nos 1 & 2, July & August 1986, pp. 193-217.
 
-    :param frequency: frequency in Hz.
-    :param temperature: temperature in K.
-    :param liquid_water: (fractional volume of water with respect to ice+water volume).
-    :returns: complex permittivity of pure ice.
+    Args:
+        frequency: Frequency in Hz.
+        temperature: Temperature in K.
+        liquid_water: Fractional volume of water with respect to ice+water volume.
 
-"""
+    Returns:
+        Complex permittivity of pure ice.
+
+    """
 
     epsice = ice_permittivity_maetzler06(frequency, temperature)
 
@@ -36,12 +39,15 @@ def symmetric_wetice_permittivity(frequency, temperature, liquid_water):
     """Calculate the dielectric constant of wet particules of ice using Polder van Santen Maxwell equation 
     assuming both ice and water are fully mixed. This applies to intermediate content of wetness. Typically liquid_water=0.5.
 
-    :param frequency: frequency in Hz.
-    :param temperature: temperature in K.
-    :param liquid_water: (fractional volume of water with respect to ice+water volume).
-    :returns: complex permittivity of pure ice.
+    Args:
+        frequency: Frequency in Hz.
+        temperature: Temperature in K.
+        liquid_water: Fractional volume of water with respect to ice+water volume.
 
-"""
+    Returns:
+        Complex permittivity of pure ice.
+
+    """
 
     epsice = ice_permittivity_maetzler06(frequency, temperature)
 

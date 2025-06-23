@@ -1,12 +1,12 @@
-"""Mixing formulae relevant to saline snow. This module contains equations to compute the effective permittivity of saline snow.
+"""Provides mixing formulae relevant to saline snow. Contains equations to compute the effective permittivity of saline snow.
 
-These functions are to be used with :py:meth:`~smrt.emmodel.iba.derived_IBA` or
-:py:meth:`~smrt.emmodel.symsce_torquato21.derived_SymSCETK21` to change the default of most emmodels (IBA, DMRT, SFT
+These functions are to be used with `smrt.emmodel.iba.derived_IBA` or
+`smrt.emmodel.symsce_torquato21.derived_SymSCETK21` to change the default of most emmodels (IBA, DMRT, SFT
 Rayleigh, SCE) using the generic mixing formula Polder van Staten that automatically mixes the permittivities of the
 background (e.g.) and the scatterer materials (e.g. saline ice) to compute the effective permittivity of snow in a proportion
 determined by frac_volume.
 
-They should not be used to set the material permittivities as input of :py:func:`~smrt.smrt_inputs.make_snowpack` and
+They should not be used to set the material permittivities as input of `smrt.smrt_inputs.make_snowpack` and
 similar functions (because the emmodel would re-mix the already mixed materials with the background material).
 """
 
@@ -31,10 +31,11 @@ def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salin
 
     Source: Matlab code, Ludovic Brucker
 
-    :param frequency: frequency in Hz
-    :param density: snow density in kg m-3
-    :param temperature: ice temperature in K
-    :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
+    Args:
+        frequency: frequency in Hz
+        density: snow density in kg m-3
+        temperature: ice temperature in K
+        salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
     """
 
     if np.max(frequency) > 40e9:
@@ -105,10 +106,11 @@ def saline_snow_permittivity_scharien(density, temperature, salinity, brine_perm
 
     Source: Matlab code, Randall Scharien
 
-    :param density: snow density in kg m-3
-    :param temperature: snow temperature in K
-    :param salinity: snow salinity in kg/kg (see PSU constant in smrt module)
-    :param brine_permittivity: brine_permittivity
+    Args:
+        density: snow density in kg m-3
+        temperature: snow temperature in K
+        salinity: snow salinity in kg/kg (see PSU constant in smrt module)
+        brine_permittivity: brine_permittivity
 
     """
 

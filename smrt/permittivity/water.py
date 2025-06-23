@@ -13,10 +13,15 @@ def water_permittivity_maetzler87(frequency, temperature):
      Based on Mätzler, C., & Wegmuller, U. (1987). Dielectric properties of freshwater
      ice at microwave frequencies. *Journal of Physics D: Applied Physics*, 20(12), 1623-1630.
 
-     :param frequency: frequency in Hz
-     :param temperature: temperature in K
-     :raises Exception: if liquid water > 0 or salinity > 0 (model unsuitable)
-     :returns: complex permittivity of pure ice
+     Args:
+         frequency: Frequency in Hz.
+         temperature: Temperature in K.
+
+     Raises:
+         Exception: If liquid water > 0 or salinity > 0 (model unsuitable).
+
+     Returns:
+         complex: Complex permittivity of pure ice.
 """
     if temperature < FREEZING_POINT:
         raise SMRTError(f"The water temperature must be higher or equal to {FREEZING_POINT}K")
@@ -52,7 +57,16 @@ def water_permittivity_tiuri80(frequency, temperature):
 
     https://ntrs.nasa.gov/api/citations/19810010984/downloads/19810010984.pdf
 
-"""
+    Args:
+        frequency: Frequency in Hz.
+        temperature: Temperature in K.
+
+    Raises:
+        SMRTError: If the water temperature is below the freezing point.
+
+    Returns:
+        complex: Complex permittivity of water.
+    """
     freqGHz = frequency / GHz
 
     tempC = temperature - FREEZING_POINT
