@@ -1,16 +1,16 @@
 # coding: utf-8
 
-""" Wrapper to the original MEMLS matlab code using the SMRT framework. To use this module, extra installation are needed:
+"""
+Wraps the original MEMLS matlab code using the SMRT framework.
 
- * download MEMLS from http://www.iapmw.unibe.ch/research/projects/snowtools/memls.html. Decompress the archive somewhere on your disk.
+To use this module, extra installations are needed:
 
- * install the oct2py module using :code:`pip install oct2py` or :code:`easy_install install oct2py` 
+    * Downloads MEMLS from http://www.iapmw.unibe.ch/research/projects/snowtools/memls.html. Decompresses the archive somewhere on your disk.
+    * Installs the oct2py module using :code:`pip install oct2py` or :code:`easy_install install oct2py`.
+    * Installs Octave version 3.6 or above.
+    * For convenience, sets the MEMLS_DIR environment variable to point to MEMLS path. This path can also be programmatically set with :py:func:`set_memls_path`.
 
- * install Octave version 3.6 or above.
-
- * for convenience you can set the MEMLS_DIR environment variable to point to MEMLS path. This path can also be programmatically set with :py:func:`set_memls_path`
-
- In case of problem check the instructions given in http://blink1073.github.io/oct2py/source/installation.html
+In case of problem, checks the instructions given in http://blink1073.github.io/oct2py/source/installation.html.
 
 """
 
@@ -38,7 +38,12 @@ MEMLS_RECOMMENDED = 11
 _memls_path = None
 
 def set_memls_path(path):
-    """set the path where MEMLS archive has been uncompressed, i.e. where the file `memlsmain.m` is located."""
+    """
+    Sets the path where MEMLS archive has been uncompressed, i.e. where the file `memlsmain.m` is located.
+
+    Args:
+        path: Path to the MEMLS directory.
+    """
     global _memls_path
 
     if path != _memls_path:
@@ -56,8 +61,8 @@ except KeyError:
 
 
 def run(sensor, snowpack, scattering_choice=ABORN, atmosphere=None, memls_path=None, memls_driver=None, snowpack_dimension=None):
-    """ call MEMLS for the snowpack and sensor configuration given as argument. Any microstructure model that defines the "corr_length" parameter
-        is valid, but it must be clear that MEMLS only considers exponential autocorrelation.
+    """
+    Calls MEMLS for the snowpack and sensor configuration given as argument. Any microstructure model that defines the "corr_length" parameter is valid, but it must be clear that MEMLS only considers exponential autocorrelation.
 
         :param snowpack: describe the snowpack.
         :param sensor: describe the sensor configuration.
