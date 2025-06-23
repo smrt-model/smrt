@@ -1,35 +1,35 @@
 # coding: utf-8
 
-""" Implement a reflective boundary conditions with prescribed reflection coefficient in the specular direction.
+"""
+Implements a reflective boundary condition with prescribed reflection coefficient in the specular direction.
+
 The reflection is set to a value or a function of theta. Azimuthal symmetry is assumed (no dependence on phi).
 
-The `specular_reflection` parameter can be a scalar, a function or a dictionary.
+Args:
+    specular_reflection: Can be a scalar, a function, or a dictionary.
+        - scalar: Uses the same reflection for all angles.
+        - function: Takes a single argument theta array (in radians) and returns the reflection as an array of the same size as theta.
+        - dictionary: Keys must be 'H' and 'V', and values are a scalar or a function, interpreted as for the non-polarized case.
 
-    - scalar: same reflection is use for all angles
-    - function: the function must take a unique argument theta array (in radians) and return the reflection as an array of the same size as theta
-    - dictionary: in this case, the keys must be 'H' and 'V' and the values are a scalar or a function and are interpreted as for the non-polarized case.
-
-To make a reflector, it is recommended to use the helper function :py:func:`~smrt.substrate.reflector.make_reflector`.
-
+Returns:
+    Reflector: A reflector instance.
 
 Examples::
 
     # the full path import is required
     from smrt.substrate.reflector import make_reflector
 
-    # return a perfect reflector (the temperature is useless in this specific case)
+    # Returns a perfect reflector (the temperature is useless in this specific case)
     ref = make_reflector(temperature=260, specular_reflection=1)
 
-    # return a perfect absorber / black body.
+    # Returns a perfect absorber / black body.
     ref = make_reflector(temperature=260, specular_reflection=0)
 
     # Specify a frequency and polarization dictionary of reflectivity
     ref = make_reflector(specular_reflection={(21e9, 'H'): 0.5, (21e9, 'V'): 0.6, (36e9, 'H'): 0.7, (36e9, 'V'): 0.8})
-
-.. note::
-
-    the backscatter coefficient argument is not implemented/documented yet.
-
+    
+Note:
+    The backscatter coefficient argument is not implemented or documented yet.
 """
 
 import numpy as np
