@@ -93,8 +93,8 @@ class IterativeFirst(object):
         return_contributions (bool, optional): If False (default), returns only total backscatter.
             If True, returns individual contributions:
             - 'direct_backscatter': Single volume backscatter upwards
-            - 'reflection_backscatter': Volume backscatter + double boundary reflection
-            - 'double_bounce': Bistatic scattering + single boundary reflection
+            - 'reflected_scattering': Bistatic scattering + single boundary reflection
+            - 'double_bounce': Volume backscatter + double boundary reflection
             - 'zeroth': Zeroth-order contribution
             - 'total': Sum of all contributions
 
@@ -213,7 +213,7 @@ class IterativeFirst(object):
                 coords=[
                     (
                         "contribution",
-                        ["total", "direct_backscatter", "reflection_backscatter", "double_bounce", "zeroth"],
+                        ["total", "direct_backscatter", "reflected_scattering", "double_bounce", "zeroth"],
                     )
                 ]
                 + coords,
@@ -241,7 +241,7 @@ class IterativeFirst(object):
         Returns:
             np.ndarray: Intensity array with shape (4, n, npol, npol) containing:
                 - [0]: Direct backscatter contribution
-                - [1]: Reflection backscatter contribution
+                - [1]: Reflected scattering contribution
                 - [2]: Double bounce contribution
                 - [3]: Zeroth order contribution
 
@@ -344,19 +344,19 @@ class IterativeFirst(object):
             First order, ulaby et al 2014 (11.75 and 11.62 )
             Four contributions are taken into account
             - Single volume backscatter upwards by the layer (direct backscatter)
-            - 2x single bistatic scattering by the layer and single reflection by the lower boundary. (double bounce)
-            - Single volume backscatter downward by the layer and double specular reflection by the boundary (reflected backscatter)
+            - 2x single bistatic scattering by the layer and single reflection by the lower boundary. (reflected scattering)
+            - Single volume backscatter downward by the layer and double specular reflection by the boundary (double bounce)
 
             """
 
             I1_back = Ttop_coh_m**2 @ ((1 - gammas2) / (2 * ke) * P_Up) @ I_l
 
-            I1_ref_back = Ttop_coh_m**2 @ (((1 - gammas2) / (2 * ke) * gammas2) * (Rbottom_coh_m @ P_Down @ Rbottom_coh_m)) @ I_l
+            I1_2B = Ttop_coh_m**2 @ (((1 - gammas2) / (2 * ke) * gammas2) * (Rbottom_coh_m @ P_Down @ Rbottom_coh_m)) @ I_l
 
-            I1_2B = Ttop_coh_m**2 @ (thickness[l] * gammas2 / mus_l * (P_Bi_Down @ Rbottom_coh_m + Rbottom_coh_m @ P_Bi_Up)) @ I_l
+            I1_ref_scat = Ttop_coh_m**2 @ (thickness[l] * gammas2 / mus_l * (P_Bi_Down @ Rbottom_coh_m + Rbottom_coh_m @ P_Bi_Up)) @ I_l
 
             # shape of intensity (incident angle, first order contribution, npo, npol)
-            I1 = np.array([I1_back, I1_ref_back, I1_2B, I0_mu]).reshape(4, n, npol, npol)
+            I1 = np.array([I1_back, I1_ref_scat, I1_2B, I0_mu]).reshape(4, n, npol, npol)
 
             # add intensity
             intensity_up += I1
