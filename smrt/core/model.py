@@ -161,7 +161,8 @@ def make_rtsolver(rtsolver_class: Union[str, Type], **options) -> Type:
     Returns:
         Type: This function provides an alternative to setting `rtsolver_options` in :py:func:`make_model`).
         
-        Example::
+    Example::
+
         make_model(..., make_rtsolver("dort", n_max_stream=128))
     """
     return lib.class_specializer('rtsolver', rtsolver_class, **options)
@@ -178,7 +179,8 @@ def make_emmodel(emmodel_class: Union[str, Type], **options) -> Type:
     Returns:
         Type: This function provides an alternative to setting `emmodel_options` in :py:func:`make_model`).
         
-        Example::
+    Example::
+    
         make_model(make_emmodel("iba", dense_snow_correction=True), ...)
     """
     return lib.class_specializer('emmodel', emmodel_class, **options)

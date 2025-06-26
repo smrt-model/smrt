@@ -17,7 +17,7 @@ users. See `smrt.emmodel.symsce_torquato21.derived_SymSCETK21` and
     between the layer properties and the arguments of the function (see ice.py for examples).
     It means that the arguments of the function must be listed (in order) in the @required_layer_properties
     decorator. In most cases, the name of the arguments should be the same as a properties, but
-    this is not strictly necessary, only the order matters. For example:
+    this is not strictly necessary, only the order matters. For example::
 
         @required_layer_properties("temperature", "salinity")
         def permittivity_something(frequency, t, s):

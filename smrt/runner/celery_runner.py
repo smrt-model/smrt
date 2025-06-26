@@ -1,7 +1,8 @@
 """Run the simulations using Celery on a cluster. This requires  setup on the cluster
 (see the Celery documentation https://docs.celeryproject.org/).
 
-Example:
+Example::
+
     from smrt.runner.celery import CeleryParallelRunner
 
     runner = CeleryParallelRunner()   # Run with the default broker redis://localhost:6379/0 but any url can be provided, as well as a Celery object

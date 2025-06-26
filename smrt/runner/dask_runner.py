@@ -1,7 +1,8 @@
 """Run the simulations using dask.distributed on a cluster. This requires  setup on the cluster
 (see the dask.distributed documentation).
 
-Example:
+Example::
+
     from smrt.runner.dask import DaskParallelRunner
 
     runner = DaskParallelRunner()   # Run on localhost:7454 by default but an url can be provided

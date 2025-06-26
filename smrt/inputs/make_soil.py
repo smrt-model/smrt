@@ -6,6 +6,7 @@ To create a substrate, use or implement a helper function such as `make_soil`. T
 automatically load a specific soil model and provides some soil permittivity formulae as well.
 
 Example::
+
     from smrt import make_soil
     soil = make_soil("soil_wegmuller", "dobson85", moisture=0.2, sand=0.4, clay=0.3, drymatter=1100, roughness_rms=1e-2)
 
@@ -47,6 +48,7 @@ def make_soil(substrate_model, permittivity_model, temperature, moisture=None,
         Instance of the soil substrate model.
 
     Example::
+
         bottom = substrate.make('Flat', permittivity_model=complex('6-0.5j'))
         bottom = substrate.make('Wegmuller', permittivity_model='soil', roughness_rms=0.25, moisture=0.25)
     """

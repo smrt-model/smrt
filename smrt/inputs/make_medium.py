@@ -164,6 +164,7 @@ def make_snowpack(thickness,
             The microstructure parameter(s) depend on the microstructure_model used and is documented in each microstructure_model module.
 
     Example::
+
         sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
     """
     sp = Snowpack(substrate=substrate, atmosphere=atmosphere)
@@ -834,6 +835,7 @@ def make_generic_stack(thickness, temperature=FREEZING_POINT, ks=0, ka=0, effect
         Snowpack: The constructed multi-layered medium.
 
     Example::
+
         sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
     """
 # TODO: Add an example
@@ -901,6 +903,7 @@ def add_transparent_layer(snowpack):
         snowpack: The substrate under the transparent layer.
 
     Example::
+
         sp = add_transparent_layer(sp)
     """
 
@@ -924,6 +927,7 @@ def make_transparent_volume(substrate=None,
         substrate: The substrate under the transparent layer.
 
     Example::
+    
         sp = make_transparent_volume()
     """
 
