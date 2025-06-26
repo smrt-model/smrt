@@ -2,13 +2,13 @@
 
 """Provides mixing formulae relevant to snow. Contains equations to compute the effective permittivity of snow.
 
-These functions are to be used with `smrt.emmodel.iba.derived_IBA` or
+These functions are to be used with :py:mod:`smrt.emmodel.iba.derived_IBA` or
 `smrt.emmodel.symsce_torquato21.derived_SymSCETK21` to change the default of most emmodels (IBA, DMRT, SFT
 Rayleigh, SCE) using the generic mixing formula Polder van Staten that automatically mixes the permittivities of the
 background (e.g.) and the scatterer materials (e.g. ice) to compute the effective permittivity of snow in a proportion
 determined by frac_volume.
 
-They should not be used to set the material permittivities as input of `smrt.smrt_inputs.make_snowpack` and
+They should not be used to set the material permittivities as input of :py:mod:`smrt.smrt_inputs.make_snowpack` and
 similar functions (because the emmodel would re-mix the already mixed materials with the background material).
 """
 

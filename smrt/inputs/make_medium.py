@@ -23,9 +23,9 @@ Note:
     and according to the wave theory such sub-wavelength layers and their interface should have reduced or close to zero impact.
     It is the responsibility of the user to ensure that such thin layers (less than a quarter of wavelength) are removed from
     the snowpack. Alternatively, setting the `process_coherent_layers` option when using the
-    `smrt.rtsolver.dort` solver allows to deal with sub-wavelength layers provided they are isolated between two thick layers.
+    :py:mod:`smrt.rtsolver.dort` solver allows to deal with sub-wavelength layers provided they are isolated between two thick layers.
 
-    Note that `make_snowpack` is directly imported from `smrt` instead of `smrt.inputs.make_medium`. This feature is for convenience.
+    Note that `make_snowpack` is directly imported from :py:mod:`smrt` instead of :py:mod:`smrt.inputs.make_medium`. This feature is for convenience.
 """
 
 import itertools
@@ -505,7 +505,7 @@ def make_ice_layer(ice_type,
         brine_inclusion_shape: (firstyear and multiyear) Assumption for shape of brine inclusions (so far,
             "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions), and "mix_spheres_needles" are implemented)
         brine_volume_fraction: Brine / liquid water fraction in sea ice. Can be a value or a function depending on temperature and salinity.
-            See the module `smrt.permittivity.brine` for available options.
+            See the module :py:mod:`smrt.permittivity.brine` for available options.
             This parameter is optional, if not given brine volume fraction is calculated from temperature and salinity in
             `brine_volume_cox83_lepparanta88`.
         brine_permittivity_model: (firstyear and multiyear) Brine permittivity formulation

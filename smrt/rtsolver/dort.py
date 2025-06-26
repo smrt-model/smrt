@@ -19,7 +19,7 @@ Note:
     The DORT solver is very robust in passive mode but may raise exception in active mode due to a matrix
     diagonalisation problem. The exception provides detailed information on how to address this issue. Two new
     diagonalisation approaches were added in January 2024. They are activated by setting the diagonalization_method optional
-    argument (see `smrt.core.make_model`). The first method (diagonalization_method='shur') replaces the
+    argument (see :py:mod:`smrt.core.make_model`). The first method (diagonalization_method='shur') replaces the
     scipy.linalg.eig function by a shur decomposition followed by a diagonalisation of the shur matrix. While
     scipy.linalg.eig performs such a shur decomposition internally in any case, it seems that explicitly calling the shur
     decomposition beforehand improves the stability. Nevertheless to really solve the problem, the second method
