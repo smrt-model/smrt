@@ -7,6 +7,7 @@ for most usages. Extension of these functions is welcome on the condition they k
 The function `make_snowpack` is the first entry point the user should consider to build a snowpack.
 
 Example::
+
     from smrt import make_snowpack
 
     sp = make_snowpack([1000], density=[300], microstructure_model='sticky_hard_spheres', radius=[0.3e-3], stickiness=0.2)
