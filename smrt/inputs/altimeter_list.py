@@ -10,11 +10,12 @@ from smrt.core.error import SMRTError
 
 
 def envisat_ra2(channel=None):
-    """return an Altimeter instance for the ENVISAT RA2 altimeter.
+    """
+    Returns an Altimeter instance for the ENVISAT RA2 altimeter.
 
-    :param channel: can be 'S', 'Ku', or both. Default is both.
-
-"""
+    Args:
+      channel: can be 'S', 'Ku', or both. Default is both.
+    """
 
     config = {
         'Ku': dict(frequency=13.575e9,

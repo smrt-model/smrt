@@ -6,7 +6,7 @@ for most usages. Extension of these functions is welcome on the condition they k
 
 The function `make_snowpack` is the first entry point the user should consider to build a snowpack.
 
-Example:
+Example::
     from smrt import make_snowpack
 
     sp = make_snowpack([1000], density=[300], microstructure_model='sticky_hard_spheres', radius=[0.3e-3], stickiness=0.2)
@@ -162,7 +162,7 @@ def make_snowpack(thickness,
             Thus, the documentation of this function is the reference. It describes precisely the available parameters.
             The microstructure parameter(s) depend on the microstructure_model used and is documented in each microstructure_model module.
 
-    Example:
+    Example::
         sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
     """
     sp = Snowpack(substrate=substrate, atmosphere=atmosphere)
@@ -832,7 +832,7 @@ def make_generic_stack(thickness, temperature=FREEZING_POINT, ks=0, ka=0, effect
     Returns:
         Snowpack: The constructed multi-layered medium.
 
-    Example:
+    Example::
         sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
     """
 # TODO: Add an example
@@ -899,7 +899,7 @@ def add_transparent_layer(snowpack):
     Args:
         snowpack: The substrate under the transparent layer.
 
-    Example:
+    Example::
         sp = add_transparent_layer(sp)
     """
 
@@ -922,7 +922,7 @@ def make_transparent_volume(substrate=None,
     Args:
         substrate: The substrate under the transparent layer.
 
-    Example:
+    Example::
         sp = make_transparent_volume()
     """
 

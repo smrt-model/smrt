@@ -38,7 +38,7 @@ def amsre(channel=None, frequency=None, polarization=None, theta=55):
     Returns:
         Sensor: Instance of Sensor.
 
-    Example:
+    Example::
         from smrt import sensor
         radiometer = sensor.amsre()  # Simulates all channels
         radiometer = sensor.amsre('36V')  # Simulates 36.5 GHz channel only
@@ -75,7 +75,7 @@ def amsr2(channel=None, frequency=None, polarization=None, theta=55):
     Returns:
         Sensor: Instance of Sensor.
 
-    Example:
+    Example::
         from smrt import sensor
         radiometer = sensor.amsre()  # Simulates all channels
         radiometer = sensor.amsre('36V')  # Simulates 36.5 GHz channel only
