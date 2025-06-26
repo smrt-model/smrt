@@ -11,7 +11,7 @@ from smrt.core.error import SMRTWarning
 from smrt.interface.transparent import Transparent
 from smrt.emmodel.nonscattering import NonScattering
 from smrt.emmodel.iba import IBA
-from smrt.rtsolver.iterative_first import IterativeFirst
+from smrt.rtsolver.iterative_first_order import IterativeFirstOrder
 from smrt.core.fresnel import snell_angle
 
 
@@ -39,7 +39,7 @@ def test_returned_theta():
     theta = [30, 40]
     sensor = active(17.25e9, theta)
 
-    m = Model(NonScattering, IterativeFirst)
+    m = Model(NonScattering, IterativeFirstOrder)
     res = m.run(sensor, sp)
 
     res_theta = res.coords["theta_inc"]
@@ -53,7 +53,7 @@ def test_selectby_theta():
     theta = [30, 40]
     sensor = active(17.25e9, theta)
 
-    m = Model(NonScattering, IterativeFirst)
+    m = Model(NonScattering, IterativeFirstOrder)
     res = m.run(sensor, sp)
 
     print(res.data.coords)
@@ -64,7 +64,7 @@ def test_depth_hoar_stream_numbers():
     # Will throw error if doesn't run
     sp = setup_snowpack_with_DH()
     sensor = active(13e9, 45)
-    m = Model(NonScattering, IterativeFirst)
+    m = Model(NonScattering, IterativeFirstOrder)
     m.run(sensor, sp).sigmaVV()
 
 
@@ -72,17 +72,17 @@ def test_2layer_pack():
     # Will throw error if doesn't run
     sp = setup_2layer_snowpack()
     sensor = active(13e9, 45)
-    m = Model(NonScattering, IterativeFirst)
+    m = Model(NonScattering, IterativeFirstOrder)
     m.run(sensor, sp).sigmaVV()
 
 
 def test_shallow_snowpack():
-    warnings.filterwarnings("error", message=".*optically shallow.*", module=".*iterative_first")
+    warnings.filterwarnings("error", message=".*optically shallow.*", module=".*iterative_first_order")
 
     with pytest.raises(SMRTWarning) as e_info:
         sp = make_snowpack([0.15, 0.15], "homogeneous", density=[300, 250], temperature=2 * [250], interface=2 * [Transparent])
         sensor = active(17e9, 45)
-        m = Model(NonScattering, IterativeFirst)
+        m = Model(NonScattering, IterativeFirstOrder)
         m.run(sensor, sp).sigmaVV()
 
 
@@ -97,7 +97,7 @@ def test_infinite_pack():
     theta = [30]
     sensor = active(17.25e9, theta)
 
-    m = Model("iba", IterativeFirst)
+    m = Model("iba", IterativeFirstOrder)
     res = m.run(sensor, sp)
     ke = res.optical_depth() / sp.layer_thicknesses
 
@@ -120,7 +120,7 @@ def test_normal_call():
     theta = [30, 40]
     sensor = active(17.25e9, theta)
 
-    m = Model(NonScattering, "iterative_first")
+    m = Model(NonScattering, "iterative_first_order")
     res = m.run(sensor, sp)
 
 
@@ -129,7 +129,7 @@ def test_return_contributions():
 
     sensor = active(17.25e9, 30)
 
-    m = Model(NonScattering, "iterative_first", rtsolver_options={"return_contributions": True})
+    m = Model(NonScattering, "iterative_first_order", rtsolver_options={"return_contributions": True})
     res = m.run(sensor, sp)
     np.testing.assert_allclose(len(res.sigmaVV().contribution), 5)
 
@@ -161,5 +161,5 @@ def test_all_substrate():
 
         sensor = sensor_list.active(17.25e9, 30)
         # test with DORT and compare with final sigma
-        model = make_model("iba", "iterative_first", rtsolver_options={"error_handling": "nan"})
+        model = make_model("iba", "iterative_first_order", rtsolver_options={"error_handling": "nan"})
         result = model.run(sensor, snowpack)

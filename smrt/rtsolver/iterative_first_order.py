@@ -76,7 +76,7 @@ from ..core.result import make_result
 from ..core.fresnel import snell_angle
 
 
-class IterativeFirst(object):
+class IterativeFirstOrder(object):
     """
     Iterative radiative transfer solver using first-order approximation.
 
