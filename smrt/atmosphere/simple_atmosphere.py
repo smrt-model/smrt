@@ -19,14 +19,24 @@ Examples::
     from smrt import make_atmosphere
 
     # Incident dependent only
-    atmos = make_atmosphere("simple_atmosphere", theta=[0, 40, 89], tb_down=[20., 25, 40], tb_up=[18., 23, 38],
-                            transmittance=[0.95, 0.90, 0.80])
+    atmos = make_atmosphere(
+        "simple_atmosphere",
+        theta=[0, 40, 89],
+        tb_down=[20.0, 25, 40],
+        tb_up=[18.0, 23, 38],
+        transmittance=[0.95, 0.90, 0.80],
+    )
 
     # Frequency-dependent
-    atmos = make_atmosphere("simple_atmosphere", theta={37e9: [10, 40, 90]}, tb_down={37e9: [20., 25, 40]}, tb_up={37e9: [18., 23, 38]})
+    atmos = make_atmosphere(
+        "simple_atmosphere",
+        theta=[10, 40, 90],
+        tb_down={37e9: [20.0, 25, 40]},
+        tb_up={37e9: [18.0, 23, 38]},
+        transmittance={37e9: [0.95, 0.90, 0.80]},
+)
 
 """
-
 
 # other import
 import numpy as np
@@ -38,11 +48,11 @@ from ..core.atmosphere import AtmosphereBase, AtmosphereResult
 
 
 class SimpleAtmosphere(AtmosphereBase):
-
     def __init__(self, theta, tb_down, tb_up, transmittance):
-
         if len(theta) < 2:
-            raise SMRTError("theta must contains at least two values (0° and close to 90° recommended).")
+            raise SMRTError(
+                "The theta parameter must be a list or array of angles in degrees with at least two values (0° and close to 90° recommended)."
+            )
 
         costheta = np.cos(np.deg2rad(theta))
 
@@ -51,18 +61,48 @@ class SimpleAtmosphere(AtmosphereBase):
 
         self.theta = np.array(theta)[i]
         self.costheta = np.array(costheta)[i]
-        self.tbdown = np.array(tb_down)[i]
-        self.tbup = np.array(tb_up)[i]
-        self.trans = np.array(transmittance)[i]
+        if isinstance(tb_down, dict):
+            try:
+                self.tbdown = {key: np.array(value)[i] for key, value in zip(tb_down.keys(), tb_down.values())}
+            except IndexError:
+                raise SMRTError(
+                    "The length of the tb_down values must match the length of the theta array. "
+                    f"Got {len(tb_down)} values for {len(theta)} angles."
+                )
+        else:
+            self.tbdown = np.array(tb_down)[i]
+        if isinstance(tb_up, dict):
+            try:
+                self.tbup = {key: np.array(value)[i] for key, value in zip(tb_up.keys(), tb_up.values())}
+            except IndexError:
+                raise SMRTError(
+                    "The length of the tb_up values must match the length of the theta array. "
+                    f"Got {len(tb_up)} values for {len(theta)} angles."
+                )
+        else:
+            self.tbup = np.array(tb_up)[i]
+        if isinstance(transmittance, dict):
+            try:
+                self.trans = {
+                    key: np.array(value)[i] for key, value in zip(transmittance.keys(), transmittance.values())
+                }
+            except IndexError:
+                raise SMRTError(
+                    "The length of the transmittance values must match the length of the theta array. "
+                    f"Got {len(transmittance)} values for {len(theta)} angles."
+                )
+        else:
+            self.trans = np.array(transmittance)[i]
 
     def run(self, frequency, costheta, npol):
-
         def interpolate(x):
             if isinstance(x, dict):
-                x = x[frequency]
+                if frequency not in x.keys():
+                    raise SMRTError(f"Frequency {frequency} not defined in atmosphere.")
+                else:
+                    x = x[frequency]
             return np.repeat(np.interp(costheta, self.costheta, x), npol)
 
         return AtmosphereResult(
-            tb_down=interpolate(self.tbdown),
-            tb_up=interpolate(self.tbup),
-            transmittance=interpolate(self.trans))
+            tb_down=interpolate(self.tbdown), tb_up=interpolate(self.tbup), transmittance=interpolate(self.trans)
+        )

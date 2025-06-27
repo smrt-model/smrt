@@ -10,7 +10,7 @@ under the non-local approximation, a.k.a long range in Tsang's books. The trunca
 
 # local import
 from smrt.permittivity.generic_mixing_formula import polder_van_santen
-from .common import AdjustableEffectivePermittivityMixins, derived_EMModel
+from .common import AdjustableEffectivePermittivityMixin, derived_EMModel
 from .sce_common import SCEBase
 
 
@@ -35,7 +35,7 @@ def derived_SymSCETK21(effective_permittivity_model):
     return derived_EMModel(SymSCETK21, effective_permittivity_model)
 
 
-class SymSCETK21(AdjustableEffectivePermittivityMixins, SCEBase):
+class SymSCETK21(AdjustableEffectivePermittivityMixin, SCEBase):
 
     effective_permittivity_model = staticmethod(polder_van_santen)
 

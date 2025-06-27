@@ -110,8 +110,8 @@ class IEM_Fung92(Interface):
         k = vector3.from_angles(2 * np.pi * frequency / C_SPEED * np.sqrt(eps_1).real, mu, 0)
         eps_r = eps_2 / eps_1
 
-        ks = np.abs(k.norm * self.roughness_rms)
-        kl = np.abs(k.norm * self.corr_length)
+        ks = np.abs(k.norm() * self.roughness_rms)
+        kl = np.abs(k.norm() * self.corr_length)
 
         try:
             self.check_validity(ks, kl, eps_r)
@@ -149,15 +149,15 @@ class IEM_Fung92(Interface):
         rms2_over_fractorial = np.cumprod(rms2 / n)[:, None]
 
         # Eq 82 in Fung et al. 1992
-        coef = k.norm2 / 2 * np.exp(-2 * rms2 * k.z**2)
+        coef = k.norm2() / 2 * np.exp(-2 * rms2 * k.z**2)
         coef_n = rms2_over_fractorial * self.W_n(n, -2 * k.x)
 
         sigma_vv = coef * np.sum(coef_n * abs2(Ivv_n), axis=0)
         sigma_hh = coef * np.sum(coef_n * abs2(Ihh_n), axis=0)
 
         # if debug:
-        #    self.sigma_vv_1 = ( 8*k.norm2**2*rms2*abs2(Rv*mu2 + (1-mu2)*(1+Rv)**2 / 2 * (1 - 1 / eps_r)) * self.W_n(1, -2 * k.x) ).flat
-        #    self.sigma_hh_1 = ( 8*k.norm2**2*rms2*abs2(Rh*mu2) * self.W_n(1, -2 * k.x) ).flat
+        #    self.sigma_vv_1 = ( 8*k.norm()2**2*rms2*abs2(Rv*mu2 + (1-mu2)*(1+Rv)**2 / 2 * (1 - 1 / eps_r)) * self.W_n(1, -2 * k.x) ).flat
+        #    self.sigma_hh_1 = ( 8*k.norm()2**2*rms2*abs2(Rh*mu2) * self.W_n(1, -2 * k.x) ).flat
 
         reflection_coefficients = smrt_matrix.zeros((npol, len(mu_i)))
         reflection_coefficients[0] = sigma_vv / (4 * np.pi * mu_i)

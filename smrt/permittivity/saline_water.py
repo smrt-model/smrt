@@ -235,7 +235,7 @@ def seawater_permittivity_stogryn95(frequency, temperature, salinity):
 
 
 @layer_properties("temperature", "salinity")
-def seawwater_permittivity_boutin21_2function(frequency, temperature, salinity):
+def seawwater_permittivity_boutin23_2function(frequency, temperature, salinity):
     """Compute the permittivity using BVZ 2 from Boutin et al. (2023, IEEE TGRS, doi : 10.1109/TGRS.2023.3257923) Equations (7) and (8)
 
     BVZ 2functions' has been derived from L-Band GW2020 measurements,  following the assumptions of Somaraju and Trumpf
@@ -312,7 +312,7 @@ def seawwater_permittivity_boutin21_2function(frequency, temperature, salinity):
 
 
 @layer_properties("temperature", "salinity")
-def seawwater_permittivity_boutin21_3function(frequency, temperature, salinity):
+def seawwater_permittivity_boutin23_3function(frequency, temperature, salinity):
     """Compute the permittivity using BVZ 2 from Boutin et al. (2023, IEEE TGRS, doi : 10.1109/TGRS.2023.3257923) Equations (9,10,11)
 
     Model derived from L-Band GW2020 measurements and validated wit SMOS SSS retrievals. In order to better fit GW2020

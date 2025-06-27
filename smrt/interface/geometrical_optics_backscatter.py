@@ -17,14 +17,13 @@ from smrt.core.interface import Interface
 from smrt.interface.geometrical_optics import shadow_function, GeometricalOptics
 
 
-class GeometricalOpticsBackscatter(Interface):
+class GeometricalOpticsBackscatter(GeometricalOptics):
     """
     Represents a very rough surface.
-
     """
-    args = ["mean_square_slope"]
-    optional_args = {"shadow_correction": True}
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
@@ -39,10 +38,9 @@ class GeometricalOpticsBackscatter(Interface):
 
         Returns:
             The reflection matrix.
-"""
+        """
 
         return smrt_matrix(0)
-
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
         """
@@ -59,26 +57,34 @@ class GeometricalOpticsBackscatter(Interface):
 
         Returns:
             The reflection matrix.
-"""
+        """
         mu_s = np.atleast_1d(mu_s)
         mu_i = np.atleast_1d(mu_i)
 
         if not np.allclose(mu_s, mu_i) or not np.allclose(dphi, np.pi):
-            raise NotImplementedError("Only the backscattering coefficient is implemented at this stage. This is a very preliminary implementation")
+            raise NotImplementedError(
+                "Only the backscattering coefficient is implemented at this stage. This is a very preliminary implementation"
+            )
 
         if len(np.atleast_1d(dphi)) != 1:
             raise NotImplementedError("Only the backscattering coefficient is implemented at this stage. ")
 
         R_normal, _, _ = fresnel_coefficients(eps_1, eps_2, np.ones(1))
 
-        tantheta_i2 = 1 / mu_i ** 2 - 1
+        tantheta_i2 = 1 / mu_i**2 - 1
 
         smrt_norm = 1 / (4 * np.pi)
 
-        gamma = smrt_norm / (2 * self.mean_square_slope) * np.abs(R_normal)**2 / mu_i**5 * np.exp(- tantheta_i2 / (2 * self.mean_square_slope))
+        gamma = (
+            smrt_norm
+            / (2 * self.mean_square_slope)
+            * np.abs(R_normal) ** 2
+            / mu_i**5
+            * np.exp(-tantheta_i2 / (2 * self.mean_square_slope))
+        )
 
         if self.shadow_correction:
-             with np.errstate(divide='ignore'):
+            with np.errstate(divide="ignore"):
                 gamma *= 1 / (1 + shadow_function(self.mean_square_slope, 1 / np.sqrt(tantheta_i2)))
 
         reflection_coefficients = smrt_matrix.zeros((npol, len(mu_i)))
@@ -121,7 +127,7 @@ class GeometricalOpticsBackscatter(Interface):
 
         Returns:
             The transmission matrix.
-"""
+        """
         go = GeometricalOptics(mean_square_slope=self.mean_square_slope, shadow_function=self.shadow_correction)
         total_reflection = go.reflection_coefficients(frequency, eps_1, eps_2, mu1)
 
