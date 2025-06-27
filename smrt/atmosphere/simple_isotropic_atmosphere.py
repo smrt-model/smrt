@@ -7,7 +7,8 @@ Implements an isotropic atmosphere with prescribed frequency-dependent emission 
  To make an atmosphere, it is recommended to use the helper function :py:func:`~smrt.inputs.make_model.make_atmosphere`.
 
 
-Examples:
+Examples::
+
     # The full path import is required
     from smrt import make_atmosphere
 

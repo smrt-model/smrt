@@ -8,7 +8,8 @@ in most cases unless the computation time is a constraint.
 
 Selection of the solver is done with the :py:mod:`smrt.core.model.make_model` function.
 
-For Developers:
+Note:  **For Developers**
+
     To experiment with DORT, it is recommended to copy the file dort.py to e.g. dort_mytest.py so it is immediately available through
     :py:mod:`smrt.core.model.make_model`.
 

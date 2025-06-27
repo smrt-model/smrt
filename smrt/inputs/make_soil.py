@@ -47,7 +47,7 @@ def make_soil(substrate_model, permittivity_model, temperature, moisture=None,
     Returns:
         Instance of the soil substrate model.
 
-    Example::
+    Example (TOTEST)::
 
         bottom = substrate.make('Flat', permittivity_model=complex('6-0.5j'))
         bottom = substrate.make('Wegmuller', permittivity_model='soil', roughness_rms=0.25, moisture=0.25)

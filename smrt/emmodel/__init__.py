@@ -11,11 +11,10 @@ for theoretical reasons.
 
 The selection of the EM model is done with the :py:mod:`smrt.core.model.make_model` function.
 
-Note:
-    **For developers**
+Note:  **For developers**
 
     To implement a new scattering formulation / phase function, we recommend to start from an existing module, probably rayleigh.py is the simplest.
-    Copy this file to `myscatteringtheory.py` or any meaningful name. It can be directly used with :py:mod:`smrt.core.model.make_model` function as follows:
+    Copy this file to `myscatteringtheory.py` or any meaningful name. It can be directly used with :py:func:`smrt.core.model.make_model` function as follows::
 
         m = make_model("myscatteringtheory", "dort")
 

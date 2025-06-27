@@ -6,7 +6,8 @@ reformulate how the effective permittivity is calculated. This latter usage is v
 users. See :py:mod:`smrt.emmodel.symsce_torquato21.derived_SymSCETK21` and
 `smrt.emmodel.iba.derived_IBA`.
 
-..admonition:: **For developers**
+..admonition:: 
+**For developers**
 
     To add a new permittivity function proceed as follows:
 

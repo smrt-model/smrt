@@ -10,7 +10,7 @@ Approximations:
 
 Note:
     With this RT solver, if using Geometrical Optics for rough surface/interface modeling, it is strongly advised to use
-    :py:mod:`smrt.interface.geometrical_optics_backscatter` instead of :py:mod:`smrt.interface.geometrical_optics` for
+    :py:func:`smrt.interface.geometrical_optics_backscatter` instead of :py:func:`smrt.interface.geometrical_optics` for
     the reason explained in the documentation of those modules.
 """
 
