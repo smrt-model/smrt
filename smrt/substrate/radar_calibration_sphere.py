@@ -1,9 +1,7 @@
 # coding: utf-8
 
-
 """
-Implement the radar_calibration_sphere interface boundary for the bottom layer (substrate).
-
+Implements the radar_calibration_sphere interface boundary for the bottom layer (substrate).
 """
 
 # local import

@@ -1,8 +1,8 @@
 # coding: utf-8
 
 """The sensor configuration includes all the information describing the sensor viewing geometry (incidence, ...)
-and operating parameters (frequency, polarization, ...). The easiest and recommended way to create a :py:class:`~smrt.core.Sensor` instance is
-to use one of the convenience functions listed below. The generic functions :py:func:`passive` and :py:func:`active` should cover all the usages,
+and operating parameters (frequency, polarization, ...). The easiest and recommended way to create a `Sensor` instance is
+to use one of the convenience functions listed below. The generic functions `passive` and `active` should cover all the usages,
 but functions for specific sensors are more convenient. See examples in the functions documentation below. We recommend to add new sensors/functions here and share your file to be included in SMRT.
 
 .. autofunction:: passive
@@ -20,26 +20,30 @@ from smrt.core.sensor import passive, active  # import so they are available fro
 
 
 def amsre(channel=None, frequency=None, polarization=None, theta=55):
-    """ Configuration for AMSR-E sensor.
+    """
+    Returns a configuration for AMSR-E sensor.
 
     This function can be used to simulate all 12 AMSR-E channels i.e. frequencies of 6.925, 10.65, 18.7, 23.8, 36.5 and 89 GHz
     at both polarizations H and V. Alternatively single channels can be specified with 3-character identifiers. 18 and 19 GHz can
-    be used interchangably to represent 18.7 GHz, similarly either 36 and 37 can be used to represent the 36.5 GHz channel.
-    Note that if you need both H and V polarization (at 37 GHz for instance), use channel="37" instead of channel=["37V", "37H"]
+    be used interchangeably to represent 18.7 GHz, similarly either 36 and 37 can be used to represent the 36.5 GHz channel.
+    Note that if both H and V polarization are needed (at 37 GHz for instance), use channel="37" instead of channel=["37V", "37H"]
     as this will result in a more efficient simulation, because most rtsolvers anyway compute both polarizations in one shot.
 
-    :param channel: single channel identifier
-    :type channel: 3-character string
+    Args:
+        channel: Single channel identifier (3-character string).
+        frequency: Frequency value.
+        polarization: Polarization.
+        theta: Incidence angle.
 
-    :returns: :py:class:`Sensor` instance
+    Returns:
+        Sensor: Instance of Sensor.
 
     Example::
-
+    
         from smrt import sensor
         radiometer = sensor.amsre()  # Simulates all channels
         radiometer = sensor.amsre('36V')  # Simulates 36.5 GHz channel only
         radiometer = sensor.amsre('06H')  # 6.925 GHz channel
-
     """
 
     amsre_frequency_dict = {
@@ -54,26 +58,30 @@ def amsre(channel=None, frequency=None, polarization=None, theta=55):
 
 
 def amsr2(channel=None, frequency=None, polarization=None, theta=55):
-    """ Configuration for AMSR-2 sensor.
+    """
+    Returns a configuration for AMSR-2 sensor.
 
     This function can be used to simulate all 14 AMSR2 channels i.e. frequencies of 6.925, 10.65, 18.7, 23.8, 36.5 and 89 GHz
     at both polarizations H and V. Alternatively single channels can be specified with 3-character identifiers. 18 and 19 GHz can
-    be used interchangably to represent 18.7 GHz, similarly either 36 and 37 can be used to represent the 36.5 GHz channel.
-    Note that if you need both H and V polarization (at 37 GHz for instance), use channel="37" instead of channel=["37V", "37H"]
+    be used interchangeably to represent 18.7 GHz, similarly either 36 and 37 can be used to represent the 36.5 GHz channel.
+    Note that if both H and V polarization are needed (at 37 GHz for instance), use channel="37" instead of channel=["37V", "37H"]
     as this will result in a more efficient simulation, because most rtsolvers anyway compute both polarizations in one shot.
 
-    :param channel: single channel identifier
-    :type channel: 3-character string
+    Args:
+        channel: Single channel identifier (3-character string).
+        frequency: Frequency value.
+        polarization: Polarization.
+        theta: Incidence angle.
 
-    :returns: :py:class:`Sensor` instance
+    Returns:
+        Sensor: Instance of Sensor.
 
-    Usage example::
+    Example::
 
         from smrt import sensor
         radiometer = sensor.amsre()  # Simulates all channels
         radiometer = sensor.amsre('36V')  # Simulates 36.5 GHz channel only
         radiometer = sensor.amsre('06H')  # 6.925 GHz channel
-
     """
 
     amsr2_frequency_dict = {
@@ -89,19 +97,24 @@ def amsr2(channel=None, frequency=None, polarization=None, theta=55):
 
 
 def cimr(channel=None, frequency=None, polarization=None, theta=55):
-    """ Configuration for AMSR-2 sensor.
+    """
+    Returns a configuration for CIMR sensor.
 
     This function can be used to simulate all 10 CIMR channels i.e. frequencies of 1.4, 6.9, 10.6, 18.7, 36.5 GHz
     at both polarizations H and V. Alternatively single channels can be specified with 3-character identifiers. 18 and 19 GHz can
-    be used interchangably to represent 18.7 GHz, similarly either 36 and 37 can be used to represent the 36.5 GHz channel.
-    Note that if you need both H and V polarization (at 37 GHz for instance), use channel="37" instead of channel=["37V", "37H"]
+    be used interchangeably to represent 18.7 GHz, similarly either 36 and 37 can be used to represent the 36.5 GHz channel.
+    Note that if both H and V polarization are needed (at 37 GHz for instance), use channel="37" instead of channel=["37V", "37H"]
     as this will result in a more efficient simulation, because most rtsolvers anyway compute both polarizations in one shot.
 
-    :param channel: single channel identifier
-    :type channel: 3-character string
+    Args:
+        channel: Single channel identifier (3-character string).
+        frequency: Frequency value.
+        polarization: Polarization.
+        theta: Incidence angle.
 
-    :returns: :py:class:`Sensor` instance
-"""
+    Returns:
+        Sensor: Instance of Sensor.
+    """
 
     cimr_frequency_dict = {
         '01': 1.4135e9,
@@ -159,16 +172,19 @@ def common_conical_pmw(sensor_name, frequency_dict, channel=None, frequency=None
 
 
 def quikscat(channel=None, theta=None):
-    """ Configuration for quikscat sensor.
+    """
+    Returns a configuration for quikscat sensor.
 
-     This function can be used to simulate the 4 QUIKSCAT channels i.e. incidence angles 46° and 54° and HH and VV polarizations.
-     Alternatively a subset of these channels can be specified with 4-character identifiers with polarization first .e.g. HH46, VV54
+    This function can be used to simulate the 4 QUIKSCAT channels i.e. incidence angles 46° and 54° and HH and VV polarizations.
+    Alternatively a subset of these channels can be specified with 4-character identifiers with polarization first .e.g. HH46, VV54
 
-     :param channel: single channel identifier
-     :type channel: 4-character string
+    Args:
+        channel: Single channel identifier (4-character string).
+        theta: Incidence angle.
 
-     :returns: :py:class:`Sensor` instance
-"""
+    Returns:
+        Sensor: Instance of Sensor.
+    """
 
     channel_map = {'HH46': dict(polarization='H', polarization_inc='H', theta=46, theta_inc=46),
                    'VV54': dict(polarization='V', polarization_inc='V', theta=54, theta_inc=54)
@@ -199,17 +215,20 @@ def quikscat(channel=None, theta=None):
 
 
 def ascat(theta=None):
-    """ Configuration for ASCAT on MetOp satellites.
+    """
+    Returns a configuration for ASCAT on MetOp satellites.
 
-        Characteristics of the observation configuration: https://ieeexplore.ieee.org/document/7815274
+    Characteristics of the observation configuration: https://ieeexplore.ieee.org/document/7815274
 
-       This function returns a sensor at 5.255 GHz (C-band) and VV polarization. The incidence angle can be chosen or is by defaut from 25° to 65° every 5°
+    This function returns a sensor at 5.255 GHz (C-band) and VV polarization. The incidence angle can be chosen or is by default from 25° to 65° every 5°
 
-       :param theta: incidence angle (between 25 and 65° in principle)
-       :type theta: float or sequence
+    Args:
+        theta: Incidence angle (between 25 and 65° in principle).
 
-       :returns: :py:class:`Sensor` instance
-  """
+    Returns:
+        Sensor: Instance of Sensor.
+    """
+
     if theta is None:
         theta = np.arange(25, 70, 5)
 
@@ -221,15 +240,18 @@ def ascat(theta=None):
 
 
 def sentinel1(theta=None):
-    """ Configuration for C-SAR on Sentinel 1.
+    """
+    Returns a configuration for C-SAR on Sentinel 1.
 
-       This function return a sensor at 5.405 GHz (C-band). The incidence angle can be chosen or is by defaut from 20 to 45° by step of 5°
+    This function returns a sensor at 5.405 GHz (C-band). The incidence angle can be chosen or is by default from 20 to 45° by step of 5°
 
-       :param theta: incidence angle
-       :type theta: float or sequence
+    Args:
+        theta: Incidence angle.
 
-       :returns: :py:class:`Sensor` instance
-  """
+    Returns:
+        Sensor: Instance of Sensor.
+    """
+
     if theta is None:
         theta = np.arange(20, 46, 5)
 
@@ -239,15 +261,18 @@ def sentinel1(theta=None):
 
 
 def smos(theta=None):
-    """ Configuration for MIRAS on SMOS.
+    """
+    Returns a configuration for MIRAS on SMOS.
 
-       This function returns a passive sensor at 1.41 GHz (L-band). The incidence angle can be chosen or is by defaut from 0 to 60° by step of 5°
+    This function returns a passive sensor at 1.41 GHz (L-band). The incidence angle can be chosen or is by default from 0 to 60° by step of 5°
 
-       :param theta: incidence angle
-       :type theta: float or sequence
+    Args:
+        theta: Incidence angle.
 
-       :returns: :py:class:`Sensor` instance
-  """
+    Returns:
+        Sensor: Instance of Sensor.
+    """
+
     if theta is None:
         theta = np.arange(0, 61, 5)
 
@@ -259,10 +284,20 @@ def smos(theta=None):
 
 
 def smap(mode, theta=40):
-    """Configuration for the passive (mode=P) and active (mode=A) sensor on smap
+    """
+    Returns a configuration for the passive (mode='P') and active (mode='A') sensor on SMAP.
 
-        This function returns either a passive sensor at 1.4 GHz (L-band) sensor or an active sensor at 1.26 GHz. The incidence angle is 40°.
+    This function returns either a passive sensor at 1.4 GHz (L-band) sensor or an active sensor at 1.26 GHz. The incidence angle is 40°.
 
+    Args:
+        mode: 'P' for passive, 'A' for active.
+        theta: Incidence angle.
+
+    Returns:
+        Sensor: Instance of Sensor.
+
+    Raises:
+        SMRTError: If mode is not 'A' or 'P'.
     """
 
     if mode == 'P':

@@ -1,7 +1,8 @@
 # coding: utf-8
 
-"""The Discrete Ordinate and Eigenvalue Solver is a multi-stream solver of the radiative transfer model. It is precise but less efficient 
-than 2 or 6 flux solvers. Different flavours of DORT (or DISORT) exist depending on the mode (passive or active), on the density of the medium
+"""Provides a Discrete Ordinate and Eigenvalue Solver as a multi-stream solver of the radiative transfer model.
+
+Solvers are precise but less efficient than 2 or 6 flux solvers. Different flavours of DORT (or DISORT) exist depending on the mode (passive or active), on the density of the medium
 (sparse media have trivial inter-layer boundary conditions), on the way the streams are connected between the layers and on the way the phase
 function is prescribed. The actual version is a blend between Picard et al. 2004 (active mode for sparse media) and DMRT-ML (Picard et al. 2013) which works
 in passive mode only for snow. The DISORT often used in optics (Stamnes et al. 1988) works only for sparse medium and uses a development of the phase
@@ -10,7 +11,6 @@ it uses spline interpolation to connect constant-angle streams between the layer
 according to Snell's law. A practical consequence is that the number of streams vary (due to internal reflection) and the value `n_max_stream`
 only applies in the most refringent layer. The number of outgoing streams in the air is usually smaller, sometimes twice smaller (depends on the density profile).
 It is important not to set too low a value for n_max_stream. E.g. 32 is usually fine, 64 or 128 are better but simulations will be much slower.
-
 """
 
 
@@ -32,11 +32,12 @@ from ..core.lib import is_equal_zero
 
 
 class DORT(object):
-    """Discrete Ordinate and Eigenvalue Solver
+    """Implements the Discrete Ordinate and Eigenvalue Solver.
 
-        :param n_max_stream: number of stream in the most refringent layer
-        :param m_max: number of mode (azimuth)
-
+    Args:
+        n_max_stream (int): Number of streams in the most refringent layer.
+        m_max (int): Number of mode (azimuth).
+        stream_mode (str): Stream mode, default is "most_refringent".
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
@@ -54,9 +55,17 @@ class DORT(object):
         self.m_max = m_max
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
-        """solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
+        """Solves the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
-"""
+        Args:
+            snowpack: Snowpack object.
+            emmodels: List of electromagnetic models.
+            sensor: Sensor object.
+            atmosphere: Optional atmosphere object.
+
+        Returns:
+            Result: Computed result.
+        """
         try:
             len(self.sensor.phi)
         except Exception:

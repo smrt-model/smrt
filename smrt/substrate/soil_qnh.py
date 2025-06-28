@@ -1,16 +1,22 @@
 # coding: utf-8
 
-"""Implement the QNH soil model proposed by Wang, 1983.  This model is for the passive mode, it is
-not suitable for the active mode.
+"""
+Implements the QNH soil model proposed by Wang, 1983.
 
-parameters: Q, N, H  (or Nv and Nh instead of N)
+This model is for the passive mode and is not suitable for the active mode.
 
-Q and N are set to zero by default. The roughness rms is called H and is a required parameter (note: it is called roughness_rms in soil_wegmuller)
+Args:
+    Q: Optional; default is 0.
+    N: Optional; default is 0.
+    Nv: Optional; default is NaN.
+    Nh: Optional; default is NaN.
+    H: Required; the roughness rms (note: called roughness_rms in soil_wegmuller).
 
 Examples:
+    ```python
     soil = make_soil("soil_qnh", "dobson85", moisture=0.2, sand=0.4, clay=0.3, drymatter=1100,
-                    Q=0, N=0, H=1e-2)
-
+                     Q=0, N=0, H=1e-2)
+    ```
 """
 
 import numpy as np

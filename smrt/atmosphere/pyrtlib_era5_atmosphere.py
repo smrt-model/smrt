@@ -82,12 +82,14 @@ class PyRTlibERA5Atmosphere(PyRTlibAtmosphereBase):
 
 
 class _ERA5Reanalysis_with_grib(ERA5Reanalysis):
-    """temporary hack to retrieve ERA5 data in grib instead of netcdf which seems to be broken. The only disavantage is to require the dependency (cfgrib)
-"""
+    """
+    Temporary hack to retrieve ERA5 data in grib instead of netcdf which seems to be broken. The only disavantage is to require the dependency (cfgrib)
+    """
 
     @classmethod
     def read_data(cls, file: str, lonlat: tuple) -> pd.DataFrame:
-        """Read data from the ERA5 Reanalysis dataset.
+        """
+        Read data from the ERA5 Reanalysis dataset.
 
         Args:
             file (str): The netcdf file
@@ -179,7 +181,8 @@ class _ERA5Reanalysis_with_grib(ERA5Reanalysis):
                      lonlat: tuple,
                      resolution: Optional[float] = 0.25,
                      offset: Optional[float] = 0.4) -> str:
-        """Download ERA5Reanalysis data from the Copernicus Climate Change Service using the grib format as the netcdf
+        """
+        Download ERA5Reanalysis data from the Copernicus Climate Change Service using the grib format as the netcdf
         format seems to be broken at the moment (April 2024).
 
         Args:

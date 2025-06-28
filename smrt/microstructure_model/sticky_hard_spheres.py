@@ -1,14 +1,19 @@
 # coding: utf-8
 
-"""Monodisperse sticky hard sphere model of the microstructure.
+"""
+Implements the monodisperse sticky hard sphere model of the microstructure.
 
-parameters: frac_volume, radius, stickiness.
+Args:
+    frac_volume (float): Fractional volume.
+    radius (float): Sphere radius.
+    stickiness (float, optional): Stickiness parameter. Default is 1000.
 
-The stickiness is optional but it is recommended to use value around 0.2 as a first guess.
-Be aware that low values of stickiness are invalid, the limit depends on the fractional volume
-(see for instance Loewe and Picard, 2015). See the :py:meth:`~StickyHardSpheres.tau_min` method.
+Notes:
+    The stickiness is optional but it is recommended to use value around 0.2 as a first guess.
+    Be aware that low values of stickiness are invalid, the limit depends on the fractional volume
+    (see for instance Loewe and Picard, 2015). See the tau_min method.
 
-Currently the implementation is specific to ice / snow. It can not be used for other materials.
+    Currently the implementation is specific to ice / snow. It cannot be used for other materials.
 """
 
 import numpy as np

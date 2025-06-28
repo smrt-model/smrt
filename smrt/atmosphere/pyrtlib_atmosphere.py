@@ -49,16 +49,13 @@ https://satclop.github.io/pyrtlib/en/main/generated/pyrtlib.apiwebservices.ERA5R
     from smrt import make_atmosphere
 
     atmos = make_atmosphere('pyrtlib_era5_atmosphere', ncfile='era5_reanalysis-2023-05-16T18:00:00.nc',
-                                                       longitude=-75.07, latitude=123., date=datetime(2020, 2, 22, 12),
-                                                       absorption_model = 'R20')
+                            longitude=-75.07, latitude=123., date=datetime(2020, 2, 22, 12),
+                            absorption_model = 'R20')
 
 
 PyRTlib includes many absorption models and the list can be obtained using::
 
     PyRTlibAtmosphere.available_absorption_models()
-
-
-
 """
 
 # Stdlib import

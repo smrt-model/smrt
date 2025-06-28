@@ -1,10 +1,12 @@
 # coding: utf-8
 
-"""Implement the rough boundary reflectivity presented in Choudhury et al. (1979). It is not suitable for the active mode.
+"""
+Implements the rough boundary reflectivity presented in Choudhury et al. (1979).
 
-Applicable for ksigma<<1
+This model is not suitable for the active mode and is applicable for ksigma << 1.
 
-parameters: roughness_rms
+Args:
+    roughness_rms: The root mean square of the surface roughness.
 
 """
 

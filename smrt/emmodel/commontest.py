@@ -6,11 +6,15 @@ import scipy.integrate
 
 # Generic test: check integral of phase function equals scattering coefficient
 def test_energy_conservation(em, tolerance_pc, npol=None, subset=16):
-    """test energy conservation
+    """
+    test energy conservation
 
-    :param em: the electromagnetic model that has been set up
-    :param tolerance_pc: relative tolerance
-"""
+    Args:
+        em: the electromagnetic model that has been set up
+        tolerance_pc: relative tolerance
+        npol: (Default value = None)
+        subset: (Default value = 16)
+    """
 
     # Default test is for 2 pol matrix
     if npol is None:

@@ -1,18 +1,17 @@
 # coding: utf-8
 
-"""This module provides a function to build soil model and provides some soil permittivity formulae.
+"""Provides a function to build soil model and some soil permittivity formulae.
 
-To create a substrate, use/implement an helper function such as :py:func:`~smrt.substrate.substrate.make_soil`. This function is able to 
+To create a substrate, use or implement a helper function such as `make_soil`. This function is able to 
 automatically load a specific soil model and provides some soil permittivity formulae as well.
 
-Examples::
+Example::
 
     from smrt import make_soil
     soil = make_soil("soil_wegmuller", "dobson85", moisture=0.2, sand=0.4, clay=0.3, drymatter=1100, roughness_rms=1e-2)
 
-It is recommand to first read the documentation of :py:func:`~smrt.substrate.substrate.make_soil` and then explore the different types of soil
+It is recommended to first read the documentation of `make_soil` and then explore the different types of soil
 models.
-
 """
 
 from functools import partial
@@ -30,23 +29,28 @@ from smrt.core.globalconstants import PERMITTIVITY_OF_FREE_SPACE
 
 def make_soil(substrate_model, permittivity_model, temperature, moisture=None,
               sand=None, clay=None, drymatter=None, **kwargs):
-    """ Construct a soil instance based on a given surface electromagnetic model, a permittivity model and parameters 
+    """
+    Constructs a soil instance based on a given surface electromagnetic model, a permittivity model and parameters.
 
-    :param substrate_model: name of substrate model, can be a class or a string. e.g. fresnel, wegmuller...
-    :param permittivity_model: permittivity_model to use. Can be a name ("hut_epss", "dobson85", "montpetit2008"), a function of
-        frequency and temperature or a complex value.
-    :param moisture: soil moisture in m:sup:`3` m:sup:`-3` to compute the permittivity. This parameter is used depending on the permittivity_model.
-    :param sand: soil relative sand content. This parameter is used or not depending on the permittivity_model.
-    :param clay: soil relative clay content. This parameter is used or not depending on the permittivity_model.
-    :param drymatter: soil content in dry matter in kg m:sup:`-3`. This parameter is used or not depending on the permittivity_model.
+    Args:
+        substrate_model: Name of substrate model, can be a class or a string. e.g. fresnel, wegmuller...
+        permittivity_model: Permittivity model to use. Can be a name ("hut_epss", "dobson85", "montpetit2008"), a function of
+            frequency and temperature or a complex value.
+        temperature: Temperature of the soil.
+        moisture: Soil moisture in m^3 m^-3 to compute the permittivity. This parameter is used depending on the permittivity_model.
+        sand: Soil relative sand content. This parameter is used or not depending on the permittivity_model.
+        clay: Soil relative clay content. This parameter is used or not depending on the permittivity_model.
+        drymatter: Soil content in dry matter in kg m^-3. This parameter is used or not depending on the permittivity_model.
+        **kwargs: Geometrical parameters depending on the substrate_model. Refer to the document of each model to see the
+            list of required and optional parameters. Usually, it is roughness_rms, corr_length, ...
 
-    :param \\**kwargs: geometrical parameters depending on the substrate_model. Refer to the document of each model to see the
-        list of required and optional parameters. Usually, it is roughness_rms, corr_length, ...
+    Returns:
+        Instance of the soil substrate model.
 
-    **Usage example:**::
-        TOTEST: bottom = substrate.make('Flat', permittivity_model=complex('6-0.5j'))
-        TOTEST:  bottom = substrate.make('Wegmuller', permittivity_model='soil', roughness_rms=0.25, moisture=0.25)
+    Example (TOTEST)::
 
+        bottom = substrate.make('Flat', permittivity_model=complex('6-0.5j'))
+        bottom = substrate.make('Wegmuller', permittivity_model='soil', roughness_rms=0.25, moisture=0.25)
     """
 
     # process the permittivity_model argument
@@ -155,14 +159,23 @@ def soil_dielectric_constant_hut(frequency, tempK, SM, sand, clay, dm_rho):
 
 
 def soil_dielectric_constant_monpetit2008(frequency, temperature):
-    """Soil dielectric constant formulation based on the formulation Montpetit et al. 2018. 
-    The formulation is only valid for below-frrezing point temperature.
+    """
+    Computes the soil dielectric constant using the Montpetit et al. (2018) formulation.
 
-    Reference: Montpetit, B., Royer, A., Roy, A., & Langlois, A. (2018). In-situ passive microwave emission model 
-    parameterization of sub-arctic frozen organic soils. Remote Sensing of Environment, 205, 112–118. 
-    https://doi.org/10.1016/j.rse.2017.10.033
+    The formulation is only valid for below-freezing point temperature.
 
-"""
+    Reference:
+        Montpetit, B., Royer, A., Roy, A., & Langlois, A. (2018). In-situ passive microwave emission model 
+        parameterization of sub-arctic frozen organic soils. Remote Sensing of Environment, 205, 112–118. 
+        https://doi.org/10.1016/j.rse.2017.10.033
+
+    Args:
+        frequency: Frequency in Hz.
+        temperature: Temperature in Kelvin.
+
+    Returns:
+        complex: Soil dielectric constant.
+    """
     # from functools import partial
     # from smrt.inputs.make_soil import soil_dielectric_constant_dobson
     if temperature > 273.15:

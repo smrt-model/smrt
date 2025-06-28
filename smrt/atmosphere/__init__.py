@@ -1,7 +1,7 @@
-""" This package contains different options to represent the atmosphere, that is the upper boundary conditions 
-of the radiation transfer equation.
+"""
+Contains different options to represent the atmosphere, that is the upper boundary conditions of the radiation transfer equation.
 
-Example::
+Examples::
 
     from smrt.atmosphere.simple_isotropic_atmosphere import SimpleIsotropicAtmosphere
 
@@ -10,4 +10,3 @@ Example::
 The API is subject to change.
 
  """  # html documentation
- 

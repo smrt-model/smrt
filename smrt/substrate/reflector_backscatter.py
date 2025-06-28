@@ -1,6 +1,8 @@
 # coding: utf-8
 
-""" Implement a reflective boundary conditions with prescribed reflection coefficient in the specular direction, and backscatter coefficient.
+"""
+Implements a reflective boundary condition with prescribed reflection coefficient in the specular direction and backscatter coefficient.
+
 The reflection is set to a value or a function of theta. Azimuthal symmetry is assumed (no dependence on phi).
 
 The `specular_reflection` parameter can be a scalar, a function or a dictionary.
@@ -21,23 +23,20 @@ Examples::
     # the full path import is required
     from smrt.substrate.reflector import make_reflector
 
-    # return a perfect reflector (the temperature is useless in this specific case)
+    # Returns a perfect reflector (the temperature is useless in this specific case)
     ref = make_reflector(temperature=260, specular_reflection=1)
 
-    # return a perfect absorber / black body.
+    # Returns a perfect absorber / black body.
     ref = make_reflector(temperature=260, specular_reflection=0)
 
-    # use a function as a function of the cosine of the incidence angle
-
+    # Use a function as a function of the cosine of the incidence angle
     def reflection_function(mu):
         return 0.5 * mu
 
     ref = make_reflector(specular_reflection=reflection_function)
 
-.. note::
-
-    the backscatter coefficient argument is not implemented/documented yet.
-
+Note:
+    The backscatter coefficient argument is not implemented or documented yet. Modeling substrate with prescribed backscatter value with the DORT solver is an approximate trick, and the result is only approximately the prescribed value even for a transparent snowpack.
 """
 
 import numpy as np

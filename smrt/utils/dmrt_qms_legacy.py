@@ -1,16 +1,16 @@
 # coding: utf-8
 
-""" Wrapper to the original DMRT_QMS matlab code using the SMRT framework. To use this module, extra installation are needed:
+"""
+Wraps the original DMRT_QMS matlab code using the SMRT framework.
 
- * get DMRT_QMS from http://web.eecs.umich.edu/~leutsang/Available%20Resources.html and extract the model somewhere
+To use this module, extra installations are needed:
 
- * install the oct2py module using :code:`pip install oct2py` or :code:`easy_install install oct2py`
+    * Gets DMRT_QMS from http://web.eecs.umich.edu/~leutsang/Available%20Resources.html and extracts the model somewhere.
+    * Installs the oct2py module using :code:`pip install oct2py` or :code:`easy_install install oct2py`.
+    * Installs Octave version 3.6 or above.
+    * For convenience, sets the DMRT_QMS_DIR environment variable to point to DMRT-QMS path. This path can also be programmatically set with and use :py:func:`set_dmrt_qms_path` function.
 
- * install Octave version 3.6 or above.
-
- * for convenience you can set the DMRT_QMS_DIR environment variable to point to DMRT-QMS path. This path can also be programmatically set with and use :py:func:`set_dmrt_qms_path` function.
-
-In case of problem check the instructions given in http://blink1073.github.io/oct2py/source/installation.html
+In case of problem, checks the instructions given in http://blink1073.github.io/oct2py/source/installation.html.
 
 You may also want to increase the number of streams in passive/DMRT_QMS_passive.m
 
@@ -35,7 +35,12 @@ _dmrt_qms_path = None
 
 
 def set_dmrt_qms_path(path):
-    """set the path where dmrt_qms archive has been uncompressed, i.e. where the file `dmrt_qmsmain.m` is located."""
+    """
+    Sets the path where dmrt_qms archive has been uncompressed, i.e. where the file `dmrt_qmsmain.m` is located.
+
+    Args:
+        path: Path to the DMRT_QMS directory.
+    """
     global _dmrt_qms_path
 
     if path != _dmrt_qms_path:
@@ -55,13 +60,20 @@ except KeyError:
 
 
 def run(sensor, snowpack, dmrt_qms_path=None, snowpack_dimension=None, full_output=False):
-    """call DMRT-QMS for the snowpack and sensor configuration given as argument. The :py:mod:`~smrt.microstructure_model.sticky_hard_spheres` microstructure model 
+    """
+    Calls DMRT-QMS for the snowpack and sensor configuration given as argument. The :py:mod:`~smrt.microstructure_model.sticky_hard_spheres` microstructure model 
     must be used.
 
-    :param snowpack: describe the snowpack.
-    :param sensor: describe the sensor configuration.
-    :param full_output: determine if ks, ka and effective permittivity are return in addition to the result object
-"""
+    Args:
+        sensor: Sensor configuration.
+        snowpack: Snowpack description.
+        dmrt_qms_path: Optional path to DMRT_QMS.
+        snowpack_dimension: Optional dimension for results when a list of snowpacks is provided.
+        full_output: If True, returns ks, ka, and effective permittivity in addition to the result object.
+
+    Returns:
+        PassiveResult or tuple with additional outputs if full_output is True.
+    """
 
     if dmrt_qms_path is not None:
         set_dmrt_qms_path(dmrt_qms_path)
@@ -162,11 +174,17 @@ def dmrt_qms_active(sensor, snowpack):
 
 
 def dmrt_qms_emmodel(sensor, layer, dmrt_qms_path=None):
-    """ Compute scattering and absorption coefficients using DMRT QMS
+    """
+    Computes scattering and absorption coefficients using DMRT QMS.
 
-        :param layer: describe the layer.
-        :param sensor: describe the sensor configuration.
-"""
+    Args:
+        sensor: Sensor configuration.
+        layer: Layer description.
+        dmrt_qms_path: Optional path to DMRT_QMS.
+
+    Returns:
+        namedtuple with ks and ka.
+    """
 
     diameter = np.float64([layer.microstructure.radius * 200])
     density = np.float64([layer.frac_volume * DENSITY_OF_ICE / 1000])

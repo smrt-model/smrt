@@ -51,14 +51,13 @@ class IBA(AdjustableEffectivePermittivityMixin,
     the size of the phase matrix as redundant information is not calculated for the
     passive case.
 
-    :param sensor: object containing sensor characteristics
-    :param layer: object containing snow layer characteristics (single layer)
-    :dense_snow_correction: set how snow denser than half the ice density (ie. fractional volume larger than 0.5 is handled).
-        "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air. The default is None
+    Args:
+        sensor: Object containing sensor characteristics.
+        layer: Object containing snow layer characteristics (single layer).
+        dense_snow_correction: Set how snow denser than half the ice density (i.e. fractional volume larger than 0.5) is handled.
+            "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air. The default is None.
 
-
-    **Usage Example:**
-
+    Example:
         This class is not normally accessed directly by the user, but forms part of the
         smrt model, together with the radiative solver (in this example, `dort`) i.e.:
 
@@ -67,8 +66,7 @@ class IBA(AdjustableEffectivePermittivityMixin,
             from smrt import make_model
             model = make_model("iba", "dort")
 
-        `iba` does not need to be imported by the user due to autoimport of electromagnetic model modules
-
+        `iba` does not need to be imported by the user due to autoimport of electromagnetic model modules.
     """
 
     # default effective_permittivity_model is polder_van_santen in Matzler 1998 and Matzler&Wiesman 1999
@@ -139,9 +137,9 @@ become a default in the future.""")
         return iba_coeff
 
     def mean_sq_field_ratio(self):
-        """ Mean squared field ratio calculation
+        """Mean squared field ratio calculation.
 
-        Uses layer effective permittivity
+        Uses layer effective permittivity.
 
         """
 
@@ -154,7 +152,13 @@ become a default in the future.""")
         pass
 
     def compute_ks(self):
-        """Calculate scattering coefficient: integrate p11+p12 over mu"""
+        """Calculate scattering coefficient.
+
+        Integrates p11+p12 over mu.
+
+        Returns:
+            float: Scattering coefficient.
+        """
 
         k = 6  # number of samples. This should be adaptative depending on the size/wavelength
         mu = np.linspace(1, -1, 2**k + 1)
@@ -163,7 +167,7 @@ become a default in the future.""")
         return ks_int / 4.  # Ding et al. (2010), normalised by (1/4pi)
 
     def ks_integrand(self, mu):
-        """ This is the scattering function for the IBA model.
+        """Scattering function for the IBA model.
 
         It uses the phase matrix in the 1-2 frame. With incident angle chosen to be 0, the scattering
         angle becomes the scattering zenith angle:
@@ -207,7 +211,7 @@ become a default in the future.""")
         return ks_int.real
 
     def phase(self, mu_s, mu_i, dphi, npol=2):
-        """ IBA Phase function(not decomposed).
+        """IBA Phase function (not decomposed).
 
 """
         p, sin_half_scatt = rayleigh_scattering_matrix_and_angle(mu_s, mu_i, dphi, npol)
@@ -225,15 +229,16 @@ become a default in the future.""")
         return smrt_matrix(ft_corr_fn * self.iba_coeff * p)
 
     def compute_ka(self):
-        """ IBA absorption coefficient calculated from the low-loss assumption of a general lossy medium.
+        """IBA absorption coefficient calculated from the low-loss assumption of a general lossy medium.
 
-        Calculates ka from wavenumber in free space(determined from sensor), and effective permittivity
-        of the medium(snow layer property): return ka: absorption coefficient[m:sup:`-1`]
+        Calculates ka from wavenumber in free space (determined from sensor), and effective permittivity
+        of the medium (snow layer property).
 
-        .. note::
+        Returns:
+            float: Absorption coefficient [m^-1].
 
-            This may not be suitable for high density material
-
+        Note:
+            This may not be suitable for high density material.
         """
 
         # after several go and back, the situation is now clear:

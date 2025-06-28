@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""Non-scattering medium can be applied to medium without heteoreneity (like water or pure ice layer).
-
+"""Non-scattering medium can be applied to medium without heterogeneity (like water or pure ice layer).
 """
 
 # Stdlib import
@@ -18,8 +17,7 @@ from ..permittivity.generic_mixing_formula import polder_van_santen
 
 
 class NonScattering(IsotropicScatteringMixin):
-    """
-    """
+    """ """
 
     def __init__(self, sensor, layer):
 
@@ -43,10 +41,17 @@ class NonScattering(IsotropicScatteringMixin):
         pass
 
     def ft_even_phase(self, mu_s, mu_i, m_max, npol=None):
-        """ Non-scattering phase matrix.
+        """
+        Non-scattering phase matrix.
 
-        :returns: null phase matrix
+        Args:
+            mu_s: 
+            mu_i: 
+            m_max: 
+            npol:  (Default value = None)
 
+        Returns:
+            null phase matrix
         """
         if npol is None:
             npol = 2 if m_max == 0 else 3
@@ -54,10 +59,17 @@ class NonScattering(IsotropicScatteringMixin):
         return smrt_matrix.zeros((npol, npol, m_max + 1, len_atleast_1d(mu_s), len_atleast_1d(mu_i)))
 
     def phase(self, mu_s, mu_i, dphi, npol=2):
-        """Non-scattering phase matrix.
+        """
+        Non-scattering phase matrix.
 
-        :returns: null phase matrix
+        Args:
+            mu_s: 
+            mu_i: 
+            dphi: 
+            npol:  (Default value = 2)
 
+        Returns:
+            null phase matrix
         """
 
         return smrt_matrix.zeros((npol, npol, len_atleast_1d(dphi), len_atleast_1d(mu_s), len_atleast_1d(mu_i)))

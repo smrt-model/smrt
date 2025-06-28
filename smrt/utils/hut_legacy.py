@@ -1,18 +1,17 @@
 # coding: utf-8
 
-""" Wrapper to original HUT matlab using SMRT framework. To use this module, extra installation are needed:
+"""
+Wraps the original HUT matlab using SMRT framework.
 
- * get HUT. Decompress the archive somewhere on your disk.
+To use this module, extra installations are needed:
 
- * in the file snowemis_nlayers change the 6 occurences of the "do" variable into "dos" because it causes a syntax error in Octave.
+    * Gets HUT. Decompresses the archive somewhere on your disk.
+    * In the file snowemis_nlayers, changes the 6 occurrences of the "do" variable into "dos" because it causes a syntax error in Octave.
+    * Installs the oct2py module using :code:`pip install oct2py` or :code:`easy_install install oct2py`.
+    * Installs Octave version 3.6 or above.
+    * For convenience, sets the HUT_DIR environment variable to point to HUT path. This path can also be programmatically set with :py:func:`set_hut_path`.
 
- * install the oct2py module using :code:`pip install oct2py` or :code:`easy_install install oct2py`.
-
- * install Octave version 3.6 or above.
-
- * for convenience you can set the HUT_DIR environment variable to point to HUT path. This path can also be programmatically set with :py:func:`set_hut_path`.
-
- In case of problem check the instructions given in http://blink1073.github.io/oct2py/source/installation.html
+In case of problem, checks the instructions given in http://blink1073.github.io/oct2py/source/installation.html.
 
 """
 
@@ -31,7 +30,12 @@ _hut_path = None
 
 
 def set_hut_path(path):
-    """set the path where MEMLS archive has been uncompressed, i.e. where the file `memlsmain.m` is located."""
+    """
+    Sets the path where HUT archive has been uncompressed, i.e. where the file `memlsmain.m` is located.
+
+    Args:
+        path: Path to the HUT directory.
+    """
     global _hut_path
 
     if path != _hut_path:
@@ -48,14 +52,19 @@ except KeyError:
 
 
 def run(sensor, snowpack, ke_option=0, grainsize_option=1, hut_path=None):
-    """call HUT for the snowpack and sensor configuration given as argument. Any microstructure model that defines the "radius" parameter
-    is valid.
+    """
+    Calls HUT for the snowpack and sensor configuration given as argument. Any microstructure model that defines the "radius" parameter is valid.
 
-    :param snowpack: describe the snowpack.
-    :param sensor: describe the sensor configuration.
-    :param ke_option: see HUT snowemis_nlayers.m code
-    :param grainsize_option: see HUT snowemis_nlayers.m code
-"""
+    Args:
+        sensor: Sensor configuration.
+        snowpack: Snowpack description.
+        ke_option: Option for HUT snowemis_nlayers.m code.
+        grainsize_option: Option for HUT snowemis_nlayers.m code.
+        hut_path: Optional path to HUT.
+
+    Returns:
+        Result object.
+    """
 
     if hut_path is not None:
         set_hut_path(hut_path)

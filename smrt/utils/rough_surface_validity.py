@@ -1,4 +1,3 @@
-
 import numpy as np
 from collections.abc import Iterable
 
@@ -10,15 +9,21 @@ import matplotlib.pyplot as plt
 colors = {'kirchoff': '#87CEEB', 'IEM': '#FF6F61', 'SPM': '#32CD32', 'SSA': '#FFD700', 'GO': '#708090'}
 
 def validity_diagram(sensor=None, snowpack=None, interface=None, rms_height=None, correlation_length=None, frequency=None, ax=None):
-    """plot a validity diagram for the rough surface model (assuming a Gaussian surface) with the roughness of the
+    """
+    Plots a validity diagram for the rough surface model (assuming a Gaussian surface) with the roughness of the
     snowpack (and/or the interface, or provides RMS and correlation values).
 
-    :param sensor: sensor with a single or multiple frequencies.
-    :param snowpack: snowpack from which to take the interfaces.
-    :param interface: an interface or a list of interfaces (can be a substrate as well).
-    :param rms_height: other rms_height to be plotted.
-    :param correlation_length: other correlation_length to be plotted.
-    :param frequency: frequency if the sensor is not provided.
+    Args:
+        sensor: Sensor with a single or multiple frequencies.
+        snowpack: Snowpack from which to take the interfaces.
+        interface: An interface or a list of interfaces (can be a substrate as well).
+        rms_height: Other rms_height to be plotted.
+        correlation_length: Other correlation_length to be plotted.
+        frequency: Frequency if the sensor is not provided.
+        ax: Matplotlib axis.
+
+    Returns:
+        None.
     """
 
     if ax is None:

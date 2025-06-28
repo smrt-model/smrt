@@ -1,4 +1,4 @@
-"""These permittivity formulations are for use with saline ice, and possibly in some case with saline snow. See also saline_snow.py in the latter case.
+"""Provides permittivity formulations for use with saline ice, and possibly in some cases with saline snow. See also saline_snow.py in the latter case.
 """
 
 

@@ -1,10 +1,10 @@
-"""Sampled autocorrelation function model. To use when no analytical form of the autocorrelation function but
-the values of the autocorrelation function (`acf`) is known at a series of `lag`.
+"""Implements the sampled autocorrelation function model. Use when no analytical form of the autocorrelation function exists but
+the values of the autocorrelation function (`acf`) are known at a series of `lag`.
 
-parameters: frac_volume, lag, acf
-
-`acf` contains the values at different `lag`. These parameters must be lists or arrays.
-
+Args:
+    frac_volume (float): Fractional volume.
+    lag (array-like): Lag values.
+    acf (array-like): Autocorrelation function values at the given lags.
 """
 
 import numpy as np

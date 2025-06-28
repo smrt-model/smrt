@@ -1,19 +1,18 @@
-"""Nadir LRM Mode Altimetry rtsolver computes waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the
-given snowpack and sensor (or complex terrain soon). I was based on Adams and Brown 1998 and Lacroix et al. 2008. Both
+"""Computes waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the
+given snowpack and sensor (or complex terrain soon). The implementation is based on Adams and Brown 1998 and Lacroix et al. 2008. Both
 models differ in the specific choices for the scattering and backscatter of the interface, but are similar in the way
 the waveform is calculated, which concerns the solver here.
 
 Approximations:
- - Backscatter is computed assuming only first order scattering. The propagation is then simply governed by extinction
- - Near nadir / small angle approximation: to compute delay, the paths in the snow are along the z-axis. We neglect the off-nadir delay.*
- This error is likely to be small (except for very deep penetration).
+    - Backscatter is computed assuming only first order scattering. The propagation is then simply governed by extinction.
+    - Near nadir / small angle approximation: to compute delay, the paths in the snow are along the z-axis. Off-nadir delay is neglected.
+      This error is likely to be small (except for very deep penetration).
 
-.. note:
+Note:
     With this RT solver, if using Geometrical Optics for rough surface/interface modeling, it is strongly advised to use
-    :py:mod:`~smrt.interface.geometrical_optics_backscatter` instead of :py:mod:`~smrt.interface.geometrical_optics` for
+    :py:func:`smrt.interface.geometrical_optics_backscatter` instead of :py:func:`smrt.interface.geometrical_optics` for
     the reason explained in the documentation of those modules.
-
- """
+"""
 
 import numpy as np
 import scipy.signal
@@ -29,7 +28,7 @@ import xarray as xr
 
 
 class NadirLRMAltimetry(object):
-    """Nadir LRM Mode Altimetry rtsolver
+    """Implements the Nadir LRM Mode Altimetry RT solver.
 
     :param oversampling: integer number defining the number of subgates used for the computation in each altimeter gate.
         This is equivalent to multiply the bandwidth by this number. It is used to perform more accurate computation.
@@ -79,9 +78,17 @@ class NadirLRMAltimetry(object):
             self.return_theta_inc_sampling = False
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
-        """solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
+        """Solves the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
-"""
+        Args:
+            snowpack: Snowpack object.
+            emmodels: List of electromagnetic models.
+            sensor: Sensor object.
+            atmosphere: Optional atmosphere object.
+
+        Returns:
+            AltimetryResult: Computed result.
+        """
         if sensor.theta_inc != 0:
             raise SMRTError("This solver is for nadir looking altimeter only")
         assert atmosphere is None
@@ -280,6 +287,8 @@ class NadirLRMAltimetry(object):
 
         :param mu: cosine of the incidence angles. Only the dependence on the surface scattering depend on mu_i
 
+        Returns:
+            ndarray: Backscattering distribution.
         """
         mu_i = np.atleast_1d(mu_i)
 

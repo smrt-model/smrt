@@ -1,5 +1,3 @@
-
-
 """
 This package includes modules to create the medium and sensor configuration required for the simulations.
 The recommended way to build these objects::
@@ -22,5 +20,4 @@ in the package :py:mod:`smrt.inputs`. They could be imported using the full path
 
 Extension of the modules in the `inputs` package is welcome. This is as simple as adding new functions in the modules (e.g. in :py:mod:`~smrt.inputs.sensor_list`) or
 adding a new modules (e.g. `my_make_medium.py`) in this package and use the full path import.
-
 """

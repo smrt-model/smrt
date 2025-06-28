@@ -1,9 +1,11 @@
 # coding: utf-8
 
-"""Independent sphere model of the microstructure.
+"""
+Implements the independent sphere model of the microstructure.
 
-parameters: frac_volume, radius
-
+Args:
+    frac_volume (float): Fractional volume.
+    radius (float): Sphere radius.
 """
 
 import numpy as np

@@ -1,5 +1,6 @@
 # coding: utf-8
-"""Implement an isotropic atmosphere with prescribed frequency-dependent emission (up and down) and transmittance.
+"""
+Implements an isotropic atmosphere with prescribed frequency-dependent emission (up and down) and transmittance.
 
  TB and transmissivity can be specified as a constant, or a frequency-dependent dictionary
 
@@ -8,7 +9,7 @@
 
 Examples::
 
-    # the full path import is required
+    # The full path import is required
     from smrt import make_atmosphere
 
     # Constant
@@ -16,7 +17,6 @@ Examples::
 
     # Frequency-dependent
     atmos = make_atmosphere("simple_isotopic_atmosphere", tb_down={10e9: 15.2, 21e9: 23.5})
-
 """
 
 # Stdlib import
@@ -37,8 +37,13 @@ from ..core.atmosphere import AtmosphereBase, AtmosphereResult
 
 
 def make_atmosphere(tb_down=0, tb_up=0, transmittance=1):
-    """ Construct an atmosphere instance.
+    """
+    Construct an atmosphere instance.
 
+    Args:
+        tb_down:  (Default value = 0)
+        tb_up:  (Default value = 0)
+        transmittance:  (Default value = 1)
     """
     warn("""This function 'make_atmosphere' is going to be depreciated. Use smrt.inputs.make_medium.make_atmosphere or the
 short cut smrt.make_atmosphere instead.""", DeprecationWarning)

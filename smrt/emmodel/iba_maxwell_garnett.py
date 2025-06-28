@@ -26,28 +26,25 @@ class IBA_MaxwellGarnett(IBA):
     """
     Modified Improved Born Approximation electromagnetic model class.
 
-    As with all electromagnetic modules, this class is used to create an electromagnetic
-    object that holds information about the effective permittivity, extinction coefficient and
-    phase function for a particular snow layer. Due to the frequency dependence, information
-    about the sensor is required. Passive and active sensors also have different requirements on
-    the size of the phase matrix as redundant information is not calculated for the
-    passive case.
+    This class is used to create an electromagnetic object that holds information about the effective permittivity,
+    extinction coefficient and phase function for a particular snow layer. Due to the frequency dependence, information
+    about the sensor is required. Passive and active sensors also have different requirements on the size of the phase
+    matrix as redundant information is not calculated for the passive case.
 
-    :param sensor: object containing sensor characteristics
-    :param layer: object containing snow layer characteristics (single layer)
-
+    Args:
+        sensor: Object containing sensor characteristics.
+        layer: Object containing snow layer characteristics (single layer).
     """
     effective_permittivity_model = staticmethod(maxwell_garnett)
 
 
     def mean_sq_field_ratio(self):
-        """ Mean squared field ratio calculation
+        """Mean squared field ratio calculation.
 
-        Uses layer effective permittivity
+        Uses layer effective permittivity.
 
-        :param e0: background relative permittivity
-        :param eps: scattering constituent relative permittivity
-
+        Returns:
+            float: Mean squared field ratio.
         """
         apparent_permittivity = self.e0
         y2 = (1. / 3.) * np.sum(np.absolute(apparent_permittivity / (apparent_permittivity + (self.eps - self.e0) * self.depol_xyz))**2.)
