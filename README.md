@@ -41,7 +41,7 @@ An example to calculate the brightness temperature from a one-layer snowpack.
 from smrt import make_snowpack, sensor_list, make_model
 
 # create a snowpack
-snowpack = make_snowpack(thickness=10.,   # snowpack depth in m
+snowpack = make_snowpack(thickness=[10.],   # snowpack depth in m
                          microstructure_model="sticky_hard_spheres",
                          density=320.0,   # density in kg/m3
                          temperature=260, # temperature in Kelvin
