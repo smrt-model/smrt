@@ -26,6 +26,7 @@ In general, it is not recommended to modify/extend :py:mod:`~smrt.core` for norm
 The :py:mod:`~smrt.utils` package provides various useful tools to work with SMRT, but they are not strictly necessary. This package includes wrappers to some off-the-shelf models such as DMRT-QMS, HUT and MEMLS.
 
 
+
 .. toctree::
     :titlesonly:
     :maxdepth: 4
@@ -44,6 +45,9 @@ The :py:mod:`~smrt.utils` package provides various useful tools to work with SMR
     Core <smrt.core.rst>
 
     Utilities and tools <smrt.utils.rst>
+
+    Publish papers using SMRT <publish.rst>
+
     Developer Guidelines <developer_guidelines.rst>
 
 Indices and tables
