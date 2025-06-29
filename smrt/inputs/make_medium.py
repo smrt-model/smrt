@@ -886,7 +886,7 @@ def make_generic_stack(thickness, temperature=FREEZING_POINT, ks=0, ka=0, effect
 def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, temperature=FREEZING_POINT):
     """
     Make a generic layer with prescribed scattering and absorption coefficients and effective permittivity.
-    Must be used with prescribed_kskaeps emmodel.
+    Must be used with :py:mod:`smrt.emmodel.prescribed_kskaeps` emmodel.
 
     Args:
         layer_thickness: Thickness of ice layer in m.
