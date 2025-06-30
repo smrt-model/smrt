@@ -92,7 +92,7 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=Fals
         return rv, rh, mu2
 
 
-def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1, full_output=False):
+def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1):
     """
     Computes the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
@@ -102,11 +102,12 @@ def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1, full_output=False
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
     reflection coefficient.
 
+    This function only returns the FIELD reflection coefficients and the cosine angle in the medium 2
+
     Args:
         eps_1: permittivity of medium 1.
         eps_2: permittivity of medium 2.
         mu1: cosine zenith angle in medium 1.
-        full_output: (Default value = False)
 
     Returns:
         : rv, rh, mu2 the cosine of the angle in medium 2
@@ -127,31 +128,74 @@ def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1, full_output=False
 
     mu2 = - kyt.real / np.sqrt(eps_2).real  # by definition of kyt
 
-    if full_output:
-        n2 = np.sqrt(eps_2)
+    return rv, rh, mu2
 
-        th = 2 * kyi.real / (kyi.conjugate() + kyt)  # Eq 60
 
-        tv = n2 * 2 * (eps_1.conjugate() * kyi).real / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))   # Eq 62
+def fresnel_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu1):
+    """
+    Computes the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
+    on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
+    Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
 
-        Rv = abs2(rv)  # Eq 34
-        Rh = abs2(rh)  # Eq 34
-        # Th = (kyt + kyt.conjugate()) / (kyi + kyi.conjugate()) * abs2(th)  # Eq 35
-        Th = kyt.real / kyi.real * abs2(th)  # Optimized Eq 35
+    The 'rigorous' derivation respects the energy conservation even for strongly loosly media.
+    The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
+    reflection coefficient.
 
-        # Tv = abs2(n1) * (eps_2.conjugate() * kyt + eps_2 * kyt.conjugate()) \
-        #     / (abs2(n2) * (eps_1.conjugate() * kyi + eps_1 * kyi.conjugate())) \
-        #     * abs2(tv)                                                      # Eq 36
-        Tv = abs2(n1) * (eps_2.conjugate() * kyt).real \
-            / (abs2(n2) * (eps_1.conjugate() * kyi).real) \
-            * abs2(tv)                                                      # Optimized Eq 36
+    This function returns the FIELF and INTENSITY reflection and transmission coefficients and the cosine angle in the medium 2
 
-        assert np.allclose(Rv + Tv, 1)  # check energy conservation
-        assert np.allclose(Rh + Th, 1)  # check energy conservation
+    Args:
+        eps_1: permittivity of medium 1.
+        eps_2: permittivity of medium 2.
+        mu1: cosine zenith angle in medium 1.
+        full_output: (Default value = False)
 
-        return rv, rh, th, tv, Rv, Rh, Tv, Th, mu2
-    else:
-        return rv, rh, mu2
+    Returns:
+        : rv, rh, mu2 the cosine of the angle in medium 2
+    """
+    # y is the axis normal to the interface (usually z, but here it is y!)
+
+    # this part is the same as in fresnel_coefficients_maezawa09_rigorous
+    # the duplication is for numba compilation to work as returning different set of parameters is not allowed
+
+    # incident wavenumber
+    n1 = np.sqrt(eps_1)
+    kiz2 = n1.real**2 * (1 - mu1**2)   # this the square of kiz = n1 * sin(theta)
+    kyi = - np.sqrt(eps_1 - kiz2)                  # Eq 8 for i
+
+    ktz2 = kiz2   # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
+    kyt = - np.sqrt(complex(eps_2) - ktz2)                  # Eq 8 for t
+
+    rh = (kyi - kyt) / (kyi.conjugate() + kyt)  # Eq 59
+
+    rv = n1.conjugate() * (eps_2 * kyi - eps_1 * kyt) / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))  # Eq 61
+
+    mu2 = - kyt.real / np.sqrt(eps_2).real  # by definition of kyt
+
+    # this part is for the full_output
+    # full_output
+    #
+    n2 = np.sqrt(eps_2)
+
+    th = 2 * kyi.real / (kyi.conjugate() + kyt)  # Eq 60
+
+    tv = n2 * 2 * (eps_1.conjugate() * kyi).real / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))   # Eq 62
+
+    Rv = abs2(rv)  # Eq 34
+    Rh = abs2(rh)  # Eq 34
+    # Th = (kyt + kyt.conjugate()) / (kyi + kyi.conjugate()) * abs2(th)  # Eq 35
+    Th = kyt.real / kyi.real * abs2(th)  # Optimized Eq 35
+
+    # Tv = abs2(n1) * (eps_2.conjugate() * kyt + eps_2 * kyt.conjugate()) \
+    #     / (abs2(n2) * (eps_1.conjugate() * kyi + eps_1 * kyi.conjugate())) \
+    #     * abs2(tv)                                                      # Eq 36
+    Tv = abs2(n1) * (eps_2.conjugate() * kyt).real \
+        / (abs2(n2) * (eps_1.conjugate() * kyi).real) \
+        * abs2(tv)                                                      # Optimized Eq 36
+
+    assert np.allclose(Rv + Tv, 1)  # check energy conservation
+    assert np.allclose(Rh + Th, 1)  # check energy conservation
+
+    return rv, rh, th, tv, Rv, Rh, Tv, Th, mu2
 
 
 # use the best function for the fresnel coefficients
@@ -178,6 +222,8 @@ def snell_angle(eps_1, eps_2, mu1):
     mu2 = - kyt.real / np.sqrt(eps_2).real  # by definition of kyt
 
     return mu2
+
+
 
 
 def brewster_angle(eps_1, eps_2):
