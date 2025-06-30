@@ -137,6 +137,8 @@ Other rules
 
 Use f-strings (see also the Python tutorial) to format strings with variables from the code. Only use concatenation (+) between strings in exceptional cases.
 
+Name branches explicitely e.g. 'feature/changes-being-made-JD'.
+
 Sphinx
 ---------
 Documentation is done in-code, and is automatically generated with `Sphinx <http://www.sphinx-doc.org/en/stable/>`_. If no new modules are added, generate the rst and html documentation from the in-code Sphinx comments, by typing (whilst in smrt/doc directory)::
