@@ -2,18 +2,18 @@
 
 """Provides the Discrete Ordinate and Eigenvalue Solver as a multi-stream solver of the radiative transfer model.
 
-Solvers are precise but less efficient than 2 or 6 flux solvers. Different flavours of DORT (or DISORT) exist depending on the mode
-(passive or active), on the density of the medium (sparse media have trivial inter-layer boundary conditions), on the
-way the streams are connected between the layers and on the way the phase function is prescribed. The actual version is
-a blend between Picard et al. 2004 (active mode for sparse media) and DMRT-ML (Picard et al. 2013) which works in
-passive mode only for snow. The DISORT often used in optics (Stamnes et al. 1988) only works for sparse medium and uses
-a development of the phase function in Legendre polynomials on theta. The version used in DMRT-QMS (L. Tsang's group) is
-similar to the present implementation except it uses spline interpolation to connect constant-angle streams between the
-layers although we use direct connection by varying the angle according to Snell's law. A practical consequence is that
-the number of streams vary (due to internal reflection) and the value `n_max_stream` only applies in the most refringent
-layer. The number of outgoing streams in the air is usually smaller, sometimes twice smaller (depends on the density
-profile). It is important not to set too low a value for n_max_stream. E.g. 32 is usually fine, 64 or 128 are better
-but simulations will be much slower.
+This solver is precise but less efficient than 2 or 6 flux solvers. Different flavours of DORT (or DISORT) exist in the literature
+depending on the mode (passive or active), on the density of the medium (sparse media have trivial inter-layer boundary
+conditions), on the way the streams are connected between the layers and on the way the phase function is prescribed.
+The actual version is a blend between Picard et al. 2004 (active mode for sparse media) and DMRT-ML (Picard et al. 2013)
+which works in passive mode only for snow. The DISORT often used in optics (Stamnes et al. 1988) only works for sparse
+medium and uses a development of the phase function in Legendre polynomials on theta. The version used in DMRT-QMS (L.
+Tsang's group) is similar to the present implementation except it uses spline interpolation to connect constant-angle
+streams between the layers although we use direct connection by varying the angle according to Snell's law. A practical
+consequence is that the number of streams vary (due to internal reflection) and the value `n_max_stream` only applies in
+the most refringent layer. The number of outgoing streams in the air is usually smaller, sometimes twice smaller
+(depends on the density profile). It is important not to set too low a value for n_max_stream. E.g. 32 is usually fine,
+64 or 128 are better but simulations will be much slower.
 
 Note:
     The DORT solver is very robust in passive mode but may raise exception in active mode due to a matrix
@@ -43,15 +43,14 @@ from functools import partial
 
 # other import
 import numpy as np
-from pandas._libs import properties
 import xarray as xr
 import scipy.special
 import scipy.linalg
 import scipy.interpolate
 
 # local import
-from ..core.error import SMRTError, smrt_warn
-from ..core.result import make_result
+from smrt.core.error import SMRTError, smrt_warn
+from smrt.core.result import make_result
 from smrt.core.lib import smrt_matrix, smrt_diag, is_equal_zero, is_zero_scalar
 from smrt.core.optional_numba import numba
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers
@@ -60,32 +59,34 @@ from smrt.core.optional_numba import numba
 class DORT(object):
     """Implements the Discrete Ordinate and Eigenvalue Solver.
 
-    :param n_max_stream: number of stream in the most refringent layer
-    :param m_max: number of mode (azimuth)
-    :param phase_normalization: the integral of the phase matrix should in principe be equal to the scattering coefficient.
-        However, some emmodels do not respect this strictly. In general a small difference is due to numerical rounding and is acceptable,
-        but a large difference rather indicates either a bug in the emmodel or input parameters that breaks the
-        assumption of the emmodel. The most typical case is when the grain size is too big compared to wavelength for emmodels
-        that rely on Rayleigh assumption. If this argument is to True, the phase matrix is normalized to be coherent
-        with the scattering coefficient, but only when the difference is moderate (0.7 to 1.3).
-        If set to "force" the normalization is always performed. This option is dangerous because it may hide bugs or unappropriate
-        input parameters (typically too big grains). If set to False, no normalization is performed.
-        If set to "auto" the normalization is performed except for emmodels not respecting the reciprocity princple
-        (which the normalization relies on).
-    :param stream_mode: TODO: add documentation
-    :param error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
-        If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
-        the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
-    :param process_coherent_layers: Adapt the layers thiner than the wavelegnth using the MEMLS method. The radiative transfer
-        theory is inadequate layers thiner than the wavelength and using DORT with thin layers is generally not recommended.
-        In some parcticular cases (such as ice lenses) where the thin layer is isolated between large layers, it is possible
-        to replace the thin layer by an equivalent reflective interface. This neglects scattering in the thin layer,
-        which is acceptable in most case, because the layer is thin. To use this option and more generally
-        to investigate ice lenses, it is recommended to read MEMLS documentation on this topic.
-    :param prune_deep_snowpack: this value is the optical depth from which the layers are discarded in the calculation.
-        It is to be use to accelerate the calculations for deep snowpacks or at high frequencies when the
-        contribution of the lowest layers is neglegible. The optical depth is a good criteria to determine this limit.
-        A value of about 6 is recommended. Use with care, especially values lower than 6.
+    Args:
+
+        n_max_stream: number of stream in the most refringent layer.
+        m_max: number of mode (azimuth).
+        phase_normalization: the integral of the phase matrix should in principe be equal to the scattering coefficient.
+            However, some emmodels do not respect this strictly. In general a small difference is due to numerical rounding and is acceptable,
+            but a large difference rather indicates either a bug in the emmodel or input parameters that breaks the
+            assumption of the emmodel. The most typical case is when the grain size is too big compared to wavelength for emmodels
+            that rely on Rayleigh assumption. If this argument is to True, the phase matrix is normalized to be coherent
+            with the scattering coefficient, but only when the difference is moderate (0.7 to 1.3).
+            If set to "force" the normalization is always performed. This option is dangerous because it may hide bugs or unappropriate
+            input parameters (typically too big grains). If set to False, no normalization is performed.
+            If set to "auto" the normalization is performed except for emmodels not respecting the reciprocity princple
+            (which the normalization relies on).
+        stream_mode: TODO: add documentation.
+        error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
+            If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
+            the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
+        process_coherent_layers: Adapt the layers thiner than the wavelegnth using the MEMLS method. The radiative transfer
+            theory is inadequate layers thiner than the wavelength and using DORT with thin layers is generally not recommended.
+            In some parcticular cases (such as ice lenses) where the thin layer is isolated between large layers, it is possible
+            to replace the thin layer by an equivalent reflective interface. This neglects scattering in the thin layer,
+            which is acceptable in most case, because the layer is thin. To use this option and more generally
+            to investigate ice lenses, it is recommended to read MEMLS documentation on this topic.
+        prune_deep_snowpack: this value is the optical depth from which the layers are discarded in the calculation.
+            It is to be use to accelerate the calculations for deep snowpacks or at high frequencies when the
+            contribution of the lowest layers is neglegible. The optical depth is a good criteria to determine this limit.
+            A value of about 6 is recommended. Use with care, especially values lower than 6.
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
@@ -103,11 +104,6 @@ class DORT(object):
         prune_deep_snowpack=None,
         diagonalization_method="eig",
     ):
-        # """
-        # :param n_max_stream: number of stream in the most refringent layer
-        # :param m_max: number of mode (azimuth)
-
-        # """
         self.n_max_stream = n_max_stream
         self.stream_mode = stream_mode
         self.m_max = m_max
@@ -121,7 +117,7 @@ class DORT(object):
         self.prune_deep_snowpack = prune_deep_snowpack
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
-        """Solves the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
+        """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
             snowpack: Snowpack object.
@@ -130,7 +126,7 @@ class DORT(object):
             atmosphere: Optional atmosphere object.
 
         Returns:
-            Result: Computed result.
+            Result object: Computed result.
         """
         try:
             len(self.sensor.phi)
@@ -243,6 +239,7 @@ class DORT(object):
         return make_result(sensor, intensity, coords, other_data=other_data)
 
     def dort(self, m_max=0, special_return=False):
+        #"""Solve the radiative transfer equation using the DORT method
         # not to be called by the user
         #     """
         #     :param incident_intensity: give either the intensity (array of size 2) at incident_angle (radar) or isotropic or a function
