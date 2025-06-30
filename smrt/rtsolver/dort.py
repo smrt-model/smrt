@@ -50,7 +50,7 @@ import scipy.interpolate
 
 # local import
 from smrt.core.error import SMRTError, smrt_warn
-from smrt.core.result import make_result
+from smrt.core.result import make_result, prepare_kskaeps_profile_information
 from smrt.core.lib import smrt_matrix, smrt_diag, is_equal_zero, is_zero_scalar
 from smrt.core.optional_numba import numba
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers
@@ -221,20 +221,9 @@ class DORT(object):
             coords = [("theta_inc", sensor.theta_inc_deg), ("polarization_inc", pola), ("polarization", pola)]
 
         # store other diagnostic information
-        layer_index = "layer", range(snowpack.nlayer)
         other_data = {
             "stream_angles": xr.DataArray(np.rad2deg(np.arccos(outmu)), coords=[range(len(outmu))]),
-            "effective_permittivity": xr.DataArray(self.effective_permittivity, coords=[layer_index]),
-            "ks": xr.DataArray(
-                [
-                    np.mean(em.ks(outmu).values if hasattr(em, "ks") and callable(em.ks) else getattr(em, "ks", np.nan))
-                    for em in emmodels
-                ],
-                coords=[layer_index],
-            ),
-            "ka": xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index]),
-            "thickness": xr.DataArray(self.snowpack.layer_thicknesses, coords=[layer_index]),
-        }
+        } | prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity=self.effective_permittivity, mu=outmu)
 
         return make_result(sensor, intensity, coords, other_data=other_data)
 

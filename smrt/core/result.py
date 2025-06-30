@@ -32,7 +32,7 @@ For instance result.TbV(theta=53) returns a time-series of brightness temperatur
 plots this timeseries::
 
     plot(times, result.TbV(theta=53))
-    
+
 """
 
 # Stdlib import
@@ -610,7 +610,7 @@ def concat_results(result_list, coord):
         coord: a tuple (dimension_name, dimension_values) for the new dimension. Dimension_values must be a sequence or
         array with the same length as result_list.
 
-    Returns: 
+    Returns:
         :py:class:`Result` instance
     """
 
@@ -656,3 +656,35 @@ def _strongsqueeze(x):
         return float(x)
     else:
         return x
+
+
+def prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity=None, mu=0):
+    """
+    Return a dict with the profiles of ka, ks and effective permittivity. Can be directly used by Solver to insert
+    data in other_data.
+
+    Args:
+        snowpack: the snowpack used for the calculation
+        emmodels: the list of instantiated emmodel
+        effective_permittivity: list of permittivity. If None, it is obtained from the emmodels
+        mu: cosine angles where to compute ks.
+    """
+
+    if effective_permittivity is None:
+        effective_permittivity = np.array([emmodel.effective_permittivity() for emmodel in emmodels])
+
+    # store other diagnostic information
+    layer_index = "layer", range(len(emmodels))
+    other_data = {
+        "effective_permittivity": xr.DataArray(effective_permittivity, coords=[layer_index]),
+        "ks": xr.DataArray(
+            [
+                np.mean(em.ks(mu).values if hasattr(em, "ks") and callable(em.ks) else getattr(em, "ks", np.nan))
+                for em in emmodels
+            ],
+            coords=[layer_index],
+        ),
+        "ka": xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index]),
+        "thickness": xr.DataArray(snowpack.layer_thicknesses, coords=[layer_index]),
+    }
+    return other_data

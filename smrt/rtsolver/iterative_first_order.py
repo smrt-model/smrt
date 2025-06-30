@@ -70,10 +70,10 @@ import numpy as np
 import xarray as xr
 
 # local import
-from ..core.error import SMRTError, smrt_warn
-from ..core.lib import smrt_matrix, is_equal_zero
-from ..core.result import make_result
-from ..core.fresnel import snell_angle
+from smrt.core.error import SMRTError, smrt_warn
+from smrt.core.lib import smrt_matrix, is_equal_zero
+from smrt.core.result import make_result, prepare_kskaeps_profile_information
+from smrt.core.fresnel import snell_angle
 
 
 class IterativeFirstOrder(object):
@@ -192,13 +192,7 @@ class IterativeFirstOrder(object):
         coords = [("theta_inc", sensor.theta_inc_deg), ("polarization_inc", self.pola), ("polarization", self.pola)]
 
         # store other diagnostic information
-        layer_index = "layer", range(self.nlayer)
-        other_data = {
-            "effective_permittivity": xr.DataArray(effective_permittivity, coords=[layer_index]),
-            "ks": xr.DataArray([getattr(em, "_ks", np.nan) for em in emmodels], coords=[layer_index]),
-            "ka": xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index]),
-            "thickness": xr.DataArray(snowpack.layer_thicknesses, coords=[layer_index]),
-        }
+        other_data = prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity=effective_permittivity, mu=mu0)
 
         # get total intensity from the three contributions
         # first index is the number of mu
@@ -333,9 +327,9 @@ class IterativeFirstOrder(object):
             gammas2 = np.exp(-2 * layer_optical_depth / mus_l)
 
             """
-            Zeroth order, ulaby et al 2014 (first term of 11.74) 
+            Zeroth order, ulaby et al 2014 (first term of 11.74)
             Simply the reduced incident intensity, which attenuates exponentially inside the medium.
-            Scattering is not included, except for its contribution to extinction. 
+            Scattering is not included, except for its contribution to extinction.
             Should be zero for flat interface and off-nadir.
             """
             I0_mu = Ttop_coh_m**2 @ (gammas2 * (Rbottom_diff_m @ I_l))
