@@ -113,9 +113,24 @@ All functions must be documented with a docstring, enabling automatic documentat
 We are moving towards using Markdown for docstrings and the Google style guide for documenting function arguments and results.
 This is not the case yet for all files but new code should be written with respect to this rule.
 
-Docstrings must start on the line following the triple quotes with a capital letter. For functions and methods, the first word is a third person singular verb.
+Docstrings must start on the line following the triple quotes with a capital letter. For functions and methods, the first word is an imperative verb (no 's').
+The first sentence must be direct and simple, with a blank line separating it from the rest of the docstring (See the Numpy documentation as an example).
 
-Private methods have no documentation. This could be changed to naming private functions with _ so that sphinx does not get it but developers can access the doc.
+Sentences end with a full stop (.), even in the argument section!
+
+Private methods have no documentation. This could be changed to naming private functions with _ so that sphinx does not get it but developers can access the doc. Small technical function considered as "private" (=only used in their module) can remain undocumented at this stage.
+
+Check that bullet lists (- symbols) are well rendered in the documentation on readthedoc. It seems that ":" in the previous sentence triggers bullet list formatting. Another option seems to be to indent the "-". Don't use * or other symbols for the bullet lists.
+
+For parameter names in the middle of a sentence, It is more readable to add backquotes as `parameters`. This renders the parameters as bold. However avoid too much bolding.
+
+Functions and modules are referred with a ReST link as follows: :py:func:`~smrt.inputs.make_medium.make_snow_layer` or :py:mod:`smrt.rtsolver`. This makes a link in the doc, very convenient for the user to browse the documentation. The tilda "~" means that only "make_snow_layer" is rendered (but the link uses the full path). Removing the ~ renders the full path. This can be useful in some occasion, especially for modules.
+
+Units with subscript use the ReST syntax. E.g. density must be written as kg m :sup:`-3`.
+
+References to papers should be complete with hyperlinks for DOI: doi:10.1007/s10236-018-1166-4  ==> https://doi.org/10.1007/s10236-018-1166-4. For now, references can be written inline or in a reference section. Only one of these option will remain in the future.
+
+For any other points, ask the community or take a decision following the practice of numpy documentation.
 
 Other rules
 -----------
