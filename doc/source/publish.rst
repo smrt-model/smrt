@@ -22,7 +22,7 @@ In practice, we would recommend the following:
 
 - The method to solve the radiative transfer method is not a critical information in general. The DORT solver has been the first and main solver for a long time in SMRT, it is understood as the default. If you use the altimetry modules, it is possible to refer to SMRT-Altim, with a reference to Larue et al. 2021 (for LRM) and Picard et al. 2025/26 (for SAR).
 
-- In general, we recommend to indicate the version of SMRT (or the commit hash if the dev version is used) as some default options may change in the future. If you need a SMRT code doi from Zenodo (often required by the publishers) for your paper, don’t hesitate to contact us, we will provide it rapidely.
+- In general, we recommend to indicate the version of SMRT (or the commit hash if the dev version is used) as some default options may change in the future. If you need a SMRT code doi from Zenodo (often required by the publishers) for your paper, don’t hesitate to contact us, we will provide it rapidly.
 
 - We strongly recommend to publish the code running your simulations, at least the part configuring SMRT. This is the most detailed information that readers will need to understand your results.
 
