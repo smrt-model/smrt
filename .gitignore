@@ -92,3 +92,5 @@ ENV/
 
 # Pyment patches
 *.patch
+# pixi environments
+.pixi

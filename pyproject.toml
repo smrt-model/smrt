@@ -16,7 +16,7 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "numpy >= 1.13, <= 2.0.1",
+    "numpy>=1.13",
     "pandas>=0.20.3",
     "scipy>=1.0.0",
     "xarray>=0.10.3",
@@ -39,7 +39,7 @@ Repository = "https://github.com/smrt-model/smrt.git"
 
 
 [build-system]
-requires = ["setuptools >= 48",
+requires = ["setuptools >= 62",
             "setuptools_scm[toml] >= 6.2",
 ]
 build-backend = "setuptools.build_meta"
@@ -47,14 +47,25 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 packages = ['smrt']
 
-
-
 [tool.ruff]
 line-length = 120
 target-version = "py310"
 lint.ignore = ["E741"]
-
-[tool.ruff.lint.pydocstyle]
-convention = "numpy"   # TODO: changed to google
+lint.pydocstyle.convention = "google"
 
 [tool.setuptools_scm]
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["linux-64"]
+
+[tool.pixi.pypi-dependencies]
+smrt = { path = ".", editable = true }
+
+[tool.pixi.environments]
+default = { solve-group = "default" }
+gsw = { features = ["gsw"], solve-group = "default" }
+progressbar = { features = ["progressbar"], solve-group = "default" }
+pyrtlib = { features = ["pyrtlib"], solve-group = "default" }
+
+[tool.pixi.tasks]
