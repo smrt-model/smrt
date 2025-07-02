@@ -1,7 +1,7 @@
 """Provides permittivity formulations for use with saline ice, and possibly in some cases with saline snow. See also saline_snow.py in the latter case.
 """
 
-
+from typing import Optional
 import warnings
 
 import numpy as np
@@ -54,7 +54,7 @@ def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
 @layer_properties("temperature", "brine_volume_fraction",
                   optional=("brine_inclusion_shape", "brine_mixing_ratio", "ice_permittivity_model", "brine_permittivity_model"))
 def saline_ice_permittivity_pvs_mixing(frequency, temperature, brine_volume_fraction, brine_inclusion_shape='spheres',
-                                       brine_mixing_ratio=1, ice_permittivity_model=None, brine_permittivity_model=None):
+                                       brine_mixing_ratio: Optional[float]=None, ice_permittivity_model=None, brine_permittivity_model=None):
     """Computes effective permittivity of saline ice using the Polder Van Santen mixing formulaes.
 
         :param frequency: frequency in Hz

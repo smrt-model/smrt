@@ -16,7 +16,8 @@ import scipy.fftpack
 # local import
 from ..core.error import SMRTError, smrt_warn
 from ..core.globalconstants import C_SPEED
-from ..permittivity.generic_mixing_formula import polder_van_santen, depolarization_factors
+from ..permittivity.generic_mixing_formula import polder_van_santen
+from ..permittivity.depolarization_factors import depolarization_factors_spheroids
 from ..core.lib import smrt_matrix, generic_ft_even_matrix
 from .common import rayleigh_scattering_matrix_and_angle, AdjustableEffectivePermittivityMixin, IsotropicScatteringMixin, GenericFTPhaseMixin, derived_EMModel
 
@@ -110,7 +111,7 @@ become a default in the future.""")
             else:
                 self.depol_xyz = layer.depolarization_factors
         else:
-            self.depol_xyz = depolarization_factors(getattr(layer, "length_ratio", 1))
+            self.depol_xyz = depolarization_factors_spheroids(getattr(layer, "length_ratio", None))
         # default depol_xyz is spheres
 
         self._effective_permittivity = self.effective_permittivity()
