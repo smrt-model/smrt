@@ -65,6 +65,14 @@ smrt.permittivity.generic\_mixing\_formula module
    :undoc-members:
    :show-inheritance:
 
+smrt.permittivity.depolarization_factors module
+-----------------------------------------------
+
+.. automodule:: smrt.permittivity.depolarization_factors
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 smrt.permittivity.saline\_snow module
 -------------------------------------
 
@@ -88,5 +96,3 @@ smrt.permittivity.wetsnow module
    :members:
    :undoc-members:
    :show-inheritance:
-
-
