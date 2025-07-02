@@ -16,18 +16,21 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "numpy>=1.13",
-    "pandas>=0.20.3",
-    "scipy>=1.0.0",
-    "xarray>=0.10.3",
-    "numba>=0.40",
-    "joblib>=1.0.0",
+    "numpy>=2,<3",
+    "pandas>=2,<3",
+    "scipy>=1,<2",
+    "xarray>=2024",
+    "numba>=0.58,<1",
+    "joblib>=1.3.2,<2",
 ]
 
 [project.optional-dependencies]
     progressbar = ["tqdm"]
     pyrtlib = ["scikit-learn", "bs4", "netCDF4", "requests", "cdsapi", "cfgrib", "pyrtlib"]
     gsw = ["gsw"]
+
+[dependency-groups]
+dev = ["pytest", "ruff"]
 
 
 [project.urls]
@@ -67,5 +70,6 @@ default = { solve-group = "default" }
 gsw = { features = ["gsw"], solve-group = "default" }
 progressbar = { features = ["progressbar"], solve-group = "default" }
 pyrtlib = { features = ["pyrtlib"], solve-group = "default" }
+dev = { features = ["dev"], solve-group = "default" }
 
 [tool.pixi.tasks]
