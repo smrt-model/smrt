@@ -7,18 +7,35 @@ from smrt.core.lib import abs2, smrt_matrix, len_atleast_1d
 from smrt.core.error import SMRTError
 
 
-def vectorize_angles(mu_s, mu_i, dphi):
-    """return angular cosines and sinus with proper dimensions, ready for vectorized calculations."""
+def vectorize_angles(mu_s, mu_i, dphi, compute_cross_product=True, compute_sin=True):
+    """return angular cosines and sinus with proper dimensions, ready for vectorized calculations.
 
-    mu_s = np.atleast_1d(mu_s)[np.newaxis, :, np.newaxis]
-    mu_i = np.atleast_1d(mu_i)[np.newaxis, np.newaxis, :]
+    Args:
+        mu_s: scattering cosine angle.
+        mu_i: incident cosine angle.
+        dphi: azimuth angle between the scattering and incident directions.
+        compute_cross_product: if True perform the computation for all elements in mu_s, mu_i, dphi (cross product)
+            and if False perform the computation for each successive configuration in mu_s, mu_i and dphi (they must
+            have the same shape).
 
-    sin_i = np.sqrt(1. - mu_i**2)
-    sin_s = np.sqrt(1. - mu_s**2)
+    Returns:
+        vectorize angles
+    """
 
+    mu_s = np.atleast_1d(mu_s)
+    mu_i = np.atleast_1d(mu_i)
     dphi = np.atleast_1d(dphi)
-    sinphi = np.sin(dphi)[:, np.newaxis, np.newaxis]
-    cosphi = np.cos(dphi)[:, np.newaxis, np.newaxis]
+
+    if compute_cross_product:
+        mu_s = mu_s[np.newaxis, :, np.newaxis]
+        mu_i = mu_i[np.newaxis, np.newaxis, :]
+        dphi = dphi[:, np.newaxis, np.newaxis]
+
+    sin_i = np.sqrt(1. - mu_i**2) if compute_sin else np.nan
+    sin_s = np.sqrt(1. - mu_s**2) if compute_sin else np.nan
+
+    sinphi = np.sin(dphi)
+    cosphi = np.cos(dphi)
 
     return mu_s, sin_s, mu_i, sin_i, cosphi, sinphi
 
