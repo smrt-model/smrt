@@ -1,6 +1,9 @@
 # coding: utf-8
 
-"""Multi-Fresnel Thermal Emission (MFTE) is a fast RT solver suitable for passive microwave and none scattering
+"""
+Provide the Multi-Fresnel Thermal Emission (MFTE) RT solver for passive sensor.
+
+Multi-Fresnel Thermal Emission (MFTE) is a fast RT solver suitable for passive microwave and none scattering
 media. It computes the thermal emission of a multi-layer stack of homogeneous layers (absorption only, no scattering)
 with flat interfaces (no roughness) solely characterized by their permittivity and temperature. It is most suitable for
 instance for L-band and lower frequencies over the dry zone of the ice-sheet where the penetration is deep and the
@@ -45,13 +48,12 @@ from smrt.core.result import make_result, prepare_kskaeps_profile_information
 
 class MultiFresnelThermalEmission(object):
     """
-    Multi-Fresnel Thermal Emission (MFTE) solver for SMRT.
+    Implement the Multi-Fresnel Thermal Emission (MFTE) solver for SMRT.
 
-    Args
+    Args:
         error_handling: If set to "exception" (the default), raise an exception in cause of error, stopping the code.
             If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
             the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
-
         prune_deep_snowpack: this value is the optical depth from which the layers are discarded in the calculation.
             This prevents numerical unstability inherent to the MFTE formulation for a very deep snowpack.
             A value of 10 is used by default which is already very large / safe. In case of problems of stability, this
@@ -68,7 +70,18 @@ class MultiFresnelThermalEmission(object):
         self.prune_deep_snowpack = prune_deep_snowpack
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
-        """solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration."""
+        """
+        Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
+
+        Args:
+            snowpack: Snowpack object, py:mod:`smrt.core.snowpack`.
+            emmodels: List of electromagnetic models object, py:mod:`smrt.emmodel`.
+            sensor: Sensor object, py:mod:`smrt.core.sensor`.
+            atmosphere: [Optional] Atmosphere object, py:mod:`smrt.atmosphere`.
+
+        Returns:
+            result: Result object, py:mod:`smrt.core.result.PassiveResult`.
+        """
         if sensor.mode != "P":
             raise SMRTError(
                 "the MFTE solver is only suitable for passive microwave. Use an adequate sensor falling in"

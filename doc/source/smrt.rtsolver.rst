@@ -22,6 +22,20 @@ smrt.rtsolver.dort\_nonormalization module
    :members:
    :show-inheritance:
 
+smrt.rtsolver.iterative\_first\_order module
+------------------------------------
+
+.. automodule:: smrt.rtsolver.iterative_first_order
+   :members:
+   :show-inheritance:
+
+smrt.rtsolver.multifresnel\_thermalemission module
+------------------------------------
+
+.. automodule:: smrt.rtsolver.multifresnel_thermalemission
+   :members:
+   :show-inheritance:
+
 smrt.rtsolver.nadir\_lrm\_altimetry module
 ------------------------------------------
 
@@ -36,9 +50,3 @@ smrt.rtsolver.waveform\_model module
    :members:
    :show-inheritance:
 
-smrt.rtsolver.iterative\_first module
-------------------------------------
-
-.. automodule:: smrt.rtsolver.iterative_first
-   :members:
-   :show-inheritance:

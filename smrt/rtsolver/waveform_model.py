@@ -1,3 +1,15 @@
+"""
+Provide Waveform models use in py:mod:`smrt.rtsolver.nadir_lrm_altimetry`.
+
+Brown1977:
+    - Brown, G. (1977).The average impulse response of a rough surface and its applications. IEEE Transactions on Antennas and
+    Propagation. 25-1. pp.67-74. https://doi.org/10.1109/TAP.1977.1141536
+
+Newkirk1992:
+    - Newkirk, M.H., Brown, G.S., 1992. Issues related to waveform computations for radar altimeter applications. IEEE Trans.
+    Antennas Propag. 40, 1478–1488. https://doi.org/10.1109/8.204738.
+"""
+
 import numpy as np
 import scipy.special
 
@@ -9,14 +21,15 @@ class WaveformModel(object):
 
 
 class Brown1977(WaveformModel):
-    """Implements the Antenna Gain formulation used by Brown 1977.
+    """
+    Implement the Antenna Gain formulation used by Brown 1977.
 
-    The formula is exp(2/gamma * sin(theta)**2) for the perfect nadir case,
+    The formula is \(\exp\left(\frac{2}{\gamma} \sin^2 \theta\right)\) for the perfect nadir case,
     but is also available with off-nadir angles.
 
     Args:
         sensor: Sensor object.
-        numerical_convolution (bool): Whether to use numerical convolution.
+        numerical_convolution: Whether to use numerical convolution.
     """
     __name__ = "brown_1977"
 
@@ -71,16 +84,16 @@ class Brown1977(WaveformModel):
                 * scipy.special.i0(4 / self.gamma * np.sqrt(e) * np.sin(2 * theta))
 
     def PFS_PTR_PDF(self, tau, sigma_surface=0, surface_slope=0):
-        """Computes the convolution of the PFS and PTR.
+        # """Computes the convolution of the PFS and PTR.
 
-        Args:
-            tau: Time to which to compute the PFSxPTR.
-            sigma_surface (float): RMS height of the surface topography (meter).
-            surface_slope (float): Surface slope.
+        # Args:
+        #     tau: Time to which to compute the PFSxPTR.
+        #     sigma_surface (float): RMS height of the surface topography (meter).
+        #     surface_slope (float): Surface slope.
 
-        Returns:
-            ndarray: Convoluted PFS and PTR.
-        """
+        # Returns:
+        #     ndarray: Convoluted PFS and PTR.
+        # """
 
         sqrt2 = 1.4142135623731
         sigma_c = np.sqrt(self.sensor.pulse_sigma**2 + (2 * sigma_surface / C_SPEED)**2)
@@ -110,12 +123,15 @@ class Brown1977(WaveformModel):
 
 
 class Newkrik1992(WaveformModel):
-    """Implements the Antenna Gain formulation proposed by Newkrik and Brown, 1992.
+    """
+    Implement the Antenna Gain formulation proposed by Newkrik and Brown, 1992.
 
-    Compared to the classical Brown 1977, it takes into account 
+    Compared to the classical Brown 1977, it takes into account
     the asymmetry of the antenna pattern in the co and cross-track direction.
 
-"""
+    Args:
+        sensor: Sensor object.
+    """
 
     __name__ = "Newkrik1992"
 

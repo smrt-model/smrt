@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-Iterative First-Order Radiative Transfer Solver
+Provide the iterative first-order radiative transfer solver.
 
 This module implements a first-order iterative solution for the radiative transfer equation
 to calculate backscatter coefficients. The solver computes both zeroth and first-order
@@ -9,17 +9,11 @@ backscatter contributions and is computationally more efficient than the DORT so
 but should be used with caution.
 
 Key Features:
-        - Separates different backscatter mechanisms for analysis
-        - More computationally efficient than full DORT solver
-        - Provides diagnostic information about scattering contributions
-
-Limitations:
-    - Single scattering albedo should be < 0.5 for reliable results. Can compare to dort to estimate unaccounted scattering.
-    - Multiple scattering effects are not accounted for in first-order approximation
-    - For higher scattering albedos, a second-order solution is required
+        - Separate different backscatter mechanisms for analysis.
+        - More computationally efficient than full DORT solver.
+        - Provide diagnostic information about scattering contributions.
 
 Backscatter Components:
-
     Zeroth Order:
         Should be zero for flat interfaces and off-nadir angles. Represents the
         incident intensity that attenuates exponentially inside the medium. Scattering
@@ -27,17 +21,15 @@ Backscatter Components:
         (Reference: Ulaby et al. 2014, first term of Eq. 11.74)
 
     First Order:
-        Calculates three main contributions (Ulaby et al. 2014, Eqs. 11.75 and 11.62):
-
-        - direct_backscatter: Single volume backscatter upwards by the layer
-        - reflection_backscatter: Single volume backscatter downward by the layer
-          and double specular reflection by the boundary
-        - double_bounce: 2× single bistatic scattering by the layer and single
-          reflection by the lower boundary
+        Calculate three main contributions (Ulaby et al. 2014, Eqs. 11.75 and 11.62):
+        - direct_backscatter: Single volume backscatter upwards by the layer.
+        - double_bounce: Single volume backscatter downward by the layer
+          and double specular reflection by the boundary.
+        - reflected_scattering: 2× single bistatic scattering by the layer and single.
+          reflection by the lower boundary.
 
 Usage:
-
-    Basic usage with default settings:
+    Basic usage with default settings and iba emmodel:
         >>> m = make_model("iba", "iterative_first")
 
     Return individual contributions for analysis:
@@ -47,10 +39,13 @@ Usage:
         >>> m = make_model("iba", "iterative_first", rtsolver_options = {'error_handling':'nan'}
 
 Note:
-    This solver is designed for backscatter calculations only.
+    - This solver is designed for backscatter calculations only.
+    - Single scattering albedo should be < 0.5 for reliable results. Can compare to dort to estimate unaccounted scattering.
+    - Multiple scattering effects are not accounted for in first-order approximation.
+    - For higher scattering albedos, a second-order solution is required.
 
 References:
-Ulaby, F. T., et al. (2014). Microwave radar and radiometric remote sensing. Chapter 11
+Ulaby, F. T., et al. (2014). Microwave radar and radiometric remote sensing. Chapter 11.
 
 Tsang, L., Pan, J., Liang, D., Li, Z., Cline, D. W., & Tan, Y. (2007). Modeling Active Microwave Remote Sensing of Snow
 Using Dense Media Radiative Transfer (DMRT) Theory With Multiple-Scattering Effects. IEEE Transactions on Geoscience and
@@ -78,32 +73,26 @@ from smrt.core.fresnel import snell_angle
 
 class IterativeFirstOrder(object):
     """
-    Iterative radiative transfer solver using first-order approximation.
+    Implement the iterative radiative transfer solver using first-order approximation.
 
     This solver computes the zeroth and first-order terms of the iterative solution
     for the radiative transfer equation. It provides efficient backscatter calculations
     but is limited to scenarios with relatively low scattering albedos.
 
     Args:
-        error_handling (str, optional): Error handling strategy. Options:
-            - "exception" (default): Raise exceptions on errors, stopping execution
-            - "nan": Return NaN values on errors, allowing calculation to continue
-              (recommended only for long simulations where occasional errors are expected)
+        error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
+            If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
+            the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
 
-        return_contributions (bool, optional): If False (default), returns only total backscatter.
+        return_contributions: If False (default), returns only total backscatter.
             If True, returns individual contributions:
             - 'direct_backscatter': Single volume backscatter upwards
             - 'reflected_scattering': Bistatic scattering + single boundary reflection
             - 'double_bounce': Volume backscatter + double boundary reflection
             - 'zeroth': Zeroth-order contribution
             - 'total': Sum of all contributions
-
-    Attributes:
-        _broadcast_capability (set): Dimensions that this solver can handle directly:
-            {"theta_inc", "polarization_inc", "theta", "polarization"}
-            Other dimensions (frequency, time, etc.) must be managed by the caller.
     """
-
+    # Dimensions that this solver can handle directly:
     _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "polarization"}
 
     def __init__(self, error_handling="exception", return_contributions=False):
@@ -112,32 +101,16 @@ class IterativeFirstOrder(object):
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
         """
-        Solve the radiative transfer equation for the given configuration.
+        Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
-            snowpack (Snowpack): Snowpack object containing layer properties and structure.
-            emmodels (list): List of electromagnetic models for each layer.
-            sensor (Sensor): Sensor configuration (must be active microwave, mode="A").
-            atmosphere (Atmosphere, optional): Atmospheric model (currently not supported,
-                must be None).
+            snowpack: Snowpack object, py:mod:`smrt.core.snowpack`.
+            emmodels: List of electromagnetic models object, py:mod:`smrt.emmodel`.
+            sensor: Sensor object, py:mod:`smrt.core.sensor`.
+            atmosphere: [Optional] Atmosphere object, py:mod:`smrt.atmosphere`.
 
         Returns:
-            Result: Result object containing:
-                - Backscatter coefficients
-                - Coordinate information (theta_inc, polarization_inc, polarization)
-                - Diagnostic data (effective_permittivity, ks, ka, thickness)
-                - Individual contributions (if return_contributions=True)
-
-        Raises:
-            SMRTError: If sensor mode is not "A" (active microwave), if atmosphere is
-                provided (not yet supported), or if substrate permittivity has too
-                small imaginary part.
-
-        Warnings:
-            Issues warnings for:
-                - Scattering albedo > 0.5 (may exceed solver validity range)
-                - Optically shallow snowpack without substrate
-                - Substrate with very small imaginary permittivity
+            result: Result object, py:mod:`smrt.core.result.ActiveResult`.
         """
         if sensor.mode != "A":
             raise SMRTError(
@@ -217,31 +190,28 @@ class IterativeFirstOrder(object):
             return make_result(sensor, total_I, coords=coords, other_data=other_data)
 
     def compute_intensity(self, snowpack, emmodels, sensor, interfaces, substrate, effective_permittivity, mu0):
-        """
-        Calculate the intensity contributions for first-order backscatter.
+        # """
+        # Calculate the intensity contributions for first-order backscatter.
 
-        Computes zeroth and first-order backscatter contributions including direct
-        backscatter, reflection backscatter, and double bounce scattering.
+        # Computes zeroth and first-order backscatter contributions including direct
+        # backscatter, reflection backscatter, and double bounce scattering.
 
-        Args:
-            snowpack (Snowpack): Snowpack object with layer properties.
-            emmodels (list): List of electromagnetic models for each layer.
-            sensor (Sensor): Sensor configuration.
-            interfaces (list): List of interface objects.
-            substrate (Substrate): Substrate object.
-            effective_permittivity (list): Complex permittivity for each layer.
-            mu0 (array_like): Cosine of incident angles.
+        # Args:
+        #     snowpack (Snowpack): Snowpack object with layer properties.
+        #     emmodels (list): List of electromagnetic models for each layer.
+        #     sensor (Sensor): Sensor configuration.
+        #     interfaces (list): List of interface objects.
+        #     substrate (Substrate): Substrate object.
+        #     effective_permittivity (list): Complex permittivity for each layer.
+        #     mu0 (array_like): Cosine of incident angles.
 
-        Returns:
-            np.ndarray: Intensity array with shape (4, n, npol, npol) containing:
-                - [0]: Direct backscatter contribution
-                - [1]: Reflected scattering contribution
-                - [2]: Double bounce contribution
-                - [3]: Zeroth order contribution
-
-        Warnings:
-            Issues warnings for high scattering albedo or optically shallow snowpack.
-        """
+        # Returns:
+        #     np.ndarray: Intensity array with shape (4, n, npol, npol) containing:
+        #         - [0]: Direct backscatter contribution
+        #         - [1]: Reflected scattering contribution
+        #         - [2]: Double bounce contribution
+        #         - [3]: Zeroth order contribution
+        # """
         nlayer = snowpack.nlayer
         dphi = self.dphi
         n = len(mu0)  # number of streams
@@ -379,20 +349,20 @@ class IterativeFirstOrder(object):
 
 
 def _get_np_matrix(smrt_m, npol, n_mu):
-    """
-    Convert SMRT matrix format to numpy array format.
+    # """
+    # Convert SMRT matrix format to numpy array format.
 
-    Args:
-        smrt_m (SMRTMatrix): SMRT matrix object to convert.
-        npol (int): Number of polarizations.
-        n_mu (int): Number of incident angles.
+    # Args:
+    #     smrt_m (SMRTMatrix): SMRT matrix object to convert.
+    #     npol (int): Number of polarizations.
+    #     n_mu (int): Number of incident angles.
 
-    Returns:
-        np.ndarray: Numpy array of shape (n_mu, npol, npol).
+    # Returns:
+    #     np.ndarray: Numpy array of shape (n_mu, npol, npol).
 
-    Raises:
-        SMRTError: If matrix type is not supported for conversion.
-    """
+    # Raises:
+    #     SMRTError: If matrix type is not supported for conversion.
+    # """
     if is_equal_zero(smrt_m):
         # zero matrix
         np_m = np.zeros((n_mu, npol, npol))
@@ -415,33 +385,33 @@ def _get_np_matrix(smrt_m, npol, n_mu):
 
 
 class _InterfaceProperties(object):
-    """
-    Helper class to organize interface properties for multi-layer snowpack.
+    # """
+    # Helper class to organize interface properties for multi-layer snowpack.
+    
+    # Manages transmission and reflection matrices for coherent and diffuse
+    # scattering at interfaces between layers and boundaries.
+    # Prepare interface properties of multi-layer snowpack layer l
+    # Index -1 refers to air layer
 
-    Manages transmission and reflection matrices for coherent and diffuse
-    scattering at interfaces between layers and boundaries.
-    Prepare interface properties of multi-layer snowpack layer l
-    Index -1 refers to air layer
+    # Args:
+    #     frequency (float): Electromagnetic frequency.
+    #     interfaces (list): List of interface objects.
+    #     substrate (Substrate): Substrate object.
+    #     permittivity (list): Complex permittivity for each layer.
+    #     mu0 (array_like): Cosine of incident angles.
+    #     npol (int): Number of polarizations.
+    #     nlayer (int): Number of layers.
+    #     dphi (float): Azimuth angle difference.
 
-    Args:
-        frequency (float): Electromagnetic frequency.
-        interfaces (list): List of interface objects.
-        substrate (Substrate): Substrate object.
-        permittivity (list): Complex permittivity for each layer.
-        mu0 (array_like): Cosine of incident angles.
-        npol (int): Number of polarizations.
-        nlayer (int): Number of layers.
-        dphi (float): Azimuth angle difference.
-
-    Attributes:
-        Rtop_coh (dict): Coherent reflection matrices for top interfaces.
-        Rtop_diff (dict): Diffuse reflection matrices for top interfaces.
-        Ttop_coh (dict): Coherent transmission matrices for top interfaces.
-        Rbottom_coh (dict): Coherent reflection matrices for bottom interfaces.
-        Rbottom_diff (dict): Diffuse reflection matrices for bottom interfaces.
-        Tbottom_coh (dict): Coherent transmission matrices for bottom interfaces.
-        mu (dict): Cosine of refraction angles for each layer.
-    """
+    # Attributes:
+    #     Rtop_coh (dict): Coherent reflection matrices for top interfaces.
+    #     Rtop_diff (dict): Diffuse reflection matrices for top interfaces.
+    #     Ttop_coh (dict): Coherent transmission matrices for top interfaces.
+    #     Rbottom_coh (dict): Coherent reflection matrices for bottom interfaces.
+    #     Rbottom_diff (dict): Diffuse reflection matrices for bottom interfaces.
+    #     Tbottom_coh (dict): Coherent transmission matrices for bottom interfaces.
+    #     mu (dict): Cosine of refraction angles for each layer.
+    # """
 
     def __init__(self, frequency, interfaces, substrate, permittivity, mu0, npol, nlayer, dphi):
 
