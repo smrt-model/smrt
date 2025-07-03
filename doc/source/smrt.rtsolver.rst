@@ -15,13 +15,6 @@ smrt.rtsolver.dort module
    :members:
    :show-inheritance:
 
-smrt.rtsolver.dort\_nonormalization module
-------------------------------------------
-
-.. automodule:: smrt.rtsolver.dort_nonormalization
-   :members:
-   :show-inheritance:
-
 smrt.rtsolver.iterative\_first\_order module
 ------------------------------------
 
