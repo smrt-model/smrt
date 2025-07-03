@@ -1,6 +1,7 @@
 # coding: utf-8
 
-"""Provides the Discrete Ordinate and Eigenvalue Solver as a multi-stream solver of the radiative transfer model.
+"""
+Provide the Discrete Ordinate and Eigenvalue Solver as a multi-stream solver of the radiative transfer model.
 
 This solver is precise but less efficient than 2 or 6 flux solvers. Different flavours of DORT (or DISORT) exist in the literature
 depending on the mode (passive or active), on the density of the medium (sparse media have trivial inter-layer boundary
@@ -12,18 +13,18 @@ Tsang's group) is similar to the present implementation except it uses spline in
 streams between the layers although we use direct connection by varying the angle according to Snell's law. A practical
 consequence is that the number of streams vary (due to internal reflection) and the value `n_max_stream` only applies in
 the most refringent layer. The number of outgoing streams in the air is usually smaller, sometimes twice smaller
-(depends on the density profile). It is important not to set too low a value for n_max_stream. E.g. 32 is usually fine,
+(depends on the density profile). It is important not to set too low a value for `n_max_stream`. E.g. 32 is usually fine,
 64 or 128 are better but simulations will be much slower.
 
 Note:
     The DORT solver is very robust in passive mode but may raise exception in active mode due to a matrix
     diagonalisation problem. The exception provides detailed information on how to address this issue. Two new
-    diagonalisation approaches were added in January 2024. They are activated by setting the diagonalization_method optional
-    argument (see :py:mod:`smrt.core.make_model`). The first method (diagonalization_method='shur') replaces the
+    diagonalisation approaches were added in January 2024. They are activated by setting the `diagonalization_method` optional
+    argument (see :py:mod:`smrt.core.make_model`). The first method (``diagonalization_method='shur'``) replaces the
     scipy.linalg.eig function by a shur decomposition followed by a diagonalisation of the shur matrix. While
     scipy.linalg.eig performs such a shur decomposition internally in any case, it seems that explicitly calling the shur
     decomposition beforehand improves the stability. Nevertheless to really solve the problem, the second method
-    (diagonalization_method='shur_forcedtriu') consists in removing the 2x2 and 3x3 blocks from the shur matrix, i.e. forcing
+    (``diagonalization_method='shur_forcedtriu'``) consists in removing the 2x2 and 3x3 blocks from the shur matrix, i.e. forcing
     the shur matrix to be upper triangular (triu in numpy jargon = zeroing the lower part of this
     matrix). This problem is due to the structure of the matrix to be diagonalized and the formulation of the DORT method in the polarimetric
     configuration. The eigenvalues come by triplets and can be very close to each other for the three H, V, U Stokes components
@@ -35,6 +36,25 @@ Note:
     to check that these blocks are nearly diagonal but this is not done in the current implementation. The user is
     responsible to switch between the options until it works. After sufficient successful reports by users are received the last
     method (forcedtriu) will certainly be the default.
+
+Usage:
+    Basic usage with default settings and iba emmodel:
+        >>> m = make_model("iba", "dort")
+
+    Handle errors gracefully in batch processing:
+        >>> m = make_model("iba", "dort", rtsolver_options = {'error_handling':'nan'})
+
+References:
+    Picard, G., Le Toan, T., Quegan, S., Caraglio, Y., and Castel, T. (2004). Radiative Transfer Modeling of Cross-Polarized  Backscatter
+    From a Pine Forest Using the Discrete  Ordinate and Eigenvalue Method. IEEE TRANSACTIONS ON GEOSCIENCE AND REMOTE SENSING, VOL. 42, NO. 8,
+    https://doi.org/10.1109/TGRS.2004.831229
+
+    Picard, G., Brucker, L., Roy, A., Dupont, F., Fily, M., Royer, A., and Harlow, C. (2013) Simulation of the microwave emission of
+    multi-layered snowpacks using the Dense Media Radiative transfer theory: the DMRT-ML model, Geosci. Model Dev., 6, 1061–1078,
+    https://doi.org/10.5194/gmd-6-1061-2013
+
+    Stamnes, K., Tsay, S-C., Wiscombe, W., and Jayaweera, K. (1988). Numerically stable algorithm for discrete-ordinate-method radiative
+    transfer in multiple scattering and emitting layered media. Applied Optics, 27-12, pp.2502-2509. https://doi.org/10.1364/AO.27.002502
 """
 
 # Stdlib import
@@ -57,10 +77,10 @@ from smrt.core.optional_numba import numba
 
 
 class DORT(object):
-    """Implements the Discrete Ordinate and Eigenvalue Solver.
+    """
+    Implement the Discrete Ordinate and Eigenvalue Solver.
 
     Args:
-
         n_max_stream: number of stream in the most refringent layer.
         m_max: number of mode (azimuth).
         phase_normalization: the integral of the phase matrix should in principe be equal to the scattering coefficient.
@@ -73,7 +93,9 @@ class DORT(object):
             input parameters (typically too big grains). If set to False, no normalization is performed.
             If set to "auto" the normalization is performed except for emmodels not respecting the reciprocity princple
             (which the normalization relies on).
-        stream_mode: TODO: add documentation.
+        stream_mode: If set to "most_refringent" (the default) or "air", streams are calculated using the Gauss-Legendre polynomials and
+            then use Snell-law to prograpate the direction in the other layers. If set to "uniform_air", streams are calculated
+            uniformly in air and then according to Snells law.
         error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
             If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
             the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
@@ -87,6 +109,9 @@ class DORT(object):
             It is to be use to accelerate the calculations for deep snowpacks or at high frequencies when the
             contribution of the lowest layers is neglegible. The optical depth is a good criteria to determine this limit.
             A value of about 6 is recommended. Use with care, especially values lower than 6.
+        diagonalization_method: This value set the method for the diagonalization in the eigenvalue solver. The defaut is "eig" use the
+            scipy.linalg.eig function. The "shur" replaces the scipy.linalg.eig function by a shur decomposition followed by a diagonalisation of the
+            shur matrix. The "shur_forcedtriu" forces the shur matrix to be upper triangular.
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
@@ -120,13 +145,13 @@ class DORT(object):
         """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
-            snowpack: Snowpack object.
-            emmodels: List of electromagnetic models.
-            sensor: Sensor object.
-            atmosphere: Optional atmosphere object.
+            snowpack: Snowpack object, py:mod:`smrt.core.snowpack`.
+            emmodels: List of electromagnetic models object, py:mod:`smrt.emmodel`.
+            sensor: Sensor object, py:mod:`smrt.core.sensor`.
+            atmosphere: [Optional] Atmosphere object, py:mod:`smrt.atmosphere`.
 
         Returns:
-            Result object: Computed result.
+            result: Result object, py:mod:`smrt.core.result.Result`.
         """
         try:
             len(self.sensor.phi)

@@ -1,17 +1,26 @@
-"""Computes waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the
-given snowpack and sensor (or complex terrain soon). The implementation is based on Adams and Brown 1998 and Lacroix et al. 2008. Both
-models differ in the specific choices for the scattering and backscatter of the interface, but are similar in the way
-the waveform is calculated, which concerns the solver here.
+"""
+Compute waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the given snowpack and sensor (or complex terrain soon). 
+
+The implementation is based on Adams and Brown 1998 and Lacroix et al. 2008. Both models differ in the specific choices for the 
+scattering and backscatter of the interface, but are similar in the way the waveform is calculated, which concerns the solver here.
 
 Approximations:
     - Backscatter is computed assuming only first order scattering. The propagation is then simply governed by extinction.
     - Near nadir / small angle approximation: to compute delay, the paths in the snow are along the z-axis. Off-nadir delay is neglected.
       This error is likely to be small (except for very deep penetration).
+    - Do not account for specular refelction (to be implemented).
 
 Note:
     With this RT solver, if using Geometrical Optics for rough surface/interface modeling, it is strongly advised to use
     :py:func:`smrt.interface.geometrical_optics_backscatter` instead of :py:func:`smrt.interface.geometrical_optics` for
     the reason explained in the documentation of those modules.
+
+Usage:
+    Basic usage with default settings and iba emmodel:
+        >>> altimodel = make_model('iba', "nadir_lrm_altimetry")
+
+    Return individual contributions:
+        >>> altimodel = make_model('iba', "nadir_lrm_altimetry", rtsolver_options={return_contributions=True})
 """
 
 import numpy as np
@@ -28,22 +37,24 @@ import xarray as xr
 
 
 class NadirLRMAltimetry(object):
-    """Implements the Nadir LRM Mode Altimetry RT solver.
+    """
+    Implement the Nadir LRM Mode Altimetry RT solver.
 
-    :param oversampling: integer number defining the number of subgates used for the computation in each altimeter gate.
-        This is equivalent to multiply the bandwidth by this number. It is used to perform more accurate computation.
-    :param return_oversampled: by default the backscatter is returned for each gate. If set to True, the oversampled waveform
-        is returned instead. See the 'oversampling' argument.
-    :param return_contributions: return volume, surface and interface backscatter contributions in addition to the total backscatter.
-    :param skip_pfs_convolution: return the vertical backscatter without the convolution by the PFS, if set to True.
-    :param theta_inc_sampling: number of subdivisions used to calculate the incidence angular variations of surface and inteface
-        backscatter (the higher the better but the more computationnaly expensive). Note
-        that the subdivisions are irregular in incidence angle but correspond to annulii of equi-duration. This number
-        must be a true divider of the number of gates.
-    :param return_theta_inc_sampling: return the backscatter at the different angles
-    :param error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
-        If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
-        the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
+    Args:
+        oversampling: integer number defining the number of subgates used for the computation in each altimeter gate.
+            This is equivalent to multiply the bandwidth by this number. It is used to perform more accurate computation.
+        return_oversampled: by default the backscatter is returned for each gate. If set to True, the oversampled waveform
+            is returned instead. See the 'oversampling' argument.
+        return_contributions: return "volume", "surface" and "interface" backscatter contributions in addition to the "total" backscatter.
+        skip_pfs_convolution: return the vertical backscatter without the convolution by the PFS, if set to True.
+        theta_inc_sampling: number of subdivisions used to calculate the incidence angular variations of surface and inteface
+            backscatter (the higher the better but the more computationnaly expensive). Note
+            that the subdivisions are irregular in incidence angle but correspond to annulii of equi-duration. This number
+            must be a true divider of the number of gates.
+        return_theta_inc_sampling: return the backscatter at the different angles.
+        error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
+            If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
+            the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
@@ -78,16 +89,17 @@ class NadirLRMAltimetry(object):
             self.return_theta_inc_sampling = False
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
-        """Solves the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
+        """
+        Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
-            snowpack: Snowpack object.
-            emmodels: List of electromagnetic models.
-            sensor: Sensor object.
-            atmosphere: Optional atmosphere object.
+            snowpack: Snowpack object, py:mod:`smrt.core.snowpack`.
+            emmodels: List of electromagnetic models object, py:mod:`smrt.emmodel`.
+            sensor: Sensor object, py:mod:`smrt.core.sensor`.
+            atmosphere: [Optional] Atmosphere object, py:mod:`smrt.atmosphere`.
 
         Returns:
-            AltimetryResult: Computed result.
+            result: Result object, py:mod:`smrt.core.result.AltimetryResult`.
         """
         if sensor.theta_inc != 0:
             raise SMRTError("This solver is for nadir looking altimeter only")
@@ -244,7 +256,7 @@ class NadirLRMAltimetry(object):
             return do_convolve(backscatter)
 
     def gate_depth(self, eps=None):
-        """return gate depth that cover the snowpack for a regular time sampling"""
+        # """return gate depth that cover the snowpack for a regular time sampling"""
 
         if eps is None:
             eps = [em.effective_permittivity().real for em in self.emmodels]
@@ -282,14 +294,14 @@ class NadirLRMAltimetry(object):
         return z[:-1], dz, b_gate, b_layer[:-1], b_interface
 
     def vertical_scattering_distribution(self, return_contributions, mu_i=1.0):
-        """Compute the vertical backscattering distribution due to "grain" or volume scattering (symbol pvg in Eq 9 in Lacroix 2008) and
-        "interfaces" or 'surface' scattering (symbol pvl in Eq 9 in Lacroix 2008)
+        # """Compute the vertical backscattering distribution due to "grain" or volume scattering (symbol pvg in Eq 9 in Lacroix 2008) and
+        # "interfaces" or 'surface' scattering (symbol pvl in Eq 9 in Lacroix 2008)
 
-        :param mu: cosine of the incidence angles. Only the dependence on the surface scattering depend on mu_i
+        # :param mu: cosine of the incidence angles. Only the dependence on the surface scattering depend on mu_i
 
-        Returns:
-            ndarray: Backscattering distribution.
-        """
+        # Returns:
+        #     ndarray: Backscattering distribution.
+        # """
         mu_i = np.atleast_1d(mu_i)
 
         # propagation time
