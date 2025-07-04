@@ -16,11 +16,11 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "numpy>=1.13",
+    "numpy>=1.15",
     "pandas>=0.20.3",
     "scipy>=1.0.0",
     "xarray>=0.10.3",
-    "numba>=0.40",
+    "numba>=0.53",
     "joblib>=1.0.0",
 ]
 
