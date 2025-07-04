@@ -15,18 +15,15 @@ Key Features:
 
 Backscatter Components:
     Zeroth Order:
-        Should be zero for flat interfaces and off-nadir angles. Represents the
-        incident intensity that attenuates exponentially inside the medium. Scattering
-        is only included through its contribution to extinction.
+        Should be zero for flat interfaces and off-nadir angles. Represents the incident intensity that attenuates exponentially inside 
+        the medium. Scattering is only included through its contribution to extinction.
         (Reference: Ulaby et al. 2014, first term of Eq. 11.74)
 
     First Order:
         Calculate three main contributions (Ulaby et al. 2014, Eqs. 11.75 and 11.62):
-        - direct_backscatter: Single volume backscatter upwards by the layer.
-        - double_bounce: Single volume backscatter downward by the layer
-          and double specular reflection by the boundary.
-        - reflected_scattering: 2× single bistatic scattering by the layer and single.
-          reflection by the lower boundary.
+            - direct_backscatter: Single volume backscatter upwards by the layer.
+            - double_bounce: Single volume backscatter downward by the layer and double specular reflection by the boundary.
+            - reflected_scattering: 2× single bistatic scattering by the layer and single reflection by the lower boundary.
 
 Usage:
     Basic usage with default settings and iba emmodel:
@@ -45,16 +42,16 @@ Note:
     - For higher scattering albedos, a second-order solution is required.
 
 References:
-Ulaby, F. T., et al. (2014). Microwave radar and radiometric remote sensing. Chapter 11.
+    Ulaby, F. T., et al. (2014). Microwave radar and radiometric remote sensing. Chapter 11.
 
-Tsang, L., Pan, J., Liang, D., Li, Z., Cline, D. W., & Tan, Y. (2007). Modeling Active Microwave Remote Sensing of Snow
-Using Dense Media Radiative Transfer (DMRT) Theory With Multiple-Scattering Effects. IEEE Transactions on Geoscience and
-Remote Sensing, 45(4), 990–1004. https://doi.org/10.1109/tgrs.2006.888854
+    Tsang, L., Pan, J., Liang, D., Li, Z., Cline, D. W., & Tan, Y. (2007). Modeling Active Microwave Remote Sensing of Snow
+    Using Dense Media Radiative Transfer (DMRT) Theory With Multiple-Scattering Effects. IEEE Transactions on Geoscience and
+    Remote Sensing, 45(4), 990–1004. https://doi.org/10.1109/tgrs.2006.888854
 
-Tan, S., Chang, W., Tsang, L., Lemmetyinen, J., & Proksch, M. (2015). Modeling Both Active and Passive Microwave Remote
-Sensing of Snow Using Dense Media Radiative Transfer (DMRT) Theory With Multiple Scattering and Backscattering
-Enhancement. IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, 8(9), 4418–4430.
-https://doi.org/10.1109/jstars.2015.2469290
+    Tan, S., Chang, W., Tsang, L., Lemmetyinen, J., & Proksch, M. (2015). Modeling Both Active and Passive Microwave Remote
+    Sensing of Snow Using Dense Media Radiative Transfer (DMRT) Theory With Multiple Scattering and Backscattering
+    Enhancement. IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, 8(9), 4418–4430.
+    https://doi.org/10.1109/jstars.2015.2469290
 """
 
 
@@ -86,11 +83,11 @@ class IterativeFirstOrder(object):
 
         return_contributions: If False (default), returns only total backscatter.
             If True, returns individual contributions:
-            - 'direct_backscatter': Single volume backscatter upwards
-            - 'reflected_scattering': Bistatic scattering + single boundary reflection
-            - 'double_bounce': Volume backscatter + double boundary reflection
-            - 'zeroth': Zeroth-order contribution
-            - 'total': Sum of all contributions
+                - 'direct_backscatter': Single volume backscatter upwards.
+                - 'reflected_scattering': Bistatic scattering + single boundary reflection.
+                - 'double_bounce': Volume backscatter + double boundary reflection.
+                - 'zeroth': Zeroth-order contribution.
+                - 'total': Sum of all contributions.
     """
     # Dimensions that this solver can handle directly:
     _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "polarization"}
@@ -104,13 +101,13 @@ class IterativeFirstOrder(object):
         Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
-            snowpack: Snowpack object, py:mod:`smrt.core.snowpack`.
-            emmodels: List of electromagnetic models object, py:mod:`smrt.emmodel`.
-            sensor: Sensor object, py:mod:`smrt.core.sensor`.
-            atmosphere: [Optional] Atmosphere object, py:mod:`smrt.atmosphere`.
+            snowpack: Snowpack object, :py:mod:`smrt.core.snowpack`.
+            emmodels: List of electromagnetic models object, :py:mod:`smrt.emmodel`.
+            sensor: Sensor object, :py:mod:`smrt.core.sensor`.
+            atmosphere: [Optional] Atmosphere object, :py:mod:`smrt.atmosphere`.
 
         Returns:
-            result: Result object, py:mod:`smrt.core.result.ActiveResult`.
+            result: Result object, :py:mod:`smrt.core.result.ActiveResult`.
         """
         if sensor.mode != "A":
             raise SMRTError(

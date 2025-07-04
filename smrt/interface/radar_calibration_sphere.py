@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-Implements a surface with a backscatter of 4pi.
+Implement a surface with a backscatter of 4pi.
 
 """
 

@@ -1,5 +1,5 @@
-"""Implements a transparent interface (no reflection). Useful mainly for unit tests.
-
+"""
+Implement a transparent interface (no reflection). Useful mainly for unit tests.
 """
 
 from smrt.core.lib import smrt_matrix, len_atleast_1d
@@ -12,7 +12,8 @@ class Transparent(object):
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
-        Computes the reflection coefficients for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
+        Compute the reflection coefficients for the azimuthal mode m and for an array of incidence angles (given by their cosine) 
+        in medium 1. Medium 2 is where the beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -33,7 +34,8 @@ class Transparent(object):
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
-        Computes the transmission coefficients for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
+        Compute the transmission coefficients for the azimuthal mode m and for an array of incidence angles (given by their cosine) 
+        in medium 1. Medium 2 is where the beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
