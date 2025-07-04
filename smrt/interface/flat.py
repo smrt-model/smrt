@@ -1,6 +1,7 @@
 """
-Implements the flat interface boundary condition between layers characterized by their effective permittivities. The reflection and transmission are computed using the Fresnel coefficient.
+Provide the flat interface boundary condition between layers characterized by their effective permittivities. 
 
+The reflection and transmission are computed using the Fresnel coefficient from :py:mod:`smrt.core.fresnel`.
 """
 
 from smrt.core.lib import smrt_matrix
@@ -10,15 +11,19 @@ from smrt.core.interface import Interface
 
 class Flat(Interface):
     """
-    Represents a flat surface. The reflection is in the specular direction and the coefficient is calculated with the Fresnel coefficients.
-
+    Implement a flat surface. 
+    
+    The reflection is in the specular direction and the coefficient is calculated with the Fresnel coefficients.
     """
     args = []
     optional_args = {}
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
-        Computes the reflection coefficients for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
+        Compute the reflection coefficients. 
+        
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
+        beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -28,7 +33,7 @@ class Flat(Interface):
             npol: Number of polarization.
 
         Returns:
-            The reflection matrix.
+            The reflection matrix, :py:mod:`smrt.core.fresnel.fresnel_reflection_matrix`. 
         """
 
         return fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
@@ -38,7 +43,10 @@ class Flat(Interface):
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
-        Computes the transmission coefficients for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
+        Compute the transmission coefficients.
+        
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
+        beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -48,7 +56,7 @@ class Flat(Interface):
             npol: Number of polarization.
 
         Returns:
-            The transmission matrix.
+            The transmission matrix, :py:mod:`smrt.core.fresnel.fresnel_transmission_matrix`.
         """
 
         return fresnel_transmission_matrix(eps_1, eps_2, mu1, npol)
