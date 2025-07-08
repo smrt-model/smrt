@@ -23,6 +23,7 @@ res_example = result.ActiveResult([[[[4.01445680e-03, 3.77746658e-03, 0.00000000
                                                'VH': dict(polarization='H', polarization_inc='V')},
                                   other_data={'ks': xr.DataArray([1., 2., 3.], coords=[layer_coord]),
                                               'ka': xr.DataArray([3., 2., 1.], coords=[layer_coord]),
+                                              'ke': xr.DataArray([4., 4., 4.], coords=[layer_coord]),
                                               'thickness': xr.DataArray([0.1, 0.1, 0.1], coords=[layer_coord])}
                                   )
 
@@ -35,6 +36,7 @@ res_example2 = result.ActiveResult([[[[4e-03, 3e-03, 0]],
                                                 'VH': dict(polarization='H', polarization_inc='V')},
                                   other_data={'ks': xr.DataArray([2., 4., 6.], coords=[layer_coord]),
                                               'ka': xr.DataArray([3., 2., 1.], coords=[layer_coord]),
+                                              'ke': xr.DataArray([5., 6., 7.], coords=[layer_coord]),
                                               'thickness': xr.DataArray([0.1, 0.1, 0.1], coords=[layer_coord])}
                                    )
 

@@ -234,9 +234,28 @@ class Result(object):
 
     def single_scattering_albedo(self):
         """
-        Returns the single scattering albedo of each layer: ssalb = ks / (ks + ka). This is useful to assess if
-        multiple scattering is significant (e.g. if ssalb > 0.2).
+        Returns the single scattering albedo of each layer: ssalb = ks / ke.
+
+        Single scattering albedo is useful to assess if
+        multiple scattering is significant (e.g. if ssalb > 0.2). Note that ks and ke are averaged over the angle used
+        for the calculation, use this single scattering albedo value with care.
         """
+
+        if "ke" not in self.other_data or "ks" not in self.other_data:
+            raise SMRTError("single_scattering_albedo requires that the RT solver provides ke and ks.")
+
+        return self.other_data["ks"] / self.other_data["ke"]
+
+    def single_scattering_albedo_using_absorption(self):
+        """
+        Returns the single scattering albedo of each layer using the equation ssalb = ks / (ks + ka).
+
+        Single scattering albedo is useful to assess if multiple scattering is significant (e.g. if ssalb > 0.2).
+
+        This function use absorption coefficient which may gives different results compared to using the extinction
+        coefficient if the energy conservation is not respected by the EM model (which is often the case unfortunately!)
+        """
+
         if "ka" not in self.other_data or "ks" not in self.other_data:
             raise SMRTError("single_scattering_albedo requires that the RT solver provides ka and ks.")
 
@@ -528,11 +547,11 @@ class AltimetryResult(ActiveResult):
             **kwargs: any dimension to select. See xarray.DataArray.sel.
         """
 
-        if ("contribution" in kwargs):
+        if "contribution" in kwargs:
             if kwargs["contribution"] == "all":
                 del kwargs["contribution"]
         else:
-            if("contribution" in self.data.dims):
+            if "contribution" in self.data.dims:
                 kwargs["contribution"] = "total"
 
         wf = self.sigma(**kwargs)
@@ -658,10 +677,12 @@ def _strongsqueeze(x):
         return x
 
 
-def prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity=None, mu=0):
+def prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity=None, mu=1):
     """
-    Return a dict with the profiles of ka, ks and effective permittivity. Can be directly used by Solver to insert
+    Return a dict with the profiles of ka, ks, ke and effective permittivity. Can be directly used by Solver to insert
     data in other_data.
+
+    ks and ke are the mean in all directions given by mu.
 
     Args:
         snowpack: the snowpack used for the calculation
@@ -678,13 +699,15 @@ def prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivi
     other_data = {
         "effective_permittivity": xr.DataArray(effective_permittivity, coords=[layer_index]),
         "ks": xr.DataArray(
-            [
-                np.mean(em.ks(mu).values if hasattr(em, "ks") and callable(em.ks) else getattr(em, "ks", np.nan))
-                for em in emmodels
-            ],
+            [np.mean(em.ks(mu).values) for em in emmodels],
+            coords=[layer_index],
+        ),
+        "ke": xr.DataArray(
+            [np.mean(em.ke(mu).values) for em in emmodels],
             coords=[layer_index],
         ),
         "ka": xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index]),
         "thickness": xr.DataArray(snowpack.layer_thicknesses, coords=[layer_index]),
     }
+
     return other_data
