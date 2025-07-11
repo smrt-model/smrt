@@ -42,7 +42,7 @@ class Rayleigh(IsotropicScatteringMixin):
         k0 = 2 * np.pi / lmda
 
         self._ks = f * 2 * abs((eps - e0) / (eps + 2 * e0))**2 * radius**3 * e0**2 * k0**4
-        self.ka = f * 9 * k0 * eps.imag * abs(e0 / (eps + 2 * e0))**2 + (1 - f) * e0.imag * k0
+        self.ka = f * k0 * eps.imag * abs(3 * e0 / (eps + 2 * e0))**2 + (1 - f) * 2 * k0 * np.sqrt(e0).imag
 
     def basic_check(self):
         # TODO Ghi: check the microstructure model is compatible.
