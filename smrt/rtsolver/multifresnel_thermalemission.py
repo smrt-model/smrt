@@ -74,13 +74,14 @@ class MultiFresnelThermalEmission(object):
         Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
-            snowpack: Snowpack object, py:mod:`smrt.core.snowpack`.
-            emmodels: List of electromagnetic models object, py:mod:`smrt.emmodel`.
-            sensor: Sensor object, py:mod:`smrt.core.sensor`.
-            atmosphere: [Optional] Atmosphere object, py:mod:`smrt.atmosphere`.
+            snowpack: Snowpack object, :py:mod:`smrt.core.snowpack`.
+            emmodels: List of electromagnetic models object, :py:mod:`smrt.emmodel`. With MFTE it is recommended to use
+                the nonscattering emmodel even though other emmodels will work with their scattering not used.
+            sensor: Sensor object, :py:mod:`smrt.core.sensor`.
+            atmosphere: [Optional] Atmosphere object, :py:mod:`smrt.atmosphere`.
 
         Returns:
-            result: Result object, py:mod:`smrt.core.result.PassiveResult`.
+            result: Result object, :py:mod:`smrt.core.result.PassiveResult`.
         """
         if sensor.mode != "P":
             raise SMRTError(
