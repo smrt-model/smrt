@@ -230,7 +230,7 @@ class Result(object):
             raise SMRTError("optical_depth requires that the RT solver provides ka, ks and thickness.")
 
         ke = self.other_data["ka"] + self.other_data["ks"]
-        return ke * self.other_data["thickness"]
+        return (ke * self.other_data["thickness"]).rename("optical_depth")
 
     def single_scattering_albedo(self):
         """
@@ -244,7 +244,7 @@ class Result(object):
         if "ke" not in self.other_data or "ks" not in self.other_data:
             raise SMRTError("single_scattering_albedo requires that the RT solver provides ke and ks.")
 
-        return self.other_data["ks"] / self.other_data["ke"]
+        return (self.other_data["ks"] / self.other_data["ke"]).rename("single_scattering_albedo")
 
     def single_scattering_albedo_using_absorption(self):
         """
@@ -285,7 +285,7 @@ class PassiveResult(Result):
             channel: channel to select
             \\**kwargs: any parameter to slice the results.
         """
-        return _strongsqueeze(self.sel_data(channel=channel, **kwargs))
+        return _strongsqueeze(self.sel_data(channel=channel, **kwargs).rename('Tb'))
 
     def Tb_as_dataframe(self, channel_axis=None, **kwargs):
         """
@@ -320,14 +320,14 @@ class PassiveResult(Result):
         Returns V polarization. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
-        return _strongsqueeze(self.data.sel(polarization="V", **kwargs))
+        return _strongsqueeze(self.data.sel(polarization="V", **kwargs).rename('TbV'))
 
     def TbH(self, **kwargs):
         """
         Returns H polarization. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
-        return _strongsqueeze(self.data.sel(polarization="H", **kwargs))
+        return _strongsqueeze(self.data.sel(polarization="H", **kwargs).rename('TbH'))
 
     def polarization_ratio(self, ratio="H_V", **kwargs):
         """
@@ -335,7 +335,7 @@ class PassiveResult(Result):
         See xarray slicing with sel method (to document)
         """
         return _strongsqueeze(
-            self.data.sel(polarization=ratio[0], **kwargs) / self.data.sel(polarization=ratio[-1], **kwargs)
+            self.data.sel(polarization=ratio[0], **kwargs) / self.data.sel(polarization=ratio[-1], **kwargs).rename('polarization_ratio')
         )
 
 
@@ -390,7 +390,7 @@ class ActiveResult(Result):
         else:
             return x
 
-    def sigma(self, channel=None, **kwargs):
+    def sigma(self, channel=None, name='sigma', **kwargs):
         """
         Returns backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V').
         See xarray slicing with sel method (to document). It is also posisble to select by channel if the sensor has a channel_map.
@@ -400,15 +400,15 @@ class ActiveResult(Result):
         \\**kwargs: any parameter to slice the results.
         """
 
-        return _strongsqueeze(self.sel_data(channel=channel, return_backscatter="natural", **kwargs))
+        return _strongsqueeze(self.sel_data(channel=channel, return_backscatter="natural", **kwargs).rename(name))
 
-    def sigma_dB(self, channel=None, **kwargs):
+    def sigma_dB(self, name='sigma_dB', channel=None, **kwargs):
         """
         Returns backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9,
         polarization_inc='V', polarization='V'). See xarray slicing with sel method (to document)
         """
 
-        return _strongsqueeze(self.sel_data(channel=channel, return_backscatter="dB", **kwargs))
+        return _strongsqueeze(self.sel_data(channel=channel, return_backscatter="dB", **kwargs).rename(name))
 
     def sigma_as_dataframe(self, channel_axis=None, **kwargs):
         """
@@ -466,59 +466,59 @@ class ActiveResult(Result):
         """
         return super().to_series(return_backscatter="dB", **kwargs)
 
-    def sigmaVV(self, **kwargs):
+    def sigmaVV(self, name='sigmaVV', **kwargs):
         """
         Returns VV backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
-        return self.sigma(polarization_inc="V", polarization="V", **kwargs)
+        return self.sigma(polarization_inc="V", polarization="V", name=name, **kwargs)
 
-    def sigmaVV_dB(self, **kwargs):
+    def sigmaVV_dB(self, name='sigmaVV_dB', **kwargs):
         """
         Returns VV backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
-        return dB(self.sigmaVV(**kwargs))
+        return dB(self.sigmaVV(name=name, **kwargs))
 
-    def sigmaHH(self, **kwargs):
+    def sigmaHH(self, name='sigmaHH', **kwargs):
         """
         Returns HH backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
-        return self.sigma(polarization_inc="H", polarization="H", **kwargs)
+        return self.sigma(polarization_inc="H", polarization="H", name=name, **kwargs)
 
-    def sigmaHH_dB(self, **kwargs):
+    def sigmaHH_dB(self, name='sigmaHH_dB', **kwargs):
         """
         Returns HH backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
-        return dB(self.sigmaHH(**kwargs))
+        return dB(self.sigmaHH(name=name, **kwargs))
 
-    def sigmaHV(self, **kwargs):
+    def sigmaHV(self, name='sigmaHV', **kwargs):
         """
         Returns HV backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
-        return self.sigma(polarization_inc="H", polarization="V", **kwargs)
+        return self.sigma(polarization_inc="H", polarization="V", name=name, **kwargs)
 
-    def sigmaHV_dB(self, **kwargs):
+    def sigmaHV_dB(self, name='sigmaHV_dB', **kwargs):
         """
         Returns HV backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
-        return dB(self.sigmaHV(**kwargs))
+        return dB(self.sigmaHV(name=name, **kwargs))
 
-    def sigmaVH(self, **kwargs):
+    def sigmaVH(self, name='sigmaVH', **kwargs):
         """
         Return VH backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)"""
-        return self.sigma(polarization_inc="V", polarization="H", **kwargs)
+        return self.sigma(polarization_inc="V", polarization="H", name=name, **kwargs)
 
-    def sigmaVH_dB(self, **kwargs):
+    def sigmaVH_dB(self, name='sigmaVH_dB', **kwargs):
         """Returns VH backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
-        return dB(self.sigmaVH(**kwargs))
+        return dB(self.sigmaVH(name=name, **kwargs))
 
     # def groupby(self, variable):
     #    """iterated over a given variable. Variable is typically frequency, theta, polarization or snowpack"""
@@ -534,7 +534,7 @@ class AltimetryResult(ActiveResult):
         Returns the delay Doppler map
         """
         assert "doppler_frequency" in self.data.dims
-        return self.sigma(**kwargs)
+        return self.sigma(**kwargs).rename('delay_doppler_map')
 
     def waveform(self, **kwargs):
         """
@@ -559,7 +559,7 @@ class AltimetryResult(ActiveResult):
         if "doppler_frequency" in self.data.dims:
             wf = self.sigma(**kwargs).sum(dim="doppler_frequency")
 
-        return wf
+        return wf.rename('waveform')
 
     def contributions(self):
         """
@@ -701,13 +701,15 @@ def prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivi
         "ks": xr.DataArray(
             [np.mean(em.ks(mu).values) for em in emmodels],
             coords=[layer_index],
+            name='ks'
         ),
         "ke": xr.DataArray(
             [np.mean(em.ke(mu).values) for em in emmodels],
             coords=[layer_index],
+            name='ke'
         ),
-        "ka": xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index]),
-        "thickness": xr.DataArray(snowpack.layer_thicknesses, coords=[layer_index]),
+        "ka": xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index], name='ka'),
+        "thickness": xr.DataArray(snowpack.layer_thicknesses, coords=[layer_index], name='thickness'),
     }
 
     return other_data
