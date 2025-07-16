@@ -145,13 +145,13 @@ class DORT(object):
         """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
-            snowpack: Snowpack object, py:mod:`smrt.core.snowpack`.
-            emmodels: List of electromagnetic models object, py:mod:`smrt.emmodel`.
-            sensor: Sensor object, py:mod:`smrt.core.sensor`.
-            atmosphere: [Optional] Atmosphere object, py:mod:`smrt.atmosphere`.
+            snowpack: Snowpack object, :py:mod:`smrt.core.snowpack`.
+            emmodels: List of electromagnetic models object, :py:mod:`smrt.emmodel`.
+            sensor: Sensor object, :py:mod:`smrt.core.sensor`.
+            atmosphere: [Optional] Atmosphere object, :py:mod:`smrt.atmosphere`.
 
         Returns:
-            result: Result object, py:mod:`smrt.core.result.Result`.
+            result: Result object, :py:mod:`smrt.core.result.Result`.
         """
         try:
             len(self.sensor.phi)
@@ -248,12 +248,14 @@ class DORT(object):
         # store other diagnostic information
         other_data = {
             "stream_angles": xr.DataArray(np.rad2deg(np.arccos(outmu)), coords=[range(len(outmu))]),
-        } | prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity=self.effective_permittivity, mu=outmu)
+        } | prepare_kskaeps_profile_information(
+            snowpack, emmodels, effective_permittivity=self.effective_permittivity, mu=outmu
+        )
 
         return make_result(sensor, intensity, coords, other_data=other_data)
 
     def dort(self, m_max=0, special_return=False):
-        #"""Solve the radiative transfer equation using the DORT method
+        # """Solve the radiative transfer equation using the DORT method
         # not to be called by the user
         #     """
         #     :param incident_intensity: give either the intensity (array of size 2) at incident_angle (radar) or isotropic or a function
