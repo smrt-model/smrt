@@ -21,7 +21,7 @@ def process_coherent_layers(snowpack, emmodel_list, sensor):
     if not np.any(coherent_layers):
         return snowpack, emmodel_list
 
-    snowpack = snowpack.copy()
+    snowpack = snowpack.shallow_copy()
 
     if coherent_layers[-1]:
         raise SMRTError("The last layer is coherent, this is not supported")
