@@ -29,25 +29,12 @@ The :py:mod:`~smrt.utils` package provides various useful tools to work with SMR
 
 .. toctree::
     :titlesonly:
-    :maxdepth: 4
+    :maxdepth: 2
 
     self
-    Inputs <smrt.inputs.rst>
-    Permittivity <smrt.permittivity.rst>
-    Microstructure Model <smrt.microstructure_model.rst>
-    Interface <smrt.interface.rst>
-    Substrate <smrt.substrate.rst>
-    Atmosphere <smrt.atmosphere.rst>
-
-    Electromagnetic Model <smrt.emmodel.rst>
-    Radiative Transfer Solver <smrt.rtsolver.rst>
-
-    Core <smrt.core.rst>
-
-    Utilities and tools <smrt.utils.rst>
 
     Publish papers using SMRT <publish.rst>
-
+    API Reference <api_reference.rst>
     Developer Guidelines <developer_guidelines.rst>
 
 Indices and tables
