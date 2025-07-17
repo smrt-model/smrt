@@ -12,5 +12,5 @@
     :maxdepth: 2
 
     User Guide <user_guide/index>
-    API Reference <api_reference/index>
+    API Reference <api/index>
     Developer Guidelines <developer/index>
