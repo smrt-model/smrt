@@ -34,8 +34,8 @@ The :py:mod:`~smrt.utils` package provides various useful tools to work with SMR
     self
 
     Publish papers using SMRT <publish.rst>
-    API Reference <api_reference>
-    Developer Guidelines <developer>
+    API Reference <api_reference/index>
+    Developer Guidelines <developer/index>
 
 Indices and tables
 ==================
