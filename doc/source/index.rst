@@ -3,10 +3,10 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-SMRT API Documentation
+User Guide
 ==================================
 
-The SMRT API documentation describes the structure of the package and modules and provides detailed information on the classes and functions. It is not a practical guide for beginners to learn SMRT even though a few examples are sometimes given. We recommend to first read the `tutorials <https://github.com/smrt-model/tutorials>`_ and then use this API documentation as a further step to exploit SMRT in depth. SMRT extensively uses default/optional arguments in functions to provide a simple yet extendable interface. The API documentation is the only valid/up-to-date reference for these default behaviours as it is auto-generated from code source. For developers who want to implement new behaviour in SMRT for their own use or for improving SMRT, we recommend to read the :doc:`developer_guidelines` and to contact the authors of the model to discuss about the best/most generic approach to solve your problem.
+ It is not a practical guide for beginners to learn SMRT even though a few examples are sometimes given. We recommend to first read the `tutorials <https://github.com/smrt-model/tutorials>`_ and then use this API documentation as a further step to exploit SMRT in depth. SMRT extensively uses default/optional arguments in functions to provide a simple yet extendable interface. The API documentation is the only valid/up-to-date reference for these default behaviours as it is auto-generated from code source. For developers who want to implement new behaviour in SMRT for their own use or for improving SMRT, we recommend to read the :doc:`developer_guidelines` and to contact the authors of the model to discuss about the best/most generic approach to solve your problem.
 
 The following packages are available in SMRT. The :py:mod:`~smrt.inputs` package includes the functions to build the medium and the sensor configuration. The :py:mod:`~smrt.permittivity` package provides formulae to compute the permittivity of raw materials such as ice, water, wet ice. The :py:mod:`~smrt.microstructure_model` package includes all the representations of the snow micro-structure available. It provides information on the required and optional parameters of each microstrcuture_model. :py:mod:`~smrt.interface` provides the formulation for different types of inter-layer interfaces (such as flat, rugged in the future).
 
@@ -34,8 +34,8 @@ The :py:mod:`~smrt.utils` package provides various useful tools to work with SMR
     self
 
     Publish papers using SMRT <publish.rst>
-    API Reference <api_reference.rst>
-    Developer Guidelines <developer_guidelines.rst>
+    API Reference <api_reference>
+    Developer Guidelines <developer>
 
 Indices and tables
 ==================
