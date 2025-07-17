@@ -1,5 +1,6 @@
+#########################
 Getting started with SMRT
--------------------------
+#########################
 
 1.  Get up to date: git status / git pull
 2.  Install requirements
