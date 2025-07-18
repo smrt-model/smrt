@@ -1206,7 +1206,7 @@ class Streams(object):
     __slot__ = "n", "mu", "weight", "outmu", "outweight", "n_substrate", "n_air"
 
 
-def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="most_refringent"):
+def compute_stream(n_max_stream, permittivity, substrate_permittivity, mode="most_refringent"):
     # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent layer and
     # use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
 
@@ -1217,16 +1217,16 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="mos
     # """
 
     if mode in ["most_refringent", "air"]:
-        return compute_stream_gaussian(n_max_stream, permittivity, permittivity_substrate, mode=mode)
+        return compute_stream_gaussian(n_max_stream, permittivity, substrate_permittivity, mode=mode)
 
     elif mode == "uniform_air":
-        return compute_stream_uniform(n_max_stream, permittivity, permittivity_substrate)
+        return compute_stream_uniform(n_max_stream, permittivity, substrate_permittivity)
 
     else:
         raise SMRTError(f"Unknown mode '{mode}' for the computation of the streams")
 
 
-def compute_stream_gaussian(n_max_stream, permittivity, permittivity_substrate, mode="most_refringent"):
+def compute_stream_gaussian(n_max_stream, permittivity, substrate_permittivity, mode="most_refringent"):
     # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent layer and
     # use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
 
@@ -1315,12 +1315,12 @@ def compute_stream_gaussian(n_max_stream, permittivity, permittivity_substrate, 
     streams.outweight = compute_outweight(streams.outmu)
 
     # compute the number of stream in the substrate
-    streams.n_substrate = compute_n_stream_substrate(permittivity, permittivity_substrate, streams.mu)
+    streams.n_substrate = compute_n_stream_substrate(permittivity, substrate_permittivity, streams.mu)
 
     return streams
 
 
-def compute_stream_uniform(n_max_stream, permittivity, permittivity_substrate):
+def compute_stream_uniform(n_max_stream, permittivity, substrate_permittivity):
     # """Compute the angles of each layer. Use a regular step in angle in the air, then deduce the angles in the other layers
     # using Snell-law. Then, in the most refringent layer, add regular stream up to close to 0, and then propagate back this second
     # set of angles in the other layers using Snell-law and accounting for the total reflections
@@ -1395,7 +1395,7 @@ def compute_stream_uniform(n_max_stream, permittivity, permittivity_substrate):
     streams.outweight = compute_outweight(streams.outmu)
 
     # compute the number of stream in the substrate
-    streams.n_substrate = compute_n_stream_substrate(permittivity, permittivity_substrate, streams.mu)
+    streams.n_substrate = compute_n_stream_substrate(permittivity, substrate_permittivity, streams.mu)
 
     return streams
 
@@ -1432,12 +1432,12 @@ def compute_weight(mu):
     return weight
 
 
-def compute_n_stream_substrate(permittivity, permittivity_substrate, mu):
-    if permittivity_substrate is None:
+def compute_n_stream_substrate(permittivity, substrate_permittivity, mu):
+    if substrate_permittivity is None:
         n_substrate = len(mu[-1])  # streams in the last layer
 
     else:
-        real_index = np.real(np.sqrt(permittivity_substrate / permittivity[-1]))
+        real_index = np.real(np.sqrt(substrate_permittivity / permittivity[-1]))
 
         # calculate the angles (=node) in the substrate
 
