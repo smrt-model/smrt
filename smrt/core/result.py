@@ -529,14 +529,14 @@ class ActiveResult(Result):
 
 
 class AltimetryResult(ActiveResult):
-    def delay_doppler_map(self, **kwargs):
+    def delay_doppler_map(self, name='delay_doppler_map', **kwargs):
         """
         Returns the delay Doppler map
         """
         assert "doppler_frequency" in self.data.dims
-        return self.sigma(**kwargs).rename('delay_doppler_map')
+        return self.sigma(name=name, **kwargs)
 
-    def waveform(self, **kwargs):
+    def waveform(self, name='waveform', **kwargs):
         """
         Returns the waveform.
 
@@ -554,14 +554,14 @@ class AltimetryResult(ActiveResult):
             if "contribution" in self.data.dims:
                 kwargs["contribution"] = "total"
 
-        wf = self.sigma(**kwargs)
+        wf = self.sigma(name=name, **kwargs)
 
         if "doppler_frequency" in self.data.dims:
-            wf = self.sigma(**kwargs).sum(dim="doppler_frequency")
+            wf = self.sigma(name=name, **kwargs).sum(dim="doppler_frequency")
 
-        return wf.rename('waveform')
+        return wf
 
-    def contributions(self):
+    def contribution(self):
         """
         Returns the list of the contribution dimension. Raise an exception if the contribution does not exist.
         """
