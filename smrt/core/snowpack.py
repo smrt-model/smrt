@@ -224,10 +224,9 @@ class Snowpack(object):
 
         new_sp = copy.copy(self)
 
-        if cut_bottom is None:
+        if (cut_bottom is None) or (cut_bottom >= self.nlayer):
             cut_bottom = self.nlayer
         else:
-            assert cut_bottom < self.nlayer
             new_sp.substrate = None
 
         new_sp.layers = copy.copy(self.layers[0:cut_bottom])
