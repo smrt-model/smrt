@@ -1,34 +1,6 @@
 ####################################
-Guidelines for Developers
+Coding rules and style
 ####################################
-
-This is an evolving document to collect all the model design and developer style decisions.
-
-Goals
-=====
-
-The initial goal of the model was to explore new ideas related to the microstructure and test various modeling solutions. This led to a highly modular architecture.
-
-As of 2025, the goal is to provide the community with:
-
-- A model that is easy to use for beginners and easy to extend for advanced users.
-- Good documentation, including not only technical information but also scientific recommendations (compatibilities, limitations) and traceability in the literature.
-- Many options to choose from at all levels of the RT calculation. There is no single best solution in electromagnetic snow modeling, and the authors have tried to minimize opinionated choices, leaving the responsibility and possibility to the user.
-- Historical models and formulations to serve as a memory of our electromagnetic and snow history. If you read an "old" paper with some formulations, create a function and commit to SMRT. Even if no one uses it, it will be there forever in a digital format, avoiding future generation to reinvent the wheel.
-- New models and formulations not available in any other snow RT models. These models are unique to SMRT.
-
-Python
-------
-
-Python was chosen in 2015 because of its growing popularity in the scientific community and its higher flexibility compared to compiled legacy languages like FORTRAN. This choice is even more valid in 2025. Python enables the model to be extremely modular, much easier to use, which is a main constraint of the project, allows faster development, and facilitates the exploration of new ideas. Performance should not be an issue as the time-consuming part of the model is usually localized in the RT solver, where numerical integrations and eigenvalue problems are solved with the highly optimized SciPy module, backed by BLAS, LAPACK, and MINPACK libraries as would be done if using FORTRAN. In addition, we use Numba in some small portion of the code. The compilation of the full code base with PyPy will be considered in case of performance issues later. Parallelization is provided through the joblib and dask modules, and extensions are made easy with "runners".
-
-Python Versions
-^^^^^^^^^^^^^^^
-
-The target version is currently Python 3.10 minimum as of 2025 and will increase at the pace of Python's end of life.
-
-Conda is probably the easiest way to install Python, especially when several versions are needed.
-
 
 Coding Style, PEP 8, and Ruff
 -----------------------------
@@ -81,11 +53,6 @@ In short:
 
     It's part of the Google Python style guides that all imports must import a module, not a class or function from that module. There are way more classes and functions than there are modules, so recalling where a particular thing comes from is much easier if it is prefixed with a module name. Often, multiple modules happen to define things with the same name, so a reader of the code doesn't have to go back to the top of the file to see from which module a given name is imported.
 
-Bug Correction
---------------
-
-Every bug found and corrected should result in writing a unit test to prevent the bug from reappearing (regression).
-
 Documentation
 -------------
 
@@ -112,42 +79,3 @@ Units with supercripts use the ReST syntax. For example, density must be written
 References to publications should be complete with hyperlinks for DOI: doi:10.1007/s10236-018-1166-4 ==> https://doi.org/10.1007/s10236-018-1166-4. For now, references can be written inline or in a reference section. Only one of these options will remain in the future.
 
 For any other points, ask the community or make a decision following the practice of NumPy documentation (except that we use Google style, not NumPy style).
-
-Documentation Generation with Sphinx
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-The documentation is generated automatically after each push to GitHub by Read the Docs. It is requested to check that the online documentation is well rendered after every major change.
-
-However, it is also possible to generate the documentation locally using `Sphinx <http://www.sphinx-doc.org/en/stable/>`_. If no new module is added, it is simple to generate the rst and HTML documentation by typing (from the smrt/doc directory)::
-
-    make fullhtml
-
-The documentation can then be accessed via the index.html page in the smrt/doc/build/html folder.
-
-If you have math symbols to be displayed, this can be done with the imgmath extension (already used), which generates a PNG and inserts the image at the appropriate place. You may need to set the path to LaTeX and dvipng on your system. From the source directory, this can be done with, e.g.::
-
-    sphinx-build -b html -D imgmath_latex=/sw/bin/latex -D imgmath_dvipng=/sw/bin/dvipng . ../build/html
-
-Or to continue to use ``make html`` or ``make fullhtml``, by setting your path (C-shell), e.g.::
-
-    set path = ($path /sw/bin)
-
-Or for bash::
-
-    PATH=$PATH:/sw/bin
-
-.. note::
-
-    Math symbols will need double backslashes in place of the single backslash used in LaTeX.
-
-To generate a list of undocumented elements, while in the *source* directory::
-
-    sphinx-build -b coverage . coverage
-
-The files will be listed in the *coverage/python.txt* file.
-
-Git
----
-
-- The development by the core developers is done on the master branch (as of 2025), although this practice may change in the future. Other developers can either use branches (if rights granted) or use pull requests (for all users). The latter is recommended.
-- If using branches, name branches explicitly, e.g., 'feature/changes-being-made-JD', to avoid name conflicts with other developers.
