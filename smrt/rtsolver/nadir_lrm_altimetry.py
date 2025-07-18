@@ -1,7 +1,7 @@
 """
-Compute waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the given snowpack and sensor (or complex terrain soon). 
+Compute waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the given snowpack and sensor (or complex terrain soon).
 
-The implementation is based on Adams and Brown 1998 and Lacroix et al. 2008. Both models differ in the specific choices for the 
+The implementation is based on Adams and Brown 1998 and Lacroix et al. 2008. Both models differ in the specific choices for the
 scattering and backscatter of the interface, but are similar in the way the waveform is calculated, which concerns the solver here.
 
 Approximations:
@@ -41,7 +41,7 @@ class NadirLRMAltimetry(object):
     Implement the Nadir LRM Mode Altimetry RT solver.
 
     Args:
-        oversampling: integer number defining the number of subgates used for the computation in each altimeter gate.
+        oversampling_time: integer number defining the number of subgates used for the computation in each altimeter gate.
             This is equivalent to multiply the bandwidth by this number. It is used to perform more accurate computation.
         return_oversampled: by default the backscatter is returned for each gate. If set to True, the oversampled waveform
             is returned instead. See the 'oversampling' argument.
@@ -61,7 +61,7 @@ class NadirLRMAltimetry(object):
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {}  # "theta_inc", "polarization_inc", "theta", "phi", "polarization"}
 
-    def __init__(self, waveform_model=None, oversampling=10, return_oversampled=False, skip_pfs_convolution=False,
+    def __init__(self, waveform_model=None, oversampling_time=10, return_oversampled=False, skip_pfs_convolution=False,
                  return_contributions=False, theta_inc_sampling=8, return_theta_inc_sampling=False, error_handling="exception"):
         # """
 
@@ -71,7 +71,7 @@ class NadirLRMAltimetry(object):
 
         self.waveform_model_class = waveform_model if waveform_model is not None else Brown1977
         self.error_handling = error_handling
-        self.oversampling = oversampling
+        self.oversampling = oversampling_time
         self.return_contributions = return_contributions
         self.return_oversampled = return_oversampled
         self.skip_pfs_convolution = skip_pfs_convolution
@@ -156,7 +156,8 @@ class NadirLRMAltimetry(object):
 
         # prepare the output in the Result object
         theta_inc_deg = np.atleast_1d(np.rad2deg(np.arccos(mu_i))) if self.return_theta_inc_sampling else [0]
-        coords = [('t_gate', t_gate), ('theta_inc', theta_inc_deg), ('theta', theta_inc_deg)]
+        coords = [('delay', t_gate - self.sensor.nominal_gate / self.sensor.pulse_bandwidth),
+                  ('theta_inc', theta_inc_deg), ('theta', theta_inc_deg)]
 
         if self.return_contributions:
             if self.return_theta_inc_sampling:
@@ -171,9 +172,14 @@ class NadirLRMAltimetry(object):
                 total = np.sum(waveform, axis=0)  # compute the total
 
             waveform = np.append(waveform, total[None, :], axis=0)  # add the total
-            res = AltimetryResult(waveform[:, :, None, None], coords=[('contribution', ['surface', 'interfaces', 'volume', 'total'])] + coords)
-        else:
-            res = AltimetryResult(waveform[:, None, None], coords=coords)
+            coords = [('contribution', ['surface', 'interfaces', 'volume', 'total'])] + coords
+
+        res = xr.DataArray(waveform[:, None, None], coords=coords)
+
+        # add useful coordinates
+        res = res.assign_coords(gate=res.delay * sensor.pulse_bandwidth + sensor.nominal_gate)
+        # create the altimetry result
+        res = AltimetryResult(res)
 
         if len(self.z_gate) >= len(t_gate):
             # shorten
@@ -183,7 +189,7 @@ class NadirLRMAltimetry(object):
             self.z_gate = np.append(self.z_gate, np.full(len(t_gate) - len(self.z_gate), np.nan))
 
         # that's a hack... we should make an AltimetryResult class
-        res.z_gate = xr.DataArray(self.z_gate, coords=[('delay', t_gate + self.sensor.nominal_gate / self.sensor.pulse_bandwidth)])
+        res.z_gate = xr.DataArray(self.z_gate, coords=[res.delay])
         return res
 
     def convolve_with_PFS_PTR_PDF(self, t_gate, backscatter, t_inc_sample):
@@ -362,12 +368,12 @@ class NadirLRMAltimetry(object):
                 mu_s=mu2, mu_i=mu2, dphi=np.pi, npol=2).diagonal[0].squeeze() / eps[-1].real]
         else:
             # no echo from the bottom
-
             layer_echo += [np.zeros_like(layer_echo[-1])]
+
 
         if len(mu_upper_interface[0]) > 1:
             # convert the scalar into matrix to get an homogeneous list before transformation to numpy array
-            layer_echo = [np.full(len(mu_upper_interface[0]), m) if np.isscalar(m) else m for m in layer_echo]
+            layer_echo = [np.full(len(mu_upper_interface[0]), m) if np.ndim(m) == 0 else m for m in layer_echo]
 
         layer_echo = np.transpose(layer_echo)
 
