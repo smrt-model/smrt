@@ -1,5 +1,6 @@
-Comparison of electromagnetic models
-====================================
+##################################
+Comparison of electromagnetic mode
+##################################
 
 **Goal**:
 

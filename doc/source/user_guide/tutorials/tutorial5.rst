@@ -1,5 +1,6 @@
+##################################
 Extending SMRT
-==============
+##################################
 
 There are different ways to extend SMRT, here we address the case of ice
 permittivity.

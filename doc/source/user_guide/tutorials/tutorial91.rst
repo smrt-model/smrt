@@ -1,4 +1,6 @@
-# Intensive calculations
+################################
+Intensive calculations
+################################
 
 Goal:
 

@@ -1,5 +1,6 @@
+##################################
 Evaluation of SMRT with PAMIR data
-----------------------------------
+##################################
 
 This practical builds on the earlier microstructure practical. The same
 thin section image will be used to derive SMRT snowpack parameters and
