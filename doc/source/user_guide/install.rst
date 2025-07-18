@@ -6,7 +6,6 @@ Option 1: Install the latest stable SMRT package
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 To get started with SMRT, you will need to install the latest stable version.
 
-1.  **Install directly from the repository**:
     .. code:: shell
         pip install smrt
 
@@ -21,3 +20,5 @@ Make sure you have activated a virtual environment so that you do not get confli
 .. code:: shell
 
    pip install git+https://github.com/smrt-model/smrt
+
+If you need to install an editable version, please refer to the Developers' Guidelines.
