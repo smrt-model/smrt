@@ -1,6 +1,5 @@
 
 import warnings
-import numpy as np
 
 # local import
 from smrt import make_snowpack, make_model, sensor_list
@@ -41,5 +40,3 @@ def test_snowpack_with_coherent_layer():
     # the new values come form the correction of 917->916.7
     assert abs(res.TbV() - 261.0633483757312) < 1e-4
     assert abs(res.TbH() - 196.8659636937278) < 1e-4
-
- 
