@@ -83,6 +83,9 @@ class DORT(object):
     Args:
         n_max_stream: number of stream in the most refringent layer.
         m_max: number of mode (azimuth).
+        stream_mode: If set to "most_refringent" (the default) or "air", streams are calculated using the Gauss-Legendre polynomials and
+            then use Snell-law to prograpate the direction in the other layers. If set to "uniform_air", streams are calculated
+            uniformly in air and then according to Snells law.
         phase_normalization: the integral of the phase matrix should in principe be equal to the scattering coefficient.
             However, some emmodels do not respect this strictly. In general a small difference is due to numerical rounding and is acceptable,
             but a large difference rather indicates either a bug in the emmodel or input parameters that breaks the
@@ -93,9 +96,7 @@ class DORT(object):
             input parameters (typically too big grains). If set to False, no normalization is performed.
             If set to "auto" the normalization is performed except for emmodels not respecting the reciprocity princple
             (which the normalization relies on).
-        stream_mode: If set to "most_refringent" (the default) or "air", streams are calculated using the Gauss-Legendre polynomials and
-            then use Snell-law to prograpate the direction in the other layers. If set to "uniform_air", streams are calculated
-            uniformly in air and then according to Snells law.
+        phase_symmetrization: enforce phase function symmetry by replacing the phase function P by (P + P.T)/2 (simplified).
         error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
             If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
             the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
@@ -126,6 +127,7 @@ class DORT(object):
         m_max=2,
         stream_mode="most_refringent",
         phase_normalization="auto",
+        phase_symmetrization=False,
         error_handling="exception",
         process_coherent_layers=False,
         prune_deep_snowpack=None,
@@ -135,6 +137,7 @@ class DORT(object):
         self.stream_mode = stream_mode
         self.m_max = m_max
         self.phase_normalization = phase_normalization
+        self.phase_symmetrization = phase_symmetrization
         self.error_handling = error_handling
         self.process_coherent_layers = process_coherent_layers
         self.diagonalization_method = diagonalization_method
@@ -316,6 +319,7 @@ class DORT(object):
                 normalization=self.phase_normalization
                 if self.phase_normalization != "auto"
                 else getattr(self.emmodels[l], "_respect_reciprocity_principle", True),
+                symmetrization=self.phase_symmetrization
             )
             for l in range(len(self.emmodels))
         ]
@@ -726,7 +730,7 @@ def extend_2pol_npol(x, npol):
 
 
 class EigenValueSolver(object):
-    def __init__(self, ke, ks, ft_even_phase_function, mu, weight, m_max, normalization, method):
+    def __init__(self, ke, ks, ft_even_phase_function, mu, weight, m_max, normalization, symmetrization, method):
         # :param Ke: extinction coefficient of the layer for mode m
         # :param ft_even_phase: ft_even_phase function of the layer for mode m
         # :param mu: cosines
@@ -739,6 +743,7 @@ class EigenValueSolver(object):
         self.mu = mu
         self.weight = weight
         self.normalization = normalization
+        self.symmetrization = symmetrization
 
         # default: use the solve_generic method and compute the full matrix
         # these defaults may be overwritten in the next if/elif
@@ -770,7 +775,7 @@ class EigenValueSolver(object):
                 self._ft_even_phase = smrt_matrix(0)
             else:
                 fullmu = np.concatenate((self.mu, -self.mu))
-                if self.compute_half_rank_phase:
+                if self.compute_half_rank_phase and not self.symmetrization:
                     # compute only mu_s > 0 for all mu_i >0 and <0
                     self._ft_even_phase = self.ft_even_phase_function(self.mu, fullmu, self.m_max)
                 else:
@@ -804,8 +809,10 @@ class EigenValueSolver(object):
         if is_equal_zero(A):
             return self.return_no_scattering(m)
 
-
         npol = 2 if m == 0 else 3
+
+        if self.symmetrization:
+            A = symmetrize_phase_matrix(A, m)
 
         # compute invmu
         invmu = 1.0 / self.mu
@@ -892,6 +899,7 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
 
         A *= norm[:, np.newaxis]
         return A
+
 
     def diagonalize_eig(self, m, A):
         # diagonalise the matrix. Eq (13)
@@ -1199,6 +1207,30 @@ obtained by setting the option error_handling='nan'.
 
 Note:: setting an option in DORT is obtained with make_model(..., "dort", rtsolver_options=dict(error_handling='nan')).
 """
+
+
+@numba.jit
+def symmetrize_phase_matrix(A, m):
+
+    if m == 0:
+        newA = 0.5 * (A + A.T)
+    else:
+        n = A.shape[1] // 2
+        npol = 3
+        newA = np.empty_like(A)
+        for i in range(n):
+            d0 = 1 if (i % npol) < 2 else -1
+            for j in range(n):
+                d = d0 if (j % npol) < 2 else -d0
+
+                # alpha
+                newA[i, j] = 0.5 * (A[i, j] + A[i + n, j + n] * d)
+                newA[i + n, j + n] = d * A[i, j]
+                # beta
+                newA[i, j + n] = 0.5 * (A[i, j + n] + A[i +n, j] * d)
+                newA[i + n, j] = d * newA[i, j + n]
+    return newA
+
 
 
 class InterfaceProperties(object):
