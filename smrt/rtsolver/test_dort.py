@@ -126,6 +126,8 @@ def test_shur_based_diagonalisation():
         n_max_stream=nstreams,
         diagonalization_method="shur"))
 
+    m.run(scatt, sp).sigmaVV()
+
 
 def test_shur_forcedtriu_based_diagonalisation():
 
@@ -143,7 +145,9 @@ def test_shur_forcedtriu_based_diagonalisation():
     # this setting fails when DORT  use scipy.linalg.eig and using shur
     # but this works with the shur_forcedtriu diagonalization. Let check this:
 
-    m = m = Model(IBA, DORT, rtsolver_options=dict(
+    m = Model(IBA, DORT, rtsolver_options=dict(
         m_max=m_max,
         n_max_stream=nstreams,
         diagonalization_method="shur_forcedtriu"))
+
+    m.run(scatt, sp).sigmaVV()
