@@ -11,7 +11,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 	- change to support for Python >=3.10. Old versions are not supported anymore.
 	- in nadir_lrm_altimetry oversampling argument becomes oversampling_time.
 	- Snowpack.copy is depreciated, it is replaced by shallow_copy
-	- add two faster diagonalization methods in dort: half_rank_eig and stamnes88. "eig" is still the default, but this may 	change in the future.
+	- add two faster diagonalization methods in dort: half_rank_eig and stamnes88. "eig" is still the default, but this 	may change in the future.
+	- add phase symmetrization in DORT to deal with non reciprocal phase function
 
 ## [v1.5]
 ### Added

@@ -1212,17 +1212,21 @@ Note:: setting an option in DORT is obtained with make_model(..., "dort", rtsolv
 @numba.jit
 def symmetrize_phase_matrix(A, m):
 
+    n = A.shape[1] // 2
+    newA = np.empty_like(A)
+
     if m == 0:
-        newA = 0.5 * (A + A.T)
+        npol = 2
+        newA[:n, :n] = 0.5 * (A[:n, :n] + A[n:, n:])
+        newA[n:, n:] = newA[:n, :n]
+        newA[:n, n:] = 0.5 * (A[:n, n:] + A[n:, :n])
+        newA[n:, :n] = newA[:n, n:]
     else:
-        n = A.shape[1] // 2
         npol = 3
-        newA = np.empty_like(A)
         for i in range(n):
             d0 = 1 if (i % npol) < 2 else -1
             for j in range(n):
                 d = d0 if (j % npol) < 2 else -d0
-
                 # alpha
                 newA[i, j] = 0.5 * (A[i, j] + A[i + n, j + n] * d)
                 newA[i + n, j + n] = d * A[i, j]
@@ -1230,7 +1234,6 @@ def symmetrize_phase_matrix(A, m):
                 newA[i, j + n] = 0.5 * (A[i, j + n] + A[i +n, j] * d)
                 newA[i + n, j] = d * newA[i, j + n]
     return newA
-
 
 
 class InterfaceProperties(object):
