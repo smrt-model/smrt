@@ -124,11 +124,11 @@ class Result(object):
         else:
             raise AttributeError("AttributeError: '%s' object has no attribute '%s'" % (type(self), attr))
 
-    def save(self, filename):
+    def save(self, filename, netcdf_engine=None):
         """
         Saves a result to disk. Under the hood, this is a netCDF file produced by xarray (http://xarray.pydata.org/en/stable/io.html).
         """
-        self.data.to_netcdf(filename)
+        self.data.to_netcdf(filename, netcdf_engine=None)
 
     def sel_data(self, channel=None, **kwargs):
         raise NotImplementedError("must be implemented in a subclass")
@@ -561,7 +561,7 @@ class AltimetryResult(ActiveResult):
 
         return wf
 
-    def contribution(self):
+    def contributions(self):
         """
         Returns the list of the contribution dimension. Raise an exception if the contribution does not exist.
         """
