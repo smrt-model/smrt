@@ -955,8 +955,6 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
         #         print("ok")
         #     #print(f"{m}, {iscomplex_beta}, {iscomplex_E}")
 
-        beta, E = self.validate_eigen(beta, E, m)
-
         npol = 2 if m == 0 else 3
         n = npol * len(self.mu)
         Eu = E[0:n, :]  # upwelling
