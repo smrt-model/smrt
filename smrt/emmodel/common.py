@@ -86,7 +86,7 @@ def phase_matrix_from_scattering_amplitude(fvv, fvh, fhv, fhh, npol=2):
     return np.array(p)
 
 
-def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
+def generic_ft_even_matrix(phase_function, m_max, nsamples):
     """ Calculation of the Fourier decomposed of the phase or reflection or transmission matrix provided by the function.
 
     This method calculates the Fourier decomposition modes and return the output.
@@ -104,14 +104,12 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
              [Phvp Phhp Phup]
              [Puvp Puhp Puup]
 
-    :param phase_function: must be a function taking dphi as input. It is assumed that phi is symmetrical (it is in cos(phi))
-    :param m_max: maximum Fourier decomposition mode needed
+    Arg:
+        phase_function: must be a function taking dphi as input. It is assumed that phi is symmetrical (it is in cos(phi))
+        m_max: maximum Fourier decomposition mode needed
+        nsamples: number of samples to use for the Fourier transform
 
     """
-
-    # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
-    if nsamples is None:
-        nsamples = 2**np.ceil(3 + np.log(m_max + 1) / np.log(2))
 
     assert nsamples > 2 * m_max
 
@@ -376,7 +374,7 @@ class IsotropicScatteringMixin(object):
 
 class GenericFTPhaseMixin(object):
 
-    def ft_even_phase(self, mu_s, mu_i, m_max, npol=None):
+    def ft_even_phase(self, mu_s, mu_i, m_max, npol=None, nsamples=None):
         """ Calculation of the Fourier decomposed IBA phase function.
 
         This method calculates the Improved Born Approximation phase matrix for all
@@ -407,6 +405,7 @@ class GenericFTPhaseMixin(object):
         :param mu_i: 1-D array of cosine of incident radiation stream angles (set by solver)
         :param m_max: maximum Fourier decomposition mode needed
         :param npol: number of polarizations considered (set from sensor characteristics)
+        :param nsamples: number of samples to use to compute the fourrier transform
 
         """
 
@@ -421,4 +420,23 @@ class GenericFTPhaseMixin(object):
         def phase_function(dphi):
             return self.phase(mu_s, mu_i, dphi, npol)
 
-        return generic_ft_even_matrix(phase_function, m_max)  # order is pola_s, pola_i, m, mu_s, mu_i
+        if nsamples is None:
+            nsamples = self.estimate_ft_number_samples(m_max)
+
+        return generic_ft_even_matrix(phase_function, m_max, nsamples=nsamples)  # order is pola_s, pola_i, m, mu_s, mu_i
+
+    def estimate_ft_number_samples(self, m_max: int):
+        """
+        Estimate the number of samples of dphi for fourier decomposition. Highest efficiency for 2^n numbers.
+
+        This should be adaptative depending on the size/wavelength. The default estimate is sufficient for smooth phase
+        function but emmodel with sharp phase function must increase this value.
+
+        Args:
+            m_max: maximum mode number
+
+        Returns:
+            number of samples
+        """
+        nsamples = 2**np.ceil(4 + np.log(m_max + 1) / np.log(2))
+        return nsamples
