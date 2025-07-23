@@ -142,6 +142,9 @@ class DORT(object):
         self.process_coherent_layers = process_coherent_layers
         self.diagonalization_method = diagonalization_method
 
+        if self.phase_symmetrization:
+            smrt_warn("symmetrization is under development and it is not sure it is working yet.")
+
         if prune_deep_snowpack is True:
             prune_deep_snowpack = 6
         self.prune_deep_snowpack = prune_deep_snowpack
@@ -809,11 +812,10 @@ class EigenValueSolver(object):
         if is_equal_zero(A):
             return self.return_no_scattering(m)
 
-        npol = 2 if m == 0 else 3
-
         if self.symmetrization:
             A = symmetrize_phase_matrix(A, m)
 
+        npol = 2 if m == 0 else 3
         # compute invmu
         invmu = 1.0 / self.mu
         invmu = np.repeat(invmu, npol)
