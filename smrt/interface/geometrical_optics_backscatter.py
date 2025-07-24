@@ -1,12 +1,16 @@
 """
-Implement the interface boundary condition under the Geometrical Approximation between layers characterized by their
-effective permittivities. This code is for backscatter only, that is, to use as a substrate and at low frequency when
+Provide the interface boundary condition under the Geometrical Approximation between layers characterized by their
+effective permittivities. 
+
+This code is for backscatter only, that is, to use as a substrate and at low frequency when
 the backscatter is the main mecahnism, and conversely when mulitple scattering and double bounce between snow and
-substrate are negligible. In other case, it is recommended to use
-:py:mod:`~smrt.interface.geometrical_optics`.
+substrate are negligible. In other case, it is recommended to use :py:mod:`~smrt.interface.geometrical_optics`.
 
-The transmitted energy is also computed in an approximate way suitable for first order scattering such as smrt.rtsolver.nadir_lrm_altimetry. It uses energy conservation to compute the total transmitted energy and considers that all this energy is transmitted in the refracted direction. This approach compensates for the deficiencies of first order scattering RT solvers.
-
+Note:
+    The transmitted energy is also computed in an approximate way suitable for first order scattering such as 
+    :py:mod:`smrt.rtsolver.nadir_lrm_altimetry`. It uses energy conservation to compute the total transmitted energy and considers that 
+    all this energy is transmitted in the  refracted direction. This approach compensates for the deficiencies of first order scattering
+    RT solvers.
 """
 
 import numpy as np
@@ -19,7 +23,7 @@ from smrt.interface.geometrical_optics import shadow_function, GeometricalOptics
 
 class GeometricalOpticsBackscatter(GeometricalOptics):
     """
-    Represents a very rough surface.
+    Implement a very rough surface for backscatter.
     """
 
     def __init__(self, **kwargs):
@@ -27,7 +31,10 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
-        Computes the reflection coefficients for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
+        Compute the specular reflection coefficients. 
+        
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
+        beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -44,7 +51,10 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
         """
-        Computes the reflection coefficients for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the beam is transmitted.
+        Compute the diffuse reflection coefficients.
+
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
+        beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -116,7 +126,11 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
-        Computes the transmission coefficients for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted. While Geometrical Optics, it here considers that power not reflected is scattered in the specular transmitted direction. This is an approximation which is reasonable in the context of a "1st order" geometrical optics.
+        Compute the coherent transmission coefficients.
+
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
+        beam is transmitted. While Geometrical Optics, it here considers that power not reflected is scattered in the specular 
+        transmitted direction. This is an approximation which is reasonable in the context of a "1st order" geometrical optics.
 
         Args:
             frequency: Frequency of the incident wave.

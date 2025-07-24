@@ -1,21 +1,20 @@
 """
-Implement the interface boundary condition under IEM formulation provided by Fung et al. 1992. in IEEE TGRS.
-Use of this code requires special attention because of two issues:
+Provide the interface boundary condition under IEM formulation provided by Fung et al. 1992.
 
-1) it only computes the backscatter diffuse reflection as described in Fung et al. 1992, the specular reflection
-and the coherent transmission. It does not compute the full bi-static diffuse reflection and transmission.
-As a consequence it is only suitable for emissivity calculation and when single scattering is dominant, usually at low
-frequency when the medium is weakly scattering. This happends when the main mechanism is the backscatter from the
-interface attenuated by the medium.  Another case is when the rough surface is relatively smooth, the specular
-reflection is relatively strong and the energy can be scattered back by the medium (double bounce). For other
-situations, this code is not recommended.
+Notes:
+    It only computes the backscatter diffuse reflection as described in Fung et al. 1992, the specular reflection
+    and the coherent transmission. It does not compute the full bi-static diffuse reflection and transmission.
+    As a consequence it is only suitable for emissivity calculation and when single scattering is dominant, usually at low
+    frequency when the medium is weakly scattering. This happends when the main mechanism is the backscatter from the
+    interface attenuated by the medium.  Another case is when the rough surface is relatively smooth, the specular
+    reflection is relatively strong and the energy can be scattered back by the medium (double bounce). For other
+    situations, this code is not recommended.
 
-2) Additionaly, IEM is known to work for a limited range of roughness. Usually it is considered valid for ks < 3 and
-ks*kl < sqrt(eps) where k is the wavenumber, s the rms height and l the correlation length. The code print a warning
-when out of this range. There is also limitation for smooth surfaces but no warning is printed.
+    Additionaly, IEM is known to work for a limited range of roughness. Usually it is considered valid for ks < 3 and
+    ks*kl < sqrt(eps) where k is the wavenumber, s the rms height and l the correlation length. The code print a warning
+    when out of this range. There is also limitation for smooth surfaces but no warning is printed.
 
-Example::
-
+Usage:
     # rms height and corr_length values work at 10 GHz
     substrate = make_soil("iem_fung92", "dobson85", temperature=260,
                                             roughness_rms=1e-3,
@@ -23,6 +22,10 @@ Example::
                                             autocorrelation_function="exponential",
                                             moisture=moisture,
                                             clay=clay, sand=sand, drymatter=drymatter)
+
+References:
+    Fung, A.K, Zongqian, L., and Chen, K.S. (1992). Backscattering from a randomly rough dielectric surface. IEEE TRANSACTIONS ON 
+    GEOSCIENCE AND REMOTE SENSING, 30-2. https://doi.org/10.1109/36.134085
 """
 
 import numpy as np
@@ -37,8 +40,16 @@ from smrt.core.vector3 import vector3
 
 class IEM_Fung92(Interface):
     """
-    Represents a moderate rough surface model with backscatter, specular reflection and transmission only. It is not suitable for emissivity calculations. Use with care!
+    Implement a moderate rough surface model with backscatter, specular reflection and transmission only. 
+    
+    It is not suitable for emissivity calculations. Use with care!
 
+    Args:
+        roughness_rms: Root-Mean-Squared surface roughness.
+        corr_length: Correlation length of the surface.
+        autocorrelation_function: [Optional] Type of autocorrelation function to use. Default is "exponential".
+        warning_handling: [Optional] Parameter that dictates how to handle wanring. Default is "print".
+        series_truncation: [Optional] Number of iterations to use in the summation of roughness spectra.
     """
     args = ["roughness_rms", "corr_length"]
     optional_args = {"autocorrelation_function": "exponential",
@@ -47,7 +58,10 @@ class IEM_Fung92(Interface):
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
-        Computes the reflection coefficients for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
+        Compute the specular reflection coefficients.
+
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
+        beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -74,7 +88,9 @@ class IEM_Fung92(Interface):
                             " Limit is ks * kl < sqrt(eps_r). Here ks*kl=%g and sqrt(eps_r)=%g" % (ks * kl, np.sqrt(eps_r)))
 
     def fresnel_coefficients(self, eps_1, eps_2, mu_i, ks, kl):
-        """calculate the fresnel coefficients at the angle mu_i whatever is ks and kl according to the original formulation of Fung 1992"""
+        """
+        Calculate the fresnel coefficients at the angle mu_i whatever is ks and kl according to the original formulation of Fung 1992
+        """
 
         Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
         return Rv, Rh
@@ -82,7 +98,10 @@ class IEM_Fung92(Interface):
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol, debug=False):
         """
-        Computes the reflection coefficients for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the beam is transmitted.
+        Compute the diffuse reflection coefficients.
+        
+        Coefficients are calculated for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the 
+        beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -177,7 +196,7 @@ class IEM_Fung92(Interface):
             lc = self.corr_length
             return (lc / n)**2 * (1 + (k * lc / n)**2)**(-1.5)
         else:
-            raise SMRTError("The autocorrelation function must be expoential or gaussian")
+            raise SMRTError("The autocorrelation function must be exponential or gaussian")
 
     def ft_even_diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, m_max, npol):
 
@@ -203,7 +222,10 @@ class IEM_Fung92(Interface):
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
-        Computes the transmission coefficients for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
+        Compute the transmission coefficients.
+        
+        Coefficients are calculated for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1. 
+        Medium 2 is where the beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.

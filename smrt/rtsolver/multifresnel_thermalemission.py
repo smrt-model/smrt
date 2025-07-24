@@ -27,7 +27,7 @@ temperatures: application to melt detection on the Antarctic and Greenland ice s
 315, 114469, http://doi.org/10.1016/j.rse.2024.114469, 2024
 
 
-Usage::
+Usage:
     # Create a model using a nonscattering medium and the rtsolver 'multifresnel_thermalemission'.
     m = make_model("nonscattering", "multifresnel_thermalemission")
 
@@ -74,14 +74,14 @@ class MultiFresnelThermalEmission(object):
         Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
-            snowpack: Snowpack object, :py:mod:`smrt.core.snowpack`.
-            emmodels: List of electromagnetic models object, :py:mod:`smrt.emmodel`. With MFTE it is recommended to use
+            snowpack: Snowpack object.
+            emmodels: List of electromagnetic models object. With MFTE it is recommended to use
                 the nonscattering emmodel even though other emmodels will work with their scattering not used.
-            sensor: Sensor object, :py:mod:`smrt.core.sensor`.
-            atmosphere: [Optional] Atmosphere object, :py:mod:`smrt.atmosphere`.
+            sensor: Sensor object.
+            atmosphere: [Optional] Atmosphere object.
 
         Returns:
-            result: Result object, :py:mod:`smrt.core.result.PassiveResult`.
+            result: Result object.
         """
         if sensor.mode != "P":
             raise SMRTError(
