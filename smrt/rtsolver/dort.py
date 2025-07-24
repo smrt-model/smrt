@@ -83,6 +83,9 @@ class DORT(object):
     Args:
         n_max_stream: number of stream in the most refringent layer.
         m_max: number of mode (azimuth).
+        stream_mode: If set to "most_refringent" (the default) or "air", streams are calculated using the Gauss-Legendre polynomials and
+            then use Snell-law to prograpate the direction in the other layers. If set to "uniform_air", streams are calculated
+            uniformly in air and then according to Snells law.
         phase_normalization: the integral of the phase matrix should in principe be equal to the scattering coefficient.
             However, some emmodels do not respect this strictly. In general a small difference is due to numerical rounding and is acceptable,
             but a large difference rather indicates either a bug in the emmodel or input parameters that breaks the
@@ -93,9 +96,7 @@ class DORT(object):
             input parameters (typically too big grains). If set to False, no normalization is performed.
             If set to "auto" the normalization is performed except for emmodels not respecting the reciprocity princple
             (which the normalization relies on).
-        stream_mode: If set to "most_refringent" (the default) or "air", streams are calculated using the Gauss-Legendre polynomials and
-            then use Snell-law to prograpate the direction in the other layers. If set to "uniform_air", streams are calculated
-            uniformly in air and then according to Snells law.
+        phase_symmetrization: enforce phase function symmetry by replacing the phase function P by (P + P.T)/2 (simplified).
         error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
             If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
             the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
@@ -109,9 +110,11 @@ class DORT(object):
             It is to be use to accelerate the calculations for deep snowpacks or at high frequencies when the
             contribution of the lowest layers is neglegible. The optical depth is a good criteria to determine this limit.
             A value of about 6 is recommended. Use with care, especially values lower than 6.
-        diagonalization_method: This value set the method for the diagonalization in the eigenvalue solver. The defaut is "eig" use the
-            scipy.linalg.eig function. The "shur" replaces the scipy.linalg.eig function by a shur decomposition followed by a diagonalisation of the
-            shur matrix. The "shur_forcedtriu" forces the shur matrix to be upper triangular.
+        diagonalization_method: This value set the method for the diagonalization in the eigenvalue solver. The defaut
+            is "eig" use the scipy.linalg.eig function. The "shur" replaces the scipy.linalg.eig function by a shur
+            decomposition followed by a diagonalisation of the shur matrix. The "shur_forcedtriu" forces the shur matrix
+            to be upper triangular. The "half_rank_eig" is the fastest method but requires symmetry and energy conservation
+            which may fail with some EMModels and for some parameters. The "stamnes88" is another a halk rank fast method.
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
@@ -124,6 +127,7 @@ class DORT(object):
         m_max=2,
         stream_mode="most_refringent",
         phase_normalization="auto",
+        phase_symmetrization=False,
         error_handling="exception",
         process_coherent_layers=False,
         prune_deep_snowpack=None,
@@ -133,9 +137,13 @@ class DORT(object):
         self.stream_mode = stream_mode
         self.m_max = m_max
         self.phase_normalization = phase_normalization
+        self.phase_symmetrization = phase_symmetrization
         self.error_handling = error_handling
         self.process_coherent_layers = process_coherent_layers
         self.diagonalization_method = diagonalization_method
+
+        if self.phase_symmetrization:
+            smrt_warn("symmetrization is under development and it is not sure it is working yet.")
 
         if prune_deep_snowpack is True:
             prune_deep_snowpack = 6
@@ -248,12 +256,14 @@ class DORT(object):
         # store other diagnostic information
         other_data = {
             "stream_angles": xr.DataArray(np.rad2deg(np.arccos(outmu)), coords=[range(len(outmu))]),
-        } | prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity=self.effective_permittivity, mu=outmu)
+        } | prepare_kskaeps_profile_information(
+            snowpack, emmodels, effective_permittivity=self.effective_permittivity, mu=outmu
+        )
 
         return make_result(sensor, intensity, coords, other_data=other_data)
 
     def dort(self, m_max=0, special_return=False):
-        #"""Solve the radiative transfer equation using the DORT method
+        # """Solve the radiative transfer equation using the DORT method
         # not to be called by the user
         #     """
         #     :param incident_intensity: give either the intensity (array of size 2) at incident_angle (radar) or isotropic or a function
@@ -312,6 +322,7 @@ class DORT(object):
                 normalization=self.phase_normalization
                 if self.phase_normalization != "auto"
                 else getattr(self.emmodels[l], "_respect_reciprocity_principle", True),
+                symmetrization=self.phase_symmetrization
             )
             for l in range(len(self.emmodels))
         ]
@@ -722,7 +733,7 @@ def extend_2pol_npol(x, npol):
 
 
 class EigenValueSolver(object):
-    def __init__(self, ke, ks, ft_even_phase_function, mu, weight, m_max, normalization, method):
+    def __init__(self, ke, ks, ft_even_phase_function, mu, weight, m_max, normalization, symmetrization, method):
         # :param Ke: extinction coefficient of the layer for mode m
         # :param ft_even_phase: ft_even_phase function of the layer for mode m
         # :param mu: cosines
@@ -735,6 +746,12 @@ class EigenValueSolver(object):
         self.mu = mu
         self.weight = weight
         self.normalization = normalization
+        self.symmetrization = symmetrization
+
+        # default: use the solve_generic method and compute the full matrix
+        # these defaults may be overwritten in the next if/elif
+        self.solve = self.solve_generic
+        self.compute_half_rank_phase = False
 
         if method == "eig":
             self.diagonalize_function = self.diagonalize_eig
@@ -742,55 +759,70 @@ class EigenValueSolver(object):
             self.diagonalize_function = partial(self.diagonalize_shur, force_triu=False)
         elif method == "shur_forcedtriu":
             self.diagonalize_function = partial(self.diagonalize_shur, force_triu=True)
+        elif method == "half_rank_eig":
+            self.compute_half_rank_phase = True
+            self.diagonalize_function = self.diagonalize_half_rank_eig
+        elif method == "stamnes88":
+            self.compute_half_rank_phase = True
+            self.solve = self.solve_stamnes88
         else:
             raise SMRTError(f"Unknown method '{method}' to diagonalize the matrix")
 
         self.norm_0 = None
         self.norm_m = None
 
-    @property
-    def ft_even_phase(self):
+    def compute_ft_even_phase(self):
         # cached version of the ft_even_phase
         if not hasattr(self, "_ft_even_phase"):
             if self.ft_even_phase_function is None:
                 self._ft_even_phase = smrt_matrix(0)
             else:
-                mu = np.concatenate((self.mu, -self.mu))
-                self._ft_even_phase = self.ft_even_phase_function(mu, mu, self.m_max)
+                fullmu = np.concatenate((self.mu, -self.mu))
+                if self.compute_half_rank_phase and not self.symmetrization:
+                    # compute only mu_s > 0 for all mu_i >0 and <0
+                    self._ft_even_phase = self.ft_even_phase_function(self.mu, fullmu, self.m_max)
+                else:
+                    # compute the full matrix for all mu_s and mu_i >0 and <0
+                    self._ft_even_phase = self.ft_even_phase_function(fullmu, fullmu, self.m_max)
+
         return self._ft_even_phase
 
     def solve(self, m, compute_coherent_only, debug_A=False):
+        raise RuntimeError(
+            "This method is the entry point and it must be set to one of the solve function at initialization"
+        )
+
+    def solve_generic(self, m, compute_coherent_only, debug_A=False):
         # solve the homogeneous equation for a single layer and return eignen values and eigen vectors
         # :param m: mode
         # :param compute_coherent_only
         # :returns: beta, E, Q
         #
 
-        npol = 2 if m == 0 else 3
-        n = npol * len(self.mu)
-
         # this coefficient come from the 1/4pi normalization of the RT equation and the
         # 1/(4*pi) * int_{phi=0}^{2*pi} cos(m phi)*cos(n phi) dphi
         # note that equation A7 and A8 in Picard et al. 2018 has an error, it does not show this coefficient.
-        coef = 0.5 if m == 0 else 0.25
 
+        # calculate the A matrix. Eq (12),  or 0 if compute_coherent_only
+        if compute_coherent_only:
+            return self.return_no_scattering(m)
+
+        A = self.compute_ft_even_phase().compress(mode=m, auto_reduce_npol=True)
+
+        if is_equal_zero(A):
+            return self.return_no_scattering(m)
+
+        if self.symmetrization:
+            A = symmetrize_phase_matrix(A, m)
+
+        npol = 2 if m == 0 else 3
         # compute invmu
         invmu = 1.0 / self.mu
         invmu = np.repeat(invmu, npol)
         invmu = np.concatenate((invmu, -invmu))  # matrix M^-1 in Stamnes et al. DISORT 1988
-        mu = np.concatenate((self.mu, -self.mu))
+        fullmu = np.concatenate((self.mu, -self.mu))
 
-        # calculate the A matrix. Eq (12),  or 0 if compute_coherent_only
-        A = self.ft_even_phase.compress(mode=m, auto_reduce_npol=True) if not compute_coherent_only else 0
-
-        if is_equal_zero(A):
-            # the solution is trivial
-            beta = invmu * self.ke(mu, npol=npol).compress().diagonal()
-            E = np.eye(2 * n, 2 * n)
-            Eu = E[0:n, :]  # upwelling
-            Ed = E[n:, :]  # downwelling
-
-            return beta, Eu, Ed
+        coef = 0.5 if m == 0 else 0.25
 
         # the phase function is not null, let's continue to create the A matrix
         coef_weight = np.tile(
@@ -804,12 +836,12 @@ class EigenValueSolver(object):
         # normalize
         if self.normalization:
             if callable(self.ks):
-                A = self.normalize(m, A, self.ks(mu[0 : k // npol], npol=npol).compress().diagonal())
+                A = self.normalize(m, A, self.ks(fullmu[0 : k // npol], npol=npol).compress().diagonal())
             else:
                 A = self.normalize(m, A, self.ks)
         # normalization is done
 
-        A[np.diag_indices(k)] += self.ke(mu[0 : k // npol], npol=npol).compress().diagonal()
+        A[np.diag_indices(k)] += self.ke(fullmu[0 : k // npol], npol=npol).compress().diagonal()
         A = invmu[0:k, np.newaxis] * A
 
         if debug_A:  # this is not elegant but can be useful. A dedicated function to compute_A is not better
@@ -817,6 +849,23 @@ class EigenValueSolver(object):
 
         return self.diagonalize_function(m, A)
         # !-----------------------------------------------------------------------------!
+
+    def return_no_scattering(self, m: int):
+        # the solution is trivial
+        npol = 2 if m == 0 else 3
+        n = npol * len(self.mu)
+
+        invmu = 1.0 / self.mu
+        invmu = np.repeat(invmu, npol)
+        invmu = np.concatenate((invmu, -invmu))  # matrix M^-1 in Stamnes et al. DISORT 1988
+        fullmu = np.concatenate((self.mu, -self.mu))
+
+        beta = invmu * self.ke(fullmu, npol=npol).compress().diagonal()
+        E = np.eye(2 * n, 2 * n)
+        Eu = E[0:n, :]  # upwelling
+        Ed = E[n:, :]  # downwelling
+
+        return beta, Eu, Ed
 
     def normalize(self, m, A, ks):
         # normalize A to conserve energy, assuming isotrope scattering coefficient
@@ -853,6 +902,7 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
         A *= norm[:, np.newaxis]
         return A
 
+
     def diagonalize_eig(self, m, A):
         # diagonalise the matrix. Eq (13)
 
@@ -861,14 +911,12 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
         except scipy.linalg.LinAlgError:
             raise SMRTError("Eigen value decomposition failed.\n" + self.diagonalization_error_message())
 
-        beta, E = self.validate_eigen(beta, E, m)
-
         npol = 2 if m == 0 else 3
         n = npol * len(self.mu)
         Eu = E[0:n, :]  # upwelling
         Ed = E[n:, :]  # downwelling
 
-        return beta, Eu, Ed
+        return self.validate_eigen(beta, Eu, Ed, m)
 
     def diagonalize_shur(self, m, A, force_triu=False):
         # diagonalise the matrix. Eq (13) using Shur decomposition. This avoids some instabilities with the direct eig
@@ -917,42 +965,227 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
         #         print("ok")
         #     #print(f"{m}, {iscomplex_beta}, {iscomplex_E}")
 
-        beta, E = self.validate_eigen(beta, E, m)
-
         npol = 2 if m == 0 else 3
         n = npol * len(self.mu)
         Eu = E[0:n, :]  # upwelling
         Ed = E[n:, :]  # downwelling
 
-        return beta, Eu, Ed
+        return self.validate_eigen(beta, Eu, Ed, m)
 
-    def validate_eigen(self, beta, E, m):
+
+    def diagonalize_half_rank_eig(self, m, A):
+        # solve the eigenvalue problem of A using half-rank A
+        # the decomposition can be found in Stamnes et al. DISORT 1988 for 2-stockes vectors (mode m=0)
+        # for the 4-stockes, it is necessary to take into account that the 3rd and 4th components change
+        # sign when the outgoing mu_s is changing sign
+        #
+        # We define D=diag([1, 1, -1, -1]). Note that D^2=1 and D=D^-1 (projection matrix). We can show that the system
+        # to solve is:
+        #  |d u+ / dtau| = |    alpha       beta| |u+|
+        #  |d u- / dtau| = |-D*beta*D -D*alpha*D| |u-|
+        # which can be transform into
+        #  |d  u+ / dtau| = |  alpha beta*D| |u+  |
+        #  |d Du- / dtau| = |-beta*D -alpha| |D u-|
+        # it follows that D must be applied to beta before solving the eigen value problem and u- after.
+        #
+        # this approach is found in Garcia and Siewert 1989. and in C.E. Siewert 2000 JQSRT,
+        # however their derivation is difficult to follow. It is straigtforward here.
+
+        n = A.shape[1] // 2
+
+        # see Eq (8e) in Stamnes et al. DISORT 1988
+        alpha_mat = -A[0:n, 0:n]  # the top half of the A matrix is for the UP outgoing radiation
+        beta_mat = -A[0:n, n:]
+
+        # if A.shape[0] > n:
+        #      # check that A has the expected form  (for m = 0 only). For m > 0, the 3rd component as
+        #     alternating sign, as mentioned earlier.
+        #     assert np.allclose(-A[0:n, 0:n], A[n:, n:]), f"A{m}={-A[0:4, 0:4]}\n{A[n:n+4, n:n+4]}"
+        #     assert np.allclose(-A[0:n, n:], A[n:, 0:n]), f"A{m}={-A[0:4, n:n+4]}\n{A[n:n+4, 0:4]}"
+
+        if m > 0:
+            # apply the diagonal matrix D
+            beta_mat[:, 2::3] = -beta_mat[:, 2::3]
+
+        # solve for the sum: Ep = Eu + Ed
+        half_rank_A = (alpha_mat - beta_mat) @ (alpha_mat + beta_mat)  # eq 8e in Stamnes et al. DISORT 1988
+
+        # TODO: it seems that there is an even better solution here: https://edepot.wur.nl/210943 Appendix A
+        # where this diagonalization is split in two steps where only symmetric matrix diagonalization
+        # is necessary. Better stability ??
+        # see also Stamnes 1988 EIGENVALUE PROBLEM equation 5 and following.
+        # Stamnes 1998 EIGENVALUE proposes a faster method than in Nakajima and Tanaka which involves
+        # Cholesky decomposition
+
+        # diagonalise the matrix. Eq (13)
+        try:
+            beta, Ep = scipy.linalg.eig(half_rank_A, overwrite_a=True)
+        except scipy.linalg.LinAlgError:
+            raise SMRTError("Diagonalization of the halk rank matrix failed.\n" + self.diagonalization_error_message())
+
+        beta = np.sqrt(beta.real)  # eq 8e in Stamnes et al. DISORT 1988
+
+        # compute the difference of the eigenvecteur Em = Eu - Ed using Eq. 8d in Stamnes et al. DISORT 1988
+        Em = (alpha_mat + beta_mat) @ (Ep * (1 / beta)[np.newaxis, :])
+
+        # Eu = np.empty((n, 2 * n))
+        # Eu[:, 0:n] = 0.5 * (Ep - Em)
+        # Eu[:, n:] = 0.5 * (Ep + Em)
+        Eu = np.hstack((0.5 * (Ep - Em), 0.5 * (Ep + Em)))
+
+        # Ed = np.empty((n, 2 * n))
+        # Ed[:, 0:n] = Eu[:, n:]
+        # Ed[:, n:] = Eu[:, 0:n]
+        Ed = np.hstack((Eu[:, n:], Eu[:, 0:n]))
+
+        if m > 0:
+            # apply the diagonal matrix D
+            Ed[2::3, :] = -Ed[2::3, :]  # apply eq 43b in C.E. Siewert 2000 JQSRT
+
+        beta = np.concatenate((beta, -beta))
+
+        return self.validate_eigen(beta, Eu, Ed, m)
+
+    def solve_stamnes88(self, m, compute_coherent_only, debug_A=False):
+        # solve the homogeneous equation for a single layer and return eignen values and eigen vectors
+        # :param m: mode
+        # :param compute_coherent_only
+        # :returns: beta, E, Q
+        #
+        smrt_warn("The stamnes88 solver is not fully validated. Use for debugging only.")
+
+        npol = 2 if m == 0 else 3
+
+        n = npol * len(self.mu)
+
+        # this coefficient come from the 1/4pi normalization of the RT equation and the
+        # 1/(4*pi) * int_{phi=0}^{2*pi} cos(m phi)*cos(n phi) dphi
+        # note that equation A7 and A8 in Picard et al. 2018 has an error, it does not show this coefficient.
+        coef = 0.5 if m == 0 else 0.25
+
+        # compute inv_mu
+        inv_mu = np.repeat(1 / self.mu, npol)
+
+        # calculate the A matrix. Eq (12),  or 0 if compute_coherent_only
+        if compute_coherent_only:
+            return self.return_no_scattering(m)
+
+        phase = self.compute_ft_even_phase().compress(mode=m, auto_reduce_npol=True)
+
+        if is_equal_zero(phase):
+            return self.return_no_scattering(m)
+
+        Cp = phase[0:n, 0:n]
+        Cm = phase[0:n, n:]
+
+        # if m > 0:
+        #     # apply the diagonal matrix D
+        #     Cm[:, 2::3] = - Cm[:, 2::3]
+
+        ke = self.ke(self.mu, npol=npol).compress().diagonal()
+        weight = np.repeat(self.weight, npol)
+        inv_weight_ke = 1 / weight * ke  # could be cached (per layer) because same for each mode
+
+        # Calculate G+ and G- (Eq 5c)
+        Gp = -coef * (Cp + Cm)
+        Gm = -coef * (Cp - Cm)
+
+        # add inv_weight to the diagonal. Functionl alternative (slover): np.fill_diagonal(X, X.diagonal() + d)
+        Gp.ravel()[:: n + 1] += inv_weight_ke
+        Gm.ravel()[:: n + 1] += inv_weight_ke
+
+        # check that Gp and Gm are symmetric:
+        # if m > 0:
+        #     print(Gp)
+        #     print(Gp.T)
+        #     print("--")
+        if m == 0:
+            assert np.allclose(Gp, Gp.T), f"Gp is not symmetric (m={m})"
+            assert np.allclose(Gm, Gm.T), f"Gm is not symmetric (m={m})"
+
+        # Calculate X+ and X-
+
+        wm = np.sqrt(weight * inv_mu)
+
+        Xp = wm[:, np.newaxis] * Gp * wm[np.newaxis, :]
+        Xm = wm[:, np.newaxis] * Gm * wm[np.newaxis, :]
+
+        # Xm is positive definite.
+
+        L = np.linalg.cholesky(Xm)
+        # the lower instead of the upper triangular matrix is return. Switch all .T w/r to Stamnes et al. 1988
+
+        # Calculate the S matrix
+        S = L.T @ Xp @ L
+
+        # TODO: to implement the fast approach taking benefit of the symmetry using numba: see Stamnes et aL. 1988
+
+        # diagonalize this positive definite symmetric matrix if m == 0.
+        if m == 0:
+            beta, V = np.linalg.eigh(S)
+        else:
+            # S is not symmetric unfrotunately
+            try:
+                beta, V = scipy.linalg.eig(S, overwrite_a=True)
+            except scipy.linalg.LinAlgError:
+                raise SMRTError(
+                    "Diagonalization of the halk rank matrix failed.\n" + self.diagonalization_error_message()
+                )
+
+        beta = np.sqrt(beta)
+
+        Em = scipy.linalg.solve_triangular(L, V, trans="T")
+
+        # we deduce Ep
+        Ep = Xm @ (Em * (-1 / beta)[np.newaxis, :])
+
+        Eu = np.hstack((0.5 * (Ep - Em), 0.5 * (Ep + Em)))
+        Ed = np.hstack((Eu[:, n:], Eu[:, 0:n]))
+
+        if m > 0:
+            # apply the diagonal matrix D
+            Ed[2::3, :] = -Ed[2::3, :]  # apply eq 43b in C.E. Siewert 2000 JQSRT
+
+        beta = np.concatenate((beta, -beta))
+
+        return self.validate_eigen(beta, Eu, Ed, m)
+
+    def validate_eigen(self, beta, Eu, Ed, m):
         iscomplex_beta = not np.allclose(beta.imag, 0, atol=np.max(beta.real) * 1e-07)
-        iscomplex_E = not np.allclose(E.imag, 0, atol=1e-6)
-        diagonalization_failed = iscomplex_beta or iscomplex_E
+        iscomplex_Eu = not np.allclose(Eu.imag, 0, atol=1e-6)
+        iscomplex_Ed = not np.allclose(Ed.imag, 0, atol=1e-6)
+        diagonalization_failed = iscomplex_beta or iscomplex_Eu  or iscomplex_Ed
 
         reasons = []
         if iscomplex_beta:
             reasons.append("Some eigen values beta are complex.")
-        if iscomplex_E:
+        if iscomplex_Eu or iscomplex_Ed:
             reasons.append("Some eigen vectors are complex.")
 
         if diagonalization_failed:
-            print("Inof: ks:", self.ks, " m:", m)
-            mask = np.abs(E.imag) > 1e-8
-            print("E:", E[mask], "beta:", beta[np.any(mask, axis=0)])
+            print("Info: ks:", self.ks, " m:", m)
+            mask = np.abs(Eu.imag) > 1e-8
+            print("Eu:", Eu[mask], "beta:", beta[np.any(mask, axis=0)])
 
             raise SMRTError("n".join(reasons) + "\n" + self.diagonalization_error_message())
 
-        if np.iscomplexobj(E):
-            mask = abs(E.imag) > np.linalg.norm(E) * 1e-5
+        if np.iscomplexobj(Eu):
+            mask = abs(Eu.imag) > np.linalg.norm(Eu) * 1e-5
             if np.any(mask):
                 print(np.any(mask, axis=1))
                 print(beta[np.any(mask, axis=1)])
                 print(beta)
             else:
-                E = E.real
-        return beta.real, E
+                Eu = Eu.real
+        if np.iscomplexobj(Ed):
+            mask = abs(Ed.imag) > np.linalg.norm(Ed) * 1e-5
+            if np.any(mask):
+                print(np.any(mask, axis=1))
+                print(beta[np.any(mask, axis=1)])
+                print(beta)
+            else:
+                Ed = Ed.real
+        return beta.real, Eu, Ed
 
     def diagonalization_error_message(self):
         return """The diagonalization failed in DORT. Several causes are possible:
@@ -976,6 +1209,33 @@ obtained by setting the option error_handling='nan'.
 
 Note:: setting an option in DORT is obtained with make_model(..., "dort", rtsolver_options=dict(error_handling='nan')).
 """
+
+
+@numba.jit
+def symmetrize_phase_matrix(A, m):
+
+    n = A.shape[1] // 2
+    newA = np.empty_like(A)
+
+    if m == 0:
+        npol = 2
+        newA[:n, :n] = 0.5 * (A[:n, :n] + A[n:, n:])
+        newA[n:, n:] = newA[:n, :n]
+        newA[:n, n:] = 0.5 * (A[:n, n:] + A[n:, :n])
+        newA[n:, :n] = newA[:n, n:]
+    else:
+        npol = 3
+        for i in range(n):
+            d0 = 1 if (i % npol) < 2 else -1
+            for j in range(n):
+                d = d0 if (j % npol) < 2 else -d0
+                # alpha
+                newA[i, j] = 0.5 * (A[i, j] + A[i + n, j + n] * d)
+                newA[i + n, j + n] = d * A[i, j]
+                # beta
+                newA[i, j + n] = 0.5 * (A[i, j + n] + A[i +n, j] * d)
+                newA[i + n, j] = d * newA[i, j + n]
+    return newA
 
 
 class InterfaceProperties(object):
@@ -1204,7 +1464,7 @@ class Streams(object):
     __slot__ = "n", "mu", "weight", "outmu", "outweight", "n_substrate", "n_air"
 
 
-def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="most_refringent"):
+def compute_stream(n_max_stream, permittivity, substrate_permittivity, mode="most_refringent"):
     # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent layer and
     # use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
 
@@ -1215,16 +1475,16 @@ def compute_stream(n_max_stream, permittivity, permittivity_substrate, mode="mos
     # """
 
     if mode in ["most_refringent", "air"]:
-        return compute_stream_gaussian(n_max_stream, permittivity, permittivity_substrate, mode=mode)
+        return compute_stream_gaussian(n_max_stream, permittivity, substrate_permittivity, mode=mode)
 
     elif mode == "uniform_air":
-        return compute_stream_uniform(n_max_stream, permittivity, permittivity_substrate)
+        return compute_stream_uniform(n_max_stream, permittivity, substrate_permittivity)
 
     else:
         raise SMRTError(f"Unknown mode '{mode}' for the computation of the streams")
 
 
-def compute_stream_gaussian(n_max_stream, permittivity, permittivity_substrate, mode="most_refringent"):
+def compute_stream_gaussian(n_max_stream, permittivity, substrate_permittivity, mode="most_refringent"):
     # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent layer and
     # use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
 
@@ -1313,12 +1573,12 @@ def compute_stream_gaussian(n_max_stream, permittivity, permittivity_substrate, 
     streams.outweight = compute_outweight(streams.outmu)
 
     # compute the number of stream in the substrate
-    streams.n_substrate = compute_n_stream_substrate(permittivity, permittivity_substrate, streams.mu)
+    streams.n_substrate = compute_n_stream_substrate(permittivity, substrate_permittivity, streams.mu)
 
     return streams
 
 
-def compute_stream_uniform(n_max_stream, permittivity, permittivity_substrate):
+def compute_stream_uniform(n_max_stream, permittivity, substrate_permittivity):
     # """Compute the angles of each layer. Use a regular step in angle in the air, then deduce the angles in the other layers
     # using Snell-law. Then, in the most refringent layer, add regular stream up to close to 0, and then propagate back this second
     # set of angles in the other layers using Snell-law and accounting for the total reflections
@@ -1393,7 +1653,7 @@ def compute_stream_uniform(n_max_stream, permittivity, permittivity_substrate):
     streams.outweight = compute_outweight(streams.outmu)
 
     # compute the number of stream in the substrate
-    streams.n_substrate = compute_n_stream_substrate(permittivity, permittivity_substrate, streams.mu)
+    streams.n_substrate = compute_n_stream_substrate(permittivity, substrate_permittivity, streams.mu)
 
     return streams
 
@@ -1430,12 +1690,12 @@ def compute_weight(mu):
     return weight
 
 
-def compute_n_stream_substrate(permittivity, permittivity_substrate, mu):
-    if permittivity_substrate is None:
+def compute_n_stream_substrate(permittivity, substrate_permittivity, mu):
+    if substrate_permittivity is None:
         n_substrate = len(mu[-1])  # streams in the last layer
 
     else:
-        real_index = np.real(np.sqrt(permittivity_substrate / permittivity[-1]))
+        real_index = np.real(np.sqrt(substrate_permittivity / permittivity[-1]))
 
         # calculate the angles (=node) in the substrate
 

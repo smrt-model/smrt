@@ -202,13 +202,18 @@ class Snowpack(object):
         self.interfaces = self.layers[0:ilayer]
         self.substrate = None
 
-    def copy(self, cut_bottom=None):
+    def shallow_copy(self, cut_bottom=None):
         """
-        Makes a shallow copy of a snowpack by copying the list of layers and interfaces but not the layers and
+        Make a shallow copy of a snowpack by copying the list of layers and interfaces but not the layers and
         interfaces themselves which are still shared with the original snowpack.
-        This method allows the user to create a new snowpack and remove, append or replace some layers or interfaces
-        afterward. It does not allow to alter the layers or interfaces without
+
+        This method allows the advanced user to create a new snowpack and remove, append or replace some layers or
+        interfaces afterward. It does not allow to alter the layers or interfaces without
         changing the original snowpack. See deepcopy.
+
+        .. warning::
+           This function is for advanced users, understanding the concept and consequence of shallow copy.
+           It is likely to generate bugs. It may be removed in the future, if snowpack becomes immutable.
 
         Args:
             cut_bottom (int, optional): If cut_bottom is a number, all layers below the layer indexed by 'cut_bottom' are removed as well as the substrate.
@@ -219,15 +224,20 @@ class Snowpack(object):
 
         new_sp = copy.copy(self)
 
-        if cut_bottom is None:
+        if (cut_bottom is None) or (cut_bottom >= self.nlayer):
             cut_bottom = self.nlayer
         else:
-            assert cut_bottom < self.nlayer
             new_sp.substrate = None
 
         new_sp.layers = copy.copy(self.layers[0:cut_bottom])
         new_sp.interfaces = copy.copy(self.interfaces[0:cut_bottom])
         return new_sp
+
+    def copy(self, cut_bottom=None):
+        warnings.warn(
+            "The copy method is rename shallow_copy and may be itself depreciated in the future.", DeprecationWarning
+        )
+        return self.shallow_copy(cut_bottom=cut_bottom)
 
     def deepcopy(self):
         """

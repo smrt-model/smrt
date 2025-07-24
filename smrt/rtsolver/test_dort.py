@@ -1,5 +1,6 @@
 
 import numpy as np
+import numpy.testing as npt
 import warnings
 
 import pytest
@@ -12,7 +13,8 @@ from smrt.core.error import SMRTWarning
 from smrt.interface.transparent import Transparent
 from smrt.emmodel.nonscattering import NonScattering
 from smrt.emmodel.iba import IBA
-from smrt.rtsolver.dort import DORT
+from smrt.emmodel.rayleigh import Rayleigh
+from smrt.rtsolver.dort import DORT, symmetrize_phase_matrix, symmetrize_phase_matrix
 
 
 def setup_snowpack():
@@ -108,10 +110,10 @@ def test_shallow_snowpack():
 def test_shur_based_diagonalisation():
 
     sp = make_snowpack(thickness=[1000],
-                       microstructure_model='exponential',
+                       microstructure_model='independent_sphere',
                        density=280,
                        temperature=265,
-                       corr_length=0.05e-3)
+                       radius=0.05e-3)
 
     scatt = active(10e9, 50)
 
@@ -121,10 +123,12 @@ def test_shur_based_diagonalisation():
     # this setting fails when DORT  use scipy.linalg.eig
     # but this works with the shur diagonalization. Let check this:
 
-    m = Model(IBA, DORT, rtsolver_options=dict(
+    m = Model(Rayleigh, DORT, rtsolver_options=dict(
         m_max=m_max,
         n_max_stream=nstreams,
         diagonalization_method="shur"))
+
+    m.run(scatt, sp).sigmaVV()
 
 
 def test_shur_forcedtriu_based_diagonalisation():
@@ -143,7 +147,41 @@ def test_shur_forcedtriu_based_diagonalisation():
     # this setting fails when DORT  use scipy.linalg.eig and using shur
     # but this works with the shur_forcedtriu diagonalization. Let check this:
 
-    m = m = Model(IBA, DORT, rtsolver_options=dict(
+    m = Model(IBA, DORT, rtsolver_options=dict(
         m_max=m_max,
         n_max_stream=nstreams,
         diagonalization_method="shur_forcedtriu"))
+
+    m.run(scatt, sp).sigmaVV()
+
+
+def test_symmetrization():
+
+    scatt = active(10e9, 50)
+    sp = make_snowpack(thickness=[1000],
+                   microstructure_model='exponential',
+                   density=280,
+                   temperature=265,
+                   corr_length=0.05e-3)
+
+    mu = np.array([0.5, 0.2, -0.5, -0.2])
+    mu = np.array([0.5, 0.2, -0.5, -0.2])
+
+    P = IBA(scatt, sp.layers[0]).ft_even_phase(mu, mu, m_max=1).compress(mode=1)
+    #print("P=", P[0:6, 0:6], "\n", P[6:, 6:])
+    #print("P=", P[6:, 0:6]) #, "\n", P[0:6, 6:])
+
+    symP = symmetrize_phase_matrix(P, m=1)
+
+    #print("symP=", symP[0:6, 0:6], "\n", symP[6:, 6:])
+
+    #print("symP=", symP[6:, 0:6]) #, "\n", symP[0:6, 6:])
+    #P[0:]
+
+    npt.assert_allclose(P[0:6, 0:6], symP[0:6, 0:6])
+    npt.assert_allclose(P[6:, 6:], symP[6:, 6:])
+
+    npt.assert_allclose(P[6:, 0:6], symP[6:, 0:6])
+    npt.assert_allclose(P[0:6, 6:], symP[0:6, 6:])
+
+    npt.assert_allclose(P, symP)

@@ -106,6 +106,7 @@ class smrt_diag(object):
 
     def __init__(self, arr):
         self.diag = np.atleast_1d(arr)
+        assert (np.ndim(self.diag)) == 1
 
         # self.shape = shape if shape is not None else (len(self.diag), len(self.diag))
 
@@ -150,7 +151,7 @@ class smrt_diag(object):
         elif isinstance(other, np.ndarray):
             assert other.shape == self.shape  # we do not allow broadcasting (not yet)...
             other = other.copy()
-            other[np.diag_indices_from[other]] += self.diag
+            other[np.diag_indices_from(other)] += self.diag
             return other
         else:
             raise NotImplementedError

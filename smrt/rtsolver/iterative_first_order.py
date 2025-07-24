@@ -384,7 +384,7 @@ def _get_np_matrix(smrt_m, npol, n_mu):
 class _InterfaceProperties(object):
     # """
     # Helper class to organize interface properties for multi-layer snowpack.
-    
+
     # Manages transmission and reflection matrices for coherent and diffuse
     # scattering at interfaces between layers and boundaries.
     # Prepare interface properties of multi-layer snowpack layer l
