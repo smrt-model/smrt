@@ -27,13 +27,13 @@ Backscatter Components:
 
 Usage:
     Basic usage with default settings and iba emmodel:
-        >>> m = make_model("iba", "iterative_first")
+        >>> m = make_model("iba", "iterative_first_order")
 
     Return individual contributions for analysis:
-        >>> m = make_model("iba", "iterative_first", rtsolver_options= {'return_contributions' : True})
+        >>> m = make_model("iba", "iterative_first_order", rtsolver_options= {'return_contributions' : True})
 
     Handle errors gracefully in batch processing:
-        >>> m = make_model("iba", "iterative_first", rtsolver_options = {'error_handling':'nan'}
+        >>> m = make_model("iba", "iterative_first_order", rtsolver_options = {'error_handling':'nan'}
 
 Note:
     - This solver is designed for backscatter calculations only.
@@ -101,13 +101,13 @@ class IterativeFirstOrder(object):
         Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
-            snowpack: Snowpack object, :py:mod:`smrt.core.snowpack`.
-            emmodels: List of electromagnetic models object, :py:mod:`smrt.emmodel`.
-            sensor: Sensor object, :py:mod:`smrt.core.sensor`.
-            atmosphere: [Optional] Atmosphere object, :py:mod:`smrt.atmosphere`.
+            snowpack: Snowpack object.
+            emmodels: List of electromagnetic models object.
+            sensor: Sensor object.
+            atmosphere: [Optional] Atmosphere object.
 
         Returns:
-            result: Result object, :py:mod:`smrt.core.result.ActiveResult`.
+            result: Result object.
         """
         if sensor.mode != "A":
             raise SMRTError(

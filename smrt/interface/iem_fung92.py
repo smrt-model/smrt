@@ -88,9 +88,9 @@ class IEM_Fung92(Interface):
                             " Limit is ks * kl < sqrt(eps_r). Here ks*kl=%g and sqrt(eps_r)=%g" % (ks * kl, np.sqrt(eps_r)))
 
     def fresnel_coefficients(self, eps_1, eps_2, mu_i, ks, kl):
-        # """
-        # Calculate the fresnel coefficients at the angle mu_i whatever is ks and kl according to the original formulation of Fung 1992
-        # """
+        """
+        Calculate the fresnel coefficients at the angle mu_i whatever is ks and kl according to the original formulation of Fung 1992
+        """
 
         Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
         return Rv, Rh

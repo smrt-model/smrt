@@ -45,7 +45,7 @@ def process_coherent_layers(snowpack, emmodel_list, sensor):
 
 class CoherentFlat(object):
     """
-    Implement a flat surface (coherent). 
+    Implement a flat interface (coherent). 
     
     The reflection is in the specular direction and the coefficient is calculated with the Fresnel coefficients.
 
@@ -76,7 +76,7 @@ class CoherentFlat(object):
             npol: Number of polarization.
 
         Returns:
-            The reflection matrix, :py:mod:`smrt.core.fresnel.fresnel_reflection_matrix`.
+            The reflection matrix.
         """
 
         R01_v, R01_h, R1t_v, R1t_h, exp_kd, exp_2kd, mu_t = self._prepare_computation(frequency, eps_1, eps_2, mu1)
@@ -111,7 +111,7 @@ class CoherentFlat(object):
             npol: Number of polarization.
 
         Returns:
-            The transmission matrix, :py:mod:`smrt.core.fresnel.fresnel_transmission_matrix`.
+            The transmission matrix.
         """
 
         R01_v, R01_h, R1t_v, R1t_h, exp_kd, exp_2kd, mu_t = self._prepare_computation(frequency, eps_1, eps_2, mu1)

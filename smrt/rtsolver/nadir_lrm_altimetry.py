@@ -93,13 +93,13 @@ class NadirLRMAltimetry(object):
         Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
-            snowpack: Snowpack object, :py:mod:`smrt.core.snowpack`.
-            emmodels: List of electromagnetic models object, :py:mod:`smrt.emmodel`.
-            sensor: Sensor object, :py:mod:`smrt.core.sensor`.
-            atmosphere: [Optional] Atmosphere object, :py:mod:`smrt.atmosphere`.
+            snowpack: Snowpack object.
+            emmodels: List of electromagnetic models object.
+            sensor: Sensor object.
+            atmosphere: [Optional] Atmosphere object.
 
         Returns:
-            result: Result object, :py:mod:`smrt.core.result.AltimetryResult`.
+            result: Result object.
         """
         if sensor.theta_inc != 0:
             raise SMRTError("This solver is for nadir looking altimeter only")

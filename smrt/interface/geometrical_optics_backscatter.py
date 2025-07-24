@@ -30,22 +30,22 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
         super().__init__(**kwargs)
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        # """
-        # Compute the specular reflection coefficients. 
+        """
+        Compute the specular reflection coefficients. 
         
-        # Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
-        # beam is transmitted.
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
+        beam is transmitted.
 
-        # Args:
-        #     frequency: Frequency of the incident wave.
-        #     eps_1: Permittivity of the medium where the incident beam is propagating.
-        #     eps_2: Permittivity of the other medium.
-        #     mu1: Array of cosine of incident angles.
-        #     npol: Number of polarization.
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
 
-        # Returns:
-        #     The reflection matrix.
-        # """
+        Returns:
+            The reflection matrix.
+        """
 
         return smrt_matrix(0)
 

@@ -13,7 +13,7 @@ Gaussian autocorrelation function. Other equations may exist for other autocorre
 This implementation is largely based on Tsang and Kong, Scattering of Electromagnetic Waves: Advanced Topics, 2001 (Tsang_tomeIII in the following).
 
 Note:
-    This implementation sets coherent reflection and transmission to zero, which is expected theoretically for a very rough surface. 
+    This implementation set coherent reflection and transmission to zero, which is expected theoretically for a very rough surface. 
     However, first order radiative transfer solvers (such as nadir_lrm_altimetry) do not work well in this case because the transmission 
     through the layers is neglected. In such case, it is recommended to use :py:mod:`~smrt.interface.geometrical_optics_backscatter`
     which provides an approximation that sets the coherent transmission based on energy conservation assuming all the transmitted energy 
@@ -69,22 +69,22 @@ class GeometricalOptics(Interface):
 
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        # """
-        # Compute the specular reflection coefficients.
+        """
+        Compute the specular reflection coefficients.
 
-        # Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
-        # beam is transmitted.
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
+        beam is transmitted.
 
-        # Args:
-        #     frequency: Frequency of the incident wave.
-        #     eps_1: Permittivity of the medium where the incident beam is propagating.
-        #     eps_2: Permittivity of the other medium.
-        #     mu1: Array of cosine of incident angles.
-        #     npol: Number of polarization.
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
 
-        # Returns:
-        #     The reflection matrix.
-        # """
+        Returns:
+            The reflection matrix.
+        """
 
         return smrt_matrix(0)  # this is an approximation for non nadir looking
 
@@ -210,22 +210,22 @@ class GeometricalOptics(Interface):
         return generic_ft_even_matrix(transmission_function, m_max, nsamples=256)
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        # """
-        # Compute the coherent transmission coefficients.
+        """
+        Compute the coherent transmission coefficients.
 
-        # Coefficients are calculated for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1. 
-        # Medium 2 is where the beam is transmitted.
+        Coefficients are calculated for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1. 
+        Medium 2 is where the beam is transmitted.
 
-        # Args:
-        #     frequency: Frequency of the incident wave.
-        #     eps_1: Permittivity of the medium where the incident beam is propagating.
-        #     eps_2: Permittivity of the other medium.
-        #     mu1: Array of cosine of incident angles.
-        #     npol: Number of polarization.
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
 
-        # Returns:
-        #     The transmission matrix.
-        # """
+        Returns:
+            The transmission matrix.
+        """
 
         return smrt_matrix(0)
 

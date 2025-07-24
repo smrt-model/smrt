@@ -33,7 +33,7 @@ class Flat(Interface):
             npol: Number of polarization.
 
         Returns:
-            The reflection matrix, :py:mod:`smrt.core.fresnel.fresnel_reflection_matrix`. 
+            The reflection matrix. 
         """
 
         return fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
@@ -56,7 +56,7 @@ class Flat(Interface):
             npol: Number of polarization.
 
         Returns:
-            The transmission matrix, :py:mod:`smrt.core.fresnel.fresnel_transmission_matrix`.
+            The transmission matrix.
         """
 
         return fresnel_transmission_matrix(eps_1, eps_2, mu1, npol)
