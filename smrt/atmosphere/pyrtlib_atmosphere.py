@@ -37,7 +37,7 @@ For a more specific calculations in term of location and date, it is possible ob
     atmos = make_atmosphere('pyrtlib_era5_atmosphere', longitude=-75.07, latitude=123., date=datetime(2020, 2, 22, 12), absorption_model = 'R20')
 
 An ERA5 file will be automatically downloaded which requires the installation of the CDSAPI and cfgrib python packages and to obain a CDS API Key.
-Please follow the instructions on the Copernicus site: https://cds.climate.copernicus.eu/api-how-to . 
+Please follow the instructions on the Copernicus site: https://cds.climate.copernicus.eu/api-how-to .
 Note that in April 2024, the CDS is announced to be disrupted "soon", which will impose changes in SMRT.
 
 The downloaded file is copied in a temporary directory, unless the `era5_directory` argument is specified, which is
@@ -113,9 +113,9 @@ class PyRTlibAtmosphereBase(AtmosphereBase):
 
         trans = np.exp(-(downwelling['taudry'].values + downwelling['tauwet'].values + downwelling['tauliq'].values + downwelling['tauice'].values))
 
-        return AtmosphereResult(tb_down=np.repeat(downwelling['tbtotal'].values, npol),
-                                tb_up=np.repeat(upwelling['tbtotal'].values, npol),
-                                transmittance=np.repeat(trans, npol))
+        return AtmosphereResult(tb_down=np.stack([downwelling['tbtotal'].values] * npol),
+                                tb_up=np.stack([upwelling['tbtotal'].values] * npol),
+                                transmittance=np.stack([trans] * npol))
 
 
 class PyRTlibAtmosphere(PyRTlibAtmosphereBase):

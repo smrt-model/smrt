@@ -58,7 +58,6 @@ References:
 """
 
 # Stdlib import
-import math
 from functools import partial
 
 # other import
@@ -73,10 +72,11 @@ from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.result import make_result, prepare_kskaeps_profile_information
 from smrt.core.lib import smrt_matrix, smrt_diag, is_equal_zero, is_zero_scalar
 from smrt.core.optional_numba import numba
+from smrt.rtsolver.rtsolver_utils import RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers
 
 
-class DORT(object):
+class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
     """
     Implement the Discrete Ordinate and Eigenvalue Solver.
 
@@ -133,13 +133,12 @@ class DORT(object):
         prune_deep_snowpack=None,
         diagonalization_method="eig",
     ):
-        self.n_max_stream = n_max_stream
-        self.stream_mode = stream_mode
-        self.m_max = m_max
+        DiscreteOrdinatesMixin.init(self, n_max_stream=n_max_stream, stream_mode=stream_mode, m_max=m_max)
+        CoherentLayerMixin.init(self, process_coherent_layers=process_coherent_layers)
+
         self.phase_normalization = phase_normalization
         self.phase_symmetrization = phase_symmetrization
         self.error_handling = error_handling
-        self.process_coherent_layers = process_coherent_layers
         self.diagonalization_method = diagonalization_method
 
         if self.phase_symmetrization:
@@ -148,6 +147,15 @@ class DORT(object):
         if prune_deep_snowpack is True:
             prune_deep_snowpack = 6
         self.prune_deep_snowpack = prune_deep_snowpack
+
+    def check_sensor(self):
+        try:
+            len(self.sensor.phi)
+        except TypeError:
+            pass
+        else:
+            if len(self.sensor.phi) > 1:
+                raise SMRTError("phi as an array must be implemented")
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
         """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
@@ -161,106 +169,40 @@ class DORT(object):
         Returns:
             result: Result object, :py:mod:`smrt.core.result.Result`.
         """
-        try:
-            len(self.sensor.phi)
-        except Exception:
-            pass
-        else:
-            raise Exception("phi as an array must be implemented")
 
-        if self.process_coherent_layers:
-            from smrt.interface.coherent_flat import (
-                process_coherent_layers,
-            )  # we only import this if requested by the users.
+        self.init_solve(snowpack, emmodels, sensor, atmosphere)
 
-            snowpack, emmodels = process_coherent_layers(snowpack, emmodels, sensor)
+        self.process_coherent_layers()  # must be before prepare_streams
 
-        # all these assignements are for convenience, this would break with parallel code (// !!)
-        self.emmodels = emmodels
-        self.snowpack = snowpack
-        self.sensor = sensor
+        self.prepare_streams()
 
-        self.atmosphere = atmosphere
+        self.temperature = [layer.temperature for layer in self.snowpack.layers] if self.sensor.mode == "P" else None
 
-        self.effective_permittivity = np.array([emmodel.effective_permittivity() for emmodel in emmodels])
-        self.substrate_permittivity = (
-            self.snowpack.substrate.permittivity(self.sensor.frequency) if self.snowpack.substrate is not None else None
-        )
-
-        if self.sensor.mode == "P":
-            pola = ["V", "H"]
-            self.temperature = [layer.temperature for layer in self.snowpack.layers]
-            m_max = 0  # force m_max=0 for passive microwave
-        else:
-            pola = ["V", "H", "U"]
-            self.temperature = None
-            m_max = self.m_max
+        m_max = self.m_max if self.sensor.mode == "A" else 0
 
         # solve the RT equation
         outmu, intensity = self.dort(m_max=m_max)
 
-        # reshape the first dimension in two dimensions (theta, pola)
-        npol = len(pola)
-        intensity = intensity.reshape([intensity.shape[0] // npol, npol] + list(intensity.shape[1:]))
-
-        mu = np.cos(sensor.theta)
-
-        fill_value = None
-        if np.max(mu) > np.max(outmu):
-            # need extrapolation to 0°
-            # add the mean of H and V polarisation for the smallest angle for theta=0 (mu=1)
-            if self.sensor.mode == "P":  # passive
-                outmu = np.insert(outmu, 0, 1.0)
-                intensity = np.insert(intensity, 0, np.mean(intensity[0, :, ...], axis=0), axis=0)
-            else:  # active
-                copol = (intensity[0, 0, 0] + intensity[0, 1, 1]) / 2
-                crosspol = (intensity[0, 1, 0] + intensity[0, 0, 1]) / 2
-
-                intensity = np.insert(
-                    intensity,
-                    0,
-                    [[copol, crosspol, intensity[0, 0, 2]], [crosspol, copol, intensity[0, 1, 2]], intensity[0, 2, :]],
-                    axis=0,
-                )
-                outmu = np.insert(outmu, 0, 1.0)
-
-        if np.min(mu) < np.min(outmu):
-            raise SMRTError(
-                "Viewing zenith angle is higher than the stream angles computed by DORT."
-                + " Either increase the number of streams or reduce the highest viewing zenith angle."
-            )
-
-        # reverse is necessary for "old" scipy version
-        intfct = scipy.interpolate.interp1d(
-            outmu[::-1], intensity[::-1, ...], axis=0, fill_value=fill_value, assume_sorted=True
-        )
-        # the previous call could use fill_value to be smart about extrapolation, but it's safer to return NaN (default)
-
-        # it seems there is a bug in scipy at least when checking the boundary, mu must be sorted
-        # original code that should work: intensity = intfct(mu)
-        i = np.argsort(mu)
-        intensity = intfct(mu[i])[np.argsort(i)]  # mu[i] sort mu, and [np.argsort(i)] put in back
-
-        # if sensor.mode == 'A':
-        #    # reshape the outer/first dimension in two dimensions (theta_inc, pola_inc)
-        #    intensity = intensity.reshape(list(intensity.shape[:-1]) + [intensity.shape[-1] // npol, npol])
+        # interpolate to the requested streams
+        intensity = self.interpolate_intensity(outmu, intensity)
 
         #  describe the results list of (dimension name, dimension array of value)
-        if sensor.mode == "P":
-            coords = [("theta", sensor.theta_deg), ("polarization", pola)]
+        if self.sensor.mode == "P":
+            pola = ["V", "H"]
+            coords = [("polarization", pola), ("theta", sensor.theta_deg)]
 
         else:  # sensor.mode == 'A':
-            # coords = [('theta_inc', sensor.theta_inc_deg), ('polarization_inc', pola)] + coords
-            coords = [("theta_inc", sensor.theta_inc_deg), ("polarization_inc", pola), ("polarization", pola)]
+            pola = ["V", "H", "U"]
+            coords = [("polarization_inc", pola), ("polarization", pola), ("theta_inc", sensor.theta_inc_deg)]
 
         # store other diagnostic information
         other_data = {
             "stream_angles": xr.DataArray(np.rad2deg(np.arccos(outmu)), coords=[range(len(outmu))]),
         } | prepare_kskaeps_profile_information(
-            snowpack, emmodels, effective_permittivity=self.effective_permittivity, mu=outmu
+            self.snowpack, self.emmodels, effective_permittivity=self.effective_permittivity, mu=outmu
         )
 
-        return make_result(sensor, intensity, coords, other_data=other_data)
+        return make_result(sensor, intensity, coords=coords, other_data=other_data)
 
     def dort(self, m_max=0, special_return=False):
         # """Solve the radiative transfer equation using the DORT method
@@ -274,26 +216,26 @@ class DORT(object):
         # """
 
         npol = 3 if self.sensor.mode == "A" else 2
-
-        #
-        #   compute the cosine of the angles in all layers
-        # first compute the permittivity of the ground
-
-        streams = compute_stream(
-            self.n_max_stream, self.effective_permittivity, self.substrate_permittivity, mode=self.stream_mode
-        )
+        if self.sensor.mode == "P":
+            npol = 2
+        elif self.sensor.mode == "A":
+            npol = 3
+        else:
+            raise NotImplementedError()
 
         # prepare the atmosphere
 
         self.atmosphere_result = (
-            self.atmosphere.run(self.sensor.frequency, streams.outmu, npol) if self.atmosphere is not None else None
+            self.atmosphere.run(self.sensor.frequency, self.streams.outmu, npol)
+            if self.atmosphere is not None
+            else None
         )
 
         #
         # compute the incident intensity array depending on the sensor
 
-        intensity_0, intensity_higher, incident_streams = self.prepare_intensity_array(
-            streams
+        intensity_0, intensity_higher, incident_streams = (
+            self.prepare_incident_intensity()
         )  # TODO Ghi: make an iterator
 
         #
@@ -304,7 +246,7 @@ class DORT(object):
             self.snowpack.interfaces,
             self.snowpack.substrate,
             self.effective_permittivity,
-            streams,
+            self.streams,
             m_max,
             npol,
         )
@@ -315,27 +257,32 @@ class DORT(object):
                 ke=self.emmodels[l].ke,
                 ks=self.emmodels[l].ks,
                 ft_even_phase_function=self.emmodels[l].ft_even_phase,
-                mu=streams.mu[l],
-                weight=streams.weight[l],
+                mu=self.streams.mu[l],
+                weight=self.streams.weight[l],
                 m_max=m_max,
                 method=self.diagonalization_method,
                 normalization=self.phase_normalization
                 if self.phase_normalization != "auto"
                 else getattr(self.emmodels[l], "_respect_reciprocity_principle", True),
-                symmetrization=self.phase_symmetrization
+                symmetrization=self.phase_symmetrization,
             )
             for l in range(len(self.emmodels))
         ]
 
         #
         # compute the outgoing intensity for each mode
+        #
+        if self.sensor.mode == "P":
+            intensity_up = np.zeros((npol, self.streams.n_air))
+        else:
+            intensity_up = np.zeros((npol, self.streams.n_air, npol, len(incident_streams)))
 
         for m in range(0, m_max + 1):
             intensity_down_m = intensity_0 if m == 0 else intensity_higher
 
             # compute the upwelling intensity for mode m
             intensity_up_m = self.dort_modem_banded(
-                m, streams, eigenvalue_solver, interfaces, intensity_down_m, special_return=special_return
+                m, self.streams, eigenvalue_solver, interfaces, intensity_down_m, special_return=special_return
             )
 
             if special_return:  # debuging
@@ -344,44 +291,34 @@ class DORT(object):
             if self.sensor.mode == "A":
                 # substrate the coherent contribution
                 intensity_up_m -= self.dort_modem_banded(
-                    m, streams, eigenvalue_solver, interfaces, intensity_down_m, compute_coherent_only=True
+                    m, self.streams, eigenvalue_solver, interfaces, intensity_down_m, compute_coherent_only=True
                 )
 
-            # reconstruct the intensity
-            if m == 0:
-                intensity_up = extend_2pol_npol(intensity_up_m, npol)
-            else:
-                intensity_up[0::npol] += intensity_up_m[0::npol] * np.cos(
-                    m * self.sensor.phi
-                )  # TODO Ghi: deals with an array of phi
-                intensity_up[1::npol] += intensity_up_m[1::npol] * np.cos(
-                    m * self.sensor.phi
-                )  # TODO Ghi: deals with an array of phi
-                intensity_up[2::npol] += intensity_up_m[2::npol] * np.sin(
-                    m * self.sensor.phi
-                )  # TODO Ghi: deals with an array of phi
+            self.add_intensity_mode(intensity_up, intensity_up_m, m)
 
-                # TODO: implement a convergence test if we want to avoid long computation
-                # when self.m_max is too high for the phase function.
+            # TODO: implement a convergence test if we want to avoid long computation
+            # when self.m_max is too high for the phase function.
 
-        if self.sensor.mode == "P" and self.atmosphere_result is not None:
-            intensity_up = self.atmosphere_result.tb_up + self.atmosphere_result.transmittance * intensity_up
-
-        if self.sensor.mode == "A":
+        if self.sensor.mode == "P":
+            if self.atmosphere_result is not None:
+                intensity_up = self.atmosphere_result.tb_up + self.atmosphere_result.transmittance * intensity_up
+            outmu = self.streams.outmu
+        elif self.sensor.mode == "A":
             # compress to get only the backscatter
-            backscatter_intensity_up = np.empty((npol * len(incident_streams), npol))
+            backscatter_intensity_up = np.empty((npol, npol, len(incident_streams)))
             for j, i in enumerate(incident_streams):
-                # the j-th column vector contains the stram i, with angle mu[i]
-                backscatter_intensity_up[3 * j : 3 * j + 3, :] = intensity_up[3 * i : 3 * i + 3, 3 * j : 3 * j + 3]
+                # the j-th column vector contains the stream i, with angle mu[i]
+                # at the same time, convert the dimension to pola, pola, incidence
+                backscatter_intensity_up[:, :, j] = intensity_up[:, i, :, j]
 
-            outmu = streams.outmu[incident_streams]
+            outmu = self.streams.outmu[incident_streams]
             intensity_up = backscatter_intensity_up
         else:
-            outmu = streams.outmu
+            raise NotImplementedError()
 
         return outmu, intensity_up
 
-    def prepare_intensity_array(self, streams):
+    def prepare_incident_intensity(self):
         if self.sensor.mode == "A":
             # send a direct beam
 
@@ -392,36 +329,21 @@ class DORT(object):
             # delta(x) = 1/2pi + 1/pi*sum_{n=1}{infinty} cos(nx)
             #
 
-            incident_streams = set()
+            incident_streams = self.prepare_incident_streams()
 
-            for theta in self.sensor.theta_inc:
-                mu_inc = math.cos(theta)
-                i0 = np.searchsorted(-streams.outmu, -mu_inc)
-                if i0 == 0:
-                    incident_streams.add(i0)
-                elif i0 == len(streams.outmu):
-                    incident_streams.add(i0 - 1)
-                else:
-                    incident_streams.add(i0)
-                    incident_streams.add(i0 - 1)
-            incident_streams = sorted(list(incident_streams))  # fix the order (required for the interpolation)
-
-            intensity_0 = np.zeros(
-                (2 * len(streams.outmu), 2 * len(incident_streams))
-            )  # 2 is for the two polarizations
-            intensity_higher = np.zeros(
-                (3 * len(streams.outmu), 3 * len(incident_streams))
-            )  # 2 is for the two polarizations
+            intensity_0 = np.zeros((2 * self.streams.n_air, 2 * len(incident_streams)))
+            intensity_higher = np.zeros((3 * self.streams.n_air, 3 * len(incident_streams)))
+            # 2 and 3 are for the polarizations
 
             j0 = 0
             j_higher = 0
             for i in incident_streams:
-                power = 1.0 / (2 * math.pi * streams.outweight[i])
+                power = 1.0 / (2 * np.pi * self.streams.outweight[i])
                 for ipol in [0, 1]:
                     intensity_0[2 * i + ipol, j0] = power
                     j0 += 1
                 for ipol in [0, 1, 2]:
-                    intensity_higher[3 * i + ipol, j_higher] = 2 * power
+                    intensity_higher[3 *i + ipol, j_higher] = 2 * power
                     j_higher += 1
 
         elif self.sensor.mode == "P":
@@ -431,11 +353,13 @@ class DORT(object):
             if self.atmosphere_result is not None:
                 # incident radiation is a function of frequency and incidence angle
                 # assume azimuthally symmetric
-                intensity_0 = self.atmosphere_result.tb_down[:, np.newaxis]
+                intensity_0 = self.atmosphere_result.tb_down
+                assert intensity_0.shape == (npol, self.streams.n_air)
+                # convert pola, theta to (theta, pola) and add batch dimension
+                intensity_0 = np.swapaxes(intensity_0, 0, 1).flatten()[:, np.newaxis]
                 intensity_higher = np.zeros_like(intensity_0)
-
             else:
-                intensity_0 = np.zeros((len(streams.outmu) * npol, 1))
+                intensity_0 = np.zeros((npol * self.streams.n_air, 1))
                 intensity_higher = intensity_0
                 intensity_0.flags.writeable = False  # make immutable
                 intensity_higher.flags.writeable = False  # make immutable
@@ -660,7 +584,19 @@ class DORT(object):
 
         I0up_m = matmul(Rbottom_air_down, intensity_down_m) + matmul(Ttop_0, I1up_m)[0 : streams.n_air * npol, :]
 
-        return np.array(I0up_m).squeeze()
+        I0up_m = np.array(I0up_m).squeeze()
+
+        # reshape the dimension in two dimensions (theta, pola) and then transpose to (pola, theta)
+        if np.ndim(I0up_m) == 1:
+            # split the outgoing polarization:
+            I0up_m= I0up_m.reshape((I0up_m.shape[0] // npol, npol)).transpose()
+        elif np.ndim(I0up_m) == 2:
+            # split the incoming and outgoing polarization:
+            I0up_m = I0up_m.reshape((I0up_m.shape[0] // npol, npol, I0up_m.shape[1] // npol, npol)).transpose(1, 0, 3, 2)
+        else:
+            raise RuntimeError("Should not be here. Not implemented np.ndim(I0up_m) > 2.")
+
+        return I0up_m
 
 
 def muleye(x):
@@ -902,7 +838,6 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
         A *= norm[:, np.newaxis]
         return A
 
-
     def diagonalize_eig(self, m, A):
         # diagonalise the matrix. Eq (13)
 
@@ -971,7 +906,6 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
         Ed = E[n:, :]  # downwelling
 
         return self.validate_eigen(beta, Eu, Ed, m)
-
 
     def diagonalize_half_rank_eig(self, m, A):
         # solve the eigenvalue problem of A using half-rank A
@@ -1154,7 +1088,7 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
         iscomplex_beta = not np.allclose(beta.imag, 0, atol=np.max(beta.real) * 1e-07)
         iscomplex_Eu = not np.allclose(Eu.imag, 0, atol=1e-6)
         iscomplex_Ed = not np.allclose(Ed.imag, 0, atol=1e-6)
-        diagonalization_failed = iscomplex_beta or iscomplex_Eu  or iscomplex_Ed
+        diagonalization_failed = iscomplex_beta or iscomplex_Eu or iscomplex_Ed
 
         reasons = []
         if iscomplex_beta:
@@ -1213,7 +1147,6 @@ Note:: setting an option in DORT is obtained with make_model(..., "dort", rtsolv
 
 @numba.jit
 def symmetrize_phase_matrix(A, m):
-
     n = A.shape[1] // 2
     newA = np.empty_like(A)
 
@@ -1233,7 +1166,7 @@ def symmetrize_phase_matrix(A, m):
                 newA[i, j] = 0.5 * (A[i, j] + A[i + n, j + n] * d)
                 newA[i + n, j + n] = d * A[i, j]
                 # beta
-                newA[i, j + n] = 0.5 * (A[i, j + n] + A[i +n, j] * d)
+                newA[i, j + n] = 0.5 * (A[i, j + n] + A[i + n, j] * d)
                 newA[i + n, j] = d * newA[i, j + n]
     return newA
 
@@ -1257,16 +1190,13 @@ class InterfaceProperties(object):
         for l in range(nlayer):
             eps_lm1 = permittivity[l - 1] if l > 0 else 1
             eps_l = permittivity[l]
-            if l < nlayer - 1:
-                eps_lp1 = permittivity[l + 1]
-            else:
-                eps_lp1 = None
+            eps_lp1 = permittivity[l + 1] if l < nlayer - 1 else None
 
-            nsl = streams.n[l]  # number of streams in layer l
-            nslm1 = streams.n[l - 1] if l > 0 else streams.n_air  # number of streams * npol in the layer l - 1 (lm1)
-            nslp1 = (
-                streams.n[l + 1] if l < nlayer - 1 else streams.n_substrate
-            )  # number of streams * npol in the layer l + 1 (lp1)
+            # nsl = streams.n[l]  # number of streams in layer l
+            # nslm1 = streams.n[l - 1] if l > 0 else streams.n_air  # number of streams * npol in the layer l - 1 (lm1)
+            # nslp1 = (
+            #     streams.n[l + 1] if l < nlayer - 1 else streams.n_substrate
+            # )  # number of streams * npol in the layer l + 1 (lp1)
 
             # compute reflection coefficient between layer l and l - 1  UP
             # snow-snow UP
@@ -1451,258 +1381,3 @@ def normalize_diffuse_matrix(mat, mu_st, mu_i, weights):
         else:
             mat *= mu_i * weights / mu_st  # the last dimension
     return mat
-
-
-#
-# Compute streams with different method.
-# This code should be moved to a specialized module and portion of the code need to be refactored
-# in particular, it would more shorter to include air and substrate streams calculation into mu
-#
-
-
-class Streams(object):
-    __slot__ = "n", "mu", "weight", "outmu", "outweight", "n_substrate", "n_air"
-
-
-def compute_stream(n_max_stream, permittivity, substrate_permittivity, mode="most_refringent"):
-    # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent layer and
-    # use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
-
-    #     :param n_max_stream: number of stream
-    #     :param permittivity: permittivity of each layer
-    #     :type permittivity: ndarray
-    #     :returns: mu, weight, outmu
-    # """
-
-    if mode in ["most_refringent", "air"]:
-        return compute_stream_gaussian(n_max_stream, permittivity, substrate_permittivity, mode=mode)
-
-    elif mode == "uniform_air":
-        return compute_stream_uniform(n_max_stream, permittivity, substrate_permittivity)
-
-    else:
-        raise SMRTError(f"Unknown mode '{mode}' for the computation of the streams")
-
-
-def compute_stream_gaussian(n_max_stream, permittivity, substrate_permittivity, mode="most_refringent"):
-    # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent layer and
-    # use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
-
-    #     :param n_max_stream: number of stream
-    #     :param permittivity: permittivity of each layer
-    #     :type permittivity: ndarray
-    #     :returns: mu, weight, outmu
-    # """
-
-    streams = Streams()
-
-    nlayer = len(permittivity)
-
-    if nlayer == 0:
-        streams.outmu, streams.outwweight = gaussquad(n_max_stream)
-        streams.n_air = n_max_stream
-        streams.weight = []
-        streams.mu = []
-        streams.n = []
-        return streams
-
-    # there are some layers
-
-    #  ### search and proceed with the most refringent layer
-    k_most_refringent = np.argmax(permittivity)
-    real_index_air = np.real(np.sqrt(permittivity[k_most_refringent] / 1.0))
-
-    if mode is None or mode == "most_refringent":
-        # calculate the gaussian weights and nodes for the most refringent layer
-        mu_most_refringent, weight_most_refringent = gaussquad(n_max_stream)
-
-    elif mode == "air":
-        raise Warning("This code has not been tested yet. Use with caution.")
-
-        def number_stream_in_air(n_stream_densest_layer):
-            mu_most_refringent, weight_most_refringent = gaussquad(int(n_stream_densest_layer))
-            relsin = real_index_air * np.sqrt(1 - mu_most_refringent**2)
-            return np.sum(relsin < 1) - n_max_stream
-
-        streams.n = scipy.optimize.brentq(n_max_stream, 2 * n_max_stream)
-        mu_most_refringent, weight_most_refringent = gaussquad(streams.n)
-
-    else:
-        raise RuntimeError("Unknow mode to compute the number of stream")
-
-    #  calculate the nodes and weights of all the other layers
-
-    # calculate real part of the index. It is an approximation.
-    # See for instance "Semiconductor Physics, Quantum Electronics & Optoelectronics. 2001. V. 4, N 3. P. 214-218."
-    real_index = np.real(np.sqrt(permittivity[k_most_refringent] / permittivity[:]))
-
-    # calculate the angles (=node)
-    relsin = real_index[:, np.newaxis] * np.sqrt(1 - mu_most_refringent[np.newaxis, :] ** 2)
-
-    real_reflection = relsin < 1  # mask where real reflection occurs
-
-    mu = np.zeros((nlayer, n_max_stream), dtype=np.float64)
-    mu[real_reflection] = np.sqrt(1 - relsin[real_reflection] ** 2)
-
-    # calculate the number of streams per layer
-    streams.mu = [mu[l, real_reflection[l, :]] for l in range(nlayer)]
-    streams.n = np.sum(real_reflection, axis=1)
-
-    assert all(streams.n > 2)
-
-    # calculate the weight ("a" in Y-Q Jin)
-    # weight(1,k)=1-0.5 * (mu(1,k)+mu(2,k))
-    # weight(nsk,k)=0.5 * (mu(nsk-1,k)+mu(nsk,k))
-    # weight(2:nsk-1,k)=0.5 * (mu(1:nsk-2,k)-mu(3:nsk,k))
-
-    streams.weight = compute_weight(streams.mu)
-
-    # ### calculate the angles (=node) in the air
-    # real_index = np.real(np.sqrt(permittivity[0]/1.0))
-    # relsin = real_index * np.sqrt(1 - mu[0, :]**2)
-
-    # real_reflection = relsin < 1
-    # outmu = np.sqrt(1 - relsin[real_reflection]**2)
-
-    relsin = real_index_air * np.sqrt(1 - mu_most_refringent[:] ** 2)
-
-    real_reflection = relsin < 1
-    streams.outmu = np.sqrt(1 - relsin[real_reflection] ** 2)
-    streams.n_air = len(streams.outmu)
-
-    streams.outweight = compute_outweight(streams.outmu)
-
-    # compute the number of stream in the substrate
-    streams.n_substrate = compute_n_stream_substrate(permittivity, substrate_permittivity, streams.mu)
-
-    return streams
-
-
-def compute_stream_uniform(n_max_stream, permittivity, substrate_permittivity):
-    # """Compute the angles of each layer. Use a regular step in angle in the air, then deduce the angles in the other layers
-    # using Snell-law. Then, in the most refringent layer, add regular stream up to close to 0, and then propagate back this second
-    # set of angles in the other layers using Snell-law and accounting for the total reflections
-
-    #     :param n_max_stream: number of stream
-    #     :param permittivity: permittivity of each layer
-    #     :type permittivity: ndarray
-    #     :returns: mu, weight, outmu
-    # """
-
-    streams = Streams()
-    streams.n_air = n_max_stream
-
-    nlayer = len(permittivity)
-
-    #
-    # first set has uniform angle distribution in the air
-    #
-    streams.outmu = np.cos(np.linspace(0.01, np.pi / 2 * 0.99, n_max_stream))
-
-    if nlayer == 0:
-        streams.outmu
-        streams.outwweight = compute_outweight(streams.outmu)
-        streams.weight = []
-        streams.mu = []
-        streams.n = []
-        return streams
-
-    #  calculate the nodes and weights of all the other layers
-
-    # calculate real part of the index. It is an approximation.
-    # See for instance "Semiconductor Physics, Quantum Electronics & Optoelectronics. 2001. V. 4, N 3. P. 214-218."
-    real_index = np.real(np.sqrt(1 / permittivity[:]))
-
-    # calculate the angles (=node)
-    relsin = real_index[:, np.newaxis] * np.sqrt(1 - streams.outmu[np.newaxis, :] ** 2)
-
-    # deduce the first set of streams
-    mu1 = np.sqrt(1 - relsin**2)
-
-    # now compute the additional streams.
-    # get the most_refringent layer
-    k_most_refringent = np.argmax(permittivity)
-
-    # compute the mean mu resolution to extend the first set
-    mean_resolution = np.mean(np.diff(mu1[k_most_refringent]))
-
-    # compute the other streams
-    mu2_most_refringent = np.arange(mu1[k_most_refringent][-1], 0.02, mean_resolution)
-    # calculate real part of the index. It is an approximation.
-    # See for instance "Semiconductor Physics, Quantum Electronics & Optoelectronics. 2001. V. 4, N 3. P. 214-218."
-    real_index = np.real(np.sqrt(permittivity[k_most_refringent] / permittivity[:]))
-
-    # calculate the angles (=node)
-    relsin = real_index[:, np.newaxis] * np.sqrt(1 - mu2_most_refringent[np.newaxis, :] ** 2)
-
-    real_reflection = relsin < 1  # mask where real reflection occurs
-
-    # compute the second set of angles
-    mu2 = np.zeros((nlayer, len(mu2_most_refringent)), dtype=np.float64)
-    mu2[real_reflection] = np.sqrt(1 - relsin[real_reflection] ** 2)
-
-    # assemble the two sets
-    streams.mu = [np.hstack((mu1[l], mu2[l, real_reflection[l, :]])) for l in range(nlayer)]
-    # calculate the number of streams per layer
-    streams.n = n_max_stream + np.sum(real_reflection, axis=1)
-
-    assert all(streams.n > 2)
-
-    # compute the weights
-    streams.weight = compute_weight(streams.mu)
-    streams.outweight = compute_outweight(streams.outmu)
-
-    # compute the number of stream in the substrate
-    streams.n_substrate = compute_n_stream_substrate(permittivity, substrate_permittivity, streams.mu)
-
-    return streams
-
-
-def gaussquad(n):
-    #     """return the gauss-legendre roots and weight, only the positive roots are return.
-
-    #     :param n: number of (positive) points in the quadrature. Must be larger than 2
-    # """
-    assert n >= 2
-
-    mu, weight = scipy.special.p_roots(2 * n)
-
-    mu = mu[-1 : n - 1 : -1]
-    weight = weight[-1 : n - 1 : -1]
-
-    return mu, weight
-
-
-def compute_outweight(outmu):
-    outweight = np.empty_like(outmu)
-    outweight[0] = 1 - 0.5 * (outmu[0] + outmu[1])
-    outweight[-1] = 0.5 * (outmu[-2] + outmu[-1])
-    outweight[1:-1] = 0.5 * (outmu[0:-2] - outmu[2:])
-    return outweight
-
-
-def compute_weight(mu):
-    weight = [np.empty_like(m) for m in mu]
-    for l in range(len(mu)):
-        weight[l][0] = 1 - 0.5 * (mu[l][0] + mu[l][1])
-        weight[l][-1] = np.abs(0.5 * (mu[l][-2] + mu[l][-1]))
-        weight[l][1:-1] = np.abs(0.5 * (mu[l][0:-2] - mu[l][2:]))
-    return weight
-
-
-def compute_n_stream_substrate(permittivity, substrate_permittivity, mu):
-    if substrate_permittivity is None:
-        n_substrate = len(mu[-1])  # streams in the last layer
-
-    else:
-        real_index = np.real(np.sqrt(substrate_permittivity / permittivity[-1]))
-
-        # calculate the angles (=node) in the substrate
-
-        # get the most_refringent layer
-        k_most_refringent = np.argmax(permittivity)
-
-        relsin = real_index * np.sqrt(1 - mu[k_most_refringent][:] ** 2)
-        n_substrate = np.sum(relsin < 1)  # count where real reflection occurs
-
-    return n_substrate

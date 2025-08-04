@@ -65,7 +65,7 @@ class SimpleIsotropicAtmosphere(AtmosphereBase):
         def create_array(x):
             if isinstance(x, dict):
                 x = x[frequency]
-            return np.full(len(costheta) * npol, x)
+            return np.full((npol, len(costheta)), x)
 
         return AtmosphereResult(
             tb_down=create_array(self.constant_tbdown),

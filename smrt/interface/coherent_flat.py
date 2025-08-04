@@ -11,36 +11,40 @@ from smrt.core.fresnel import fresnel_coefficients
 from smrt.core.error import SMRTError
 
 
-def process_coherent_layers(snowpack, emmodel_list, sensor):
+def process_coherent_layers(snowpack, emmodel_list, effective_permittivity, sensor):
+    wave_phase = [
+        sensor.wavenumber * np.sqrt(eps_eff).real * lay.thickness
+        for lay, eps_eff in zip(snowpack.layers, effective_permittivity)
+    ]
 
-    effective_permittivity = [em.effective_permittivity() for em in emmodel_list]
-    phase = [sensor.wavenumber * np.sqrt(eps_eff).real * lay.thickness for lay, eps_eff in zip(snowpack.layers, effective_permittivity)]
+    coherent_layers = np.array(wave_phase) < 3 * np.pi / 4
 
-    coherent_layers = np.array(phase) < 3 * np.pi / 4
+    if np.any(coherent_layers):
+        snowpack = snowpack.shallow_copy()
 
-    if not np.any(coherent_layers):
-        return snowpack, emmodel_list
+        if coherent_layers[-1]:
+            raise SMRTError("The last layer is coherent, this is not supported")
 
-    snowpack = snowpack.shallow_copy()
+        # print("process_coherent_layers (in dev, use for testing only) # coherent layers:", np.sum(coherent_layers))
 
-    if coherent_layers[-1]:
-        raise SMRTError("The last layer is coherent, this is not supported")
+        for l in np.flatnonzero(coherent_layers[:-1])[
+            ::-1
+        ]:  # reverse the processing to safely delete the snowpack layer and interface
+            print("coherent layer:", l)
+            if coherent_layers[l - 1]:
+                raise SMRTError("Two sucessive layers are coherent, this is not yet supported")
+            # create a coherent interface
+            coherent_interface = CoherentFlat(
+                snowpack.interfaces[l : l + 2], snowpack.layers[l], effective_permittivity[l]
+            )
+            # set the next interface to coherent
+            snowpack.interfaces[l + 1] = coherent_interface
+            # delete the layer to be deleted
+            snowpack.delete_layer(l)  # delete layer and interface l
+            emmodel_list.pop(l)
+            effective_permittivity = np.delete(effective_permittivity, l)
 
-    print("process_coherent_layers (in dev, use for testing only) # coherent layers:", np.sum(coherent_layers))
-
-    for l in np.flatnonzero(coherent_layers[:-1])[::-1]:  # reverse the processing to safely delete the snowpack layer and interface
-        print("coherent layer:", l)
-        if coherent_layers[l - 1]:
-            raise SMRTError("Two sucessive layers are coherent, this is not yet supported")
-        # create a coherent interface
-        coherent_interface = CoherentFlat(snowpack.interfaces[l:l + 2], snowpack.layers[l], effective_permittivity[l])
-        # set the next interface to coherent
-        snowpack.interfaces[l + 1] = coherent_interface
-        # delete the layer to be deleted
-        snowpack.delete(l)  # delete layer and interface l
-        emmodel_list.pop(l)
-
-    return snowpack, emmodel_list
+    return snowpack, emmodel_list, effective_permittivity
 
 
 class CoherentFlat(object):
@@ -48,11 +52,11 @@ class CoherentFlat(object):
     Represents a flat surface. The reflection is in the specular direction and the coefficient is calculated with the Fresnel coefficients.
 
     """
+
     args = []
     optional_args = {}
 
     def __init__(self, interfaces, layer, permittivity):
-
         super().__init__()
 
         self.interfaces = interfaces  # (interface_above, interface_below)
@@ -85,7 +89,7 @@ class CoherentFlat(object):
         reflection_coefficients[1] = abs2(R_h)
 
         if npol >= 3:
-            reflection_coefficients[2] = (R_v * np.conj(R_h)).real   # TsangI  Eq 7.2.93
+            reflection_coefficients[2] = (R_v * np.conj(R_h)).real  # TsangI  Eq 7.2.93
 
         return reflection_coefficients
 
@@ -128,7 +132,6 @@ class CoherentFlat(object):
         return transmission_coefficients
 
     def _prepare_computation(self, frequency, eps_1, eps_2, mu1):
-
         # convert to Tsang's notation. See TsangI, pages 207, Eq. 5.2.14
         eps_0 = eps_1
         eps_1 = self.permittivity

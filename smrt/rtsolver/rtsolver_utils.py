@@ -1,0 +1,180 @@
+"""This module contains useful functions for rtsolvers"""
+
+import numpy as np
+import scipy.interpolate
+
+from smrt.rtsolver.streams import compute_stream
+from smrt.core.error import SMRTError
+
+"""This module provides a basic class common to the RTsolver"""
+
+
+class RTSolverBase(object):
+    def init_solve(self, snowpack, emmodels, sensor, atmosphere=None):
+        """Initialize varaibles and perform basic checks.
+
+        Args:
+            snowpack: Snowpack object, :py:mod:`smrt.core.snowpack`.
+            emmodels: List of electromagnetic models object, :py:mod:`smrt.emmodel`.
+            sensor: Sensor object, :py:mod:`smrt.core.sensor`.
+            atmosphere: [Optional] Atmosphere object, :py:mod:`smrt.atmosphere`.
+
+        Returns:
+            result: Result object, :py:mod:`smrt.core.result.Result`.
+        """
+
+        # all these assignements are for convenience, this would break with parallel code (// !!)
+        self.emmodels = emmodels
+        self.snowpack = snowpack
+        self.sensor = sensor
+
+        self.atmosphere = atmosphere
+
+        self.effective_permittivity = np.array([emmodel.effective_permittivity() for emmodel in emmodels])
+        self.substrate_permittivity = (
+            self.snowpack.substrate.permittivity(self.sensor.frequency) if self.snowpack.substrate is not None else None
+        )
+
+        if hasattr(self, "check_sensor"):
+            self.check_sensor()
+
+
+class DiscreteOrdinatesMixin(object):
+    """
+    This mixin provides feature to deal with discrete ordinates
+    """
+
+    def init(self, stream_mode="most_refringent", n_max_stream=32, m_max=2):
+        self.n_max_stream = n_max_stream
+        self.stream_mode = stream_mode
+        self.m_max = m_max
+
+    def prepare_streams(self):
+        """Compute the streams angle using a quadrature or equivalent
+        """
+        self.streams = compute_stream(
+            self.n_max_stream, self.effective_permittivity, self.substrate_permittivity, mode=self.stream_mode
+        )
+
+    def prepare_incident_streams(self):
+        """Compute the streams nearest to the user-requested incident angle (for radar only).
+
+        """
+
+        incident_streams = set()
+
+        for mu_inc in np.cos(self.sensor.theta_inc):
+
+            i0 = np.searchsorted(-self.streams.outmu, -mu_inc)  # assume mu_inc is sorted in decreasing order.
+            if i0 == 0:
+                incident_streams.add(i0)
+            elif i0 == len(self.streams.outmu):
+                incident_streams.add(i0 - 1)
+            else:
+                incident_streams.add(i0)
+                incident_streams.add(i0 - 1)
+        incident_streams = sorted(list(incident_streams))  # fix the order (required for the interpolation)
+
+        return incident_streams
+
+    def add_intensity_mode(self, intensity, intensity_m, m):
+        """add intensity mode m to the intensity.
+
+        This function assumes that the intensity dimensions are pola, incidence, pola, incidence,...
+
+        """
+        if m == 0:
+            if self.sensor.mode == 'P':
+                intensity[0:2] += intensity_m
+            elif self.sensor.mode == 'A':
+                intensity[0:2, :, 0:2] += intensity_m
+            else:
+                raise NotImplementedError()
+        else:
+            # TODO Ghi: deals with an array of phi
+            intensity[0:2] += intensity_m[0:2] * np.cos(m * self.sensor.phi)
+            intensity[2:] += intensity_m[2:] * np.sin(m * self.sensor.phi)
+
+    def interpolate_intensity(self, outmu, intensity):
+        """Interpolate intensity.
+
+        This function assumes that the intensity dimensions are pola, incidence, for the passive mode and pola, pola,
+        incidence for the active mode
+        """
+
+        user_mu = np.cos(self.sensor.theta)  # streams requested by the user
+
+        mu_axis = 1 if self.sensor.mode == "P" else 2
+
+        fill_value = None
+        if np.max(user_mu) > np.max(outmu):
+            imumax = np.argmax(outmu)
+            # need extrapolation to 0°
+            # add the mean of H and V polarisation for the smallest angle for theta=0 (mu=1)
+            if self.sensor.mode == "P":  # passive
+                outmu = np.insert(outmu, 0, 1.0)
+                mean_H_V = np.mean(intensity.take(imumax, axis=mu_axis), axis=0)
+                intensity = np.insert(intensity, 0, mean_H_V, axis=mu_axis)
+            else:  # active
+                copol = (intensity[0, 0, imumax] + intensity[1, 1, imumax]) / 2
+                crosspol = (intensity[1, 0, imumax] + intensity[0, 1, imumax]) / 2
+
+                intensity = np.insert(
+                    intensity,
+                    0,
+                    [
+                        [copol, crosspol, intensity[0, 2, imumax]],
+                        [crosspol, copol, intensity[1, 2, imumax]],
+                        intensity[2, :, imumax],
+                    ],
+                    axis=mu_axis,
+                )
+                outmu = np.insert(outmu, 0, 1.0)
+
+        if np.min(user_mu) < np.min(outmu):
+            raise SMRTError(
+                "Viewing zenith angle is higher than the stream angles computed by DORT."
+                + " Either increase the number of streams or reduce the highest viewing zenith angle."
+            )
+
+        # # reverse is necessary for "old" scipy version
+        # intfct = scipy.interpolate.interp1d(
+        #     outmu[::-1], intensity[::-1, ...], axis=0, fill_value=fill_value, assume_sorted=True
+        # )
+        # # the previous call could use fill_value to be smart about extrapolation, but it's safer to return NaN (default)
+
+        # # it seems there is a bug in scipy at least when checking the boundary, mu must be sorted
+        # # original code that should work: intensity = intfct(mu)
+        # i = np.argsort(user_mu)
+        # intensity = intfct(user_mu[i])[np.argsort(i)]  # mu[i] sort mu, and [np.argsort(i)] put in back
+
+        intfct = scipy.interpolate.interp1d(
+            outmu, intensity, axis=mu_axis, fill_value=fill_value, assume_sorted=False
+        )
+        intensity = intfct(user_mu)
+
+        return intensity
+
+
+class CoherentLayerMixin(object):
+    """
+    This mixin provides features to deal with coherent layer for RT Solvers. It provides a function to perform the
+    snowpack transformation.
+    """
+
+    def init(self, process_coherent_layers):
+        self._process_coherent_layers = process_coherent_layers
+
+    def process_coherent_layers(self):
+        if self._process_coherent_layers:
+            from smrt.interface.coherent_flat import (
+                process_coherent_layers,
+            )  # we only lazy import this if requested by the users.
+
+            self.snowpack, self.emmodels, self.effective_permittivity = process_coherent_layers(
+                self.snowpack, self.emmodels, self.effective_permittivity, self.sensor
+            )
+            nlayers = len(self.emmodels)
+            assert len(self.snowpack.layers) == nlayers
+            assert len(self.snowpack.interfaces) == nlayers
+            assert len(self.effective_permittivity) == nlayers
