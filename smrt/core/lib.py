@@ -121,19 +121,26 @@ class smrt_diag(object):
         return len(self.diag)
 
     def __rmatmul__(self, other):
-        self.check_type(other)
         # assert other.shape[1] == self.shape[0]
-        return other * self.diag[np.newaxis, :]
+        if other.ndim == 2:
+            return other * self.diag[np.newaxis, :]
+        elif other.ndim == 1:
+            return other * self.diag
+        else:
+            raise NotImplementedError("multiplication with diag is only implemented for 1-d and 2-d ndarray")
 
     def __matmul__(self, other):
         # assert self.shape[1] == other.shape[0]
         if isinstance(other, smrt_diag):
             # return a diagonal object
             return smrt_diag(other.diag * self.diag)  # , shape=(self.shape[0], other.shape[1]))
-        else:
-            self.check_type(other)
+        elif other.ndim == 2:
             # other must be an ndarray
-            return other * self.diag[:, np.newaxis]
+            return self.diag[:, np.newaxis] * other
+        elif other.ndim == 1:
+            return other * self.diag
+        else:
+            raise NotImplementedError("multiplication with diag is only implemented for 1-d and 2-d ndarray")
 
     def __rmul__(self, other):
         assert np.isscalar(other)
@@ -189,9 +196,7 @@ class smrt_diag(object):
             raise IndexError("The index of a diag object must be a tuple with two indices. See smrt.core.lib for the rational of this diag object.")
         return self.diag[i] if i == j else 0
 
-    def check_type(self, other):
-        if not isinstance(other, np.ndarray) or other.ndim != 2:
-            raise NotImplementedError("multiplication with diag is only implemented for 2-d ndarray")
+
 
 
 class smrt_matrix(object):
