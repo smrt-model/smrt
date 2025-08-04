@@ -187,6 +187,20 @@ class Snowpack(object):
         Args:
             ilayer (int): Index of the layer.
         """
+
+        warnings.warn(
+            "The delete method will be depreciated in the future. Use the delete_layer method instead which is exactly equivalent.",
+            DeprecationWarning,
+        )
+        return self.delete_layer(ilayer)
+
+    def delete_layer(self, ilayer):
+        """
+        Deletes a layer and the upper interface.
+
+        Args:
+            ilayer (int): Index of the layer.
+        """
         self.layers.pop(ilayer)
         self.interfaces.pop(ilayer)
 
@@ -209,7 +223,7 @@ class Snowpack(object):
 
         This method allows the advanced user to create a new snowpack and remove, append or replace some layers or
         interfaces afterward. It does not allow to alter the layers or interfaces without
-        changing the original snowpack. See deepcopy.
+        changing the original snowpack. See deep_copy.
 
         .. warning::
            This function is for advanced users, understanding the concept and consequence of shallow copy.
@@ -235,11 +249,25 @@ class Snowpack(object):
 
     def copy(self, cut_bottom=None):
         warnings.warn(
-            "The copy method is rename shallow_copy and may be itself depreciated in the future.", DeprecationWarning
+            "The copy method will be depreciated in the future. Use the shallow_copy method instead which is exactly equivalent.",
+            DeprecationWarning,
         )
         return self.shallow_copy(cut_bottom=cut_bottom)
 
     def deepcopy(self):
+        """
+        Makes a deep copy of a snowpack.
+
+        Returns:
+            Snowpack: The deep copy of the snowpack.
+        """
+        warnings.warn(
+            "The deepcopy method will be depreciated in the future. Use the deep_copy method instead which is exactly equivalent.",
+            DeprecationWarning,
+        )
+        return copy.deepcopy(self)
+
+    def deep_copy(self):
         """
         Makes a deep copy of a snowpack.
 
