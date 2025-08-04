@@ -92,7 +92,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
             assumption of the emmodel. The most typical case is when the grain size is too big compared to wavelength for emmodels
             that rely on Rayleigh assumption. If this argument is to True, the phase matrix is normalized to be coherent
             with the scattering coefficient, but only when the difference is moderate (0.7 to 1.3).
-            If set to "force" the normalization is always performed. This option is dangerous because it may hide bugs or unappropriate
+            If set to "forced" the normalization is always performed. This option is dangerous because it may hide bugs or unappropriate
             input parameters (typically too big grains). If set to False, no normalization is performed.
             If set to "auto" the normalization is performed except for emmodels not respecting the reciprocity princple
             (which the normalization relies on).
@@ -161,13 +161,13 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
         """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
-            snowpack: Snowpack object, :py:mod:`smrt.core.snowpack`.
-            emmodels: List of electromagnetic models object, :py:mod:`smrt.emmodel`.
-            sensor: Sensor object, :py:mod:`smrt.core.sensor`.
-            atmosphere: [Optional] Atmosphere object, :py:mod:`smrt.atmosphere`.
+            snowpack: Snowpack object.
+            emmodels: List of electromagnetic models object.
+            sensor: Sensor object.
+            atmosphere: [Optional] Atmosphere object.
 
         Returns:
-            result: Result object, :py:mod:`smrt.core.result.Result`.
+            result: Result object.
         """
 
         self.init_solve(snowpack, emmodels, sensor, atmosphere)

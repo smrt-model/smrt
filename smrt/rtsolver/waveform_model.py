@@ -24,7 +24,7 @@ class Brown1977(WaveformModel):
     """
     Implement the Antenna Gain formulation used by Brown 1977.
 
-    The formula is \(\exp\left(\frac{2}{\gamma} \sin^2 \theta\right)\) for the perfect nadir case,
+    The formula is \ (\exp \left(\frac{2}{\gamma} \sin^2 \theta \right) \) for the perfect nadir case,
     but is also available with off-nadir angles.
 
     Args:

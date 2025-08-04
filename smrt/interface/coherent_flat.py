@@ -1,7 +1,7 @@
 """
-Implements the coherent flat pseudo-interface, as in MEMLS. This interface is obtained by collapsing one layer and two interfaces into a single interface. Scattering in the layer is neglected.
+Provide the coherent flat pseudo-interface, as in MEMLS. 
 
-
+This interface is obtained by collapsing one layer and two interfaces into a single interface. Scattering in the layer is neglected.
 """
 
 import numpy as np
@@ -49,7 +49,9 @@ def process_coherent_layers(snowpack, emmodel_list, effective_permittivity, sens
 
 class CoherentFlat(object):
     """
-    Represents a flat surface. The reflection is in the specular direction and the coefficient is calculated with the Fresnel coefficients.
+    Implement a flat interface (coherent). 
+    
+    The reflection is in the specular direction and the coefficient is calculated with the Fresnel coefficients.
 
     """
 
@@ -65,7 +67,10 @@ class CoherentFlat(object):
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
-        Computes the reflection coefficients for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
+        Compute the reflection coefficients. 
+        
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
+        beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -98,8 +103,10 @@ class CoherentFlat(object):
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
-        Computes the transmission coefficients for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the beam is transmitted.
-
+        Compute the transmission coefficients.
+        
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
+        beam is transmitted.
         Args:
             frequency: Frequency of the incident wave.
             eps_1: Permittivity of the medium where the incident beam is propagating.
