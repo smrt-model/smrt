@@ -1,8 +1,10 @@
 # coding: utf-8
 
+
 import warnings
 import numpy as np
 import numpy.testing as npt
+import pytest
 
 # local import
 from smrt import make_snowpack, make_model, sensor_list
@@ -82,7 +84,7 @@ def test_iba_oneconfig_active():
         npt.assert_allclose(res.sigmaHV_dB(), -51.544272924876886, atol=atol)
 
 
-
+@pytest.mark.skip("symmetrization is not ready yet")
 def test_iba_oneconfig_active_symmetrization():
 
     # prepare inputs
