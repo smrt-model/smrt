@@ -1,6 +1,5 @@
 
 
-from math import pi
 from smrt.core.sensor import make_multi_channel_altimeter, altimeter
 from smrt.core.error import SMRTError
 

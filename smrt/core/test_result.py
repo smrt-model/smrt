@@ -128,7 +128,6 @@ def test_to_dataframe_with_channel_axis_on_column():
     np.testing.assert_allclose(df["VH"], -14.0321985560285)
 
 
-@pytest.mark.skipif(sys.version_info < (3, 8), reason="requires python3.8 and higher")
 def test_to_dataframe_without_channel_axis():
     df = res_example.to_dataframe(channel_axis=None)
     print(df)  # this test fail for old version of xarray
