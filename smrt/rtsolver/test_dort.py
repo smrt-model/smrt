@@ -83,8 +83,28 @@ def test_2layer_pack():
     sp = setup_2layer_snowpack()
     sensor = active(13e9, 45)
     m = Model(NonScattering, DORT)
-    m.run(sensor, sp).sigmaVV()
+    res = m.run(sensor, sp)
+    assert res.sigmaVV() == 0
 
+def test_radar_nadir():
+    # Will throw error if doesn't run
+    sp = setup_2layer_snowpack()
+    sensor = active(13e9, 0)
+    m = Model(NonScattering, DORT)
+    res = m.run(sensor, sp)
+    assert res.sigmaVV() == 0
+
+def test_radiometer_nadir():
+
+    sp = setup_snowpack()
+
+    theta = [0, 5]
+    sensor = passive(37e9, theta)
+
+    m = Model(NonScattering, DORT)
+    res = m.run(sensor, sp)
+
+    np.testing.assert_allclose(res.TbV(), sp.layers[0].temperature)
 
 def test_output_stream():
     # Will throw error if doesn't run
