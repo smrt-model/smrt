@@ -62,18 +62,15 @@ from functools import partial
 
 # other import
 import numpy as np
-import xarray as xr
 import scipy.special
 import scipy.linalg
 import scipy.interpolate
 
 # local import
 from smrt.core.error import SMRTError, smrt_warn
-from smrt.core.result import make_result, prepare_kskaeps_profile_information
 from smrt.core.lib import smrt_matrix, smrt_diag, is_equal_zero, is_zero_scalar
 from smrt.core.optional_numba import numba
 from smrt.rtsolver.rtsolver_utils import RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin
-# Lazy import: from smrt.interface.coherent_flat import process_coherent_layers
 
 
 class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
@@ -186,23 +183,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
         # interpolate to the requested streams
         intensity = self.interpolate_intensity(outmu, intensity)
 
-        #  describe the results list of (dimension name, dimension array of value)
-        if self.sensor.mode == "P":
-            pola = ["V", "H"]
-            coords = [("polarization", pola), ("theta", sensor.theta_deg)]
-
-        else:  # sensor.mode == 'A':
-            pola = ["V", "H", "U"]
-            coords = [("polarization_inc", pola), ("polarization", pola), ("theta_inc", sensor.theta_inc_deg)]
-
-        # store other diagnostic information
-        other_data = {
-            "stream_angles": xr.DataArray(np.rad2deg(np.arccos(outmu)), coords=[range(len(outmu))]),
-        } | prepare_kskaeps_profile_information(
-            self.snowpack, self.emmodels, effective_permittivity=self.effective_permittivity, mu=outmu
-        )
-
-        return make_result(sensor, intensity, coords=coords, other_data=other_data)
+        return self.make_result(outmu, intensity)
 
     def dort(self, m_max=0, special_return=False):
         # """Solve the radiative transfer equation using the DORT method
@@ -343,7 +324,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
                     intensity_0[2 * i + ipol, j0] = power
                     j0 += 1
                 for ipol in [0, 1, 2]:
-                    intensity_higher[3 *i + ipol, j_higher] = 2 * power
+                    intensity_higher[3 * i + ipol, j_higher] = 2 * power
                     j_higher += 1
 
         elif self.sensor.mode == "P":
@@ -589,10 +570,12 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
         # reshape the dimension in two dimensions (theta, pola) and then transpose to (pola, theta)
         if np.ndim(I0up_m) == 1:
             # split the outgoing polarization:
-            I0up_m= I0up_m.reshape((I0up_m.shape[0] // npol, npol)).transpose()
+            I0up_m = I0up_m.reshape((I0up_m.shape[0] // npol, npol)).transpose()
         elif np.ndim(I0up_m) == 2:
             # split the incoming and outgoing polarization:
-            I0up_m = I0up_m.reshape((I0up_m.shape[0] // npol, npol, I0up_m.shape[1] // npol, npol)).transpose(1, 0, 3, 2)
+            I0up_m = I0up_m.reshape((I0up_m.shape[0] // npol, npol, I0up_m.shape[1] // npol, npol)).transpose(
+                1, 0, 3, 2
+            )
         else:
             raise RuntimeError("Should not be here. Not implemented np.ndim(I0up_m) > 2.")
 
@@ -1327,29 +1310,29 @@ class InterfaceProperties(object):
             self.Rbottom_diff[-1], streams.outmu, streams.outmu, streams.outweight
         )
 
-    def reflection_top(self, l, m, compute_coherent_only, compress=True):
+    def reflection_top(self, l, m, compute_coherent_only, **kwargs):
         return InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Rtop_coh[l], self.Rtop_diff[l], m, compute_coherent_only, compress=compress
+            self.Rtop_coh[l], self.Rtop_diff[l], m, compute_coherent_only, **kwargs
         )
 
-    def reflection_bottom(self, l, m, compute_coherent_only, compress=True):
+    def reflection_bottom(self, l, m, compute_coherent_only, **kwargs):
         return InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Rbottom_coh[l], self.Rbottom_diff[l], m, compute_coherent_only, compress=compress
+            self.Rbottom_coh[l], self.Rbottom_diff[l], m, compute_coherent_only, **kwargs
         )
 
-    def transmission_top(self, l, m, compute_coherent_only, compress=True):
+    def transmission_top(self, l, m, compute_coherent_only, **kwargs):
         return InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Ttop_coh[l], self.Ttop_diff[l], m, compute_coherent_only, compress=compress
+            self.Ttop_coh[l], self.Ttop_diff[l], m, compute_coherent_only, **kwargs
         )
 
-    def transmission_bottom(self, l, m, compute_coherent_only, compress=True):
+    def transmission_bottom(self, l, m, compute_coherent_only, **kwargs):
         return InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Tbottom_coh[l], self.Tbottom_diff[l], m, compute_coherent_only, compress=compress
+            self.Tbottom_coh[l], self.Tbottom_diff[l], m, compute_coherent_only, **kwargs
         )
 
     @staticmethod
-    def combine_coherent_diffuse_matrix(coh, diff, m, compute_coherent_only, compress=True):
-        mat_coh = coh.compress(mode=m, auto_reduce_npol=True) if compress else coh
+    def combine_coherent_diffuse_matrix(coh, diff, m, compute_coherent_only, compress=True, auto_reduce_npol=True):
+        mat_coh = coh.compress(mode=m, auto_reduce_npol=auto_reduce_npol) if compress else coh
 
         if (not compute_coherent_only) and (not is_equal_zero(diff)):
             # the coef comes from the integration of \int dphi' cos(m (phi-phi')) cos(n phi')
@@ -1362,7 +1345,7 @@ class InterfaceProperties(object):
                 coef = np.pi  # the factor 2*np.pi comes from the integration of \int dphi
                 npol = 3
 
-            mat_diff = diff.compress(mode=m, auto_reduce_npol=True) if compress else diff
+            mat_diff = diff.compress(mode=m, auto_reduce_npol=auto_reduce_npol) if compress else diff
             return coef * mat_diff + mat_coh
         else:
             return mat_coh

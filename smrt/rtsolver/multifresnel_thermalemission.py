@@ -43,7 +43,8 @@ from .multifresnel.multifresnel import compute_emerging_radiation, compute_matri
 
 # local import
 from smrt.core.error import SMRTError, smrt_warn
-from smrt.core.result import make_result, prepare_kskaeps_profile_information
+from smrt.core.result import make_result
+from smrt.rtsolver.rtsolver_utils import prepare_kskaeps_profile_information
 
 
 class MultiFresnelThermalEmission(object):

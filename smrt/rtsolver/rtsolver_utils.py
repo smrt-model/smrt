@@ -1,10 +1,15 @@
 """This module contains useful functions for rtsolvers"""
 
+from typing import Optional
+from collections.abc import Sequence
+
 import numpy as np
+import xarray as xr
 import scipy.interpolate
 
 from smrt.rtsolver.streams import compute_stream
 from smrt.core.error import SMRTError
+from smrt.core.result import make_result
 
 """This module provides a basic class common to the RTsolver"""
 
@@ -85,9 +90,9 @@ class DiscreteOrdinatesMixin(object):
         """
         if m == 0:
             if self.sensor.mode == 'P':
-                intensity[0:2] += intensity_m
+                intensity[0:2] += intensity_m[0:2]
             elif self.sensor.mode == 'A':
-                intensity[0:2, :, 0:2] += intensity_m
+                intensity[0:2, :, 0:2] += intensity_m[0:2, :, 0:2]
             else:
                 raise NotImplementedError()
         else:
@@ -155,6 +160,28 @@ class DiscreteOrdinatesMixin(object):
 
         return intensity
 
+    def make_result(self, outmu, intensity_up, other_coords: Optional[Sequence]=None):
+
+        #  describe the results list of (dimension name, dimension array of value)
+        if self.sensor.mode == "P":
+            pola = ["V", "H"]
+            coords = [("polarization", pola), ("theta", self.sensor.theta_deg)]
+        else:  # sensor.mode == 'A':
+            pola = ["V", "H", "U"]
+            coords = [("polarization_inc", pola), ("polarization", pola), ("theta_inc", self.sensor.theta_inc_deg)]
+
+        if other_coords is not None:
+            coords += other_coords
+
+        # store other diagnostic information
+        other_data = {
+            "stream_angles": xr.DataArray(np.rad2deg(np.arccos(outmu)), coords=[range(len(outmu))]),
+        } | prepare_kskaeps_profile_information(
+            self.snowpack, self.emmodels, effective_permittivity=self.effective_permittivity, mu=outmu
+        )
+
+        return make_result(self.sensor, intensity_up, coords, other_data=other_data)
+
 
 class CoherentLayerMixin(object):
     """
@@ -178,3 +205,41 @@ class CoherentLayerMixin(object):
             assert len(self.snowpack.layers) == nlayers
             assert len(self.snowpack.interfaces) == nlayers
             assert len(self.effective_permittivity) == nlayers
+
+
+def prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity=None, mu=1):
+    """
+    Return a dict with the profiles of ka, ks, ke and effective permittivity. Can be directly used by Solver to insert
+    data in other_data.
+
+    ks and ke are the mean in all directions given by mu.
+
+    Args:
+        snowpack: the snowpack used for the calculation
+        emmodels: the list of instantiated emmodel
+        effective_permittivity: list of permittivity. If None, it is obtained from the emmodels
+        mu: cosine angles where to compute ks.
+    """
+
+    if effective_permittivity is None:
+        effective_permittivity = np.array([emmodel.effective_permittivity() for emmodel in emmodels])
+
+    # store other diagnostic information
+    layer_index = "layer", range(len(emmodels))
+    other_data = {
+        "effective_permittivity": xr.DataArray(effective_permittivity, coords=[layer_index]),
+        "ks": xr.DataArray(
+            [np.mean(em.ks(mu).values) for em in emmodels],
+            coords=[layer_index],
+            name='ks'
+        ),
+        "ke": xr.DataArray(
+            [np.mean(em.ke(mu).values) for em in emmodels],
+            coords=[layer_index],
+            name='ke'
+        ),
+        "ka": xr.DataArray([getattr(em, "ka", np.nan) for em in emmodels], coords=[layer_index], name='ka'),
+        "thickness": xr.DataArray(snowpack.layer_thicknesses, coords=[layer_index], name='thickness'),
+    }
+
+    return other_data

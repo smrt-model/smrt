@@ -15,7 +15,7 @@ Key Features:
 
 Backscatter Components:
     Zeroth Order:
-        Should be zero for flat interfaces and off-nadir angles. Represents the incident intensity that attenuates exponentially inside 
+        Should be zero for flat interfaces and off-nadir angles. Represents the incident intensity that attenuates exponentially inside
         the medium. Scattering is only included through its contribution to extinction.
         (Reference: Ulaby et al. 2014, first term of Eq. 11.74)
 
@@ -64,7 +64,8 @@ import xarray as xr
 # local import
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.lib import smrt_matrix, is_equal_zero
-from smrt.core.result import make_result, prepare_kskaeps_profile_information
+from smrt.core.result import make_result
+from smrt.rtsolver.rtsolver_utils import prepare_kskaeps_profile_information
 from smrt.core.fresnel import snell_angle
 
 
