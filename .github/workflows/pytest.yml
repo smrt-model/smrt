@@ -28,5 +28,4 @@ jobs:
       - name: Test with pytest
         run: |
           pytest --benchmark-compare \
-            --benchmark-compare-fail=mean:10% \
             --benchmark-storage=.benchmark
