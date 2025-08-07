@@ -27,5 +27,4 @@ jobs:
         continue-on-error: true
       - name: Test with pytest
         run: |
-          pytest --benchmark-compare \
-            --benchmark-storage=.benchmark
+          pytest --benchmark-compare --benchmark-compare-fail=mean:10% --benchmark-auto-save
