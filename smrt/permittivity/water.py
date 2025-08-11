@@ -1,5 +1,7 @@
 # coding: utf-8
-
+"""
+Provide equations to compute the effective permittivity of water.
+"""
 import numpy as np
 
 from ..core.layer import layer_properties
@@ -9,20 +11,23 @@ from ..core.error import SMRTError
 
 @layer_properties("temperature")
 def water_permittivity_maetzler87(frequency, temperature):
-    """Calculates the complex water dielectric constant depending on the frequency and temperature
-     Based on Mätzler, C., & Wegmuller, U. (1987). Dielectric properties of freshwater
-     ice at microwave frequencies. *Journal of Physics D: Applied Physics*, 20(12), 1623-1630.
+    """
+    Calculate the complex water dielectric constant depending on the frequency and temperature based on Mätzler & Wegmuller (1987).
 
-     Args:
-         frequency: Frequency in Hz.
-         temperature: Temperature in K.
+    Args:
+        frequency: Frequency in Hz.
+        temperature: Temperature in K.
 
-     Raises:
-         Exception: If liquid water > 0 or salinity > 0 (model unsuitable).
+    Raises:
+        Exception: If liquid water > 0 or salinity > 0 (model unsuitable).
 
-     Returns:
-         complex: Complex permittivity of pure ice.
-"""
+    Returns:
+        complex: Complex permittivity of pure ice.
+    
+    References:
+        Matzler, C., Wegmuller, U., (1987) Dielectric properties of freshwater ice at microwave frequencies. J. Phys. D: 
+        Appl. Phys, 20, 1623–1630, https://doi.org/10.1088/0022-3727/20/12/013.
+    """
     if temperature < FREEZING_POINT:
         raise SMRTError(f"The water temperature must be higher or equal to {FREEZING_POINT}K")
 
@@ -49,13 +54,8 @@ water_permittivity = water_permittivity_maetzler87
 
 @layer_properties("temperature")
 def water_permittivity_tiuri80(frequency, temperature):
-    """Calculates the complex water dielectric constant reported by:
-
-    Tiuri, M. and Schultz, H., Theoretical and experimental studies of microwave radiation from a natural snow field. In Rango, A. , ed.
-    Microwave remote sensing of snowpack properties. Proceedings of a workshop ... Fort Collins, Colorado, May 20-22, 1980. 
-    Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publication 2153.)
-
-    https://ntrs.nasa.gov/api/citations/19810010984/downloads/19810010984.pdf
+    """
+    Calculate the complex water dielectric constant reported by Tiuri and Schultz (1980).
 
     Args:
         frequency: Frequency in Hz.
@@ -66,6 +66,12 @@ def water_permittivity_tiuri80(frequency, temperature):
 
     Returns:
         complex: Complex permittivity of water.
+
+    References:
+        Tiuri, M. and Schultz, H., Theoretical and experimental studies of microwave radiation from a natural snow field. In Rango, A. , ed.
+        Microwave remote sensing of snowpack properties. Proceedings of a workshop ... Fort Collins, Colorado, May 20-22, 1980. 
+        Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publication 2153.)
+        https://ntrs.nasa.gov/api/citations/19810010984/downloads/19810010984.pdf
     """
     freqGHz = frequency / GHz
 

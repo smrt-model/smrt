@@ -1,5 +1,9 @@
 # coding: utf-8
 
+"""
+Contain functions to compute various permittivity of ice.
+"""
+
 from __future__ import print_function
 
 # Stdlib import
@@ -20,29 +24,31 @@ from ..core.error import SMRTError
 
 @layer_properties("temperature")
 def ice_permittivity_maetzler06(frequency, temperature):
-    """Calculates the complex ice dielectric constant depending on the frequency and temperature.
+    """
+    Calculate the complex ice dielectric constant depending on the frequency and temperature
+    based on Mätzler (2006).
 
-    Based on Mätzler, C. (2006). Thermal Microwave Radiation: Applications for Remote Sensing p456-461
-    This is the default model used in smrt.inputs.make_medium.make_snow_layer().
+    This is the default model used in :py:func:`smrt.inputs.make_medium.make_snow_layer()`.
 
     Args:
-      frequency: frequency in Hz
-      temperature: temperature in K
+      frequency: frequency in Hz.
+      temperature: temperature in K.
 
     Returns:
-      complex permittivity of pure ice
+      complex permittivity of pure ice.
 
-    Example::
-
+    Usage:
       from smrt.permittivity.ice import ice_permittivity_maetzler06
       eps_ice = ice_permittivity_maetzler06(frequency=18e9, temperature=270)
 
     Note:
-      Ice permittivity is automatically calculated in smrt.inputs.make_medium.make_snow_layer() and
-      is not set by the electromagnetic model module. An alternative
-      to ice_permittivity_maetzler06 may be specified as an argument to the make_snow_layer
-      function. The usage example is provided for external reference or testing purposes.
+      Ice permittivity is automatically calculated in :py:func:`smrt.inputs.make_medium.make_snow_layer()` and is not set by
+      the electromagnetic model module. An alternative to ``ice_permittivity_maetzler06`` may be specified as an argument to the 
+      make_snow_layerfunction. The usage example is provided for external reference or testing purposes.
 
+    References:
+      Mätzler, C. (2006). Thermal Microwave Radiation: Applications for Remote Sensing p456-461,
+      https://doi.org/10.1049/PBEW052E
     """
 
     freqGHz = frequency / 1e9
@@ -71,17 +77,24 @@ def ice_permittivity_maetzler06(frequency, temperature):
 
 @layer_properties("temperature")
 def ice_permittivity_maetzler98(frequency, temperature):
-    """Computes permittivity of ice (accounting for ionic impurities in ice?), equations from Hufford (1991) as given in
-    Maetzler (1998): 'Microwave properties of ice and snow', in B. Schmitt et al. (eds.): 'Solar system ices', p.
-    241-257, Kluwer.
+    """
+    Compute permittivity of ice (accounting for ionic impurities in ice?), equations from Hufford (1991) 
+    as given in Mätzler (1998).
 
     Args:
-      temperature: ice temperature in K
-      frequency: Frequency in Hz
+      temperature: ice temperature in K.
+      frequency: Frequency in Hz.
 
     Returns:
-      complex permittivity of pure ice
+      complex permittivity of pure ice.
+    
+    References:
+      Hufford, G. A model for the complex permittivity of ice at frequencies below 1 THz. Int J Infrared Milli 
+      Waves 12, 677–682 (1991). https://doi.org/10.1007/BF01008898
 
+      Mätzler, C. (1998). Microwave Properties of Ice and Snow. In: Schmitt, B., De Bergh, C., Festou, M. (eds) 
+      Solar System Ices. Astrophysics and Space Science Library, vol 227. Springer, Dordrecht. 
+      https://doi.org/10.1007/978-94-011-5252-5_10
     """
 
     tempC = temperature - FREEZING_POINT
@@ -104,26 +117,28 @@ def ice_permittivity_maetzler98(frequency, temperature):
 
 @layer_properties("temperature")
 def ice_permittivity_maetzler87(frequency, temperature):
-    """Calculates the complex ice dielectric constant depending on the frequency and temperature.
-
-    Based on Mätzler, C. and Wegmüller (1987). Dielectric properties of fresh-water ice at microwave frequencies.
-    J. Phys. D: Appl. Phys. 20 (1987) 1623-1630.
+    """
+    Calculate the complex ice dielectric constant depending on the frequency and temperature 
+    based on Mätzler, C. and Wegmüller (1987).
 
     Args:
-      frequency: frequency in Hz
-      temperature: temperature in K
+      frequency: frequency in Hz.
+      temperature: temperature in K.
 
     Returns:
-      complex permittivity of pure ice
+      complex permittivity of pure ice.
 
-    Example::
-
-      from smrt.permittivity.ice import ice_permittivity_maetzler87
-      eps_ice = ice_permittivity_maetzler87(frequency=18e9, temperature=270)
+    Usage:
+      >>> from smrt.permittivity.ice import ice_permittivity_maetzler87
+      >>> eps_ice = ice_permittivity_maetzler87(frequency=18e9, temperature=270)
 
     Note:
       This is only suitable for testing at -5 deg C and -15 deg C. If used at other temperatures
       a warning will be displayed.
+
+    References:
+      Mätzler, C. and Wegmüller (1987). Dielectric properties of fresh-water ice at microwave frequencies.
+      J. Phys. D: Appl. Phys. 20, 1623-1630. https://doi.org/10.1088/0022-3727/20/12/013
 
     """
 
@@ -151,30 +166,32 @@ def ice_permittivity_maetzler87(frequency, temperature):
     Eimag = A / freqGHz + B * freqGHz**C
     # Issue warning if temperature different from values in paper
     if temperature not in [FREEZING_POINT-5, FREEZING_POINT-15]:
-        warnings.warn("Strictly, this permittivity formulation was proposed for -5 and -15 deg C. It is recommended to use another formulation if this is not for testing purpose")
+        warnings.warn("Strictly, this permittivity formulation was proposed for -5 and -15 deg C. It is recommended to use another " \
+        "formulation if this is not for testing purpose")
 
     return Ereal + Eimag * 1j
 
 
 @layer_properties("temperature")
 def ice_permittivity_tiuri84(frequency, temperature):
-    """Calculates the complex ice dielectric constant depending on the frequency and temperature.
-
-    Based on Tiuri et al. (1984). The Complex Dielectric Constant of Snow at Microwave Frequencies.
-    IEEE Journal of Oceanic Engineering, vol. 9, no. 5., pp. 377-382
+    """
+    Calculate the complex ice dielectric constant depending on the frequency and temperature 
+    based on Tiuri et al. (1984).
 
     Args:
-      frequency: frequency in Hz
-      temperature: temperature in K
+      frequency: frequency in Hz.
+      temperature: temperature in K.
 
     Returns:
-      complex permittivity of pure ice
+      complex permittivity of pure ice.
 
-    Example::
-
-      from smrt.permittivity.ice import ice_permittivity_tiuri84
-      eps_ice = ice_permittivity_tiuri84(frequency=1.9e9, temperature=250)
-
+    Usage:
+      >>> from smrt.permittivity.ice import ice_permittivity_tiuri84
+      >>> eps_ice = ice_permittivity_tiuri84(frequency=1.9e9, temperature=250)
+    
+    References:
+      Tiuri et al. (1984). The Complex Dielectric Constant of Snow at Microwave Frequencies.
+      IEEE Journal of Oceanic Engineering, vol. 9, no. 5., pp. 377-382. https://doi.org/10.1109/JOE.1984.1145645. 
     """
 
     tempC = temperature - FREEZING_POINT
@@ -294,21 +311,31 @@ def _ice_permittivity_MEMLS(frequency, temperature, salinity):
 
 @layer_properties("temperature")
 def ice_permittivity_hufford91_maetzler87(frequency, temperature):
-    """Calculates the complex ice dielectric constant depending on the frequency and temperature.
+    """
+    Calculate the complex ice dielectric constant depending on the frequency and temperature with the real part of 
+    permittivity follows Mätzler and Wegmuller (1987) and the imaginary part is based on Hufford 1991. 
     
-    Real part of permittivity follows Mätzler and Wegmuller (1987): 
-    Dielectric properties of freshwater ice at microwave frequencies, 10.1088/0022-3727/20/12/013.
-    The imaginary part is based on Hufford 1991: 
-    A model for the complex permittivity of ice at frequencies below 1 THz, 10.1007/BF01008898. 
-    The Hufford model is derived for frequencies up to 1000 GHz and temperatures from -40°C to 0°C.
-    This gives exact agreement with the MEMLS_ice model version used in Rückert et al., 2023.
+    Note:
+      The Hufford model is derived for frequencies up to 1000 GHz and temperatures from -40°C to 0°C. This gives 
+      exact agreement with the MEMLS_ice model version used in Rückert et al. (2023).
     
     Args:
-      frequency: Frequency in Hz
-      temperature: ice temperature in K
+      frequency: Frequency in Hz.
+      temperature: ice temperature in K.
 
     Returns:
-      complex permittivity of pure ice
+      complex permittivity of pure ice.
+    
+    References:
+      Hufford, G. A model for the complex permittivity of ice at frequencies below 1 THz. Int J Infrared Milli 
+      Waves 12, 677–682 (1991). https://doi.org/10.1007/BF01008898
+
+      Mätzler, C. and Wegmüller (1987). Dielectric properties of fresh-water ice at microwave frequencies.
+      J. Phys. D: Appl. Phys. 20, 1623-1630. https://doi.org/10.1088/0022-3727/20/12/013
+
+      Rückert, J., Huntemann, M., Tonboe, RT., and Spreen, G., (2023). Modeling Snow and Ice Microwave Emissions in the 
+      Arctic for a Multi-Parameter Retrieval of Surface and Atmospheric Variables From Microwave Radiometer Satellite Data,
+      Earth and Space Scienc, 10(10), https://doi.org/10.1029/2023EA003177
     """
 
     # Raise exception if temperature is zero

@@ -1,13 +1,15 @@
-"""Provides mixing formulae relevant to saline snow. Contains equations to compute the effective permittivity of saline snow.
+"""
+Provide mixing formulae relevant to saline snow and equations to compute the effective permittivity of saline snow.
 
 These functions are to be used with :py:mod:`smrt.emmodel.iba.derived_IBA` or
-`smrt.emmodel.symsce_torquato21.derived_SymSCETK21` to change the default of most emmodels (IBA, DMRT, SFT
+:py:mod:`smrt.emmodel.symsce_torquato21.derived_SymSCETK21` to change the default of most emmodels (IBA, DMRT, SFT
 Rayleigh, SCE) using the generic mixing formula Polder van Staten that automatically mixes the permittivities of the
 background (e.g.) and the scatterer materials (e.g. saline ice) to compute the effective permittivity of snow in a proportion
-determined by frac_volume.
+determined by ``frac_volume``.
 
-They should not be used to set the material permittivities as input of :py:mod:`smrt.smrt_inputs.make_snowpack` and
-similar functions (because the emmodel would re-mix the already mixed materials with the background material).
+Note:
+    They should not be used to set the material permittivities as input of :py:func:`smrt.inputs.make_medium.make_snowpack` and
+    similar functions (because the emmodel would re-mix the already mixed materials with the background material).
 """
 
 import warnings
@@ -24,18 +26,28 @@ from ..core.layer import layer_properties
 
 @layer_properties("density", "temperature", "salinity")
 def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salinity):
-    """ Computes permittivity of saline snow using the frequency dispersion model published by Geldsetzer et al., 2009 (CRST). DOI: 10.1016/j.coldregions.2009.03.009.
-    In-situ measurements collected had salinity concentration between 0.1e-3 and 12e3 kg/kg, temperatures ranging between 257 and 273 K, and a mean snow density of 352 kg/m3.
+    """
+    Compute permittivity of saline snow using the frequency dispersion model published by Geldsetzer et al. (2009).
 
-    Validity between 10 MHz and 40 GHz.
-
-    Source: Matlab code, Ludovic Brucker
+    Note:
+        In-situ measurements collected had salinity concentration between 0.1e-3 and 12e3 kg/kg, temperatures 
+        ranging between 257 and 273 K, and a mean snow density of 352 kg/m3. Validity between 10 MHz and 40 GHz.
 
     Args:
-        frequency: frequency in Hz
-        density: snow density in kg m-3
-        temperature: ice temperature in K
-        salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
+        frequency: frequency in Hz.
+        density: snow density in kg m-3.
+        temperature: ice temperature in K.
+        salinity: salinity of ice in kg/kg (see PSU constant in smrt module).
+
+    Returns:
+        complex permittivity of saline snow.
+
+    Source: 
+        Matlab code, Ludovic Brucker.
+
+    References:
+        Geldsetzer, T., Langlois, A., Yackel, J., (2009) Dielectric properties of brine-wetted snow on first-year sea ice, 
+        Cold Regions Science and Technology, Volume 58, Issues 1–2,pp 47-56. https://doi.org/10.1016/j.coldregions.2009.03.009.
     """
 
     if np.max(frequency) > 40e9:
@@ -78,7 +90,11 @@ def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salin
 
 @layer_properties("density", "temperature", "salinity")
 def saline_snow_permittivity_scharien_with_stogryn71(frequency, density, temperature, salinity):
-    """Computes permittivity of saline snow. See `saline_snow_permittivity_scharien` documentation"""
+    """
+    Compute permittivity of saline snow with :py:mod:`seawater_permittivity_stogryn71`. 
+    
+    See :py:mod:`saline_snow_permittivity_scharien` documentation.
+    """
 
     return saline_snow_permittivity_scharien(density, temperature, salinity,
                                              seawater_permittivity_stogryn71(frequency, temperature))
@@ -86,32 +102,49 @@ def saline_snow_permittivity_scharien_with_stogryn71(frequency, density, tempera
 
 @layer_properties("density", "temperature", "salinity")
 def saline_snow_permittivity_scharien_with_stogryn95(frequency, density, temperature, salinity):
-    """Computes permittivity of saline snow. See `saline_snow_permittivity_scharien` documentation"""
+    """
+    Compute permittivity of saline snow with :py:mod:`seawater_permittivity_stogryn95`. 
+    
+    See :py:mod:`saline_snow_permittivity_scharien` documentation.
+    """
 
     return saline_snow_permittivity_scharien(density, temperature, salinity,
                                              seawater_permittivity_stogryn95(frequency, temperature, salinity))
 
 
 def saline_snow_permittivity_scharien(density, temperature, salinity, brine_permittivity):
-    """Computes permittivity of saline snow using the Denoth / Matzler Mixture Model - Dielectric Constant of Saline Snow.
+    """
+    Compute permittivity of saline snow using the Denoth / Matzler Mixture Model - Dielectric Constant of Saline Snow.
 
-    Assumptions:
-    (1) Brine inclusion geometry as oblate spheroids. Depolarization factor, A0 = 0.053 (Denoth, 1980)
-    (2) Brine inclusions are isotropically oriented. Coupling factor, X = 2/3 (Drinkwater and Crocker, 1988)
+    Note: 
+        Assumptions:
+            (1) Brine inclusion geometry as oblate spheroids. Depolarization factor, A0 = 0.053 (Denoth, 1980).
+            (2) Brine inclusions are isotropically oriented. Coupling factor, X = 2/3 (Drinkwater and Crocker, 1988).
 
-    Validity ranges:
-    (1) Temperature, Ts, down to - 22.9 degrees Celcius;
-    (2) Brine salinity, Sb, up to 157ppt;  i.e.up to a Normality of 3 for NaCl
-    Not valid for wet snow
+        Validity ranges:
+            (1) Temperature, Ts, down to - 22.9 degrees Celcius;
+            (2) Brine salinity, Sb, up to 157ppt;  i.e.up to a Normality of 3 for NaCl. Not valid for wet snow.
 
-    Source: Matlab code, Randall Scharien
 
     Args:
-        density: snow density in kg m-3
-        temperature: snow temperature in K
-        salinity: snow salinity in kg/kg (see PSU constant in smrt module)
-        brine_permittivity: brine_permittivity
+        density: snow density in kg m-3.
+        temperature: snow temperature in K.
+        salinity: snow salinity in kg/kg (see PSU constant in smrt module).
+        brine_permittivity: brine_permittivity.
+    
+    Returns:
+        complex permittivity of saline snow.
+    
+    Source:
+        Matlab code, Randall Scharien.
 
+    References:
+        Denoth A. The Pendular-Funicular Liquid Transition in Snow. Journal of Glaciology. 1980;25(91):93-98.
+        https://doi.org/10.3189/S0022143000010315
+
+        Drinkwater MR, Crocker GB. Modelling Changes in Scattering Properties of the Dielectric and Young Snow-Covered 
+        Sea Ice at GHz Requencies. Journal of Glaciology. 1988;34(118):274-282. 
+        https://doi.org/10.3189/S0022143000007012 
     """
 
     # convert units
