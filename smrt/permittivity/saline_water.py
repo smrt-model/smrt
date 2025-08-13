@@ -1,5 +1,7 @@
 # coding: utf-8
-
+"""
+Provide equations to compute the effective permittivity of saline water.
+"""
 import numpy as np
 from smrt.core.error import SMRTError
 
@@ -15,13 +17,13 @@ from ..core.layer import layer_properties
 
 @layer_properties("temperature", "salinity")
 def seawater_permittivity_klein76(frequency, temperature, salinity):
-    """Calculates permittivity (dielectric constant) of water using an empirical relationship described
-    by Klein and Swift (1976).
+    """
+    Calculate permittivity (dielectric constant) of water using an empirical relationship described by Klein and Swift (1976).
 
     Args:
-        frequency: frequency in Hz
-        temperature: water temperature in K
-        salinity: water salinity in kg/kg (see PSU constant in smrt module)
+        frequency: frequency in Hz.
+        temperature: water temperature in K.
+        salinity: water salinity in kg/kg (see PSU constant in smrt module).
 
     Returns:
         complex water permittivity for a frequency f.
@@ -29,6 +31,9 @@ def seawater_permittivity_klein76(frequency, temperature, salinity):
     Raises:
         SMRTError: If the water temperature is lower than the freezing point at the given salinity.
 
+    References:
+        Klein, A.L., and Swift, C.T. (1975) An Improved Model for-the Dielectric Constant of Sea Water at Microwave. 
+        Frequencies. https://aquarius.oceansciences.org/docs/ed_klien_swift_1978.pdf
     """
 
     tempC = temperature - FREEZING_POINT
@@ -73,24 +78,25 @@ def seawater_permittivity_klein76(frequency, temperature, salinity):
 
 @layer_properties("temperature")
 def seawater_permittivity_stogryn71(frequency, temperature):
-    """Computes dielectric constant of brine, complex_b (Stogryn, 1971 approach)
+    """
+    Compute dielectric constant of brine, complex_b (Stogryn, 1971 approach)
 
-    Input parameters: from polynomial fit in Stogryn and Desargent, 1985
-
-    Source: Matlab code, Ludovic Brucker
+    Note:
+        From polynomial fit in Stogryn and Desargent, 1985
 
     Args:
-        frequency: frequency in Hz
-        temperature: water temperature in K
+        frequency: frequency in Hz.
+        temperature: water temperature in K.
 
     Returns:
-        complex water permittivity for a frequency f.
+        complex water permittivity.
+    
+    Source: 
+        Matlab code, Ludovic Brucker.
 
     References:
-        A. Stogryn, "Equations for Calculating the Dielectric Constant of Saline Water (Correspondence)," in IEEE
-        Transactions on Microwave Theory and Techniques, vol. 19, no. 8, pp. 733-736, Aug. 1971, doi:
-        10.1109/TMTT.1971.1127617
-
+        A. Stogryn. (1971) Equations for Calculating the Dielectric Constant of Saline Water (Correspondence), IEEE
+        Transactions on Microwave Theory and Techniques, vol. 19, no. 8, pp. 733-736, https://doi.org/10.1109/TMTT.1971.1127617
     """
 
     # High-frequency dielectric constant of saline water
@@ -120,16 +126,20 @@ def seawater_permittivity_stogryn71(frequency, temperature):
 
 @layer_properties("temperature")
 def brine_permittivity_stogryn85(frequency, temperature):
-    """Computes permittivity and loss of brine using equations given in Stogryn and Desargant (1985): 'The Dielectric
-    Properties of Brine in Sea Ice at Microwave Frequencies', IEEE.
+    """
+    Compute permittivity and loss of brine using equations given in Stogryn and Desargant (1985).
 
     Args:
-        frequency: em frequency [Hz]
-        temperature: ice temperature in K
+        frequency: frequency in Hz.
+        temperature: temperature in K.
 
     Returns:
         complex water permittivity for a frequency f.
 
+    References:
+        A. Stogryn and G. Desargant. (1985) The dielectric properties of brine in sea ice at microwave frequencies, 
+        IEEE Transactions on Antennas and Propagation, vol. 33, no. 5, pp. 523-532, 
+        https://doi.org/10.1109/TAP.1985.1143610
     """
 
     eps_static = static_brine_permittivity_stogryn85(temperature)  # limiting static permittivity
@@ -146,18 +156,23 @@ def brine_permittivity_stogryn85(frequency, temperature):
 
 @layer_properties("temperature", "salinity")
 def seawater_permittivity_stogryn95(frequency, temperature, salinity):
-    """Computes seawater dielectric constant using Stogryn 1995.
-
-    source: Stogryn 1995 + http://rime.aos.wisc.edu/MW/models/src/eps_sea_stogryn.f90; Matlab code, Ludovic Brucker
+    """
+    Compute seawater dielectric constant using Stogryn 1995.
 
     Args:
-        frequency: frequency in Hz
-        temperature: water temperature in K
-        salinity: water salinity in kg/kg (see PSU constant in smrt module)
+        frequency: frequency in Hz.
+        temperature: water temperature in K.
+        salinity: water salinity in kg/kg (see PSU constant in smrt module).
 
     Returns:
         complex water permittivity for a frequency f.
 
+    Source:
+        Stogryn 1995 + http://rime.aos.wisc.edu/MW/models/src/eps_sea_stogryn.f90; Matlab code, Ludovic Brucker
+
+    References:
+        Stogryn, A. P., Bull, H. T., Rubayi, K., & Iravanchy, S. (1995). The microwave dielectric properties of sea and 
+        fresh water. GenCorp Aerojet.
     """
 
     #   real, intent (in) :: f     ! [GHz]    Frequency (valid from 0 to 1000 GHz)
@@ -236,25 +251,42 @@ def seawater_permittivity_stogryn95(frequency, temperature, salinity):
 
 @layer_properties("temperature", "salinity")
 def seawwater_permittivity_boutin23_2function(frequency, temperature, salinity):
-    """Compute the permittivity using BVZ 2 from Boutin et al. (2023, IEEE TGRS, doi : 10.1109/TGRS.2023.3257923) Equations (7) and (8)
+    """
+    Compute the permittivity using BVZ 2 from Equations (7) and (8) in Boutin et al. (2023).
 
     BVZ 2functions' has been derived from L-Band GW2020 measurements,  following the assumptions of Somaraju and Trumpf
-    (2006). It reasonnably fits P-Band dielectric constants laboratory measurements over the 0-150 pss range (Levine et al. 2025,
-    IEEE TGRS). With respect to the BV (Boutin et al. 2020) model, the following changes have been performed:
+    (2006). It reasonnably fits P-Band dielectric constants laboratory measurements over the 0-150 pss range (Le vine et al. 2025,
+    IEEE TGRS). With respect to the BV (Boutin et al. 2021) model, the following changes have been performed:
+    
+        - Conductivity=pss78 conductivity-salinity relationship from TEOS10.
+        - tau = tauMW(1+gSST) instead of tau=tauMW.
+        - alpha = (par(1)-par(2).SST).
 
-    Conductivity=pss78 conductivity-salinity relationship from TEOS10
-    tau=tauMW(1+gSST) instead of tau=tauMW
-    alpha=(par(1)-par(2).SST)
-
-    This function requires the Gibbs SeaWater Oceanographic Toolbox package (gsw): https://github.com/TEOS-10/GSW-python
+    Note:
+        This function requires the Gibbs SeaWater Oceanographic Toolbox package (gsw): https://github.com/TEOS-10/GSW-python
 
     Args:
-        frequency: em frequency [Hz]
-        temperature: ice temperature in K
+        frequency: frequency in Hz.
+        temperature: ice temperature in K.
 
     Returns:
         complex water permittivity for a frequency f.
 
+    References:
+        Boutin, J., Vergely, J-L., Bonjean, F., Perrot, X., Zhou, Y., and Dinnat, E.P., (2023). New Seawater Dielectric Constant 
+        Parametrization and Application to SMOS Retrieved Salinity, IEEE Transactions on Geoscience and Remote Sensing, vol. 61, 
+        pp. 1-13, 2023, Art no. 2000813, https://doi.org/10.1109/TGRS.2023.3257923.
+
+        Boutin, J., Vergely, J. L., Perrot, X., Zhou, Y., Dinnat, E., and Sabia, R., (2021). Seawater Dielectric Constant At L-Band: 
+        How Consistent Are New Parametrisations Inferred from Smos and Laboratory Measurements?, IEEE International Geoscience and 
+        Remote Sensing Symposium IGARSS, Brussels, Belgium, 2021, pp. 7465-7467, https://doi.org/10.1109/IGARSS47720.2021.9554909.
+
+        Le Vine, D. M., Lang, R. H., Li, M., Dinnat,  E. P., Boutin, J., and Zhou, Y., (2025). The Dielectric Constant of Sea Water 
+        at P-Band for Salinity From 0 to 150 pss, IEEE Transactions on Geoscience and Remote Sensing, vol. 63, pp. 1-11, 2025, Art 
+        no. 4202011, https://doi.org/10.1109/TGRS.2025.3532180.
+
+        Somaraju, R., and Trumpf, J., (2006). Frequency, Temperature and Salinity Variation of the Permittivity of Seawater, 
+        IEEE Transactions on Antennas and Propagation, vol. 54, no. 11, pp. 3441-3448, https://doi.org/10.1109/TAP.2006.884290. 
     """
     import gsw
 
@@ -313,30 +345,46 @@ def seawwater_permittivity_boutin23_2function(frequency, temperature, salinity):
 
 @layer_properties("temperature", "salinity")
 def seawwater_permittivity_boutin23_3function(frequency, temperature, salinity):
-    """Compute the permittivity using BVZ 2 from Boutin et al. (2023, IEEE TGRS, doi : 10.1109/TGRS.2023.3257923) Equations (9,10,11)
+    """
+    Compute the permittivity using BVZ 2 from Equations (9,10,11) Boutin et al. (2023).
 
     Model derived from L-Band GW2020 measurements and validated wit SMOS SSS retrievals. In order to better fit GW2020
     measurements, and with respect to Somaraju and Trumpf (2006) assumptions. An additional dependency of alpha with S
     has been introduced. This parametization is not valid outside the 0-38pss range. With respect to the BV (Boutin et
     al. 2020) model, the following changes have been performed:
 
-    Conductivity=pss78 conductivity-salinity relationship (TEOS10)
-    tau=tauMW(1+gSST) instead of tau=tauMW
-    alpha=(par(1)-par(2).SST)(1+hSSS)
-    gSST and hSSS are polynomial functions of SST and SSS respectively
-    par(1) and par(2) : linear fit parameters of alpha
+        - Conductivity=pss78 conductivity-salinity relationship (TEOS10).
+        - tau=tauMW(1+gSST) instead of tau=tauMW.
+        - alpha=(par(1)-par(2).SST)(1+hSSS).
+        - gSST and hSSS are polynomial functions of SST and SSS respectively.
+        - par(1) and par(2) : linear fit parameters of alpha.
 
-    Notations and fresh parameters as in MW (Meissner and Wentz (2004))
+    Notations and fresh parameters as in Meissner and Wentz (2004).
 
-    This function requires the Gibbs SeaWater Oceanographic Toolbox package (gsw): https://github.com/TEOS-10/GSW-python
+    Note:
+        This function requires the Gibbs SeaWater Oceanographic Toolbox package (gsw): https://github.com/TEOS-10/GSW-python
 
     Args:
-        frequency: em frequency [Hz]
-        temperature: ice temperature in K
+        frequency: frequency in Hz.
+        temperature: ice temperature in K.
 
     Returns:
         complex water permittivity for a frequency f.
 
+    References:
+        Boutin, J., Vergely, J-L., Bonjean, F., Perrot, X., Zhou, Y., and Dinnat, E.P., (2023). New Seawater Dielectric Constant 
+        Parametrization and Application to SMOS Retrieved Salinity, IEEE Transactions on Geoscience and Remote Sensing, vol. 61, 
+        pp. 1-13, 2023, Art no. 2000813, https://doi.org/10.1109/TGRS.2023.3257923.
+
+        Boutin, J., Vergely, J. L., Perrot, X., Zhou, Y., Dinnat, E., and Sabia, R., (2021). Seawater Dielectric Constant At L-Band: 
+        How Consistent Are New Parametrisations Inferred from Smos and Laboratory Measurements?, IEEE International Geoscience and 
+        Remote Sensing Symposium IGARSS, Brussels, Belgium, 2021, pp. 7465-7467, https://doi.org/10.1109/IGARSS47720.2021.9554909.
+
+        Meissner, T., and Wentz, F. J., (2004). The complex dielectric constant of pure and sea water from microwave satellite observations,
+        IEEE Transactions on Geoscience and Remote Sensing, vol. 42, no. 9, pp. 1836-1849, https://doi.org/10.1109/TGRS.2004.831888
+
+        Somaraju, R., and Trumpf, J., (2006). Frequency, Temperature and Salinity Variation of the Permittivity of Seawater, 
+        IEEE Transactions on Antennas and Propagation, vol. 54, no. 11, pp. 3441-3448, https://doi.org/10.1109/TAP.2006.884290. 
     """
 
     import gsw

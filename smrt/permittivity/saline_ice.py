@@ -1,4 +1,7 @@
-"""Provides permittivity formulations for use with saline ice, and possibly in some cases with saline snow. See also saline_snow.py in the latter case.
+"""
+Provide permittivity formulations for use with saline ice, and possibly in some cases with saline snow. 
+
+See also :py:mod:`smrt.permittivity.saline_snow.py` in the latter case.
 """
 
 from typing import Optional
@@ -15,17 +18,27 @@ from smrt.core.layer import layer_properties
 
 @layer_properties("temperature", "salinity")
 def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
-    """ Computes permittivity of impure ice from Maetzler 2006 - Thermal Microwave Radiation: Applications for Remote Sensing.
-     Model developed for salinity around 0.013 PSU. The extrapolation is based on linear assumption to salinity, so it is not recommended for much higher salinity.
+    """
+    Compute permittivity of impure ice from Maetzler (2006).
 
-        :param temperature: ice temperature in K
-        :param salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
+    Note:
+        Model developed for salinity around 0.013 PSU. The extrapolation is based on linear assumption to salinity, so 
+        it is not recommended for much higher salinity.
 
-    **Usage example**::
+    Args:
+        temperature: ice temperature in K.
+        salinity: salinity of ice in kg/kg (see PSU constant in smrt module).
+    
+    Returns:
+        complex permittivity of saline ice.
 
+    **Usage**::
         from smrt.permittivity.saline_ice import impure_ice_permittivity_maetzler06
         eps_ice = impure_ice_permittivity_maetzler06(frequency=18e9, temperature=270, salinity=0.013)
 
+    References:
+        Mätzler, C. (2006). Thermal Microwave Radiation: Applications for Remote Sensing p456-461,
+        https://doi.org/10.1049/PBEW052E
     """
 
     # Issue warning if salinity > 0.013 PSU
@@ -55,21 +68,26 @@ def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
                   optional=("brine_inclusion_shape", "brine_mixing_ratio", "ice_permittivity_model", "brine_permittivity_model"))
 def saline_ice_permittivity_pvs_mixing(frequency, temperature, brine_volume_fraction, brine_inclusion_shape='spheres',
                                        brine_mixing_ratio: Optional[float]=None, ice_permittivity_model=None, brine_permittivity_model=None):
-    """Computes effective permittivity of saline ice using the Polder Van Santen mixing formulaes.
+    """
+    Compute effective permittivity of saline ice using the Polder Van Santen mixing formulaes.
 
-        :param frequency: frequency in Hz
-        :param temperature: ice temperature in K
-        :param brine_volume_fraction: brine / liquid water fraction in sea ice
-        :param brine_inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape,
+    Args:
+        frequency: frequency in Hz.
+        temperature: ice temperature in K.
+        brine_volume_fraction: brine / liquid water fraction in sea ice.
+        brine_inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape,
             or a list/tuple/dict of strings for mixture of shapes. So far, we have the following shapes: "spheres" and
             "random_needles" (i.e. randomly-oriented elongated ellipsoidal inclusions).
             If the argument is a dict, the keys are the shapes and the values are the mixing ratio.
             If it is a list, the mixing_ratio argument is required.
-        :param brine_mixing_ratio: The mixing ratio of the shapes. This is only relevant when inclusion_shape is a list/tuple.
+        brine_mixing_ratio: The mixing ratio of the shapes. This is only relevant when inclusion_shape is a list/tuple.
             Mixing ratio must be a sequence with length len(inclusion_shape)-1.
             The mixing ratio of the last shapes is deduced as the sum of the ratios must equal to 1.
-        :param ice_permittivity_model: pure ice permittivity formulation (default is ice_permittivity_matzler87)
-        :param brine_permittivity_model: brine permittivity formulation (default is brine_permittivity_stogryn85)
+        ice_permittivity_model: pure ice permittivity formulation (default is ice_permittivity_matzler87).
+        brine_permittivity_model: brine permittivity formulation (default is brine_permittivity_stogryn85).
+    
+    Returns:
+        complex permittivity of saline ice.
     """
 
     if ice_permittivity_model is None:

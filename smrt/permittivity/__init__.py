@@ -1,10 +1,10 @@
 """
-Provides many formulations for the permittivity of various materials (ice, water, etc.) or for mixing
-formulae. The former are to be used as input of the functions in :py:mod:`smrt.inputs` in order
+Provide many formulations for the permittivity of various materials (ice, water, etc.) or for mixing formulae. 
+
+The former are to be used as input of the functions in :py:mod:`smrt.inputs` in order
 to prescribe the scatterers and background permittivity, while the latter are to be used in :py:mod:`smrt.emmodels` to
 reformulate how the effective permittivity is calculated. This latter usage is very specific and should not concern most
-users. See :py:mod:`smrt.emmodel.symsce_torquato21.derived_SymSCETK21` and
-`smrt.emmodel.iba.derived_IBA`.
+users. See :py:mod:`smrt.emmodel.symsce_torquato21.derived_SymSCETK21` and :py:mod:`smrt.emmodel.iba.derived_IBA`.
 
 ..admonition:: 
 **For developers**
