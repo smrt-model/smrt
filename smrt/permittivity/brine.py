@@ -374,7 +374,7 @@ def brine_volume_function_stogryn_1987(temperature, salinity):
         temperature: ice temperature in K.
         salinity: salinity of ice in kg/kg (see PSU constant in smrt module).
 
-    Usage:
+    **Usage**::
         salinity = 33*PSU
         temperature = 270
         make_ice_column('firstyear', 

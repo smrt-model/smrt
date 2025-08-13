@@ -32,9 +32,9 @@ def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
     Returns:
         complex permittivity of saline ice.
 
-    Usage:
-        >>> from smrt.permittivity.saline_ice import impure_ice_permittivity_maetzler06
-        >>> eps_ice = impure_ice_permittivity_maetzler06(frequency=18e9, temperature=270, salinity=0.013)
+    **Usage**::
+        from smrt.permittivity.saline_ice import impure_ice_permittivity_maetzler06
+        eps_ice = impure_ice_permittivity_maetzler06(frequency=18e9, temperature=270, salinity=0.013)
 
     References:
         Mätzler, C. (2006). Thermal Microwave Radiation: Applications for Remote Sensing p456-461,

@@ -16,10 +16,12 @@ def depolarization_factors_spheroids(length_ratio: Optional[float]=None, **kwarg
     Returns:
         [x, y, z] depolarization factor array.
 
-    Usage:
-        >>> from smrt.permittivity.generic_mixing_formula import depolarization_factors
-        >>> depol_xyz = depolarization_factors(length_ratio=1.2)
-        >>> depol_xyz = depolarization_factors()
+    **Usage**::
+        from smrt.permittivity.generic_mixing_formula import depolarization_factors
+        #default depol of 1
+        depol_xyz = depolarization_factors()
+        #provide a length ratio
+        depol_xyz = depolarization_factors(length_ratio=1.2)
 
     References:
         Mätzler, C. (1996). Microwave permittivity of dry snow. Geoscience and Remote Sensing, EEE Transactions on 

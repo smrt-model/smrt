@@ -61,7 +61,6 @@ def symmetric_wetice_permittivity(frequency, temperature, liquid_water):
 
     Returns:
         Complex permittivity of pure ice.
-
     """
 
     epsice = ice_permittivity_maetzler06(frequency, temperature)

@@ -27,7 +27,7 @@ temperatures: application to melt detection on the Antarctic and Greenland ice s
 315, 114469, http://doi.org/10.1016/j.rse.2024.114469, 2024
 
 
-Usage:
+**Usage**::
     # Create a model using a nonscattering medium and the rtsolver 'multifresnel_thermalemission'.
     m = make_model("nonscattering", "multifresnel_thermalemission")
 

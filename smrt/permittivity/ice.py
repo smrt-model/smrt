@@ -37,7 +37,7 @@ def ice_permittivity_maetzler06(frequency, temperature):
     Returns:
         complex permittivity of pure ice.
 
-    Usage:
+    **Usage**::
         from smrt.permittivity.ice import ice_permittivity_maetzler06
         eps_ice = ice_permittivity_maetzler06(frequency=18e9, temperature=270)
 
@@ -128,9 +128,9 @@ def ice_permittivity_maetzler87(frequency, temperature):
     Returns:
         complex permittivity of pure ice.
 
-    Usage:
-        >>> from smrt.permittivity.ice import ice_permittivity_maetzler87
-        >>> eps_ice = ice_permittivity_maetzler87(frequency=18e9, temperature=270)
+    **Usage**::
+        from smrt.permittivity.ice import ice_permittivity_maetzler87
+        eps_ice = ice_permittivity_maetzler87(frequency=18e9, temperature=270)
 
     Note:
         This is only suitable for testing at -5 deg C and -15 deg C. If used at other temperatures
@@ -184,9 +184,9 @@ def ice_permittivity_tiuri84(frequency, temperature):
     Returns:
         complex permittivity of pure ice.
 
-    Usage:
-        >>> from smrt.permittivity.ice import ice_permittivity_tiuri84
-        >>> eps_ice = ice_permittivity_tiuri84(frequency=1.9e9, temperature=250)
+    **Usage**::
+        from smrt.permittivity.ice import ice_permittivity_tiuri84
+        eps_ice = ice_permittivity_tiuri84(frequency=1.9e9, temperature=250)
     
     References:
         Tiuri et al. (1984). The Complex Dielectric Constant of Snow at Microwave Frequencies.
