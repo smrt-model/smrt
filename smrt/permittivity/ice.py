@@ -38,6 +38,7 @@ def ice_permittivity_maetzler06(frequency, temperature):
         complex permittivity of pure ice.
 
     **Usage**::
+
         from smrt.permittivity.ice import ice_permittivity_maetzler06
         eps_ice = ice_permittivity_maetzler06(frequency=18e9, temperature=270)
 
@@ -129,6 +130,7 @@ def ice_permittivity_maetzler87(frequency, temperature):
         complex permittivity of pure ice.
 
     **Usage**::
+    
         from smrt.permittivity.ice import ice_permittivity_maetzler87
         eps_ice = ice_permittivity_maetzler87(frequency=18e9, temperature=270)
 
@@ -185,6 +187,7 @@ def ice_permittivity_tiuri84(frequency, temperature):
         complex permittivity of pure ice.
 
     **Usage**::
+
         from smrt.permittivity.ice import ice_permittivity_tiuri84
         eps_ice = ice_permittivity_tiuri84(frequency=1.9e9, temperature=250)
     
