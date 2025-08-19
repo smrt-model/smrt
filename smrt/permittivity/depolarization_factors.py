@@ -17,6 +17,7 @@ def depolarization_factors_spheroids(length_ratio: Optional[float]=None, **kwarg
         [x, y, z] depolarization factor array.
 
     **Usage**::
+    
         from smrt.permittivity.generic_mixing_formula import depolarization_factors
         #default depol of 1
         depol_xyz = depolarization_factors()
