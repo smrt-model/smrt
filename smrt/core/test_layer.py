@@ -1,5 +1,3 @@
-
-
 from .layer import make_microstructure_model
 
 
