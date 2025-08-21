@@ -1,0 +1,26 @@
+name: ASV Benchmark
+
+on: [push]
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # needed for git history
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'  # match your env
+
+      - name: Install dependencies
+        run: |
+          pip install -e .[dev]  
+          pip install asv
+
+      - name: Run ASV
+        run: |
+          asv machine --yes
+          asv run -v --python=same
