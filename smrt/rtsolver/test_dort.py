@@ -114,7 +114,7 @@ def test_output_stream():
     res = m.run(sensor, sp)
 
     print(res.other_data["stream_angles"])
-    assert np.allclose(res.other_data["stream_angles"], np.array([41.91460595, 45.86542465]))
+    np.testing.assert_allclose(res.other_data["stream_angles"], np.array([41.91460595, 45.86542465]))
 
 
 def test_shallow_snowpack():

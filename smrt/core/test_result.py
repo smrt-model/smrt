@@ -1,12 +1,9 @@
 # coding: utf-8
 
-import sys
 import copy
 
 import numpy as np
 import xarray as xr
-
-import pytest
 
 from smrt.core import result
 
@@ -166,10 +163,10 @@ def test_single_scattering_albedo():
     ssalb = res_example.single_scattering_albedo()
 
     print(ssalb)
-    assert np.allclose(ssalb, np.array([1 / 4, 2 / 4, 3 / 4]))
+    np.testing.assert_allclose(ssalb, np.array([1 / 4, 2 / 4, 3 / 4]))
 
 
 def test_optical_depth():
     tau = res_example.optical_depth()
 
-    assert np.allclose(tau, [0.4, 0.4, 0.4])
+    np.testing.assert_allclose(tau, [0.4, 0.4, 0.4])

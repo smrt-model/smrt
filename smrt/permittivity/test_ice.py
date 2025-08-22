@@ -1,7 +1,3 @@
-
-import pytest
-
-import warnings
 import numpy as np
 
 from smrt.permittivity.ice import ice_permittivity_maetzler06, \
@@ -129,7 +125,7 @@ def test_ice_permittivity_output_tuiri84_temp_250K_freq_40GHz():
 # Test output of HUT version
 def test_real_ice_permittivity_output_HUT():
     eps = _ice_permittivity_HUT(10e9, 270)
-    assert np.allclose(eps.real, 3.18567)
+    np.testing.assert_allclose(eps.real, 3.18567)
 
 
 # Test output of HUT version
@@ -141,7 +137,7 @@ def test_imaginary_ice_permittivity_output_HUT():
 # Test output of DMRT version
 def test_real_ice_permittivity_output_DMRTML():
     eps = _ice_permittivity_DMRTML(10e9, 270)
-    assert np.allclose(eps.real, 3.18567)
+    np.testing.assert_allclose(eps.real, 3.18567)
 
 
 # Test output of DMRT version
@@ -154,7 +150,7 @@ def test_imaginary_ice_permittivity_output_DMRTML():
 # Should be exact
 def test_real_ice_permittivity_output_matzler_temp_270_MEMLS():
     eps = _ice_permittivity_MEMLS(10e9, 270, 0)
-    assert np.allclose(eps.real, 3.18567)
+    np.testing.assert_allclose(eps.real, 3.18567)
 
 
 # Test output MEMLS version

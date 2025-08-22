@@ -12,11 +12,11 @@ def test_profile():
     sp = make_snowpack([0.1, 0.2, 0.3], "exponential", density=[100, 200, 300], corr_length=200e-6)
 
 
-    assert np.allclose(sp.z, [0, 0.1, 0.3, 0.6])
-    assert np.allclose(sp.bottom_layer_depths, [0.1, 0.3, 0.6])
-    assert np.allclose(sp.top_layer_depths, [0.0, 0.1, 0.3])
-    assert np.allclose(sp.mid_layer_depths, [0.05, 0.2, 0.45])
-    assert np.allclose(sp.profile('density'), [100, 200, 300])
+    np.testing.assert_allclose(sp.z, [0, 0.1, 0.3, 0.6])
+    np.testing.assert_allclose(sp.bottom_layer_depths, [0.1, 0.3, 0.6])
+    np.testing.assert_allclose(sp.top_layer_depths, [0.0, 0.1, 0.3])
+    np.testing.assert_allclose(sp.mid_layer_depths, [0.05, 0.2, 0.45])
+    np.testing.assert_allclose(sp.profile('density'), [100, 200, 300])
 
 
 def create_two_snowpacks():

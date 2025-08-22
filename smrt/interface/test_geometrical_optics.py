@@ -35,8 +35,8 @@ def test_compare_geometrical_optics():
     m_back = get_diffuse_reflection(go_back)
 
     #print(m[0], m_back[0])
-    assert np.allclose(m[0], m_back[0])
-    assert np.allclose(m[1], m_back[1])
+    np.testing.assert_allclose(m[0], m_back[0])
+    np.testing.assert_allclose(m[1], m_back[1])
 
 
 def test_parameters_geometrical_optics():
@@ -88,9 +88,9 @@ def test_reflectance_reciprocity():
             R = go.diffuse_reflection_matrix(10e9, eps_1, eps_2, mu_s, mu_i, dphi, 2).values
             Rs = go.diffuse_reflection_matrix(10e9, eps_1, eps_2, mu_i, mu_s, dphi, 2).values
 
-            assert np.allclose(R[1, 0, :] * mu_i, Rs[0, 1, :] * mu_s, atol=1e-3)
-            assert np.allclose(R[0, 0, :] * mu_i, Rs[0, 0, :] * mu_s, atol=1e-3)
-            assert np.allclose(R[1, 1, :] * mu_i, Rs[1, 1, :] * mu_s, atol=1e-3)
+            np.testing.assert_allclose(R[1, 0, :] * mu_i, Rs[0, 1, :] * mu_s, atol=1e-3)
+            np.testing.assert_allclose(R[0, 0, :] * mu_i, Rs[0, 0, :] * mu_s, atol=1e-3)
+            np.testing.assert_allclose(R[1, 1, :] * mu_i, Rs[1, 1, :] * mu_s, atol=1e-3)
 
 
 def test_transmission_reciprocity():
@@ -107,6 +107,6 @@ def test_transmission_reciprocity():
             T = go.diffuse_transmission_matrix(10e9, eps_1, eps_2, mu_t, mu_i, dphi, 2).values
             Tt = go.diffuse_transmission_matrix(10e9, eps_2, eps_1, mu_i, mu_t, dphi, 2).values
 
-            assert np.allclose(T[1, 0, :] * mu_i * eps_1, Tt[0, 1, :] * mu_t * eps_2, atol=1e-3)
-            assert np.allclose(T[0, 0, :] * mu_i * eps_1, Tt[0, 0, :] * mu_t * eps_2, atol=1e-3)
-            assert np.allclose(T[1, 1, :] * mu_i * eps_1, Tt[1, 1, :] * mu_t * eps_2, atol=1e-3)
+            np.testing.assert_allclose(T[1, 0, :] * mu_i * eps_1, Tt[0, 1, :] * mu_t * eps_2, atol=1e-3)
+            np.testing.assert_allclose(T[0, 0, :] * mu_i * eps_1, Tt[0, 0, :] * mu_t * eps_2, atol=1e-3)
+            np.testing.assert_allclose(T[1, 1, :] * mu_i * eps_1, Tt[1, 1, :] * mu_t * eps_2, atol=1e-3)

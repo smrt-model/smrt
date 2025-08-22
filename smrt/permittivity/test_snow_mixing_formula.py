@@ -23,8 +23,8 @@ def test_wetsnow_permittivity_hallikainen86():
     eps = wetsnow_permittivity_hallikainen86(frequency, snow_density, liquid_water)
 
     print("eps:", eps, eps - 1 - 1.83 * dry_density_gm3)
-    assert np.allclose((eps - 1 - 1.83 * dry_density_gm3).real, 1.24, atol=0.01)
-    assert np.allclose(eps.imag, 0.685, atol=0.001)
+    np.testing.assert_allclose((eps - 1 - 1.83 * dry_density_gm3).real, 1.24, atol=0.01)
+    np.testing.assert_allclose(eps.imag, 0.685, atol=0.001)
 
     # Data from the graph in Fig 8
     # the incremental epsilon for the modified debye-model seems defined with respect to A = 1 + 1.83 * dry_snow_density_gcm3 + B1
@@ -32,8 +32,8 @@ def test_wetsnow_permittivity_hallikainen86():
     eps = wetsnow_permittivity_hallikainen86(frequency, snow_density, liquid_water)
 
     print("eps:", eps, eps - 1 - 1.83 * dry_density_gm3)
-    assert np.allclose((eps - 1 - 1.83 * dry_density_gm3).real, 0.319, atol=0.01)
-    assert np.allclose(eps.imag, 0.468, atol=0.001)
+    np.testing.assert_allclose((eps - 1 - 1.83 * dry_density_gm3).real, 0.319, atol=0.01)
+    np.testing.assert_allclose(eps.imag, 0.468, atol=0.001)
 
 
 def test_wetsnow_permittivity_hallikainen86_ulaby14():
@@ -65,8 +65,8 @@ def test_wetsnow_permittivity_hallikainen86_ulaby14():
 
         print("eps:", eps)
         print("reference:", v)
-        assert np.allclose(eps.real, v.real, atol=0.001)
-        assert np.allclose(eps.imag, v.imag, atol=0.001)
+        np.testing.assert_allclose(eps.real, v.real, atol=0.001)
+        np.testing.assert_allclose(eps.imag, v.imag, atol=0.001)
 
 
 def test_wetsnow_permittivity_colbeck80_caseI():
@@ -81,7 +81,7 @@ def test_wetsnow_permittivity_colbeck80_caseI():
     print("dilectric constant: ", d)
     print("reference: ", v)
 
-    assert np.allclose(d, v, atol=0.001)
+    np.testing.assert_allclose(d, v, atol=0.001)
 
 
 def test_wetsnow_permittivity_colbeck80_caseII():
@@ -106,7 +106,7 @@ def test_wetsnow_permittivity_colbeck80_caseII():
     print("dilectric constant: ", d)
     print("reference: ", v)
 
-    assert np.allclose(d, v, atol=0.001)
+    np.testing.assert_allclose(d, v, atol=0.001)
 
 
 def test_wetsnow_permittivity_colbeck80_caseIII():
@@ -134,4 +134,4 @@ def test_wetsnow_permittivity_colbeck80_caseIII():
     print("delta dilectric constant: ", d_s - d_d)
     print("reference: ", v)
 
-    assert np.allclose(d_s - d_d, v, atol=0.001)
+    np.testing.assert_allclose(d_s - d_d, v, atol=0.001)
