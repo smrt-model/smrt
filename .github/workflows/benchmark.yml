@@ -1,6 +1,6 @@
 name: ASV Benchmark
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   benchmark:
@@ -13,7 +13,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.12'  # match your env
+          python-version: '3.12'  
 
       - name: Install dependencies
         run: |
