@@ -1,6 +1,3 @@
-
-
-
 from smrt.core.interface import make_interface
 from smrt import SMRTError
 
