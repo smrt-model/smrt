@@ -309,6 +309,7 @@ def maxwell_garnett(frac_volume, e0, eps, depolarization_factors=None, inclusion
         random orientation effective permittivity.
 
     **Usage**::
+    
         # If used by electromagnetic model module:
         from .commonfunc import maxwell_garnett
         effective_permittivity = maxwell_garnett(frac_volume=0.2, e0=1, eps=3.185, depol_xyz=[0.3, 0.3, 0.4])
