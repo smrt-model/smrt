@@ -112,11 +112,11 @@ class MultiFresnelThermalEmission(object):
             if effective_permittivity[-1].imag < 1e-8:
                 smrt_warn("the permittivity of the substrate has a too small imaginary part for reliable results")
             thickness.append(1e10)  # add an infinite layer (hugly hack)
-            temperature.append(snowpack.substrate.temperature)
+            temperature = np.append(temperature, snowpack.substrate.temperature)
 
         mu = np.cos(sensor.theta)
 
-        M = compute_matrix_slab(
+        M, min_optical_depth = compute_matrix_slab(
             frequency=sensor.frequency,
             outmu=mu,
             permittivity=effective_permittivity,
@@ -125,12 +125,24 @@ class MultiFresnelThermalEmission(object):
             prune_deep_snowpack=self.prune_deep_snowpack,
         )
 
+        if min_optical_depth < 5 and snowpack.substrate is None :
+            smrt_warn(
+                "Multifresnel has detected that the snowpack is optically shallow (tau=%g) and no substrate has been set, meaning that the space "
+                "under the snowpack is empty, the last layer bottom interface might be missing and"
+                " the snowpack is shallow enough to affect the signal measured at the surface."
+                "This is usually not wanted and can produce wrong results. Either increase the thickness of the snowpack or set a substrate."
+                " If wanted, add a transparent substrate to supress this warning" % min_optical_depth
+            )
+
         Tbv, Tbh = compute_emerging_radiation(M)
 
         #  describe the results list of (dimension name, dimension array of value)
         coords = [("theta", sensor.theta_deg), ("polarization", ["V", "H"])]
 
         # store other diagnostic information
-        other_data = prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity, mu=mu)
+        if snowpack.substrate is None:
+            other_data = prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity, mu=mu)
+        else:
+            other_data = prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity[:-1], mu=mu)
 
         return make_result(sensor, np.transpose((Tbv, Tbh)), coords, other_data=other_data)
