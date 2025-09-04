@@ -32,7 +32,7 @@ Install an editable version
     ```bash
     pip install -e '.[dev]'
     ```
-    This command installs the package in "editable" mode, meaning any changes you make to the source code will be immediately reflected without needing to reinstall.
+    This command installs the package in "editable" mode, meaning any changes you make to the source code will be immediately reflected without needing to reinstall. Additional dependencies for building the documentation are also installed.
 
 
 Git
@@ -49,13 +49,11 @@ Every bug found and corrected should result in writing a unit test to prevent th
 Documentation Generation with Sphinx
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The documentation is generated automatically after each push to GitHub by Read the Docs. It is requested to check that the online documentation is well rendered after every major change.
-
-However, it is also possible to generate the documentation locally using `Sphinx <http://www.sphinx-doc.org/en/stable/>`_. If no new module is added, it is simple to generate the rst and HTML documentation by typing (from the smrt/doc directory)::
+The documentation is generated automatically on `ReadTheDocs <https://smrt.readthedocs.io/>`_ for the last version and the ``master`` branch. It is also possible to generate the documentation locally using `Sphinx <http://www.sphinx-doc.org/en/stable/>`_. If no new module is added, it is simple to generate the rst and HTML documentation by typing (from the smrt/doc directory)::
 
     make fullhtml
 
-The documentation can then be accessed via the index.html page in the smrt/doc/build/html folder.
+The documentation can then be accessed via the index.html page in the smrt/doc/build/html folder. It is requested to check that the documentation is well rendered after every major change.
 
 If you have math symbols to be displayed, this can be done with the imgmath extension (already used), which generates a PNG and inserts the image at the appropriate place. You may need to set the path to LaTeX and dvipng on your system. From the source directory, this can be done with, e.g.::
 
