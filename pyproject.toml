@@ -30,7 +30,7 @@ dependencies = [
     gsw = ["gsw"]
 
 [dependency-groups]
-dev = ["pytest", "ruff"]
+dev = ["pytest", "ruff", "sphinx_rtd_theme", "Sphinx>=1.6"]
 
 
 [project.urls]
