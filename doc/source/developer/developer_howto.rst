@@ -30,9 +30,13 @@ Install an editable version
 
 3.  **Install the project in editable mode**:
     ```bash
-    pip install -e '.[dev]'
+    pip install -e . --group dev
     ```
-    This command installs the package in "editable" mode, meaning any changes you make to the source code will be immediately reflected without needing to reinstall. Additional dependencies for building the documentation are also installed.
+    This command installs the package in "editable" mode, meaning any changes you make to the source code will be immediately reflected without needing to reinstall. Additional dependencies for developers are also installed.
+
+    .. note::
+
+        The ``group`` option appeared in ``pip25.1`` while the latest stable version on 5/9/25 is ``pip24.0``. Run ``pip install --upgrade pip`` in your local environment to get the latest version.
 
 
 Git
