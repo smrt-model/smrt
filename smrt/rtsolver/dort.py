@@ -255,8 +255,14 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
         #
         if self.sensor.mode == "P":
             intensity_up = np.zeros((npol, self.streams.n_air))
-        else:
+        elif self.sensor.mode == "A":
             intensity_up = np.zeros((npol, self.streams.n_air, npol, len(incident_streams)))
+            # compute the coherent contribution
+            coherent_intensity_up_0 = self.dort_modem_banded(
+                0, self.streams, eigenvalue_solver, interfaces, intensity_0, compute_coherent_only=True
+            )
+        else:
+            raise RuntimeError("unknow sensor mode")
 
         for m in range(0, m_max + 1):
             intensity_down_m = intensity_0 if m == 0 else intensity_higher
@@ -271,9 +277,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
 
             if self.sensor.mode == "A":
                 # substrate the coherent contribution
-                intensity_up_m -= self.dort_modem_banded(
-                    m, self.streams, eigenvalue_solver, interfaces, intensity_down_m, compute_coherent_only=True
-                )
+                intensity_up_m[0:2, :, 0:2, :] -= coherent_intensity_up_0 * (1 + float(m > 0))
 
             self.add_intensity_mode(intensity_up, intensity_up_m, m)
 
@@ -621,34 +625,35 @@ def todiag(bmat, oi, oj, dmat):
         bmat[u + oi - oj + i, 0 + oj : 0 + oj + ldiag] = dmat_flat[i * m : i * m + (m + 1) * ldiag : m + 1]
 
 
-if numba:
+if numba is not None:
     compiled_todiag = numba.jit(nopython=True, cache=True)(todiag)
 
     def todiag(bmat, oi, oj, dmat):
         compiled_todiag(bmat, int(oi), int(oj), dmat)
 
 
-def extend_2pol_npol(x, npol):
-    if npol == 2:
-        return x
+# not used anymore
+# def extend_2pol_npol(x, npol):
+#     if npol == 2:
+#         return x
 
-    if scipy.sparse.isspmatrix_dia(x):
-        raise Exception("Should not arrive in this branch, contact the developer if it does")
-        y = scipy.sparse.diags(extend_2pol_npol(x.diagonal(), npol))
-    elif len(x.shape) == 1:
-        y = np.zeros(len(x) // 2 * npol)
-        y[0::npol] = x[0::2]
-        y[1::npol] = x[1::2]
-    elif len(x.shape) == 2:
-        y = np.zeros((x.shape[0] // 2 * npol, x.shape[1] // 2 * npol))
-        y[0::npol, 0::npol] = x[0::2, 0::2]
-        y[0::npol, 1::npol] = x[0::2, 1::2]
-        y[1::npol, 0::npol] = x[1::2, 0::2]
-        y[1::npol, 1::npol] = x[1::2, 1::2]
-    else:
-        raise SMRTError("should never be here")
+#     if scipy.sparse.isspmatrix_dia(x):
+#         raise Exception("Should not arrive in this branch, contact the developer if it does")
+#         y = scipy.sparse.diags(extend_2pol_npol(x.diagonal(), npol))
+#     elif len(x.shape) == 1:
+#         y = np.zeros(len(x) // 2 * npol)
+#         y[0::npol] = x[0::2]
+#         y[1::npol] = x[1::2]
+#     elif len(x.shape) == 2:
+#         y = np.zeros((x.shape[0] // 2 * npol, x.shape[1] // 2 * npol))
+#         y[0::npol, 0::npol] = x[0::2, 0::2]
+#         y[0::npol, 1::npol] = x[0::2, 1::2]
+#         y[1::npol, 0::npol] = x[1::2, 0::2]
+#         y[1::npol, 1::npol] = x[1::2, 1::2]
+#     else:
+#         raise SMRTError("should never be here")
 
-    return y
+#     return y
 
 
 class EigenValueSolver(object):
@@ -1128,7 +1133,6 @@ Note:: setting an option in DORT is obtained with make_model(..., "dort", rtsolv
 """
 
 
-@numba.jit
 def symmetrize_phase_matrix(A, m):
     n = A.shape[1] // 2
     newA = np.empty_like(A)
@@ -1152,6 +1156,10 @@ def symmetrize_phase_matrix(A, m):
                 newA[i, j + n] = 0.5 * (A[i, j + n] + A[i + n, j] * d)
                 newA[i + n, j] = d * newA[i, j + n]
     return newA
+
+
+if numba:
+    symmetrize_phase_matrix = numba.jit(symmetrize_phase_matrix)
 
 
 class InterfaceProperties(object):
