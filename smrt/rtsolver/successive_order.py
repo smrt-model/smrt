@@ -3,21 +3,14 @@ Provide the Successive Order Solver as a multi-stream solver of the radiative tr
 2007 and Greenwald et al. 2005, with some adaptation using SMRT DORT code.
 
 The main interests of this solver are:
-
-- to provide the succesive orders of interaction separately, allowing the investigation of the
-interaction mechanisms.
-
-- faster computations in some conditions: The favorable conditions for fast computation:
-    1) shallow snowpack
-    2) small grains / weak scattering (i.e. small optical depth)
-    3) truncation of the computation at low orders.
-    Benchmarking is necessary as DORT can also be orders of magnitude faster for thick snowpacks with big grains.
-
-- an alternative to DORT when it fails due to eigenvalue solution and grains are not very big (scattering is small).
+    - to provide the succesive orders of interaction separately, allowing the investigation of the interaction mechanisms.
+    - faster computations in some conditions: The favorable conditions for fast computation: 1) shallow snowpack, 2)
+      small grains / weak scattering (i.e. small optical depth), 3) truncation of the computation at low orders.
+      Benchmarking is necessary as DORT can also be orders of magnitude faster for thick snowpacks with big grains.
+    - an alternative to DORT when it fails due to eigenvalue solution and grains are not very big (scattering is small).
 
 
-Usage:
-    Basic usage with default settings and iba emmodel:
+Basic usage with default settings and iba emmodel:
         >>> m = make_model("iba", "successing_order")
 
 References:
