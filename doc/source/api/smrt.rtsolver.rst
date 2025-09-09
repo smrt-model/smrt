@@ -25,7 +25,7 @@ smrt.rtsolver.iterative\_first\_order module
 smrt.rtsolver.successive_order module
 ------------------------------------
 
-.. automodule:: smrt.rtsolver.successive_orders
+.. automodule:: smrt.rtsolver.successive_order
    :members:
    :show-inheritance:
 
