@@ -230,7 +230,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             profile_shape = (i_subinterface[-1], 2 * npol * max(self.streams.n), incident_npol * len(incident_streams))
 
             # prepare the incident intensity
-            incident_intensity_0 = np.empty((n, profile_shape[-1]))
+            incident_intensity_0 = np.zeros((n, profile_shape[-1]))
             j = 0
             for i in incident_streams:
                 for ipol in range(incident_npol):
