@@ -27,9 +27,9 @@ Here are some recommendations to chose an appropriate solver:
      - Radar studies, especially to analyze interaction mechanisms.
      - Fast
    * - ``successive_order``
-      - Solver combining an iterative method and discrete ordinate to compute successive orders of interactions up to 50 by
+     - Solver combining an iterative method and discrete ordinate to compute successive orders of interactions up to 50 by
         default or until a convergence is reached. It converges to numerical results close to dort.
-      - Analysis of the dominant interaction mechanisms (it results orders separately). Alternative to dort, that can be
+     - Analysis of the dominant interaction mechanisms (it results orders separately). Alternative to dort, that can be
         much faster and more stable for shallow and weakly scattering snowpacks or when accuracy is not critical and
         truncation can be applied, but can also be much slower for optical
         thick snowpacks.
