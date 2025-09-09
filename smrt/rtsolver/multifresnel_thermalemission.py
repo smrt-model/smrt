@@ -110,7 +110,7 @@ class MultiFresnelThermalEmission(object):
             if effective_permittivity[-1].imag < 1e-8:
                 smrt_warn("the permittivity of the substrate has a too small imaginary part for reliable results")
             thickness.append(1e10)  # add an infinite layer (hugly hack)
-            temperature.append(snowpack.substrate.temperature)
+            temperature = np.append(temperature, snowpack.substrate.temperature)
 
         mu = np.cos(sensor.theta)
 
@@ -137,6 +137,6 @@ class MultiFresnelThermalEmission(object):
         coords = [("theta", sensor.theta_deg), ("polarization", ["V", "H"])]
 
         # store other diagnostic information
-        other_data = prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity, mu=mu)
+        other_data = prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity[0:snowpack.nlayers], mu=mu)
 
         return make_result(sensor, np.transpose((Tbv, Tbh)), coords, other_data=other_data)
