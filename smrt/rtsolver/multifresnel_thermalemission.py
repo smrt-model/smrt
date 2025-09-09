@@ -114,7 +114,7 @@ class MultiFresnelThermalEmission(object):
 
         mu = np.cos(sensor.theta)
 
-        M = compute_matrix_slab(
+        M, min_optical_depth = compute_matrix_slab(
             frequency=sensor.frequency,
             outmu=mu,
             permittivity=effective_permittivity,
@@ -122,6 +122,14 @@ class MultiFresnelThermalEmission(object):
             thickness=thickness,
             prune_deep_snowpack=self.prune_deep_snowpack,
         )
+
+        if min_optical_depth < 5 and snowpack.substrate is None :
+            smrt_warn(
+                "Multifresnel has detected that the snowpack is optically shallow (tau=%g) and no substrate has been set, meaning that the space "
+                "under the snowpack is 'empty' with snowpack shallow enough to affect the measured signal at the surface."
+                "This is usually not wanted and can produce wrong results. Either increase the thickness of the snowpack or set a substrate."
+                " If wanted, add a transparent substrate to supress this warning" % min_optical_depth
+            )
 
         Tbv, Tbh = compute_emerging_radiation(M)
 
