@@ -112,11 +112,11 @@ class MultiFresnelThermalEmission(object):
             if effective_permittivity[-1].imag < 1e-8:
                 smrt_warn("the permittivity of the substrate has a too small imaginary part for reliable results")
             thickness.append(1e10)  # add an infinite layer (hugly hack)
-            temperature.append(snowpack.substrate.temperature)
+            temperature = np.append(temperature, snowpack.substrate.temperature)
 
         mu = np.cos(sensor.theta)
 
-        M = compute_matrix_slab(
+        M, tau_snowpack = compute_matrix_slab(
             frequency=sensor.frequency,
             outmu=mu,
             permittivity=effective_permittivity,
@@ -125,12 +125,20 @@ class MultiFresnelThermalEmission(object):
             prune_deep_snowpack=self.prune_deep_snowpack,
         )
 
+        if tau_snowpack < 5 and snowpack.substrate is None :
+            smrt_warn(
+                "Multifresnel has detected that the snowpack is optically shallow (tau=%g) and no substrate has been set, meaning that the space "
+                "under the snowpack is 'empty' with snowpack shallow enough to affect the measured signal at the surface."
+                "This is usually not wanted and can produce wrong results. Either increase the thickness of the snowpack or set a substrate."
+                " If wanted, add a transparent substrate to supress this warning" % tau_snowpack
+            )
+
         Tbv, Tbh = compute_emerging_radiation(M)
 
         #  describe the results list of (dimension name, dimension array of value)
         coords = [("theta", sensor.theta_deg), ("polarization", ["V", "H"])]
 
         # store other diagnostic information
-        other_data = prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity, mu=mu)
+        other_data = prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity[0:snowpack.nlayers], mu=mu)
 
         return make_result(sensor, np.transpose((Tbv, Tbh)), coords, other_data=other_data)
