@@ -139,6 +139,6 @@ class MultiFresnelThermalEmission(object):
         coords = [("theta", sensor.theta_deg), ("polarization", ["V", "H"])]
 
         # store other diagnostic information
-        other_data = prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity[0:snowpack.nlayers], mu=mu)
+        other_data = prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity[0:snowpack.nlayer], mu=mu)
 
         return make_result(sensor, np.transpose((Tbv, Tbh)), coords, other_data=other_data)
