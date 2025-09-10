@@ -60,9 +60,9 @@ def compute_matrix_slab(
     eps_1 = air_permittivity
 
     M = None
-    min_optical_depth = 0.
+    tau_snowpack = 0.
     for eps_2, temperature_, kd_ in zip(permittivity, temperature, kd):
-        L, (mu2, tau) = forward_matrix_fulloutput(
+        L, (mu2, tau_layer) = forward_matrix_fulloutput(
             eps_1,
             eps_2,
             mu,
@@ -73,15 +73,15 @@ def compute_matrix_slab(
 
         M = matmul3(M, L) if M is not None else L
 
-        tau_max -= tau  # decrease the optical depth
-        min_optical_depth += np.min(tau)
+        tau_max -= tau_layer  # decrease the optical depth
+        tau_snowpack += tau_layer[imumax]
         
         if tau_max[imumax] < 0:
             break
 
         mu = mu2
         eps_1 = eps_2
-    return M, min_optical_depth
+    return M, tau_snowpack
 
 
 def forward_matrix(
