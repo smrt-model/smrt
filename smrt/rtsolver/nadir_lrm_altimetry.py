@@ -416,9 +416,9 @@ class NadirLRMAltimetry(object):
                 flat.specular_reflection_matrix(self.sensor.frequency, eps_1, eps_2, mu1=mu, npol=2)
                 .diagonal[0]
                 .squeeze()
-                # use the rms_height of the interface and if not use the "macroscopic" sigma_surface
+                # use the rms_height of the interface
                 * coherent_reflection_factor(self.sensor, i.roughness_rms, mu)
-                if self.compute_coherent_reflection
+                if (self.compute_coherent_reflection) and hasattr(i, "roughness_rms")
                 else 0
             )
             for i, eps_1, eps_2, mu in zip(self.snowpack.interfaces, eps_upper_interface, eps, mu_upper_interface)
