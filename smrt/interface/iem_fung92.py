@@ -14,7 +14,8 @@ Notes:
     ks*kl < sqrt(eps) where k is the wavenumber, s the rms height and l the correlation length. The code print a warning
     when out of this range. There is also limitation for smooth surfaces but no warning is printed.
 
-Usage:
+**Usage**::
+
     # rms height and corr_length values work at 10 GHz
     substrate = make_soil("iem_fung92", "dobson85", temperature=260,
                                             roughness_rms=1e-3,

@@ -96,3 +96,5 @@ ENV/
 .pixi
 # Benchmark results
 results
+# Documentation builds
+doc/source/smrt.*
