@@ -50,6 +50,14 @@ Bug Correction
 
 Every bug found and corrected should result in writing a unit test to prevent the bug from reappearing (regression).
 
+Benchmarking
+------------
+Benchmarking is done with `Airspeed Velocity (ASV) <https://asv.readthedocs.io/en/stable/index.html>`_ which should be installed as a dependency for developers. Benchmarks can be run with
+```bash
+asv run
+```
+Running ASV for the first time on a machine will ask for information on the machine. For now, benchmark results are not saved and only local comparisons can be done. Feel free to add any nuseful benchmarks.
+
 Documentation Generation with Sphinx
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
