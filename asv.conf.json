@@ -135,7 +135,7 @@
     // "env_dir": "env",
     // The directory (relative to the current directory) that raw benchmark
     // results are stored in.  If not provided, defaults to "results".
-    // "results_dir": "results",
+    "results_dir": "benchmarks/results",
     // The directory (relative to the current directory) that the html tree
     // should be written to.  If not provided, defaults to "html".
     // "html_dir": "html",

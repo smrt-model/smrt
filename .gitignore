@@ -95,6 +95,6 @@ ENV/
 # pixi environments
 .pixi
 # Benchmark results
-results
+benchmarks/results
 # Documentation builds
 doc/source/smrt.*
