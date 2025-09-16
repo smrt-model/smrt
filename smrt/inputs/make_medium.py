@@ -537,6 +537,11 @@ def make_ice_layer(ice_type,
     """
     # common setup
     if ice_type in ['firstyear', 'multiyear']:
+        if salinity >=1:
+            raise SMRTError("The salinity values is extremely high. The unit of salinity must be kg kg^-1 (SMRT uses "
+            "S.I. for all the units). To convert PSU to kg kg^-1, multiply by the PSU constant (or 1e-3).")
+
+
         if brine_volume_fraction is None:
             brine_volume_fraction = brine_volume_cox83_lepparanta88(temperature, salinity)
         if callable(brine_volume_fraction):
