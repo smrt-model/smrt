@@ -17,7 +17,6 @@ class RadarCalibrationSphere(Interface):
     optional_args = {}
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-
         return smrt_matrix(0)
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
@@ -28,7 +27,7 @@ class RadarCalibrationSphere(Interface):
         return m
 
     def ft_even_diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, m_max, npol):
-        
+
         m = smrt_matrix.zeros((npol, m_max + 1, len_atleast_1d(mu_s)))
 
         # only mode 0, pola 0 and 1, are non-null

@@ -8,7 +8,7 @@ accurate and recommended in most cases unless the computation time is a constrai
 
 Selection of the solver is done with the :py:mod:`smrt.core.model.make_model` function.
 
-Here are some recommendations to chose an appropriate solver:
+Here are some recommendations to choose an appropriate solver:
 
 .. list-table:: SMRT Solvers Overview
    :header-rows: 1
