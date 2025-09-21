@@ -26,7 +26,7 @@ class Benchmark(ABC):
         self.set_run(*args)
 
 
-class MultipleSemiInfiniteSnowpacks(Benchmark):
+class ManySemiInfiniteSnowpacks(Benchmark):
     """
     Benchmark time and peak memory for creating multiple snowpacks and running model in parrallel
 
@@ -60,7 +60,7 @@ class MultipleSemiInfiniteSnowpacks(Benchmark):
         self.model.run(self.sensor, snowpack_list, parallel_computation=params['parallel_computation'])
 
 
-class SemiInfiniteMultipleLayer(Benchmark):
+class MultiLayerSnowpack(Benchmark):
     """
     Benchmark time and peak memory for creating a large snowpack and running model
 

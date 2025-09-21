@@ -602,15 +602,13 @@ class JoblibParallelRunner(object):
         self.backend = backend
         self.progressbar = progressbar
 
+        # the following is done internally by joblib...
         # if max_numerical_threads > 0:
         #     # it is recommended to set max_numerical_threads to 1, to disable numerical libraries parallelism.
         #     lib.set_max_numerical_threads(max_numerical_threads)
 
     def __call__(self, function, argument_list):
         from joblib import Parallel, delayed
-
-        #argument_list = list(argument_list)
-        #raise Exception(f"{len(argument_list)=}")
 
         if self.progressbar:
             from tqdm.auto import tqdm
