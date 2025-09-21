@@ -155,12 +155,12 @@ def make_rtsolver(rtsolver_class: Union[str, Type], **options) -> Type:
     Returns a rtsolver subclass of cls (either given as a string or a class) where the provided options are applied to __init__.
 
     Args:
-        rtsolver_class (Union[str, Type]): 
-        **options: 
+        rtsolver_class (Union[str, Type]):
+        **options:
 
     Returns:
         Type: This function provides an alternative to setting `rtsolver_options` in :py:func:`make_model`).
-        
+
     Example::
 
         make_model(..., make_rtsolver("dort", n_max_stream=128))
@@ -173,14 +173,14 @@ def make_emmodel(emmodel_class: Union[str, Type], **options) -> Type:
     Returns a emmodel subclass of cls (either given as a string or a class) where the provided options are applied to __init__.
 
     Args:
-        emmodel_class (Union[str, Type]): 
-        **options: 
+        emmodel_class (Union[str, Type]):
+        **options:
 
     Returns:
         Type: This function provides an alternative to setting `emmodel_options` in :py:func:`make_model`).
-        
+
     Example::
-    
+
         make_model(make_emmodel("iba", dense_snow_correction=True), ...)
     """
     return lib.class_specializer('emmodel', emmodel_class, **options)
@@ -191,7 +191,7 @@ def get_emmodel(emmodel):
     Returns an emmodel class from the file name 'emmodel'.
 
     Args:
-        emmodel: 
+        emmodel:
     """
 
     raise DeprecationWarning("This function will be remove soon, use make_emmodel instead.")
@@ -205,11 +205,11 @@ def make_emmodel_instance(emmodel, sensor, layer, **emmodel_options):
     """
     Creates a new emmodel instance based on the emmodel class or string. This function used to be called `make_emmodel`
     but has been renamed from SMRT v1.4 and will soon be depreciated. It is recommended to use instead::
-    
+
         em = make_emmodel(emmodel)(sensor, layer, **emmodel_options)
-    
+
     or::
-    
+
         emmodel_class = make_emmodel(emmodel)
         em = emodel_class(sensor, layer, **emmodel_options)
 
@@ -217,7 +217,7 @@ def make_emmodel_instance(emmodel, sensor, layer, **emmodel_options):
         emmodel: type of emmodel to use. Can be given by the name of a file/module in the emmodel directory (as a string) or a class.
         sensor: sensor to use for the calculation.
         layer: layer to use for the calculation
-        **emmodel_options: 
+        **emmodel_options:
     """
 
     # instantiate
@@ -267,7 +267,7 @@ class Model(object):
 
         Args:
             options:  (Default value = None)
-            **kwargs: 
+            **kwargs:
         """
         if options is not None:
             if not isinstance(options, Mapping):
@@ -282,7 +282,7 @@ class Model(object):
 
         Args:
             options:  (Default value = None)
-            **kwargs: 
+            **kwargs:
         """
         if options is not None:
             if not isinstance(options, Mapping):
@@ -367,7 +367,7 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
             assert n > 0, f'dimension={dimensions}'
             results = [concat_results(results[i : i + n], dimension) for i in range(0, len(results), n)]
 
-        assert len(results) == 1
+        assert len(results) == 1, f"Results size is {len(results)=}"
         results = results[0]
 
         if isinstance(snowpack, pd.DataFrame):
@@ -443,9 +443,9 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
             Returns the cross product of sensor x snowpack.
 
             Args:
-                sensor: 
-                sensor_configurations: 
-                snowpack: 
+                sensor:
+                sensor_configurations:
+                snowpack:
             """
             if sensor_configurations:
                 axis, values = sensor_configurations[0]
@@ -553,7 +553,7 @@ class SequentialRunner(object):
 
     """
 
-    def __init__(self, progressbar):
+    def __init__(self, progressbar, max_numerical_threads=1):
         """
         :param progressbar: show a progress bar if True
         """
@@ -581,7 +581,7 @@ class JoblibParallelRunner(object):
     Runs the simulations on the local machine on all the cores, using the joblib library for parallelism.
     """
 
-    def __init__(self, progressbar, backend='loky', n_jobs=-1, max_numerical_threads=1):
+    def __init__(self, progressbar, backend='loky', n_jobs=None, max_numerical_threads=1):
         """
         Joblib is a lightweight library for embarasingly parallel task.
 
@@ -593,16 +593,24 @@ class JoblibParallelRunner(object):
         parallelism techniques.
 
         """
+        from joblib import cpu_count
+
+        if n_jobs is None:
+            n_jobs = cpu_count(only_physical_cores=False) // max_numerical_threads
+
         self.n_jobs = n_jobs
         self.backend = backend
         self.progressbar = progressbar
 
-        if max_numerical_threads > 0:
-            # it is recommended to set max_numerical_threads to 1, to disable numerical libraries parallelism.
-            lib.set_max_numerical_threads(max_numerical_threads)
+        # if max_numerical_threads > 0:
+        #     # it is recommended to set max_numerical_threads to 1, to disable numerical libraries parallelism.
+        #     lib.set_max_numerical_threads(max_numerical_threads)
 
     def __call__(self, function, argument_list):
         from joblib import Parallel, delayed
+
+        #argument_list = list(argument_list)
+        #raise Exception(f"{len(argument_list)=}")
 
         if self.progressbar:
             from tqdm.auto import tqdm

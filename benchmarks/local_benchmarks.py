@@ -33,7 +33,8 @@ class MultipleSemiInfiniteSnowpacks(Benchmark):
     Inspired from smrt/test/test_model.py
     """
 
-    params = [{"solver": "dort", "emmodel": "iba", "n_snowpacks": 500}]  # Add values for multiple benchmarks
+    params = [{"solver": "dort", "emmodel": "iba", "n_snowpacks": 200, "parallel_computation": True},
+              {"solver": "dort", "emmodel": "iba", "n_snowpacks": 20, "parallel_computation": False}]  # Add values for multiple benchmarks
 
     def setup(self, params):
         """
@@ -56,7 +57,7 @@ class MultipleSemiInfiniteSnowpacks(Benchmark):
             )
             for i in range(params["n_snowpacks"])
         ]
-        self.model.run(self.sensor, snowpack_list, parallel_computation=True)
+        self.model.run(self.sensor, snowpack_list, parallel_computation=params['parallel_computation'])
 
 
 class SemiInfiniteMultipleLayer(Benchmark):
@@ -66,18 +67,18 @@ class SemiInfiniteMultipleLayer(Benchmark):
     Inspired from smrt/test/test_coherent_layer.py
     """
 
-    params = [{"solver": "dort", "emmodel": "iba", "n_layers": 500}]  # Add values for multiple benchmarks
+    params = [{"solver": "dort", "emmodel": "iba", "n_layers": 200, "parallel_computation": True},
+              {"solver": "dort", "emmodel": "iba", "n_layers": 200, "parallel_computation": False}]  # Add values for multiple benchmarks
 
     def setup(self, params):
         """
         Initiates snowpack, model and sensor for the benchmarks
         """
-        self.density = np.linspace(300, 917, params["n_layers"])
-        self.thickness = np.full(params["n_layers"], 3000 / params["n_layers"])
+        self.density = np.linspace(300, 916 / 2, params["n_layers"])
+        self.thickness = np.full(params["n_layers"], 200 / params["n_layers"])
         self.temperature = np.linspace(200, 270, params["n_layers"])
         self.corr_length = 200e-6
-        theta = 60
-        self.radiometer = sensor_list.passive(5e9, theta)
+        self.radiometer = sensor_list.amsre('19')
         # create the EM Model - Equivalent DMRTML
         self.model = make_model(
             params["emmodel"], params["solver"], rtsolver_options={"n_max_stream": 64, "process_coherent_layers": True}
@@ -92,4 +93,4 @@ class SemiInfiniteMultipleLayer(Benchmark):
             temperature=self.temperature,
             corr_length=self.corr_length,
         )
-        self.model.run(self.radiometer, sp, parallel_computation=True)
+        self.model.run(self.radiometer, sp, parallel_computation=params['parallel_computation'])
