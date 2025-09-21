@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 	- add two faster diagonalization methods in dort: half_rank_eig and stamnes88. "eig" is still the default, but this 	may change in the future.
 	- add successive_order rtsolver.
 	- change Python support to >=3.10. Old versions are not supported anymore.
+	- parallel_computation=True is now the default to run simulation. It is even faster on single simulation (thanks to joblib magic)
 	- in nadir_lrm_altimetry oversampling argument becomes oversampling_time.
 	- Snowpack.copy is depreciated, it is replaced by shallow_copy
 

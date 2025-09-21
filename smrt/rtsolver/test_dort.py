@@ -124,7 +124,7 @@ def test_shallow_snowpack():
         sp = make_snowpack([0.5, 0.5], "homogeneous", density=[300, 250], temperature=2 * [250], interface=2 * [Transparent])
         sensor = active(13e9, 45)
         m = Model(NonScattering, DORT)
-        m.run(sensor, sp).sigmaVV()
+        m.run(sensor, sp, parallel_computation=False).sigmaVV()
 
 
 def test_shur_based_diagonalisation():

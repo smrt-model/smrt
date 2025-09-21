@@ -299,7 +299,7 @@ class Model(object):
         snowpack_dimension=None,
         snowpack_column='snowpack',
         progressbar=False,
-        parallel_computation=False,
+        parallel_computation=True,
         runner=None,
     ):
         """
@@ -316,7 +316,7 @@ class Model(object):
         rom 1 to the number of snowpacks.
             snowpack_column: when snowpack is a DataFrame this argument is used to specify which column contians the Snowpack objects (Default value = 'snowpack')
             progressbar: if True, display a progress bar during multi-snowpacks computation (Default value = False)
-            parallel_computation: if True, use the joblib library to run the simulations of many snowpacks in parallel.
+            parallel_computation: if True (default), use the joblib library to run the simulations of many snowpacks in parallel.
         Otherwise, the simulations are run sequentially, one after one. See 'runner' for a more advanced control
         on parallel computations. Note for users seeking performances: numpy and scipy usually also perform low-
         level parallel computations
