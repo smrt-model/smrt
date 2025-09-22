@@ -13,7 +13,6 @@ from .iba import IBA
 
 
 class IBA_original(IBA):
-
     """
     Original Improved Born Approximation electromagnetic model class.
 

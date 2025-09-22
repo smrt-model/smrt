@@ -1,26 +1,23 @@
 # coding: utf-8
 
-"""Non-scattering medium can be applied to medium without heterogeneity (like water or pure ice layer).
-"""
+"""Non-scattering medium can be applied to medium without heterogeneity (like water or pure ice layer)."""
 
 # Stdlib import
 
 # other import
 import numpy as np
 
-
 # local import
 from ..core.globalconstants import C_SPEED
-from ..core.lib import smrt_matrix, len_atleast_1d
-from .common import extinction_matrix, IsotropicScatteringMixin
+from ..core.lib import len_atleast_1d, smrt_matrix
 from ..permittivity.generic_mixing_formula import polder_van_santen
+from .common import IsotropicScatteringMixin, extinction_matrix
 
 
 class NonScattering(IsotropicScatteringMixin):
     """ """
 
     def __init__(self, sensor, layer):
-
         self.frac_volume = layer.frac_volume
 
         self.e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
@@ -45,9 +42,9 @@ class NonScattering(IsotropicScatteringMixin):
         Non-scattering phase matrix.
 
         Args:
-            mu_s: 
-            mu_i: 
-            m_max: 
+            mu_s:
+            mu_i:
+            m_max:
             npol:  (Default value = None)
 
         Returns:
@@ -63,16 +60,24 @@ class NonScattering(IsotropicScatteringMixin):
         Non-scattering phase matrix.
 
         Args:
-            mu_s: 
-            mu_i: 
-            dphi: 
+            mu_s:
+            mu_i:
+            dphi:
             npol:  (Default value = 2)
 
         Returns:
             null phase matrix
         """
 
-        return smrt_matrix.zeros((npol, npol, len_atleast_1d(dphi), len_atleast_1d(mu_s), len_atleast_1d(mu_i)))
+        return smrt_matrix.zeros(
+            (
+                npol,
+                npol,
+                len_atleast_1d(dphi),
+                len_atleast_1d(mu_s),
+                len_atleast_1d(mu_i),
+            )
+        )
 
     def ke(self, mu, npol=2):
         return extinction_matrix(self.ka, mu=mu, npol=npol)

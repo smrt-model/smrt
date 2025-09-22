@@ -1,9 +1,7 @@
-
 import numpy as np
 
 from smrt.interface.geometrical_optics import GeometricalOptics
 from smrt.interface.geometrical_optics_backscatter import GeometricalOpticsBackscatter
-
 
 
 def get_diffuse_reflection(go):
@@ -34,40 +32,34 @@ def test_compare_geometrical_optics():
     m = get_diffuse_reflection(go)
     m_back = get_diffuse_reflection(go_back)
 
-    #print(m[0], m_back[0])
+    # print(m[0], m_back[0])
     assert np.allclose(m[0], m_back[0])
     assert np.allclose(m[1], m_back[1])
 
 
 def test_parameters_geometrical_optics():
-
-
     s = 2.8e-2
     l = 7.5e-2
 
     go_mss = GeometricalOptics(mean_square_slope=2 * s**2 / l**2)
-    go_rms_corr = GeometricalOptics(roughness_rms = s, corr_length=l)
+    go_rms_corr = GeometricalOptics(roughness_rms=s, corr_length=l)
 
     m_mss = get_diffuse_reflection(go_mss)
     m_rms_corr = get_diffuse_reflection(go_rms_corr)
-
 
     np.testing.assert_allclose(m_mss[0], m_rms_corr[0])
     np.testing.assert_allclose(m_mss[1], m_rms_corr[1])
 
 
 def test_parameters_geometrical_optics_backscatter():
-
-
     s = 2.8e-2
     l = 7.5e-2
 
     go_mss = GeometricalOpticsBackscatter(mean_square_slope=2 * s**2 / l**2)
-    go_rms_corr = GeometricalOpticsBackscatter(roughness_rms = s, corr_length=l)
+    go_rms_corr = GeometricalOpticsBackscatter(roughness_rms=s, corr_length=l)
 
     m_mss = get_diffuse_reflection(go_mss)
     m_rms_corr = get_diffuse_reflection(go_rms_corr)
-
 
     np.testing.assert_allclose(m_mss[0], m_rms_corr[0])
     np.testing.assert_allclose(m_mss[1], m_rms_corr[1])
@@ -84,7 +76,6 @@ def test_reflectance_reciprocity():
 
     for mu_i in np.linspace(0.1, 1, 10):
         for mu_s in np.linspace(0.1, 1, 10):
-
             R = go.diffuse_reflection_matrix(10e9, eps_1, eps_2, mu_s, mu_i, dphi, 2).values
             Rs = go.diffuse_reflection_matrix(10e9, eps_1, eps_2, mu_i, mu_s, dphi, 2).values
 

@@ -1,15 +1,11 @@
 # coding: utf-8
 
-import sys
 import copy
 
 import numpy as np
 import xarray as xr
 
-import pytest
-
 from smrt.core import result
-
 
 # Tests written in response to -ve intensity bug in result.py
 layer_coord = ("layer", [0, 1, 2])
@@ -51,7 +47,7 @@ res_example2 = result.ActiveResult(
             [[4e-03, 3e-03, 0], [8e-03, 6e-03, 0]],
             [[3e-03, 3.85904771e-03, 0], [6e-03, 6.85904771e-03, 0]],
             [[0, 0, 0], [0, 0, 0]],
-        ]
+        ],
     ],
     coords=[
         ("theta", [45, 50]),

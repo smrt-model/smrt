@@ -1,18 +1,17 @@
-import numpy as np
 import warnings
 
+import numpy as np
 import pytest
 
-from smrt import make_snowpack, make_soil, make_model, sensor_list
-
-from smrt.core.sensor import active
-from smrt.core.model import Model
+from smrt import make_model, make_snowpack, make_soil, sensor_list
 from smrt.core.error import SMRTWarning
-from smrt.interface.transparent import Transparent
-from smrt.emmodel.nonscattering import NonScattering
-from smrt.emmodel.iba import IBA
-from smrt.rtsolver.iterative_first_order import IterativeFirstOrder
 from smrt.core.fresnel import snell_angle
+from smrt.core.model import Model
+from smrt.core.sensor import active
+from smrt.emmodel.iba import IBA
+from smrt.emmodel.nonscattering import NonScattering
+from smrt.interface.transparent import Transparent
+from smrt.rtsolver.iterative_first_order import IterativeFirstOrder
 
 
 def setup_snowpack():
@@ -21,16 +20,22 @@ def setup_snowpack():
 
 
 def setup_snowpack_with_DH():
-    return make_snowpack([0.5, 1000], "homogeneous", density=[300, 250], temperature=2 * [250], interface=2 * [Transparent])
+    return make_snowpack(
+        [0.5, 1000], "homogeneous", density=[300, 250], temperature=2 * [250], interface=2 * [Transparent]
+    )
 
 
 def setup_2layer_snowpack():
-    return make_snowpack([0.5, 1000], "homogeneous", density=[250, 300], temperature=2 * [250], interface=2 * [Transparent])
+    return make_snowpack(
+        [0.5, 1000], "homogeneous", density=[250, 300], temperature=2 * [250], interface=2 * [Transparent]
+    )
 
 
 def setup_inf_snowpack():
     temp = 250
-    return make_snowpack([10000000], "exponential", corr_length=1e-4, density=[300], temperature=[temp], interface=[Transparent])
+    return make_snowpack(
+        [10000000], "exponential", corr_length=1e-4, density=[300], temperature=[temp], interface=[Transparent]
+    )
 
 
 def test_returned_theta():
@@ -79,8 +84,10 @@ def test_2layer_pack():
 def test_shallow_snowpack():
     warnings.filterwarnings("error", message=".*optically shallow.*", module=".*iterative_first_order")
 
-    with pytest.raises(SMRTWarning) as e_info:
-        sp = make_snowpack([0.15, 0.15], "homogeneous", density=[300, 250], temperature=2 * [250], interface=2 * [Transparent])
+    with pytest.raises(SMRTWarning):
+        sp = make_snowpack(
+            [0.15, 0.15], "homogeneous", density=[300, 250], temperature=2 * [250], interface=2 * [Transparent]
+        )
         sensor = active(17e9, 45)
         m = Model(NonScattering, IterativeFirstOrder)
         m.run(sensor, sp, parallel_computation=False).sigmaVV()
@@ -121,7 +128,7 @@ def test_normal_call():
     sensor = active(17.25e9, theta)
 
     m = Model(NonScattering, "iterative_first_order")
-    res = m.run(sensor, sp)
+    m.run(sensor, sp)
 
 
 def test_return_contributions():
@@ -162,4 +169,4 @@ def test_all_substrate():
         sensor = sensor_list.active(17.25e9, 30)
         # test with DORT and compare with final sigma
         model = make_model("iba", "iterative_first_order", rtsolver_options={"error_handling": "nan"})
-        result = model.run(sensor, snowpack)
+        model.run(sensor, snowpack)

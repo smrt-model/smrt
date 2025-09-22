@@ -1,14 +1,15 @@
 """
-Provide the coherent flat pseudo-interface, as in MEMLS. 
+Provide the coherent flat pseudo-interface, as in MEMLS.
 
 This interface is obtained by collapsing one layer and two interfaces into a single interface. Scattering in the layer is neglected.
 """
 
 import numpy as np
-from smrt.core.globalconstants import C_SPEED
-from smrt.core.lib import smrt_matrix, abs2
-from smrt.core.fresnel import fresnel_coefficients
+
 from smrt.core.error import SMRTError
+from smrt.core.fresnel import fresnel_coefficients
+from smrt.core.globalconstants import C_SPEED
+from smrt.core.lib import abs2, smrt_matrix
 
 
 def process_coherent_layers(snowpack, emmodel_list, effective_permittivity, sensor):
@@ -35,7 +36,9 @@ def process_coherent_layers(snowpack, emmodel_list, effective_permittivity, sens
                 raise SMRTError("Two sucessive layers are coherent, this is not yet supported")
             # create a coherent interface
             coherent_interface = CoherentFlat(
-                snowpack.interfaces[l : l + 2], snowpack.layers[l], effective_permittivity[l]
+                snowpack.interfaces[l : l + 2],
+                snowpack.layers[l],
+                effective_permittivity[l],
             )
             # set the next interface to coherent
             snowpack.interfaces[l + 1] = coherent_interface
@@ -49,8 +52,8 @@ def process_coherent_layers(snowpack, emmodel_list, effective_permittivity, sens
 
 class CoherentFlat(object):
     """
-    Implement a flat interface (coherent). 
-    
+    Implement a flat interface (coherent).
+
     The reflection is in the specular direction and the coefficient is calculated with the Fresnel coefficients.
 
     """
@@ -67,9 +70,9 @@ class CoherentFlat(object):
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
-        Compute the reflection coefficients. 
-        
-        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
+        Compute the reflection coefficients.
+
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
         beam is transmitted.
 
         Args:
@@ -104,7 +107,7 @@ class CoherentFlat(object):
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
         Compute the transmission coefficients.
-        
+
         Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
         beam is transmitted.
         Args:

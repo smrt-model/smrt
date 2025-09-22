@@ -28,26 +28,35 @@ Note:
     Note that `make_snowpack` is directly imported from :py:mod:`smrt` instead of :py:mod:`smrt.inputs.make_medium`. This feature is for convenience.
 """
 
-import itertools
 import collections
 import inspect
-from warnings import warn
+import itertools
 
 import numpy as np
 import pandas as pd
 
-from smrt.core.snowpack import Snowpack
-from smrt.core.interface import make_interface
-from smrt.core.plugin import import_class
-from smrt.core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE, DENSITY_OF_WATER, PERMITTIVITY_OF_AIR, PSU
-from smrt.core.layer import get_microstructure_model, Layer
-from smrt.core.error import SMRTError, smrt_warn
 from smrt.core import lib
-from smrt.permittivity.ice import ice_permittivity_maetzler06  # default pure ice permittivity model
+from smrt.core.error import SMRTError, smrt_warn
+from smrt.core.globalconstants import (
+    DENSITY_OF_ICE,
+    DENSITY_OF_WATER,
+    FREEZING_POINT,
+    PERMITTIVITY_OF_AIR,
+    PSU,
+)
+from smrt.core.interface import make_interface
+from smrt.core.layer import Layer, get_microstructure_model
+from smrt.core.plugin import import_class
+from smrt.core.snowpack import Snowpack
 from smrt.permittivity.brine import brine_volume_cox83_lepparanta88
-from smrt.permittivity.saline_water import seawater_permittivity_klein76, brine_permittivity_stogryn85
+from smrt.permittivity.ice import (
+    ice_permittivity_maetzler06,
+)  # default pure ice permittivity model
 from smrt.permittivity.saline_ice import saline_ice_permittivity_pvs_mixing
-
+from smrt.permittivity.saline_water import (
+    brine_permittivity_stogryn85,
+    seawater_permittivity_klein76,
+)
 from smrt.substrate.flat import Flat
 
 
@@ -94,7 +103,7 @@ def make_medium(data, surface=None, interface=None, substrate=None, **kwargs):
 
     if "z" in data:
         data = data.copy()
-        data['thickness'] = compute_thickness_from_z(data['z'])
+        data["thickness"] = compute_thickness_from_z(data["z"])
 
     if kwargs:
         data = data.copy()
@@ -102,22 +111,28 @@ def make_medium(data, surface=None, interface=None, substrate=None, **kwargs):
             data[k] = kwargs[k]
 
     # group layers by medium type
-    if 'medium' not in data:
-        medium_chunks = [('snow', data)]
+    if "medium" not in data:
+        medium_chunks = [("snow", data)]
     else:
-        medium_chunks = ((group, data.iloc[list(imedia)]) for group, imedia in
-                         itertools.groupby(range(len(data)), lambda i: data.iloc[i]['medium']))
+        medium_chunks = (
+            (group, data.iloc[list(imedia)])
+            for group, imedia in itertools.groupby(range(len(data)), lambda i: data.iloc[i]["medium"])
+        )
 
     # iterate on media chunk
     medium_list = []
 
     for medium, group_data in medium_chunks:
-
-        if medium == 'snow':
-            required_args = ['thickness', 'microstructure_model', 'density']
+        if medium == "snow":
+            required_args = ["thickness", "microstructure_model", "density"]
             func = make_snowpack
-        elif medium == 'ice':
-            required_args = ['ice_type', 'thickness', 'temperature', 'microstructure_model']
+        elif medium == "ice":
+            required_args = [
+                "ice_type",
+                "thickness",
+                "temperature",
+                "microstructure_model",
+            ]
             func = make_ice_column
         else:
             raise SMRTError("Unknown medium '%s' in data" % medium)
@@ -133,14 +148,16 @@ def make_medium(data, surface=None, interface=None, substrate=None, **kwargs):
     return sum(medium_list)
 
 
-def make_snowpack(thickness,
-                  microstructure_model,
-                  density,
-                  interface=None,
-                  surface=None,
-                  substrate=None,
-                  atmosphere=None,
-                  **kwargs):
+def make_snowpack(
+    thickness,
+    microstructure_model,
+    density,
+    interface=None,
+    surface=None,
+    substrate=None,
+    atmosphere=None,
+    **kwargs,
+):
     """
     Build a multi-layered snowpack. Each parameter can be an array, list or a constant value.
 
@@ -170,20 +187,27 @@ def make_snowpack(thickness,
     sp = Snowpack(substrate=substrate, atmosphere=atmosphere)
 
     if not isinstance(thickness, collections.abc.Iterable):
-        raise SMRTError("The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame.")
+        raise SMRTError(
+            "The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame."
+        )
 
     lib.check_argument_size(density, len(thickness), "density")
     lib.check_argument_size(kwargs, len(thickness))
 
     if surface is not None and lib.is_sequence(interface):
-        raise SMRTError("Setting both 'surface' and 'interface' arguments is ambiguous when inteface is a list or any sequence.")
+        raise SMRTError(
+            "Setting both 'surface' and 'interface' arguments is ambiguous when inteface is a list or any sequence."
+        )
 
     for i, dz in enumerate(thickness):
         if dz <= 0:
             continue
-        layer = make_snow_layer(dz, lib.get(microstructure_model, i, "microstructure_model"),
-                                density=lib.get(density, i, "density"),
-                                **lib.get(kwargs, i))
+        layer = make_snow_layer(
+            dz,
+            lib.get(microstructure_model, i, "microstructure_model"),
+            density=lib.get(density, i, "density"),
+            **lib.get(kwargs, i),
+        )
 
         # add the interface or surface for the first non-zero layer
         linterface = lib.get(interface, i, "interface") if surface is None else surface
@@ -198,17 +222,19 @@ def make_snowpack(thickness,
     return sp
 
 
-def make_snow_layer(layer_thickness,
-                    microstructure_model,
-                    density,
-                    temperature=FREEZING_POINT,
-                    ice_permittivity_model=None,
-                    background_permittivity_model=PERMITTIVITY_OF_AIR,
-                    volumetric_liquid_water=None,
-                    liquid_water=None,
-                    salinity=0,
-                    medium="snow",
-                    ** kwargs):
+def make_snow_layer(
+    layer_thickness,
+    microstructure_model,
+    density,
+    temperature=FREEZING_POINT,
+    ice_permittivity_model=None,
+    background_permittivity_model=PERMITTIVITY_OF_AIR,
+    volumetric_liquid_water=None,
+    liquid_water=None,
+    salinity=0,
+    medium="snow",
+    **kwargs,
+):
     """
     Make a snow layer for a given microstructure_model.
 
@@ -238,11 +264,14 @@ def make_snow_layer(layer_thickness,
         # must import this here instead of the top of the file because of cross-dependencies
         # default ice permittivity model, use ice_permittivity_maetzler06 for dry snow and add support for wet snow
         from ..permittivity.wetice import wetice_permittivity_bohren83
+
         ice_permittivity_model = wetice_permittivity_bohren83
 
-    if (salinity > 0) and 'salinity' not in inspect.signature(ice_permittivity_model).parameters:
-        smrt_warn("The salinity of the layer is >0 but the permittivity formulation does not depend on salinity.  " +
-                  "See the module smrt.permittivity.saline_ice module.")
+    if (salinity > 0) and "salinity" not in inspect.signature(ice_permittivity_model).parameters:
+        smrt_warn(
+            "The salinity of the layer is >0 but the permittivity formulation does not depend on salinity.  "
+            + "See the module smrt.permittivity.saline_ice module."
+        )
 
     eps_1 = background_permittivity_model
     eps_2 = ice_permittivity_model
@@ -257,16 +286,18 @@ def make_snow_layer(layer_thickness,
     #    raise smrt_warn("The argument 'liquid_water' is going to be depreciated because its definition is uncommon"
     #                    " in the snow community. Use instead volumetric_liquid_water. Check the definition")
 
-    lay = SnowLayer(layer_thickness,
-                    medium=medium,
-                    microstructure_model=microstructure_model,
-                    density=float(density),
-                    temperature=float(temperature),
-                    permittivity_model=(eps_1, eps_2),
-                    salinity=float(salinity),
-                    volumetric_liquid_water=volumetric_liquid_water,
-                    liquid_water=liquid_water,
-                    **kwargs)
+    lay = SnowLayer(
+        layer_thickness,
+        medium=medium,
+        microstructure_model=microstructure_model,
+        density=float(density),
+        temperature=float(temperature),
+        permittivity_model=(eps_1, eps_2),
+        salinity=float(salinity),
+        volumetric_liquid_water=volumetric_liquid_water,
+        liquid_water=liquid_water,
+        **kwargs,
+    )
 
     return lay
 
@@ -281,7 +312,14 @@ class SnowLayer(Layer):
 
     """
 
-    def __init__(self, *args, density=None, volumetric_liquid_water=None, liquid_water=None, **kwargs):
+    def __init__(
+        self,
+        *args,
+        density=None,
+        volumetric_liquid_water=None,
+        liquid_water=None,
+        **kwargs,
+    ):
         """
         Create a specialized SnowLayer
 
@@ -296,13 +334,19 @@ class SnowLayer(Layer):
 
         frac_volume, liquid_water = SnowLayer.compute_frac_volumes(density, volumetric_liquid_water, liquid_water)
 
-        super().__init__(*args,
-                         density=density,
-                         volumetric_liquid_water=volumetric_liquid_water,
-                         frac_volume=frac_volume,
-                         liquid_water=liquid_water,
-                         **kwargs)
-        self.read_only_attributes = {'density', 'volumetric_liquid_water', 'liquid_water'}
+        super().__init__(
+            *args,
+            density=density,
+            volumetric_liquid_water=volumetric_liquid_water,
+            frac_volume=frac_volume,
+            liquid_water=liquid_water,
+            **kwargs,
+        )
+        self.read_only_attributes = {
+            "density",
+            "volumetric_liquid_water",
+            "liquid_water",
+        }
 
     def update(self, density=None, volumetric_liquid_water=None, liquid_water=None, **kwargs):
         """
@@ -322,14 +366,15 @@ class SnowLayer(Layer):
 
         if density is not None:
             # avoid the readonly status
-            self.__dict__['density'] = density
+            self.__dict__["density"] = density
 
         if volumetric_liquid_water is not None:
             # avoid the readonly status
-            self.__dict__['volumetric_liquid_water'] = volumetric_liquid_water
+            self.__dict__["volumetric_liquid_water"] = volumetric_liquid_water
 
-        self.frac_volume, self.__dict__['liquid_water'] = \
-            SnowLayer.compute_frac_volumes(self.density, self.volumetric_liquid_water, liquid_water)
+        self.frac_volume, self.__dict__["liquid_water"] = SnowLayer.compute_frac_volumes(
+            self.density, self.volumetric_liquid_water, liquid_water
+        )
 
         super().update(**kwargs)
 
@@ -367,7 +412,9 @@ class SnowLayer(Layer):
         if 1 < frac_volume < 1.01:  # consider we have a small rounding error
             frac_volume = 1
 
-        assert 0 <= frac_volume <= 1, f"the frac_volume of ice+water in snow is {frac_volume} but must be between 0 and 1."
+        assert 0 <= frac_volume <= 1, (
+            f"the frac_volume of ice+water in snow is {frac_volume} but must be between 0 and 1."
+        )
         " Check that volumetric_liquid_water is between 0 and 1,"
         " and that density is between 0 and DENSITY_OF_ICE + (DENSITY_OF_WATER - DENSITY_OF_ICE) * volumetric_liquid_water. "
 
@@ -377,25 +424,27 @@ class SnowLayer(Layer):
         return frac_volume, liquid_water
 
 
-def make_ice_column(ice_type,
-                    thickness,
-                    temperature,
-                    microstructure_model,
-                    brine_inclusion_shape='spheres',
-                    salinity=0.,
-                    brine_volume_fraction=None,
-                    brine_volume_model=None,
-                    brine_permittivity_model=None,
-                    ice_permittivity_model=None,
-                    saline_ice_permittivity_model=None,
-                    porosity=0,
-                    density=None,
-                    add_water_substrate=True,
-                    surface=None,
-                    interface=None,
-                    substrate=None,
-                    atmosphere=None,
-                    **kwargs):
+def make_ice_column(
+    ice_type,
+    thickness,
+    temperature,
+    microstructure_model,
+    brine_inclusion_shape="spheres",
+    salinity=0.0,
+    brine_volume_fraction=None,
+    brine_volume_model=None,
+    brine_permittivity_model=None,
+    ice_permittivity_model=None,
+    saline_ice_permittivity_model=None,
+    porosity=0,
+    density=None,
+    add_water_substrate=True,
+    surface=None,
+    interface=None,
+    substrate=None,
+    atmosphere=None,
+    **kwargs,
+):
     """
     Build a multi-layered ice column. Each parameter can be an array, list or a constant value.
 
@@ -436,7 +485,7 @@ def make_ice_column(ice_type,
     All the other optional arguments are passed for each layer to the function :py:func:`~smrt.inputs.make_medium.make_ice_layer`.
     The documentation of this function describes in detail the parameters used/required depending on ice_type.
 
-"""
+    """
 
     # add a substrate underneath the ice (if wanted):
     if add_water_substrate:
@@ -445,6 +494,7 @@ def make_ice_column(ice_type,
         # create a permittivity_function that depends only on frequency and temperature by setting other arguments
         def permittivity_model(f, t):
             return wp.water_permittivity_model(f, t, wp.water_salinity)
+
         substrate = Flat(temperature=wp.water_temperature, permittivity_model=permittivity_model)
     else:
         substrate = substrate
@@ -452,29 +502,45 @@ def make_ice_column(ice_type,
     sp = Snowpack(substrate=substrate, atmosphere=atmosphere)
 
     n = len(thickness)
-    for name in ["temperature", "salinity", "microstructure_model", "brine_inclusion_shape", "brine_volume_fraction",
-                 "porosity", "density", "brine_permittivity_model", "ice_permittivity_model", "saline_ice_permittivity_model",
-                 "interface", "kwargs"]:
+    for name in [
+        "temperature",
+        "salinity",
+        "microstructure_model",
+        "brine_inclusion_shape",
+        "brine_volume_fraction",
+        "porosity",
+        "density",
+        "brine_permittivity_model",
+        "ice_permittivity_model",
+        "saline_ice_permittivity_model",
+        "interface",
+        "kwargs",
+    ]:
         lib.check_argument_size(locals()[name], n)
 
     if surface is not None and lib.is_sequence(interface):
-        raise SMRTError("Setting both 'surface' and 'interface' arguments is ambiguous when inteface is a list or any sequence.")
+        raise SMRTError(
+            "Setting both 'surface' and 'interface' arguments is ambiguous when inteface is a list or any sequence."
+        )
 
     for i, dz in enumerate(thickness):
         if dz <= 0:
             continue
-        layer = make_ice_layer(ice_type,
-                               dz, temperature=lib.get(temperature, i),
-                               salinity=lib.get(salinity, i),
-                               microstructure_model=lib.get(microstructure_model, i),
-                               brine_inclusion_shape=lib.get(brine_inclusion_shape, i),
-                               brine_volume_fraction=lib.get(brine_volume_fraction, i),
-                               porosity=lib.get(porosity, i),
-                               density=lib.get(density, i),
-                               brine_permittivity_model=lib.get(brine_permittivity_model, i),
-                               ice_permittivity_model=lib.get(ice_permittivity_model, i),
-                               saline_ice_permittivity_model=lib.get(saline_ice_permittivity_model, i),
-                               **lib.get(kwargs, i))
+        layer = make_ice_layer(
+            ice_type,
+            dz,
+            temperature=lib.get(temperature, i),
+            salinity=lib.get(salinity, i),
+            microstructure_model=lib.get(microstructure_model, i),
+            brine_inclusion_shape=lib.get(brine_inclusion_shape, i),
+            brine_volume_fraction=lib.get(brine_volume_fraction, i),
+            porosity=lib.get(porosity, i),
+            density=lib.get(density, i),
+            brine_permittivity_model=lib.get(brine_permittivity_model, i),
+            ice_permittivity_model=lib.get(ice_permittivity_model, i),
+            saline_ice_permittivity_model=lib.get(saline_ice_permittivity_model, i),
+            **lib.get(kwargs, i),
+        )
 
         # add the interface or surface for the first non-zero layer
         linterface = lib.get(interface, i, "interface") if surface is None else surface
@@ -489,20 +555,22 @@ def make_ice_column(ice_type,
     return sp
 
 
-def make_ice_layer(ice_type,
-                   layer_thickness,
-                   temperature,
-                   salinity,
-                   microstructure_model,
-                   brine_inclusion_shape='spheres',
-                   brine_volume_fraction=None,
-                   brine_permittivity_model=None,
-                   porosity=0,
-                   density=None,
-                   ice_permittivity_model=None,
-                   saline_ice_permittivity_model=None,
-                   medium="ice",
-                   **kwargs):
+def make_ice_layer(
+    ice_type,
+    layer_thickness,
+    temperature,
+    salinity,
+    microstructure_model,
+    brine_inclusion_shape="spheres",
+    brine_volume_fraction=None,
+    brine_permittivity_model=None,
+    porosity=0,
+    density=None,
+    ice_permittivity_model=None,
+    saline_ice_permittivity_model=None,
+    medium="ice",
+    **kwargs,
+):
     """Make an ice layer for a given `microstructure_model` (see also :py:func:`~smrt.inputs.make_medium.make_ice_column`
     to create many layers). The microstructural parameters depend on the microstructural model and should be given as
     additional arguments to this function. To identify which parameters are available, required or optional, refer to the documentation
@@ -536,11 +604,12 @@ def make_ice_layer(ice_type,
         Layer: Instance of Layer.
     """
     # common setup
-    if ice_type in ['firstyear', 'multiyear']:
-        if salinity >=1:
-            raise SMRTError("The salinity values is extremely high. The unit of salinity must be kg kg^-1 (SMRT uses "
-            "S.I. for all the units). To convert PSU to kg kg^-1, multiply by the PSU constant (or 1e-3).")
-
+    if ice_type in ["firstyear", "multiyear"]:
+        if salinity >= 1:
+            raise SMRTError(
+                "The salinity values is extremely high. The unit of salinity must be kg kg^-1 (SMRT uses "
+                "S.I. for all the units). To convert PSU to kg kg^-1, multiply by the PSU constant (or 1e-3)."
+            )
 
         if brine_volume_fraction is None:
             brine_volume_fraction = brine_volume_cox83_lepparanta88(temperature, salinity)
@@ -559,7 +628,11 @@ def make_ice_layer(ice_type,
     if density is None:
         density = bulk_ice_density(temperature, salinity, porosity)
     elif porosity == 0:
-        porosity = np.clip(1. - density / bulk_ice_density(temperature, salinity, porosity=0), 0., 1.)
+        porosity = np.clip(
+            1.0 - density / bulk_ice_density(temperature, salinity, porosity=0),
+            0.0,
+            1.0,
+        )
     else:
         raise SMRTError("Setting density and porosity is invalid")
 
@@ -599,7 +672,7 @@ def make_ice_layer(ice_type,
         frac_volume = porosity
 
         # shape of air bubbles
-        inclusion_shape = 'spheres'
+        inclusion_shape = "spheres"
 
     elif ice_type == "fresh":
         # scatterers permittivity
@@ -617,10 +690,14 @@ def make_ice_layer(ice_type,
         frac_volume = porosity
 
         # shape of bubbles
-        inclusion_shape = 'spheres'
+        inclusion_shape = "spheres"
 
-        if saline_ice_permittivity_model is not None or brine_permittivity_model is not None \
-                or brine_volume_fraction is not None or salinity > 0:
+        if (
+            saline_ice_permittivity_model is not None
+            or brine_permittivity_model is not None
+            or brine_volume_fraction is not None
+            or salinity > 0
+        ):
             raise SMRTError("Setting any saline or brine parameter is invalid for fresh ice")
 
     else:
@@ -629,15 +706,17 @@ def make_ice_layer(ice_type,
     if isinstance(microstructure_model, str):
         microstructure_model = get_microstructure_model(microstructure_model)
 
-    lay = Layer(float(layer_thickness),
-                medium="ice",
-                microstructure_model=microstructure_model,
-                frac_volume=float(frac_volume),
-                temperature=float(temperature),
-                permittivity_model=(eps_1, eps_2),
-                inclusion_shape=inclusion_shape,
-                salinity=float(salinity),
-                **kwargs)
+    lay = Layer(
+        float(layer_thickness),
+        medium="ice",
+        microstructure_model=microstructure_model,
+        frac_volume=float(frac_volume),
+        temperature=float(temperature),
+        permittivity_model=(eps_1, eps_2),
+        inclusion_shape=inclusion_shape,
+        salinity=float(salinity),
+        **kwargs,
+    )
 
     if brine_volume_fraction is not None:
         lay.brine_volume_fraction = float(brine_volume_fraction)
@@ -647,19 +726,21 @@ def make_ice_layer(ice_type,
     lay.inclusion_shape = inclusion_shape  # shape of inclusions (air or brine depending on ice_type)
     lay.ice_type = ice_type  # just for information, read-only
 
-    lay.read_only_attributes = {'ice_type', 'density', 'porosity'}
+    lay.read_only_attributes = {"ice_type", "density", "porosity"}
 
     return lay
 
 
-def make_water_body(layer_thickness=1000,
-                    temperature=FREEZING_POINT,
-                    salinity=0,
-                    water_permittivity_model=None,
-                    foam_frac_volume=0,
-                    surface=None,
-                    atmosphere=None,
-                    substrate=None):
+def make_water_body(
+    layer_thickness=1000,
+    temperature=FREEZING_POINT,
+    salinity=0,
+    water_permittivity_model=None,
+    foam_frac_volume=0,
+    surface=None,
+    atmosphere=None,
+    substrate=None,
+):
     """
     Make a water body with a single layer of water at given temperature and salinity.
 
@@ -688,13 +769,17 @@ def make_water_body(layer_thickness=1000,
     Returns:
         Snowpack: The constructed water body.
     """
-    sp = Snowpack(substrate=substrate, atmosphere=atmosphere)  # Snowpack is not a typo, yes SMRT use Snowpacks even for water or ice.
+    sp = Snowpack(
+        substrate=substrate, atmosphere=atmosphere
+    )  # Snowpack is not a typo, yes SMRT use Snowpacks even for water or ice.
 
-    layer = make_water_layer(layer_thickness,
-                             temperature=temperature,
-                             salinity=salinity,
-                             water_permittivity_model=water_permittivity_model,
-                             foam_frac_volume=foam_frac_volume)
+    layer = make_water_layer(
+        layer_thickness,
+        temperature=temperature,
+        salinity=salinity,
+        water_permittivity_model=water_permittivity_model,
+        foam_frac_volume=foam_frac_volume,
+    )
     # add the layer and the interface interface
     sp.append(layer, interface=make_interface(surface))
 
@@ -706,13 +791,15 @@ def make_water_body(layer_thickness=1000,
     return sp
 
 
-def make_water_layer(layer_thickness,
-                     temperature=FREEZING_POINT,
-                     salinity=0,
-                     water_permittivity_model=None,
-                     foam_frac_volume=0,
-                     foam_bubble_radius=0.1e-3,
-                     **kwargs):
+def make_water_layer(
+    layer_thickness,
+    temperature=FREEZING_POINT,
+    salinity=0,
+    water_permittivity_model=None,
+    foam_frac_volume=0,
+    foam_bubble_radius=0.1e-3,
+    **kwargs,
+):
     """
     Make a water layer at given temperature and salinity.
 
@@ -737,16 +824,18 @@ def make_water_layer(layer_thickness,
         microstructure_model = "homogeneous"
     else:
         microstructure_model = "sticky_hard_spheres"
-        kwargs['radius'] = foam_bubble_radius
+        kwargs["radius"] = foam_bubble_radius
 
-    lay = Layer(float(layer_thickness),
-                medium="water",
-                microstructure_model=get_microstructure_model(microstructure_model),
-                frac_volume=foam_frac_volume,
-                temperature=float(temperature),
-                permittivity_model=(water_permittivity_model, 1.),
-                salinity=float(salinity),
-                **kwargs)
+    lay = Layer(
+        float(layer_thickness),
+        medium="water",
+        microstructure_model=get_microstructure_model(microstructure_model),
+        frac_volume=foam_frac_volume,
+        temperature=float(temperature),
+        permittivity_model=(water_permittivity_model, 1.0),
+        salinity=float(salinity),
+        **kwargs,
+    )
 
     return lay
 
@@ -766,23 +855,30 @@ def water_parameters(ice_type, **kwargs):
     """
 
     # prepare default
-    if ice_type in ['firstyear', 'multiyear']:
+    if ice_type in ["firstyear", "multiyear"]:
         water_temperature = FREEZING_POINT - 1.8
         water_salinity = 0.032  # = 0.032kg kg :sup:`-1` = 32PSU; somewhat arbitrary value,
         # fresher than average ocean salinity, reflecting lower salinities in polar regions
-    elif ice_type == 'fresh':
+    elif ice_type == "fresh":
         water_temperature = FREEZING_POINT
-        water_salinity = 0.
+        water_salinity = 0.0
     else:
-        raise SMRTError("'medium' must be set to one of the following: True (default), 'ocean', 'fresh'. Additional optional arguments"
-                        " for function make_ice_column are 'water_temperature', 'water_salinity' and 'water_depth'.")
+        raise SMRTError(
+            "'medium' must be set to one of the following: True (default), 'ocean', 'fresh'. Additional optional arguments"
+            " for function make_ice_column are 'water_temperature', 'water_salinity' and 'water_depth'."
+        )
 
     # override the following variable if set
-    WaterParameter = collections.namedtuple("WaterParameter", ('water_temperature', 'water_salinity', 'water_permittivity_model'))
+    WaterParameter = collections.namedtuple(
+        "WaterParameter",
+        ("water_temperature", "water_salinity", "water_permittivity_model"),
+    )
 
-    wp = WaterParameter(water_temperature=kwargs.get('water_temperature', water_temperature),
-                        water_salinity=kwargs.get('water_salinity', water_salinity),
-                        water_permittivity_model=seawater_permittivity_klein76)
+    wp = WaterParameter(
+        water_temperature=kwargs.get("water_temperature", water_temperature),
+        water_salinity=kwargs.get("water_salinity", water_salinity),
+        water_permittivity_model=seawater_permittivity_klein76,
+    )
     return wp
 
 
@@ -825,7 +921,9 @@ def bulk_ice_density(temperature, salinity, porosity):
     rho_ice = 0.917 - 1.403e-4 * Tc  # in g/cm^3
 
     # Density of mixture:
-    rho = (1. - porosity) * (rho_ice * F1 / (F1 - rho_ice * salinity * PSU**-1 * F2)) * 1e3  # in kg/m3 (eq. 15, C&W, 1983)
+    rho = (
+        (1.0 - porosity) * (rho_ice * F1 / (F1 - rho_ice * salinity * PSU**-1 * F2)) * 1e3
+    )  # in kg/m3 (eq. 15, C&W, 1983)
 
     if rho < 0:
         raise SMRTError("Ice density may not be negative.")
@@ -833,10 +931,16 @@ def bulk_ice_density(temperature, salinity, porosity):
     return rho
 
 
-def make_generic_stack(thickness, temperature=FREEZING_POINT, ks=0, ka=0, effective_permittivity=1,
-                       interface=None,
-                       substrate=None,
-                       atmosphere=None):
+def make_generic_stack(
+    thickness,
+    temperature=FREEZING_POINT,
+    ks=0,
+    ka=0,
+    effective_permittivity=1,
+    interface=None,
+    substrate=None,
+    atmosphere=None,
+):
     """
     Build a multi-layered medium with prescribed scattering and absorption coefficients and effective permittivity.
     Must be used with :py:mod:`smrt.emmodel.prescribed_kskaeps` emmodel.
@@ -856,27 +960,30 @@ def make_generic_stack(thickness, temperature=FREEZING_POINT, ks=0, ka=0, effect
 
         sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
     """
-# TODO: Add an example
-#    e.g.::
-#
-#        sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
-#
-# """
+    # TODO: Add an example
+    #    e.g.::
+    #
+    #        sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
+    #
+    # """
 
     sp = Snowpack(substrate=substrate, atmosphere=atmosphere)
 
     if not isinstance(thickness, collections.abc.Iterable):
-        raise SMRTError("The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame.")
+        raise SMRTError(
+            "The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame."
+        )
 
     for i, dz in enumerate(thickness):
         if dz <= 0:
             continue
-        layer = make_generic_layer(dz,
-                                   ks=lib.get(ks, i, "ks"),
-                                   ka=lib.get(ka, i, "ka"),
-                                   effective_permittivity=lib.get(effective_permittivity, i, "effective_permittivity"),
-                                   temperature=lib.get(temperature, i, "temperature")
-                                   )
+        layer = make_generic_layer(
+            dz,
+            ks=lib.get(ks, i, "ks"),
+            ka=lib.get(ka, i, "ka"),
+            effective_permittivity=lib.get(effective_permittivity, i, "effective_permittivity"),
+            temperature=lib.get(temperature, i, "temperature"),
+        )
 
         sp.append(layer, lib.get(interface, i))
 
@@ -925,19 +1032,20 @@ def add_transparent_layer(snowpack):
         sp = add_transparent_layer(sp)
     """
 
-    layer = Layer(thickness=0,
-                  microstructure_model=get_microstructure_model("homogeneous"),
-                  frac_volume=0,
-                  temperature=0,
-                  permittivity_model=(1, 1))
+    layer = Layer(
+        thickness=0,
+        microstructure_model=get_microstructure_model("homogeneous"),
+        frac_volume=0,
+        temperature=0,
+        permittivity_model=(1, 1),
+    )
 
     snowpack.append(layer, interface=make_interface("transparent"))
 
     return snowpack
 
 
-def make_transparent_volume(substrate=None,
-                            atmosphere=None):
+def make_transparent_volume(substrate=None, atmosphere=None):
     """
     Build a transparent single-layer snowpack. This is useful to run SMRT with substrate only, without any volume.
 
@@ -996,7 +1104,7 @@ def compute_thickness_from_z(z):
         ndarray: Thickness array.
     """
 
-    order = (np.diff(z) < 0)
+    order = np.diff(z) < 0
     if np.any(z == 0):
         raise SMRTError("z must not include 0")
     positive = z >= 0
@@ -1036,8 +1144,10 @@ def _warn_mixing_formula(permittivity_model, name):
         return
 
     signature = inspect.signature(permittivity_model).parameters
-    if ('density' in signature) or ('frac_volume' in signature):
-        smrt_warn(f"""The permittivity model set for the {name} argument seems to be a mixing formula. Such formula should
+    if ("density" in signature) or ("frac_volume" in signature):
+        smrt_warn(
+            f"""The permittivity model set for the {name} argument seems to be a mixing formula. Such formula should
         not be used in this function but rather using derived_IBA or derive_SymSCE or equivalent functions. Check the
         module documentation of the permittivity model.""",
-             stacklevel=2)
+            stacklevel=2,
+        )

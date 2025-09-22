@@ -59,28 +59,22 @@ PyRTlib includes many absorption models and the list can be obtained using::
 """
 
 # Stdlib import
-import functools
 
 # other import
 import numpy as np
-
-from pyrtlib.tb_spectrum import TbCloudRTE
-from pyrtlib.climatology.atmospheric_profiles import AtmosphericProfiles
 from pyrtlib.absorption_model import AbsModel
+from pyrtlib.tb_spectrum import TbCloudRTE
+
+from ..core.atmosphere import AtmosphereBase, AtmosphereResult
 
 # local import
-from ..core.error import SMRTError
-from ..core.atmosphere import AtmosphereBase, AtmosphereResult
 from ..core.globalconstants import GHz
 
-
-default_absorption_model = 'R20'
+default_absorption_model = "R20"
 
 
 class PyRTlibAtmosphereBase(AtmosphereBase):
-
     def __init__(self, absorption_model=None):
-
         self.absorption_model = absorption_model if absorption_model is not None else default_absorption_model
         self.cloudy = False
 
@@ -89,15 +83,15 @@ class PyRTlibAtmosphereBase(AtmosphereBase):
         return AbsModel.implemented_models()
 
     def run(self, frequency, costheta, npol):
-
         freqGHz = np.atleast_1d(frequency) / GHz
-        rte = TbCloudRTE(z=self.z,
-                         p=self.p,
-                         t=self.t,
-                         rh=self.rh,
-                         frq=freqGHz,
-                         angles=np.atleast_1d(90 - np.rad2deg(np.arccos(costheta))),
-                         )
+        rte = TbCloudRTE(
+            z=self.z,
+            p=self.p,
+            t=self.t,
+            rh=self.rh,
+            frq=freqGHz,
+            angles=np.atleast_1d(90 - np.rad2deg(np.arccos(costheta))),
+        )
 
         rte.emissivity = np.array([0])  # The surface is taken into account in SMRT
 
@@ -111,25 +105,34 @@ class PyRTlibAtmosphereBase(AtmosphereBase):
         rte.satellite = False
         downwelling = rte.execute()
 
-        trans = np.exp(-(downwelling['taudry'].values + downwelling['tauwet'].values + downwelling['tauliq'].values + downwelling['tauice'].values))
+        tau = (
+            downwelling["taudry"].values
+            + downwelling["tauwet"].values
+            + downwelling["tauliq"].values
+            + downwelling["tauice"].values
+        )
 
-        return AtmosphereResult(tb_down=np.stack([downwelling['tbtotal'].values] * npol),
-                                tb_up=np.stack([upwelling['tbtotal'].values] * npol),
-                                transmittance=np.stack([trans] * npol))
+        trans = np.exp(-tau)
+
+        return AtmosphereResult(
+            tb_down=np.stack([downwelling["tbtotal"].values] * npol),
+            tb_up=np.stack([upwelling["tbtotal"].values] * npol),
+            transmittance=np.stack([trans] * npol),
+        )
 
 
 class PyRTlibAtmosphere(PyRTlibAtmosphereBase):
-
-    def __init__(self,
-                 altitude,
-                 pressure,
-                 temperature,
-                 rh,
-                 cloud_base_top=None,
-                 ice_density=0,
-                 water_density=0,
-                 absorption_model=None,
-                 ):
+    def __init__(
+        self,
+        altitude,
+        pressure,
+        temperature,
+        rh,
+        cloud_base_top=None,
+        ice_density=0,
+        water_density=0,
+        absorption_model=None,
+    ):
         """
         Return an PyRTlib atmosphere with a prescribed profile with pressure, temperature and humidity and optionally clouds
 
@@ -145,8 +148,8 @@ class PyRTlibAtmosphere(PyRTlibAtmosphereBase):
         super().__init__(absorption_model=absorption_model)
 
         self.z = altitude / 1000  # convert to km
-        self.p = pressure * 100   # convert to mbar
-        self.t = temperature      # in K
+        self.p = pressure * 100  # convert to mbar
+        self.t = temperature  # in K
         self.rh = rh
 
         self.denice = ice_density * 1000  # convert to g/m3
@@ -156,4 +159,4 @@ class PyRTlibAtmosphere(PyRTlibAtmosphereBase):
             self.cloudy = False
         else:
             self.cloudy = True
-            self.cldh = np.array(cloud_base_top) / 1000   # assemble and convert to km
+            self.cldh = np.array(cloud_base_top) / 1000  # assemble and convert to km

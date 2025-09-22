@@ -1,16 +1,19 @@
-
-import pytest
 import numpy as np
+import pytest
 
 from smrt.core.globalconstants import DENSITY_OF_ICE, DENSITY_OF_WATER
-from .snow_mixing_formula import wetsnow_permittivity_hallikainen86, \
-    wetsnow_permittivity_hallikainen86_ulaby14, \
-    wetsnow_permittivity_colbeck80_caseI, wetsnow_permittivity_colbeck80_caseII, wetsnow_permittivity_colbeck80_caseIII
+
+from .snow_mixing_formula import (
+    wetsnow_permittivity_colbeck80_caseI,
+    wetsnow_permittivity_colbeck80_caseII,
+    wetsnow_permittivity_colbeck80_caseIII,
+    wetsnow_permittivity_hallikainen86,
+    wetsnow_permittivity_hallikainen86_ulaby14,
+)
 
 
 @pytest.mark.skip(reason="no way to obtain an agreement between the equations and the graphs in H86")
 def test_wetsnow_permittivity_hallikainen86():
-
     fw = 0.1  # 10 percent water per snow volume
     dry_density_gm3 = 0.24
     snow_density = 1000 * ((1 - fw) * dry_density_gm3 + fw * 1)  # 1 g/cm3
@@ -37,7 +40,6 @@ def test_wetsnow_permittivity_hallikainen86():
 
 
 def test_wetsnow_permittivity_hallikainen86_ulaby14():
-
     # values from fig 4-22 and 4-23. (freq,mv) : eps
     a_val = {
         (3e9, 0.02): 1.604 + 0.051j,
@@ -51,7 +53,6 @@ def test_wetsnow_permittivity_hallikainen86_ulaby14():
     dry_density_gm3 = 0.25
 
     for k, v in a_val.items():
-
         fw = k[1]  # 10 percent water per snow volume
 
         snow_density = 1000 * ((1 - fw) * dry_density_gm3 + fw * 1)  # 1 g/cm3
@@ -70,14 +71,15 @@ def test_wetsnow_permittivity_hallikainen86_ulaby14():
 
 
 def test_wetsnow_permittivity_colbeck80_caseI():
-
     # values from Fig 5
     v = 1.891
     frequency = 1e9
     temperature = 273.15
     density = DENSITY_OF_ICE / 2
 
-    d = wetsnow_permittivity_colbeck80_caseI(frequency=frequency, temperature=temperature, density=density, liquid_water=0).real
+    d = wetsnow_permittivity_colbeck80_caseI(
+        frequency=frequency, temperature=temperature, density=density, liquid_water=0.0
+    ).real
     print("dilectric constant: ", d)
     print("reference: ", v)
 
@@ -85,7 +87,6 @@ def test_wetsnow_permittivity_colbeck80_caseI():
 
 
 def test_wetsnow_permittivity_colbeck80_caseII():
-
     DENSITY_OF_AIR = 1.22
 
     # values from Fig 9
@@ -101,7 +102,9 @@ def test_wetsnow_permittivity_colbeck80_caseII():
 
     lwc = theta_w / (theta_w + theta_i)
 
-    d = wetsnow_permittivity_colbeck80_caseII(frequency=frequency, temperature=temperature, density=density, liquid_water=lwc).real
+    d = wetsnow_permittivity_colbeck80_caseII(
+        frequency=frequency, temperature=temperature, density=density, liquid_water=lwc
+    ).real
 
     print("dilectric constant: ", d)
     print("reference: ", v)
@@ -110,7 +113,6 @@ def test_wetsnow_permittivity_colbeck80_caseII():
 
 
 def test_wetsnow_permittivity_colbeck80_caseIII():
-
     DENSITY_OF_AIR = 1.22
 
     # values from Fig 8
@@ -128,8 +130,18 @@ def test_wetsnow_permittivity_colbeck80_caseIII():
 
     lwc = theta_w / (theta_w + theta_i)
 
-    d_d = wetsnow_permittivity_colbeck80_caseI(frequency=frequency, temperature=temperature, density=density_d, liquid_water=0).real
-    d_s = wetsnow_permittivity_colbeck80_caseIII(frequency=frequency, temperature=temperature, density=density_s, liquid_water=lwc).real
+    d_d = wetsnow_permittivity_colbeck80_caseI(
+        frequency=frequency,
+        temperature=temperature,
+        density=density_d,
+        liquid_water=0.0,
+    ).real
+    d_s = wetsnow_permittivity_colbeck80_caseIII(
+        frequency=frequency,
+        temperature=temperature,
+        density=density_s,
+        liquid_water=lwc,
+    ).real
 
     print("delta dilectric constant: ", d_s - d_d)
     print("reference: ", v)

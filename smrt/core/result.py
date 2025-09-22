@@ -38,11 +38,12 @@ plots this timeseries::
 # Stdlib import
 
 import numpy as np
-import xarray as xr
 import pandas as pd
-from smrt.utils import dB
-from smrt.core.error import SMRTError
+import xarray as xr
+
 from smrt.core import lib
+from smrt.core.error import SMRTError
+from smrt.utils import dB
 
 
 def open_result(filename):
@@ -285,7 +286,7 @@ class PassiveResult(Result):
             channel: channel to select
             \\**kwargs: any parameter to slice the results.
         """
-        return _strongsqueeze(self.sel_data(channel=channel, **kwargs).rename('Tb'))
+        return _strongsqueeze(self.sel_data(channel=channel, **kwargs).rename("Tb"))
 
     def Tb_as_dataframe(self, channel_axis=None, **kwargs):
         """
@@ -320,14 +321,14 @@ class PassiveResult(Result):
         Returns V polarization. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
-        return _strongsqueeze(self.data.sel(polarization="V", **kwargs).rename('TbV'))
+        return _strongsqueeze(self.data.sel(polarization="V", **kwargs).rename("TbV"))
 
     def TbH(self, **kwargs):
         """
         Returns H polarization. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
-        return _strongsqueeze(self.data.sel(polarization="H", **kwargs).rename('TbH'))
+        return _strongsqueeze(self.data.sel(polarization="H", **kwargs).rename("TbH"))
 
     def polarization_ratio(self, ratio="H_V", **kwargs):
         """
@@ -335,7 +336,8 @@ class PassiveResult(Result):
         See xarray slicing with sel method (to document)
         """
         return _strongsqueeze(
-            self.data.sel(polarization=ratio[0], **kwargs) / self.data.sel(polarization=ratio[-1], **kwargs).rename('polarization_ratio')
+            self.data.sel(polarization=ratio[0], **kwargs)
+            / self.data.sel(polarization=ratio[-1], **kwargs).rename("polarization_ratio")
         )
 
 
@@ -376,7 +378,8 @@ class ActiveResult(Result):
             if lib.is_sequence(theta):
                 # now select all the theta if it is a sequence
                 x = xr.concat(
-                    [select_theta(self.data, t, drop=True, **kwargs) for t in theta], pd.Index(theta, name="theta_inc")
+                    [select_theta(self.data, t, drop=True, **kwargs) for t in theta],
+                    pd.Index(theta, name="theta_inc"),
                 )
             else:
                 x = select_theta(self.data, theta, drop=True, **kwargs)
@@ -390,7 +393,7 @@ class ActiveResult(Result):
         else:
             return x
 
-    def sigma(self, channel=None, name='sigma', **kwargs):
+    def sigma(self, channel=None, name="sigma", **kwargs):
         """
         Returns backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V').
         See xarray slicing with sel method (to document). It is also posisble to select by channel if the sensor has a channel_map.
@@ -402,7 +405,7 @@ class ActiveResult(Result):
 
         return _strongsqueeze(self.sel_data(channel=channel, return_backscatter="natural", **kwargs).rename(name))
 
-    def sigma_dB(self, name='sigma_dB', channel=None, **kwargs):
+    def sigma_dB(self, name="sigma_dB", channel=None, **kwargs):
         """
         Returns backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9,
         polarization_inc='V', polarization='V'). See xarray slicing with sel method (to document)
@@ -427,7 +430,10 @@ class ActiveResult(Result):
         """
 
         return super().return_as_dataframe(
-            name="sigma", channel_axis=channel_axis, return_backscatter="natural", **kwargs
+            name="sigma",
+            channel_axis=channel_axis,
+            return_backscatter="natural",
+            **kwargs,
         )
 
     def sigma_dB_as_dataframe(self, channel_axis=None, **kwargs):
@@ -466,55 +472,55 @@ class ActiveResult(Result):
         """
         return super().to_series(return_backscatter="dB", **kwargs)
 
-    def sigmaVV(self, name='sigmaVV', **kwargs):
+    def sigmaVV(self, name="sigmaVV", **kwargs):
         """
         Returns VV backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
         return self.sigma(polarization_inc="V", polarization="V", name=name, **kwargs)
 
-    def sigmaVV_dB(self, name='sigmaVV_dB', **kwargs):
+    def sigmaVV_dB(self, name="sigmaVV_dB", **kwargs):
         """
         Returns VV backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
         return dB(self.sigmaVV(name=name, **kwargs))
 
-    def sigmaHH(self, name='sigmaHH', **kwargs):
+    def sigmaHH(self, name="sigmaHH", **kwargs):
         """
         Returns HH backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
         return self.sigma(polarization_inc="H", polarization="H", name=name, **kwargs)
 
-    def sigmaHH_dB(self, name='sigmaHH_dB', **kwargs):
+    def sigmaHH_dB(self, name="sigmaHH_dB", **kwargs):
         """
         Returns HH backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
         return dB(self.sigmaHH(name=name, **kwargs))
 
-    def sigmaHV(self, name='sigmaHV', **kwargs):
+    def sigmaHV(self, name="sigmaHV", **kwargs):
         """
         Returns HV backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
         return self.sigma(polarization_inc="H", polarization="V", name=name, **kwargs)
 
-    def sigmaHV_dB(self, name='sigmaHV_dB', **kwargs):
+    def sigmaHV_dB(self, name="sigmaHV_dB", **kwargs):
         """
         Returns HV backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
         return dB(self.sigmaHV(name=name, **kwargs))
 
-    def sigmaVH(self, name='sigmaVH', **kwargs):
+    def sigmaVH(self, name="sigmaVH", **kwargs):
         """
         Return VH backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)"""
         return self.sigma(polarization_inc="V", polarization="H", name=name, **kwargs)
 
-    def sigmaVH_dB(self, name='sigmaVH_dB', **kwargs):
+    def sigmaVH_dB(self, name="sigmaVH_dB", **kwargs):
         """Returns VH backscattering coefficient in dB. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
@@ -529,14 +535,14 @@ class ActiveResult(Result):
 
 
 class AltimetryResult(ActiveResult):
-    def delay_doppler_map(self, name='delay_doppler_map', **kwargs):
+    def delay_doppler_map(self, name="delay_doppler_map", **kwargs):
         """
         Returns the delay Doppler map
         """
         assert "doppler_frequency" in self.data.dims
         return self.sigma(name=name, **kwargs)
 
-    def waveform(self, name='waveform', **kwargs):
+    def waveform(self, name="waveform", **kwargs):
         """
         Returns the waveform.
 
@@ -645,7 +651,7 @@ def concat_results(result_list, coord):
         raise SMRTError("unknown type for the coord argument")
 
     ResultClass = type(result_list[0])
-    if not all([type(result) == ResultClass for result in result_list]):
+    if not all([type(result) is ResultClass for result in result_list]):
         raise SMRTError("The results are not all of the same type")
 
     # channel_map ?

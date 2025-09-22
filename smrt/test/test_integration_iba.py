@@ -2,13 +2,13 @@
 
 
 import warnings
+
 import numpy as np
 import numpy.testing as npt
 import pytest
 
 # local import
-from smrt import make_snowpack, make_model, sensor_list
-from smrt.core.error import SMRTWarning
+from smrt import make_model, make_snowpack, sensor_list
 
 
 def setup_snowpack(l):
@@ -95,8 +95,8 @@ def test_iba_successive_order_oneconfig_passive():
     print(res.TbV(order="total"), res.TbH(order="total"))
 
     # values for DORT:
-    npt.assert_allclose(res.TbV(order='total'), 248.08374547409588, atol=2e-2)
-    npt.assert_allclose(res.TbH(order='total'), 237.30435496083572, atol=2e-2)
+    npt.assert_allclose(res.TbV(order="total"), 248.08374547409588, atol=2e-2)
+    npt.assert_allclose(res.TbH(order="total"), 237.30435496083572, atol=2e-2)
     # values for successive order
     npt.assert_allclose(res.TbV(order="total"), 248.06474685001407, atol=1e-3)
     npt.assert_allclose(res.TbH(order="total"), 237.2922307432923, atol=1e-3)

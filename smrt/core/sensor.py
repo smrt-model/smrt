@@ -10,9 +10,10 @@ Otherwise, we recommend to add these functions in your own files (outside of smr
 
 import copy
 from collections.abc import Sequence
-import numpy as np
-from ..core.globalconstants import C_SPEED
 
+import numpy as np
+
+from ..core.globalconstants import C_SPEED
 
 # local import
 from .error import SMRTError, smrt_warn
@@ -21,7 +22,7 @@ from .error import SMRTError, smrt_warn
 def passive(frequency, theta, polarization=None, channel_map=None, name=None):
     """
     Generic configuration for passive microwave sensor.
-    
+
     Return a :py:class:`Sensor` for a microwave radiometer with given frequency, incidence angle and polarization
 
     Args:
@@ -38,11 +39,11 @@ def passive(frequency, theta, polarization=None, channel_map=None, name=None):
 
     Returns:
         py:class:`Sensor` instance
-        
+
         **Usage example:**
-        
+
         ::
-        
+
         from smrt import sensor_list
         radiometer = sensor_list.passive(18e9, 50)
         radiometer = sensor_list.passive(18e9, 50, "V")
@@ -52,7 +53,16 @@ def passive(frequency, theta, polarization=None, channel_map=None, name=None):
     if polarization is None:
         polarization = ["V", "H"]
 
-    sensor = Sensor(frequency, None, theta, None, None, polarization, channel_map=channel_map, name=name)
+    sensor = Sensor(
+        frequency,
+        None,
+        theta,
+        None,
+        None,
+        polarization,
+        channel_map=channel_map,
+        name=name,
+    )
 
     sensor.basic_checks()
 
@@ -99,13 +109,20 @@ def channel_map_for_radar(frequency=None, polarization="HV", order="fp"):
 
 
 def active(
-    frequency, theta_inc, theta=None, phi=None, polarization_inc=None, polarization=None, channel_map=None, name=None
+    frequency,
+    theta_inc,
+    theta=None,
+    phi=None,
+    polarization_inc=None,
+    polarization=None,
+    channel_map=None,
+    name=None,
 ):
     """
     Configuration for active microwave sensor.
-    
+
     Return a :py:class:`Sensor` for a radar with given frequency, incidence and viewing angles and polarization
-    
+
     If polarizations are not specified, quad-pol is the default (VV, VH, HV and HH).
     If the angle of incident radiation is not specified, *backscatter* will be simulated
 
@@ -124,11 +141,11 @@ def active(
 
     Returns:
         py:class:`Sensor` instance
-        
+
         **Usage example:**
-        
+
         ::
-        
+
         from smrt import sensor_list
         scatterometer = sensor_list.active(frequency=18e9, theta_inc=50)
         scatterometer = sensor_list.active(18e9, 50, 50, 0, "V", "V")
@@ -298,7 +315,14 @@ class Sensor(SensorBase):
             smrt_warn("Frequency not in microwave range: check units are Hz")
 
     def configurations(self):
-        for axis in ["frequency", "theta_inc", "polarization_inc", "theta", "phi", "polarization"]:
+        for axis in [
+            "frequency",
+            "theta_inc",
+            "polarization_inc",
+            "theta",
+            "phi",
+            "polarization",
+        ]:
             values = np.atleast_1d(getattr(self, axis))
             if len(values) > 1:
                 yield axis, values

@@ -17,15 +17,17 @@ Example::
 """
 
 import copy
+import warnings
+
 import numpy as np
 import pandas as pd
-import warnings
-import functools
 
+from ..interface.flat import (
+    Flat,
+)  # core should not depend on something defined in interface...
 from .error import SMRTError
-from ..interface.flat import Flat  # core should not depend on something defined in interface...
-from .layer import Layer
 from .interface import SubstrateBase
+from .layer import Layer
 
 
 class Snowpack(object):
@@ -114,7 +116,7 @@ class Snowpack(object):
         )
         return [lay.density for lay in self.layers]  # TODO Ghi: caching
 
-    def profile(self, property_name, where="all", raise_attributeerror=False):
+    def profile(self, property_name, where="all", raise_attributeerror=False) -> np.ndarray:
         """
         Returns the vertical profile of property_name. The property is searched either in the layer, microstructure or interface.
 
@@ -335,7 +337,12 @@ class Snowpack(object):
         self.check_addition_validity(other)
 
         if isinstance(other, SubstrateBase):
-            return Snowpack(layers=self.layers, interfaces=self.interfaces, atmosphere=self.atmosphere, substrate=other)
+            return Snowpack(
+                layers=self.layers,
+                interfaces=self.interfaces,
+                atmosphere=self.atmosphere,
+                substrate=other,
+            )
         elif isinstance(other, Layer):
             newsp = copy.deepcopy(self)
             newsp += copy.deepcopy(other)

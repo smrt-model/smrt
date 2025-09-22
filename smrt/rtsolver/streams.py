@@ -3,12 +3,11 @@
 from dataclasses import dataclass, field
 from typing import List
 
-
 import numpy as np
 import scipy.optimize
+
 from smrt.core.error import SMRTError
 from smrt.core.lib import cached_roots_legendre
-
 
 #
 # Compute streams with different method.

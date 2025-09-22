@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-Implements the monodisperse sticky hard sphere model of the microstructure. This microstructure uses unified parameters as defined by 
+Implements the monodisperse sticky hard sphere model of the microstructure. This microstructure uses unified parameters as defined by
 G. Picard, H. Löwe, F. Domine, L. Arnaud, F. Larue, V. Favier, E. Le Meur, E. Lefebvre, J. Savarino, A. Royer, The snow microstructural control on microwave scattering, AGU Advances.
 
 Args:
@@ -16,11 +16,9 @@ from .unified_autocorrelation import UnifiedAutocorrelation
 
 
 class UnifiedStickyHardSpheres(UnifiedAutocorrelation):
-    """
-    """
+    """ """
 
     def __init__(self, params):
-
         super().__init__(params)  # don't forget this line in our classes!
 
         # value of the correlation function at the origin
@@ -28,7 +26,7 @@ class UnifiedStickyHardSpheres(UnifiedAutocorrelation):
 
         self.radius = 3 / 4 * self.porod_length / (1 - self.frac_volume)
 
-        K_32 = self.polydispersity**(-3 / 2)
+        K_32 = self.polydispersity ** (-3 / 2)
         self.t = (1 + 2 * self.frac_volume - 3 / (8 * np.sqrt(2)) * K_32) / self.corr_func_at_origin
 
         # t must check the condition t * f (1-f) < 1 + 2*f  which seems to be always valid...
@@ -41,9 +39,8 @@ class UnifiedStickyHardSpheres(UnifiedAutocorrelation):
     # def autocorrelation_function(self, r):
     #
     def compute_stickiness(self):
-
         phi_2 = self.frac_volume
-        return phi_2 / 12 * self.t - phi_2 / (1 - phi_2) + (1 + phi_2 / 2) / (self.t * (1 - phi_2)**2)
+        return phi_2 / 12 * self.t - phi_2 / (1 - phi_2) + (1 + phi_2 / 2) / (self.t * (1 - phi_2) ** 2)
 
     def ft_autocorrelation_function(self, k):
         """Compute the 3D Fourier transform of the isotropic correlation
@@ -67,7 +64,7 @@ class UnifiedStickyHardSpheres(UnifiedAutocorrelation):
 
         # solution of the quadratic equation, Eq. 32, LP2015
         # sphere volume
-        vd = 4.0 / 3 * np.pi * (d / 2.0)**3
+        vd = 4.0 / 3 * np.pi * (d / 2.0) ** 3
 
         # number density
         n = phi_2 / vd
@@ -76,7 +73,8 @@ class UnifiedStickyHardSpheres(UnifiedAutocorrelation):
         sqrt_vint = np.empty_like(X)
         zerok = np.isclose(X, 0, atol=1e-03)
         nzerok = ~zerok
-        sqrt_vint[nzerok] = vd * 3 * (np.sinc(X[nzerok] / np.pi) - np.cos(X[nzerok])) / X[nzerok]**2  # sqrt(intersection volume )* X²
+        sqrt_vint[nzerok] = vd * 3 * (np.sinc(X[nzerok] / np.pi) - np.cos(X[nzerok])) / X[nzerok] ** 2
+        # = sqrt(intersection volume )* X²
         sqrt_vint[zerok] = vd
 
         # Ghislain says: the following quantities are already multiplied by the sqrt_vint_X2 to avoid singularity in 0.
@@ -88,7 +86,7 @@ class UnifiedStickyHardSpheres(UnifiedAutocorrelation):
 
         # auxiliary quantities Eq 31, LP2015
         A_tsang_vol = (phi_2 / (1 - phi_2) * ((1 - self.t * phi_2 + 3 * phi_2 / (1 - phi_2)) * Phi_tsang_vol +
-                                              (3 - self.t * (1 - phi_2)) * Psi_tsang_vol) + np.cos(X) / sqrt_vint)
+                                              (3 - self.t * (1 - phi_2)) * Psi_tsang_vol) + np.cos(X) / sqrt_vint)  # fmt: skip
         B_tsang_vol = phi_2 / (1 - phi_2) * X * Phi_tsang_vol + np.sin(X) / sqrt_vint
 
         # structure factor Eq 31, LP2015
@@ -101,6 +99,6 @@ class UnifiedStickyHardSpheres(UnifiedAutocorrelation):
         # zerok = np.isclose(X, 0)
         # Ctilde[zerok] = (n * vd**2 / (phi_2 / (1-phi_2) * ((1 - t*phi_2 + 3 * phi_2 / (1 - phi_2)) + (3 - t * (1 - phi_2))) + 1)**2)
         Ctilde[zerok] = phi_2 * vd / (phi_2 / (1 - phi_2) * (
-            (1 - self.t * phi_2 + 3 * phi_2 / (1 - phi_2)) + (3 - self.t * (1 - phi_2))) + 1)**2
+            (1 - self.t * phi_2 + 3 * phi_2 / (1 - phi_2)) + (3 - self.t * (1 - phi_2))) + 1)**2  # fmt: skip
 
         return Ctilde

@@ -12,6 +12,7 @@ It applies to scatterer size up to 1 wavelength.
 
 # local import
 from smrt.permittivity.generic_mixing_formula import maxwell_garnett_for_spheres
+
 from .common import AdjustableEffectivePermittivityMixin, derived_EMModel
 from .sce_common import SCEBase
 
@@ -36,7 +37,6 @@ def derived_SCETK21(effective_permittivity_model):
 
 
 class SCETK21(AdjustableEffectivePermittivityMixin, SCEBase):
-
     """
     To be documented.
     """
@@ -45,5 +45,4 @@ class SCETK21(AdjustableEffectivePermittivityMixin, SCEBase):
     effective_permittivity_model = staticmethod(maxwell_garnett_for_spheres)
 
     def __init__(self, sensor, layer, scaled=True):
-
         super().__init__(sensor, layer, local=False, symmetrical=False, scaled=scaled)

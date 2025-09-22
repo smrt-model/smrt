@@ -6,7 +6,7 @@ and the phase function in a given layer. The computation of the inter-layer prop
 The EM models differ in many aspects, one of which is the constraint on the microstructure model
 they can be used with. The:py:mod:`smrt.emmodel.iba` model can use any
 microstructure model that defines autocorrelation functions (or its FT). In contrast, others such as
-`smrt.emmodel.dmrt_shortrange` are bound to the:py:mod:`smrt.microstructuremodel.sticky_hard_spheres` microstructure 
+`smrt.emmodel.dmrt_shortrange` are bound to the:py:mod:`smrt.microstructuremodel.sticky_hard_spheres` microstructure
 for theoretical reasons.
 
 The selection of the EM model is done with the :py:mod:`smrt.core.model.make_model` function.
@@ -18,7 +18,7 @@ Note:  **For developers**
 
         m = make_model("myscatteringtheory", "dort")
 
-    Note that if the file is not in the emmodels directory, you must explicitly import the module and pass it 
+    Note that if the file is not in the emmodels directory, you must explicitly import the module and pass it
     to make_model as a module object (instead of a string).
 
     An emmodel model must define:

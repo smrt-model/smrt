@@ -27,37 +27,32 @@ Examples::
 
     # Specify a frequency and polarization dictionary of reflectivity
     ref = make_reflector(specular_reflection={(21e9, 'H'): 0.5, (21e9, 'V'): 0.6, (36e9, 'H'): 0.7, (36e9, 'V'): 0.8})
-    
+
 Note:
     The backscatter coefficient argument is not implemented or documented yet.
 """
 
 import numpy as np
 
+from smrt import SMRTError
+
 # local import
 from smrt.core.interface import Substrate
-from smrt import SMRTError
-from smrt.core import lib
 from smrt.core.lib import smrt_matrix
 
 
 def make_reflector(temperature=None, specular_reflection=None):
-
-    """ Construct a reflector or absorber instance.
-
-    """
+    """Construct a reflector or absorber instance."""
 
     # create the instance
     return Reflector(temperature=temperature, specular_reflection=specular_reflection)
 
 
 class Reflector(Substrate):
-
     args = []
-    optional_args = {'specular_reflection': None}
+    optional_args = {"specular_reflection": None}
 
     def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
-
         if npol > 2:
             raise NotImplementedError("active model is not yet implemented, need modification for the third component")
 
@@ -66,13 +61,12 @@ class Reflector(Substrate):
 
         spec_refl_coeff = smrt_matrix.zeros((npol, len(mu1)))
 
-        spec_refl_coeff[0] = self._get_refl(frequency, 'V', mu1)
-        spec_refl_coeff[1] = self._get_refl(frequency, 'H', mu1)
+        spec_refl_coeff[0] = self._get_refl(frequency, "V", mu1)
+        spec_refl_coeff[1] = self._get_refl(frequency, "H", mu1)
 
         return spec_refl_coeff
 
     def emissivity_matrix(self, frequency, eps_1, mu1, npol):
-
         if self.specular_reflection is None:
             self.specular_reflection = 1
 
@@ -81,24 +75,30 @@ class Reflector(Substrate):
 
         emissivity = smrt_matrix.zeros((npol, len(mu1)))
 
-        emissivity[0] = 1 - self._get_refl(frequency, 'V', mu1)
-        emissivity[1] = 1 - self._get_refl(frequency, 'H', mu1)
+        emissivity[0] = 1 - self._get_refl(frequency, "V", mu1)
+        emissivity[1] = 1 - self._get_refl(frequency, "H", mu1)
 
         return emissivity
 
     def _get_refl(self, frequency, polarization, mu1):
-
         specular_reflection = self.specular_reflection
 
         # try to get the frequency and/or the polarization if it is a dict
         if isinstance(specular_reflection, dict):
-            for key in [(frequency, polarization), (polarization, frequency), frequency, polarization]:
+            for key in [
+                (frequency, polarization),
+                (polarization, frequency),
+                frequency,
+                polarization,
+            ]:
                 if key in specular_reflection:
                     specular_reflection = specular_reflection[key]
                     break
 
         if isinstance(specular_reflection, dict):
-            raise SMRTError("The specular_reflection argument must be a scalar or a dict with the frequency and/or polarization as a key. If both, provide frequency and polarization as a tuple key")
+            raise SMRTError(
+                "The specular_reflection argument must be a scalar or a dict with the frequency and/or polarization as a key. If both, provide frequency and polarization as a tuple key"
+            )
 
         if callable(specular_reflection):  # we have a function, call it and see what we get
             user_refl = specular_reflection(np.arccos(mu1))

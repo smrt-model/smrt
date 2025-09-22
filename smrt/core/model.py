@@ -95,23 +95,29 @@ Examples of usage::
 Both are equivalent. There is no plan to depreciate the original approach that has some nice use-cases.
 """
 
-from typing import Type, Union
-from collections.abc import Sequence, Mapping
-import itertools
 import inspect
+import itertools
+from collections.abc import Mapping, Sequence
+from typing import Type, Union
 
 import pandas as pd
 
-from .error import SMRTError
-from .result import concat_results
-from .plugin import import_class
-from .sensor import SensorBase
-from .sensitivity_study import SensitivityStudy
 from smrt.core import lib
+
+from .error import SMRTError
+from .plugin import import_class
+from .result import concat_results
+from .sensitivity_study import SensitivityStudy
+from .sensor import SensorBase
 
 
 def make_model(
-    emmodel, rtsolver=None, emmodel_options=None, rtsolver_options=None, emmodel_kwargs=None, rtsolver_kwargs=None
+    emmodel,
+    rtsolver=None,
+    emmodel_options=None,
+    rtsolver_options=None,
+    emmodel_kwargs=None,
+    rtsolver_kwargs=None,
 ):
     """
     Creates a new model with a given EM model and RT solver. The model is then ready to be run using the :py:meth:`Model.run` method.
@@ -140,14 +146,19 @@ def make_model(
     """
 
     if emmodel_kwargs is not None:
-        raise DeprecationWarning('Use emmodel_options instead of emmodel_kwargs')
+        raise DeprecationWarning("Use emmodel_options instead of emmodel_kwargs")
         emmodel_options = emmodel_kwargs
 
     if rtsolver_kwargs is not None:
-        raise DeprecationWarning('Use rtsolver_options instead of rtsolver_kwargs')
+        raise DeprecationWarning("Use rtsolver_options instead of rtsolver_kwargs")
         rtsolver_options = rtsolver_kwargs
 
-    return Model(emmodel, rtsolver, emmodel_options=emmodel_options, rtsolver_options=rtsolver_options)
+    return Model(
+        emmodel,
+        rtsolver,
+        emmodel_options=emmodel_options,
+        rtsolver_options=rtsolver_options,
+    )
 
 
 def make_rtsolver(rtsolver_class: Union[str, Type], **options) -> Type:
@@ -165,7 +176,7 @@ def make_rtsolver(rtsolver_class: Union[str, Type], **options) -> Type:
 
         make_model(..., make_rtsolver("dort", n_max_stream=128))
     """
-    return lib.class_specializer('rtsolver', rtsolver_class, **options)
+    return lib.class_specializer("rtsolver", rtsolver_class, **options)
 
 
 def make_emmodel(emmodel_class: Union[str, Type], **options) -> Type:
@@ -183,7 +194,7 @@ def make_emmodel(emmodel_class: Union[str, Type], **options) -> Type:
 
         make_model(make_emmodel("iba", dense_snow_correction=True), ...)
     """
-    return lib.class_specializer('emmodel', emmodel_class, **options)
+    return lib.class_specializer("emmodel", emmodel_class, **options)
 
 
 def get_emmodel(emmodel):
@@ -196,7 +207,7 @@ def get_emmodel(emmodel):
 
     raise DeprecationWarning("This function will be remove soon, use make_emmodel instead.")
     if isinstance(emmodel, str):
-        emmodel = import_class('emmodel', emmodel)
+        emmodel = import_class("emmodel", emmodel)
     assert inspect.isclass(emmodel)
     return emmodel
 
@@ -250,7 +261,7 @@ class Model(object):
             self.emmodel = make_emmodel(emmodel)
 
         if isinstance(rtsolver, str):
-            self.rtsolver = import_class('rtsolver', rtsolver)
+            self.rtsolver = import_class("rtsolver", rtsolver)
         else:
             self.rtsolver = rtsolver
 
@@ -271,7 +282,7 @@ class Model(object):
         """
         if options is not None:
             if not isinstance(options, Mapping):
-                raise SMRTError('options must be a Mapping (eg. dict)')
+                raise SMRTError("options must be a Mapping (eg. dict)")
             self.rtsolver_options = dict(options)  # overload the options
 
         self.rtsolver_options.update(kwargs)  # update the options
@@ -286,7 +297,7 @@ class Model(object):
         """
         if options is not None:
             if not isinstance(options, Mapping):
-                raise SMRTError('options must be a Mapping (eg. dict)')
+                raise SMRTError("options must be a Mapping (eg. dict)")
             self.emmodel_options = dict(options)  # overload the options
 
         self.emmodel_options.update(kwargs)  # update the options
@@ -297,7 +308,7 @@ class Model(object):
         snowpack,
         atmosphere=None,
         snowpack_dimension=None,
-        snowpack_column='snowpack',
+        snowpack_column="snowpack",
         progressbar=False,
         parallel_computation=True,
         runner=None,
@@ -364,7 +375,7 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
         # reshape the results with successive concatenations
         for dimension in reversed(dimensions):
             n = len(dimension[1]) if isinstance(dimension, tuple) else len(dimension)
-            assert n > 0, f'dimension={dimensions}'
+            assert n > 0, f"dimension={dimensions}"
             results = [concat_results(results[i : i + n], dimension) for i in range(0, len(results), n)]
 
         assert len(results) == 1, f"Results size is {len(results)=}"
@@ -388,7 +399,7 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
 
         # or is it a dict ?
         if isinstance(snowpack, Mapping):
-            snowpack_dimension = 'snowpack', list(snowpack.keys())
+            snowpack_dimension = "snowpack", list(snowpack.keys())
             snowpack = list(snowpack.values())
 
         if isinstance(snowpack, pd.DataFrame):
@@ -405,14 +416,14 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
         if isinstance(snowpack, pd.Series):
             name = snowpack.index.name
             if name is None:
-                name = 'snowpack'
+                name = "snowpack"
             snowpack_dimension = name, snowpack.index.tolist()
             snowpack = snowpack.tolist()
 
         # or a sequence ?
         if lib.is_sequence(snowpack):
             if snowpack_dimension is None:
-                snowpack_dimension = 'snowpack', None
+                snowpack_dimension = "snowpack", None
             if snowpack_dimension[1] is None:
                 snowpack_dimension = snowpack_dimension[0], range(len(snowpack))
 
@@ -421,7 +432,7 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
             and isinstance(snowpack, tuple)
             and (len(snowpack) != len(snowpack_dimension[1]))
         ):
-            raise SMRTError('The list of snowpacks must have the same length as the snowpack_dimension')
+            raise SMRTError("The list of snowpacks must have the same length as the snowpack_dimension")
 
         if isinstance(snowpack_dimension, tuple) and not isinstance(snowpack_dimension[0], str):
             raise SMRTError("When the 'snowpack_dimension' argument is a tuple, the first argument must be a string")
@@ -430,7 +441,7 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
         # radiative transfer solver's broadcast capability.
 
         def get_sensor_configurations(sensor):
-            rt_solver_broadcast_capability = getattr(self.rtsolver, '_broadcast_capability', [])
+            rt_solver_broadcast_capability = getattr(self.rtsolver, "_broadcast_capability", [])
             sensor_configurations = [
                 (axis, values)
                 for (axis, values) in sensor.configurations()
@@ -461,7 +472,7 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
         if lib.is_sequence(sensor):
             # sensor is a list
             if len(sensor) != len(snowpack):
-                raise SMRTError('when sensor is a sequence, the length must be the same as snowpack sequence length')
+                raise SMRTError("when sensor is a sequence, the length must be the same as snowpack sequence length")
             sensor_configurations = get_sensor_configurations(
                 next(iter(sensor))
             )  # take the config of the first, assume all are the same.
@@ -528,8 +539,8 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
             if inspect.isclass(self.rtsolver):
                 rtsolver = self.rtsolver(**self.rtsolver_options)  # create with arguments
             else:
-                if not getattr(self.rtsolver, '_reentrant', False):
-                    raise SMRTError('This solver can not be used with an instance')
+                if not getattr(self.rtsolver, "_reentrant", False):
+                    raise SMRTError("This solver can not be used with an instance")
                 # no use the instance as it is.
                 # this instances has possible memory of the last solve... and this is INCOMPATIBLE with // computation for most solver)
                 # In the future this feature should be either removed or at least restricted when the // computation will be activate.
@@ -569,7 +580,7 @@ class SequentialRunner(object):
                 for args in tqdm(
                     argument_list,
                     total=len(argument_list),
-                    desc='Running SMRT',
+                    desc="Running SMRT",
                 )
             ]
         else:
@@ -581,7 +592,7 @@ class JoblibParallelRunner(object):
     Runs the simulations on the local machine on all the cores, using the joblib library for parallelism.
     """
 
-    def __init__(self, progressbar, backend='loky', n_jobs=None, max_numerical_threads=1):
+    def __init__(self, progressbar, backend="loky", n_jobs=None, max_numerical_threads=1):
         """
         Joblib is a lightweight library for embarasingly parallel task.
 
@@ -613,14 +624,14 @@ class JoblibParallelRunner(object):
         if self.progressbar:
             from tqdm.auto import tqdm
 
-            runner = Parallel(return_as='generator', n_jobs=self.n_jobs, backend=self.backend)  # Parallel Runner
+            runner = Parallel(return_as="generator", n_jobs=self.n_jobs, backend=self.backend)  # Parallel Runner
 
             argument_list = list(argument_list)
             return list(
                 tqdm(
                     runner(delayed(function)(*args) for args in argument_list),
                     total=len(argument_list),
-                    desc='Running SMRT in parallel',
+                    desc="Running SMRT in parallel",
                 )
             )
         else:

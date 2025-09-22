@@ -1,6 +1,6 @@
 # coding: utf-8
 
-""" Compute Rayleigh scattering. This theory requires the scatterers to be smaller than the wavelength and
+"""Compute Rayleigh scattering. This theory requires the scatterers to be smaller than the wavelength and
 the medium to be sparsely populated (eq. very low density in the case of snow).
 
 This model is only compatible with the Independent Sphere microstructure model
@@ -12,15 +12,13 @@ import numpy as np
 from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
 from ..core.lib import smrt_matrix
-from .common import rayleigh_scattering_matrix_and_angle, IsotropicScatteringMixin
+from .common import IsotropicScatteringMixin, rayleigh_scattering_matrix_and_angle
 
 
 class Rayleigh(IsotropicScatteringMixin):
-    """
-    """
+    """ """
 
     def __init__(self, sensor, layer):
-
         super().__init__()
 
         # check here the limit of the Rayleigh model
@@ -41,8 +39,8 @@ class Rayleigh(IsotropicScatteringMixin):
 
         k0 = 2 * np.pi / lmda
 
-        self._ks = f * 2 * abs((eps - e0) / (eps + 2 * e0))**2 * radius**3 * abs(e0)**2 * k0**4
-        self.ka = f * k0 * eps.imag * abs(3 * e0 / (eps + 2 * e0))**2 + (1 - f) * 2 * k0 * np.sqrt(e0).imag
+        self._ks = f * 2 * abs((eps - e0) / (eps + 2 * e0)) ** 2 * radius**3 * abs(e0) ** 2 * k0**4
+        self.ka = f * k0 * eps.imag * abs(3 * e0 / (eps + 2 * e0)) ** 2 + (1 - f) * 2 * k0 * np.sqrt(e0).imag
 
     def basic_check(self):
         # TODO Ghi: check the microstructure model is compatible.
@@ -50,7 +48,6 @@ class Rayleigh(IsotropicScatteringMixin):
         # model of sphere with a radius can make it!
         if not hasattr(self.layer.microstructure, "radius"):
             raise SMRTError("Only microstructure_model which defined a `radius` can be used with Rayleigh scattering")
-
 
     def ft_even_phase_baseonUlaby(self, mu_s, mu_i, m_max, npol=None):
         """#
@@ -87,8 +84,8 @@ class Rayleigh(IsotropicScatteringMixin):
             P[u, u, 0] = 0
 
         if m_max >= 1:
-            sint_s = np.sqrt(1. - mu_s2)
-            sint_i = np.sqrt(1. - mu_i2)
+            sint_s = np.sqrt(1.0 - mu_s2)
+            sint_i = np.sqrt(1.0 - mu_i2)
             cossint_s = mu_s * sint_s
             cossint_i = mu_i * sint_i
 
@@ -114,7 +111,7 @@ class Rayleigh(IsotropicScatteringMixin):
             P[h, h, 2] = 0.5
             P[h, u, 2] = -0.5 * mu_i[np.newaxis, :]
 
-            P[u, v, 2] = - np.outer(mu_s, mu_i2)
+            P[u, v, 2] = -np.outer(mu_s, mu_i2)
             P[u, h, 2] = mu_s[:, np.newaxis]
             P[u, u, 2] = np.outer(mu_s, mu_i)
 
@@ -126,7 +123,7 @@ class Rayleigh(IsotropicScatteringMixin):
             P[h, u, :] = -P[h, u, :]  # minus comes from even phase function
 
         # this normalisation is compatible with the 1/4pi normalisation used for the RT equation.
-        coef = 3 * self._ks / 2   # no*fo^2 / Ks (see TsangI 3.2.49)
+        coef = 3 * self._ks / 2  # no*fo^2 / Ks (see TsangI 3.2.49)
 
         return P * coef
 
@@ -173,7 +170,7 @@ class Rayleigh(IsotropicScatteringMixin):
             P[u, u, 0] = 0
 
         if m_max >= 1:
-            sint = np.sqrt(1. - mu2)
+            sint = np.sqrt(1.0 - mu2)
             cossint = mu * sint
 
             P[v, v, 1] = 2 * np.outer(cossint, cossint)
@@ -197,13 +194,13 @@ class Rayleigh(IsotropicScatteringMixin):
             P[h, h, 2] = 0.5
             P[h, u, 2] = -0.5 * mu[np.newaxis, :]  ## error of theta_i theta_s in Y.Q. Jin
 
-            P[u, v, 2] = - np.outer(mu, mu2)
+            P[u, v, 2] = -np.outer(mu, mu2)
             P[u, h, 2] = mu[:, np.newaxis]
             P[u, u, 2] = -np.outer(mu, mu)
             raise Exception("Tsang is wrong, to be check in Y.Q. Jin again")
-            P[u, u, 2] = 0   # error in Y.Q. Jin ?? According to Tsang this term is null
+            P[u, u, 2] = 0  # error in Y.Q. Jin ?? According to Tsang this term is null
 
-        if m_max >=3:
+        if m_max >= 3:
             P[:, :, 3:, :, :] = 0
 
         if npol == 3:
@@ -211,10 +208,9 @@ class Rayleigh(IsotropicScatteringMixin):
             P[h, u, :] = -P[h, u, :]  # minus comes from even phase function
 
         # this normalisation is compatible with the 1/4pi normalisation used for the RT equation.
-        coef = 3 * self._ks / 2   # no*fo^2 / Ks (see TsangI 3.2.49)
+        coef = 3 * self._ks / 2  # no*fo^2 / Ks (see TsangI 3.2.49)
 
         return P * coef
-
 
     def ft_even_phase_tsang(self, mu_s, mu_i, m_max, npol=None):
         """Rayleigh phase matrix. These are the Fourier decomposed phase matrices for modes m = 0, 1, 2.
@@ -262,7 +258,7 @@ class Rayleigh(IsotropicScatteringMixin):
             P[u, u, 0] = 0  # this one is not null !!! set to zero here for simplificity but is 2*outer(mu, mu)
 
         if m_max >= 1:
-            sint = np.sqrt(1. - mu2)
+            sint = np.sqrt(1.0 - mu2)
             cossint = mu * sint
 
             P[v, v, 1] = 2 * np.outer(cossint, cossint)
@@ -274,7 +270,7 @@ class Rayleigh(IsotropicScatteringMixin):
             P[h, u, 1] = 0
 
             P[u, v, 1] = 2 * P[v, u, 1].T  # does not work
-            #P[u, v, 1] = -P[u, v, 1]      # This line is needed, I don't understand why!!!!!!!!!!!!!!!!!!!
+            # P[u, v, 1] = -P[u, v, 1]      # This line is needed, I don't understand why!!!!!!!!!!!!!!!!!!!
 
             P[u, h, 1] = 0
             P[u, u, 1] = np.outer(sint, sint)
@@ -289,10 +285,10 @@ class Rayleigh(IsotropicScatteringMixin):
             P[h, u, 2] = 0.5 * mu[np.newaxis, :]
 
             P[u, v, 2] = 2 * P[v, u, 2].T
-            #P[u, v, 2] = -P[u, v, 2]      # This line is need, I don't understand why!!!!!!!!!!!!!!!!!!!
+            # P[u, v, 2] = -P[u, v, 2]      # This line is need, I don't understand why!!!!!!!!!!!!!!!!!!!
 
             P[u, h, 2] = mu[:, np.newaxis]
-            #P[u, h, 2] = -P[u, h, 2]      # This line is need, I don't understand why!!!!!!!!!!!!!!!!!!!
+            # P[u, h, 2] = -P[u, h, 2]      # This line is need, I don't understand why!!!!!!!!!!!!!!!!!!!
             P[u, u, 2] = 0
 
         if m_max >= 3:
@@ -303,7 +299,7 @@ class Rayleigh(IsotropicScatteringMixin):
             P[h, u, :] = -P[h, u, :]  # minus comes from even phase function
 
         # this normalisation is compatible with the 1/4pi normalisation used for the RT equation.
-        coef = 3 * self._ks / 2   # no*fo^2 / Ks (see TsangI 3.2.49)
+        coef = 3 * self._ks / 2  # no*fo^2 / Ks (see TsangI 3.2.49)
 
         return P * coef
 
@@ -312,7 +308,6 @@ class Rayleigh(IsotropicScatteringMixin):
     ft_even_phase = ft_even_phase_baseonUlaby
 
     def phase(self, mu_s, mu_i, dphi, npol=2):
-
         p, sin_half_scatt = rayleigh_scattering_matrix_and_angle(mu_s, mu_i, dphi, npol)
 
         return smrt_matrix(1.5 * self._ks * p)

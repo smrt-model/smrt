@@ -1,9 +1,9 @@
-import pytest
 import numpy as np
+import pytest
 
-from smrt import make_snowpack, make_model, sensor_list
-from smrt.atmosphere.simple_isotropic_atmosphere import SimpleIsotropicAtmosphere
+from smrt import make_model, make_snowpack, sensor_list
 from smrt.atmosphere.simple_atmosphere import SimpleAtmosphere
+from smrt.atmosphere.simple_isotropic_atmosphere import SimpleIsotropicAtmosphere
 
 
 @pytest.fixture()
@@ -16,13 +16,17 @@ def default_snowpack():
     stickiness = [0.2, 0.2]
 
     snowpack = make_snowpack(
-        thickness, "sticky_hard_spheres", density=density, temperature=temperature, radius=radius, stickiness=stickiness
+        thickness,
+        "sticky_hard_spheres",
+        density=density,
+        temperature=temperature,
+        radius=radius,
+        stickiness=stickiness,
     )
     return snowpack
 
 
 def test_simple_isotropic_atmosphere(default_snowpack):
-
     atmos = SimpleIsotropicAtmosphere(tb_down=30.0, tb_up=6.0, transmittance=0.90)
 
     snowpack = atmos + default_snowpack
@@ -45,7 +49,10 @@ def test_simple_atmosphere(default_snowpack):
     rads = sensor_list.amsre("36V")
 
     atmos = SimpleAtmosphere(
-        theta=[0, 45, 90], tb_down=[23, 28, 33], tb_up=[20, 25, 30.0], transmittance=[0.85, 0.85, 0.90]
+        theta=[0, 45, 90],
+        tb_down=[23, 28, 33],
+        tb_up=[20, 25, 30.0],
+        transmittance=[0.85, 0.85, 0.90],
     )
 
     snowpack = atmos + default_snowpack
@@ -66,7 +73,9 @@ def test_simple_atmosphere(default_snowpack):
 def test_frequency_dependent_atmosphere():
     mu = np.cos(np.arange(0, 90))
     atmos = SimpleIsotropicAtmosphere(
-        tb_down={10e9: 15, 21e9: 23}, tb_up={10e9: 5, 21e9: 6}, transmittance={10e9: 1, 21e9: 0.95}
+        tb_down={10e9: 15, 21e9: 23},
+        tb_up={10e9: 5, 21e9: 6},
+        transmittance={10e9: 1, 21e9: 0.95},
     )
 
     assert np.all(atmos.run(frequency=10e9, costheta=mu, npol=2).tb_up == 5)

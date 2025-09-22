@@ -14,6 +14,7 @@ also provides a good reference for this implementation.
 
 # local import
 from smrt.permittivity.generic_mixing_formula import maxwell_garnett_for_spheres
+
 from .common import AdjustableEffectivePermittivityMixin, derived_EMModel
 from .sce_common import SCEBase
 
@@ -38,7 +39,6 @@ def derived_SCETK21_ShortRange(effective_permittivity_model):
 
 
 class SCETK21_ShortRange(AdjustableEffectivePermittivityMixin, SCEBase):
-
     """
     To be documented.
     """
@@ -47,5 +47,4 @@ class SCETK21_ShortRange(AdjustableEffectivePermittivityMixin, SCEBase):
     effective_permittivity_model = staticmethod(maxwell_garnett_for_spheres)
 
     def __init__(self, sensor, layer, scaled=True):
-
         super().__init__(sensor, layer, local=True, symmetrical=False, scaled=scaled)

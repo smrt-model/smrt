@@ -2,8 +2,8 @@
 
 import numpy as np
 
-from .generic_mixing_formula import maxwell_garnett, polder_van_santen, general_polder_van_santen
 from ..core.globalconstants import DENSITY_OF_ICE
+from .generic_mixing_formula import general_polder_van_santen, polder_van_santen
 
 
 def test_pvsl_spheres():
@@ -20,7 +20,8 @@ def test_pvsl_needles():
 
 def test_pvsl_mix_spheres_needles():
     effective_permittivity = polder_van_santen(
-        frac_volume=(300.0 / DENSITY_OF_ICE), inclusion_shape={"spheres": 0.5, "random_needles": 0.5}
+        frac_volume=(300.0 / DENSITY_OF_ICE),
+        inclusion_shape={"spheres": 0.5, "random_needles": 0.5},
     )
     print(effective_permittivity)
     np.testing.assert_allclose(effective_permittivity, 1.53757398931)

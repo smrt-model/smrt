@@ -1,5 +1,3 @@
-
-
 from smrt.core import globalconstants
 
 # Perhaps these are not strictly necessary, but they will provide an extra level of security

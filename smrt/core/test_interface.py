@@ -1,13 +1,8 @@
-
-
-
 from smrt.core.interface import make_interface
-from smrt import SMRTError
 
 
 def test_make_interface_noargs():
-
-	make_interface("flat")
+    make_interface("flat")
 
 
 # @raises(SMRTError)
@@ -19,7 +14,6 @@ def test_make_interface_noargs():
 # def test_make_interface_with_args():
 
 # 	make_interface("geometrical_optics", mean_square_slope=1)
-
 
 
 # def test_make_interface_with_multiple_args():

@@ -15,13 +15,12 @@ from .autocorrelation import Autocorrelation
 
 
 class TeubnerStrey(Autocorrelation):
-    """
-    """
+    """ """
+
     args = ["frac_volume", "corr_length", "repeat_distance"]
     optional_args = {}
 
     def __init__(self, params):
-
         super().__init__(params)  # don't forget this line in our classes!
 
     @property
@@ -39,9 +38,7 @@ class TeubnerStrey(Autocorrelation):
         raise NotImplementedError("to be implemented")
 
     def autocorrelation_function(self, r):
-        """compute the real space autocorrelation function for the Teubner Strey model
-
-        """
+        """compute the real space autocorrelation function for the Teubner Strey model"""
 
         acf = np.exp(-r / self.corr_length) * np.sinc(2 * r / self.repeat_distance)
 
@@ -54,8 +51,8 @@ class TeubnerStrey(Autocorrelation):
 
         """
 
-        X = (k * self.corr_length)**2
-        Y = (2 * np.pi * self.corr_length / self.repeat_distance)**2
-        ft_acf_normalized = 8 * np.pi * self.corr_length**3 / ((1 + Y)**2 + 2 * (1 - Y) * X + X**2)
+        X = (k * self.corr_length) ** 2
+        Y = (2 * np.pi * self.corr_length / self.repeat_distance) ** 2
+        ft_acf_normalized = 8 * np.pi * self.corr_length**3 / ((1 + Y) ** 2 + 2 * (1 - Y) * X + X**2)
 
         return self.corr_func_at_origin * ft_acf_normalized

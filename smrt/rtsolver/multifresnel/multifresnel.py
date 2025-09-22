@@ -8,12 +8,11 @@ https://hal.science/hal-01155614/document
 https://arxiv.org/pdf/1603.02720.pdf
 """
 
-from typing import Optional
 from collections.abc import Sequence
+from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
-
 from numba import jit
 
 from smrt.core import fresnel
@@ -60,7 +59,7 @@ def compute_matrix_slab(
     eps_1 = air_permittivity
 
     M = None
-    tau_snowpack = 0.
+    tau_snowpack = 0.0
     for eps_2, temperature_, kd_ in zip(permittivity, temperature, kd):
         L, (mu2, tau_layer) = forward_matrix_fulloutput(
             eps_1,
@@ -75,7 +74,7 @@ def compute_matrix_slab(
 
         tau_max -= tau_layer  # decrease the optical depth
         tau_snowpack += tau_layer[imumax]
-        
+
         if tau_max[imumax] < 0:
             break
 

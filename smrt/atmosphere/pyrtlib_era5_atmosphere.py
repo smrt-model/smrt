@@ -1,7 +1,7 @@
 # coding: utf-8
 """A non-scattering atmosphere provided by PyRTLib for SMRT using ERA5 data as input
 
-This atmosphere is a special case using ERA5. Please refer to the general documentation `py:module::~smrt.atmosphere.pyrtlib_atmosphere`. 
+This atmosphere is a special case using ERA5. Please refer to the general documentation `py:module::~smrt.atmosphere.pyrtlib_atmosphere`.
 
 """
 
@@ -16,23 +16,24 @@ from warnings import warn
 import numpy as np
 import pandas as pd
 import xarray as xr
-
 from pyrtlib.apiwebservices import ERA5Reanalysis
+from pyrtlib.utils import kgkg_to_kgm3
 
 # local import
 from .pyrtlib_atmosphere import PyRTlibAtmosphereBase
-from pyrtlib.utils import kgkg_to_kgm3
 
 
 class PyRTlibERA5Atmosphere(PyRTlibAtmosphereBase):
-
-    def __init__(self, longitude,
-                 latitude,
-                 date,
-                 datafile=None,
-                 use_grib=True,
-                 era5_directory=None,
-                 absorption_model=None):
+    def __init__(
+        self,
+        longitude: float,
+        latitude: float,
+        date: datetime,
+        datafile: Optional[str] = None,
+        use_grib: bool = True,
+        era5_directory=None,
+        absorption_model=None,
+    ):
         super().__init__(absorption_model=absorption_model)
 
         if use_grib:
@@ -48,17 +49,17 @@ class PyRTlibERA5Atmosphere(PyRTlibAtmosphereBase):
 
             extension = "grib" if use_grib else "nc"
 
-            datafile_name = 'era5_reanalysis-{}.'.format(date.isoformat()) + extension  # from pyrtlib
+            datafile_name = "era5_reanalysis-{}.".format(date.isoformat()) + extension  # from pyrtlib
             datafile = os.path.join(era5_directory, datafile_name)
             # rename with lat, lon included to avoid errors
-            new_datafile = datafile[:-len(extension)] + f'-{longitude:.1f}-{latitude:.1f}.{extension}'
+            new_datafile = datafile[: -len(extension)] + f"-{longitude:.1f}-{latitude:.1f}.{extension}"
 
             if not os.path.exists(new_datafile):
                 # automatically download the file
                 warn(f"Downloading file ERA5 file: {datafile}")
                 # it seems that small extents fail in cdsapi retrieval
                 datafile = ERA5cls.request_data(era5_directory, date, (longitude, latitude), offset=0.4)
-                assert datafile[-len(extension):] == extension, f"filename: {datafile}"
+                assert datafile[-len(extension) :] == extension, f"filename: {datafile}"
                 os.rename(datafile, new_datafile)
             datafile = new_datafile
 
@@ -76,7 +77,11 @@ class PyRTlibERA5Atmosphere(PyRTlibAtmosphereBase):
 
         total_mass = 1 - df_era5.ciwc.values - df_era5.clwc.values - df_era5.crwc.values - df_era5.cswc.values
 
-        norm = (1 / total_mass) * kgkg_to_kgm3(df_era5.q.values * (1 / total_mass), df_era5.p.values, df_era5.t.values) * 1000
+        norm = (
+            (1 / total_mass)
+            * kgkg_to_kgm3(df_era5.q.values * (1 / total_mass), df_era5.p.values, df_era5.t.values)
+            * 1000
+        )
         self.denice = df_era5.ciwc.values * norm
         self.denliq = df_era5.clwc.values * norm
 
@@ -121,66 +126,75 @@ class _ERA5Reanalysis_with_grib(ERA5Reanalysis):
                 'o3': 'kg kg-1',
                 'q': 'kg kg-1'}
 
-        .. note:: To convert specific cloud water content (CLWC) or specific cloud ice water content (CIWC) 
+        .. note:: To convert specific cloud water content (CLWC) or specific cloud ice water content (CIWC)
             from kg kg-1 to g m-3 using this function :py:meth:`pyrtlib.utils.kgkg_to_gm3`
         """
         import cfgrib
         from pyrtlib.utils import atmospheric_tickness
 
         ERAFIVE = cls()
-        data = xr.open_dataset(file, engine='cfgrib')
-        lats = data['latitude'].values
-        lons = data['longitude'].values
+        cfgrib  # pretend we use cfgrib to avoid unused import
+        data = xr.open_dataset(file, engine="cfgrib")
+        lats = data["latitude"].values
+        lons = data["longitude"].values
         idx, _ = ERAFIVE._find_nearest(lons, lats, lonlat)
         idx = dict(latitude=lats[idx], longitude=lons[idx])
 
-        pres = data['isobaricInhPa'].values
-        temp = data['t'].sel(**idx).values
+        pres = data["isobaricInhPa"].values
+        temp = data["t"].sel(**idx).values
         # RH in decimal
-        rh = data['r'].sel(**idx).values / 100
-        clwc = data['clwc'].sel(**idx).values
-        ciwc = data['ciwc'].sel(**idx).values
-        crwc = data['crwc'].sel(**idx).values
-        cswc = data['cswc'].sel(**idx).values
-        ozone = data['o3'].sel(**idx).values
-        q = data['q'].sel(**idx).values
+        rh = data["r"].sel(**idx).values / 100
+        clwc = data["clwc"].sel(**idx).values
+        ciwc = data["ciwc"].sel(**idx).values
+        crwc = data["crwc"].sel(**idx).values
+        cswc = data["cswc"].sel(**idx).values
+        ozone = data["o3"].sel(**idx).values
+        q = data["q"].sel(**idx).values
 
         print(pres, temp, q)
         z = atmospheric_tickness(pres, temp, q)  # Altitude in km
         print(z)
 
-        date = data['time'].values
+        date = data["time"].values
 
-        df = pd.DataFrame({'p': pres,
-                           'z': z,
-                           't': temp,
-                           'rh': rh,
-                           'clwc': clwc,
-                           'ciwc': ciwc,
-                           'crwc': crwc,
-                           'cswc': cswc,
-                           'o3': ozone,
-                           'q': q,
-                           'time': np.repeat(date, len(pres))
-                           })
-        df.attrs['units'] = {'p': 'hPa',
-                             'z': 'km',
-                             't': 'K',
-                             'rh': '%',
-                             'clwc': 'kg kg-1',
-                             'ciwc': 'kg kg-1',
-                             'crwc': 'kg kg-1',
-                             'cswc': 'kg kg-1',
-                             'o3': 'kg kg-1',
-                             'q': 'kg kg-1'}
+        df = pd.DataFrame(
+            {
+                "p": pres,
+                "z": z,
+                "t": temp,
+                "rh": rh,
+                "clwc": clwc,
+                "ciwc": ciwc,
+                "crwc": crwc,
+                "cswc": cswc,
+                "o3": ozone,
+                "q": q,
+                "time": np.repeat(date, len(pres)),
+            }
+        )
+        df.attrs["units"] = {
+            "p": "hPa",
+            "z": "km",
+            "t": "K",
+            "rh": "%",
+            "clwc": "kg kg-1",
+            "ciwc": "kg kg-1",
+            "crwc": "kg kg-1",
+            "cswc": "kg kg-1",
+            "o3": "kg kg-1",
+            "q": "kg kg-1",
+        }
 
         return df
 
     @staticmethod
-    def request_data(path: str, time: datetime,
-                     lonlat: tuple,
-                     resolution: Optional[float] = 0.25,
-                     offset: Optional[float] = 0.4) -> str:
+    def request_data(
+        path: str,
+        time: datetime,
+        lonlat: tuple,
+        resolution: Optional[float] = 0.25,
+        offset: Optional[float] = 0.4,
+    ) -> str:
         """
         Download ERA5Reanalysis data from the Copernicus Climate Change Service using the grib format as the netcdf
         format seems to be broken at the moment (April 2024).
@@ -199,33 +213,79 @@ class _ERA5Reanalysis_with_grib(ERA5Reanalysis):
         import cdsapi
 
         # North, West, South, Est
-        extent = [lonlat[1] + offset, lonlat[0] - offset,
-                  lonlat[1] - offset, lonlat[0] + offset]
-        grib_file_name = 'era5_reanalysis-{}.grib'.format(time.isoformat())
+        extent = [
+            lonlat[1] + offset,
+            lonlat[0] - offset,
+            lonlat[1] - offset,
+            lonlat[0] + offset,
+        ]
+        grib_file_name = "era5_reanalysis-{}.grib".format(time.isoformat())
         grib_file = os.path.join(path, grib_file_name)
 
-        variables = ['relative_humidity', 'specific_cloud_ice_water_content', 'specific_cloud_liquid_water_content',
-                     'specific_humidity', 'specific_rain_water_content', 'specific_snow_water_content', 'ozone_mass_mixing_ratio', 'temperature']
+        variables = [
+            "relative_humidity",
+            "specific_cloud_ice_water_content",
+            "specific_cloud_liquid_water_content",
+            "specific_humidity",
+            "specific_rain_water_content",
+            "specific_snow_water_content",
+            "ozone_mass_mixing_ratio",
+            "temperature",
+        ]
         c = cdsapi.Client()
         c.retrieve(
-            'reanalysis-era5-pressure-levels',
+            "reanalysis-era5-pressure-levels",
             {
-                'product_type': 'reanalysis',
-                'variable': variables,
-                'pressure_level': [
-                    '1', '2', '3', '5', '7', '10', '20', '30', '50', '70', '100', '125', '150',
-                    '175', '200', '225', '250', '300', '350', '400', '450', '500', '550', '600',
-                    '650', '700', '750', '775', '800', '825', '850', '875', '900', '925', '950',
-                    '975', '1000',
+                "product_type": "reanalysis",
+                "variable": variables,
+                "pressure_level": [
+                    "1",
+                    "2",
+                    "3",
+                    "5",
+                    "7",
+                    "10",
+                    "20",
+                    "30",
+                    "50",
+                    "70",
+                    "100",
+                    "125",
+                    "150",
+                    "175",
+                    "200",
+                    "225",
+                    "250",
+                    "300",
+                    "350",
+                    "400",
+                    "450",
+                    "500",
+                    "550",
+                    "600",
+                    "650",
+                    "700",
+                    "750",
+                    "775",
+                    "800",
+                    "825",
+                    "850",
+                    "875",
+                    "900",
+                    "925",
+                    "950",
+                    "975",
+                    "1000",
                 ],
-                'year': time.year,
-                'month': time.month,
-                'day': time.day,
-                'time': '{}:00'.format(time.hour),
-                'area': extent,
-                'grid': [resolution, resolution],
-                'format': 'grib',
+                "year": time.year,
+                "month": time.month,
+                "day": time.day,
+                "time": "{}:00".format(time.hour),
+                "area": extent,
+                "grid": [resolution, resolution],
+                "format": "grib",
             },
-            grib_file)
+            grib_file,
+        )
 
         return grib_file

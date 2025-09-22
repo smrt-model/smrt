@@ -25,14 +25,13 @@ Usage:
 
 import numpy as np
 import scipy.signal
-
-from smrt.core.globalconstants import C_SPEED
-from smrt.core.error import SMRTError
-from smrt.core.result import AltimetryResult
-from smrt.rtsolver.waveform_model import Brown1977
-from smrt.interface.flat import Flat
-
 import xarray as xr
+
+from smrt.core.error import SMRTError
+from smrt.core.globalconstants import C_SPEED
+from smrt.core.result import AltimetryResult
+from smrt.interface.flat import Flat
+from smrt.rtsolver.waveform_model import Brown1977
 
 
 class NadirLRMAltimetry(object):
@@ -224,7 +223,7 @@ class NadirLRMAltimetry(object):
                 i = min(np.searchsorted(t_gate, 5 * sigma_c), len(t_gate) - 1)
                 sym_t_gate = np.concatenate((-t_gate[i:0:-1], t_gate[0:i]))
 
-                ptr_pdf = np.exp(-0.5 * (sym_t_gate / sigma_c)**2)
+                ptr_pdf = np.exp(-0.5 * (sym_t_gate / sigma_c) ** 2)
                 ptr_pdf /= np.sum(ptr_pdf) * self.sensor.pulse_bandwidth
                 #  widening is necessary to get the tail correct after the convolution
                 extended_t_gate = t_gate[0] + (t_gate[-1] - t_gate[0]) * np.arange(len(t_gate) + i) / len(t_gate)
@@ -257,7 +256,10 @@ class NadirLRMAltimetry(object):
             def interpolate_backscatter(backscatter):
                 # interpolate in time + shift the backscatter to the nominal gate
                 return np.interp(
-                    extended_t_gate - self.sensor.nominal_gate / self.sensor.pulse_bandwidth, t_inc_sample, backscatter, left=0
+                    extended_t_gate - self.sensor.nominal_gate / self.sensor.pulse_bandwidth,
+                    t_inc_sample,
+                    backscatter,
+                    left=0,
                 )
 
             pfs_backscatter_surface = np.zeros_like(pfs_backscatter_volume)
@@ -280,7 +282,7 @@ class NadirLRMAltimetry(object):
                 def do_convolve_by_PTR_PDF(backscatter):
                     # perform the convolution and cut the first part due to t_gate symmetrization (ensure the nominal
                     # gate is at the right place)
-                    return scipy.signal.convolve(ptr_pdf, backscatter, mode="full")[len(sym_t_gate) // 2:]
+                    return scipy.signal.convolve(ptr_pdf, backscatter, mode="full")[len(sym_t_gate) // 2 :]
 
                 waveform_surface = do_convolve_by_PTR_PDF(pfs_backscatter_surface)
                 waveform_volume = do_convolve_by_PTR_PDF(pfs_backscatter_volume)

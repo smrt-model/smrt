@@ -1,34 +1,34 @@
 """
-Implement the interface boundary condition under the Geometrical Approximation between layers characterized by their 
-effective permittivities. 
+Implement the interface boundary condition under the Geometrical Approximation between layers characterized by their
+effective permittivities.
 
-This approximation is suitable for surfaces with roughness much larger than the roughness scales, typically k*s >> 1 and k*l >> 1, where 
-s is the rms height and l is the correlation length. The precise validity range must be investigated by the user, this code does not raise 
-any warning. An important characteristic of this approximation is that the scattering does not directly depend on frequency, the only 
+This approximation is suitable for surfaces with roughness much larger than the roughness scales, typically k*s >> 1 and k*l >> 1, where
+s is the rms height and l is the correlation length. The precise validity range must be investigated by the user, this code does not raise
+any warning. An important characteristic of this approximation is that the scattering does not directly depend on frequency, the only
 (probably weak) dependence is through the permittivities of the media.
 
-The model is parameterized by the `mean_square_slope` which can be calculated as ``mean_square_slope = 2*s**2/l**2`` for surface with a 
+The model is parameterized by the `mean_square_slope` which can be calculated as ``mean_square_slope = 2*s**2/l**2`` for surface with a
 Gaussian autocorrelation function. Other equations may exist for other autocorrelation function.
 
 This implementation is largely based on Tsang and Kong, Scattering of Electromagnetic Waves: Advanced Topics, 2001 (Tsang_tomeIII in the following).
 
 Note:
-    This implementation set coherent reflection and transmission to zero, which is expected theoretically for a very rough surface. 
-    However, first order radiative transfer solvers (such as nadir_lrm_altimetry) do not work well in this case because the transmission 
+    This implementation set coherent reflection and transmission to zero, which is expected theoretically for a very rough surface.
+    However, first order radiative transfer solvers (such as nadir_lrm_altimetry) do not work well in this case because the transmission
     through the layers is neglected. In such case, it is recommended to use :py:mod:`~smrt.interface.geometrical_optics_backscatter`
-    which provides an approximation that sets the coherent transmission based on energy conservation assuming all the transmitted energy 
+    which provides an approximation that sets the coherent transmission based on energy conservation assuming all the transmitted energy
     is in the refracted direction.
 """
 
 import numpy as np
-import scipy.special
 import scipy.integrate
+import scipy.special
 
-from smrt.core.fresnel import fresnel_coefficients
-from smrt.core.lib import smrt_matrix, abs2, generic_ft_even_matrix
-from smrt.core.vector3 import vector3
-from smrt.core.interface import Interface
 from smrt.core.error import SMRTError
+from smrt.core.fresnel import fresnel_coefficients
+from smrt.core.interface import Interface
+from smrt.core.lib import abs2, generic_ft_even_matrix, smrt_matrix
+from smrt.core.vector3 import vector3
 
 
 class GeometricalOptics(Interface):
@@ -39,7 +39,7 @@ class GeometricalOptics(Interface):
         mean_square_slope: Roughness parameter of a gaussian surface, ``mean_square_slope = 2*roughness_rms**2/corr_length**2``.
         roughness_rms: [Optional] Root-Mean-Squared surface roughness.
         corr_length: [Optional] Correlation length of the surface.
-        shadow_correction: [Optional] Use a shadow correction of the rough surface when dealing with significant surface roughness or 
+        shadow_correction: [Optional] Use a shadow correction of the rough surface when dealing with significant surface roughness or
             large scattering angles. Default is ``True``.
         autocorrelation_function: [Optional] Type of autocorrelation function to use. Default is "gaussian".
     """
@@ -66,13 +66,11 @@ class GeometricalOptics(Interface):
         elif (self.roughness_rms is not None) and (self.corr_length is not None):
             raise SMRTError("Either mean_square_slope or both roughness_rms and corr_length must be set.")
 
-
-
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
         Compute the specular reflection coefficients.
 
-        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
         beam is transmitted.
 
         Args:
@@ -92,7 +90,7 @@ class GeometricalOptics(Interface):
         """
         Compute the diffuse reflection coefficients.
 
-        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
         beam is transmitted.
 
         Args:
@@ -213,7 +211,7 @@ class GeometricalOptics(Interface):
         """
         Compute the coherent transmission coefficients.
 
-        Coefficients are calculated for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1. 
+        Coefficients are calculated for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1.
         Medium 2 is where the beam is transmitted.
 
         Args:
@@ -233,7 +231,7 @@ class GeometricalOptics(Interface):
         """
         Compute the diffuse transmission coefficients.
 
-        Coefficient are calculated for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the 
+        Coefficient are calculated for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the
         beam is transmitted.
 
         Args:
@@ -521,9 +519,11 @@ def _integrate_coefficients(mu, dphi, x):
     # return scipy.integrate.simps(x, mu, axis=0) * (dphi[1] - dphi[0])  # use simpson method if n_mu is not 2**n + 1
     return scipy.integrate.romb(x, dx=mu[1] - mu[0], axis=1) * (dphi[1] - dphi[0])
 
+
 def _clip_mu(mu):
     # avoid large zenith angles that causes many troubles
     return np.clip(mu, 0.1, 1)
+
 
 def shadow_function(mean_square_slope, cotan):
     # """

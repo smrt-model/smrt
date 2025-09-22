@@ -62,15 +62,17 @@ from functools import partial
 
 # other import
 import numpy as np
-import scipy.special
 import scipy.linalg
-import scipy.interpolate
 
 # local import
 from smrt.core.error import SMRTError, smrt_warn
-from smrt.core.lib import smrt_matrix, smrt_diag, is_equal_zero, is_zero_scalar
+from smrt.core.lib import is_equal_zero, is_zero_scalar, smrt_diag, smrt_matrix
 from smrt.core.optional_numba import numba
-from smrt.rtsolver.rtsolver_utils import RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin
+from smrt.rtsolver.rtsolver_utils import (
+    CoherentLayerMixin,
+    DiscreteOrdinatesMixin,
+    RTSolverBase,
+)
 
 
 class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
@@ -116,7 +118,13 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
     # e.g. here, frequency, time, ... are not managed
-    _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "phi", "polarization"}
+    _broadcast_capability = {
+        "theta_inc",
+        "polarization_inc",
+        "theta",
+        "phi",
+        "polarization",
+    }
 
     def __init__(
         self,
@@ -259,7 +267,12 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
             intensity_up = np.zeros((npol, self.streams.n_air, npol, len(incident_streams)))
             # compute the coherent contribution
             coherent_intensity_up_0 = self.dort_modem_banded(
-                0, self.streams, eigenvalue_solver, interfaces, intensity_0, compute_coherent_only=True
+                0,
+                self.streams,
+                eigenvalue_solver,
+                interfaces,
+                intensity_0,
+                compute_coherent_only=True,
             )
         else:
             raise RuntimeError("unknow sensor mode")
@@ -269,7 +282,12 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
 
             # compute the upwelling intensity for mode m
             intensity_up_m = self.dort_modem_banded(
-                m, self.streams, eigenvalue_solver, interfaces, intensity_down_m, special_return=special_return
+                m,
+                self.streams,
+                eigenvalue_solver,
+                interfaces,
+                intensity_down_m,
+                special_return=special_return,
             )
 
             if special_return:  # debuging
@@ -379,7 +397,10 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
 
         nboundary = sum(streams.n) * 2 * npol
         if len(streams.n) >= 2:
-            nband = npol * max(np.max(2 * streams.n[1:] + streams.n[:-1]), np.max(streams.n[1:] + 2 * streams.n[:-1]))
+            nband = npol * max(
+                np.max(2 * streams.n[1:] + streams.n[:-1]),
+                np.max(streams.n[1:] + 2 * streams.n[:-1]),
+            )
             # print("gain:", nband / (3 * npol * np.max(streams.)))
             # in principle could be better optimized as the number of upper and lower diagonal can be different
         else:
@@ -1348,10 +1369,10 @@ class InterfaceProperties(object):
             # m=n > 1 --> np.pi
             if m == 0:
                 coef = 2 * np.pi
-                npol = 2
+                # npol = 2
             else:
                 coef = np.pi  # the factor 2*np.pi comes from the integration of \int dphi
-                npol = 3
+                # npol = 3
 
             mat_diff = diff.compress(mode=m, auto_reduce_npol=auto_reduce_npol) if compress else diff
             return coef * mat_diff + mat_coh

@@ -30,18 +30,23 @@ References:
 # Stdlib import
 from collections import defaultdict
 
+import numba
+
 # other import
 import numpy as np
-import numba
 
 # local import
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.rtsolver.dort import (
     InterfaceProperties,
-    symmetrize_phase_matrix,
     matmul,
+    symmetrize_phase_matrix,
 )  # TODO: move these objects in a generic place
-from smrt.rtsolver.rtsolver_utils import RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin
+from smrt.rtsolver.rtsolver_utils import (
+    CoherentLayerMixin,
+    DiscreteOrdinatesMixin,
+    RTSolverBase,
+)
 
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers
 
@@ -437,7 +442,11 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
 
         for l in range(len(self.emmodels)):
             n, e, wp, s = self.prepare_layer_properties(
-                self.snowpack.layers[l], self.emmodels[l], self.streams.mu[l], self.streams.weight[l], m_max
+                self.snowpack.layers[l],
+                self.emmodels[l],
+                self.streams.mu[l],
+                self.streams.weight[l],
+                m_max,
             )
 
             n_sublayer.append(n)

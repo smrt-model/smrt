@@ -1,7 +1,7 @@
 import warnings
 
 # local import
-from smrt import make_snowpack, make_model, sensor_list
+from smrt import make_model, make_snowpack, sensor_list
 from smrt.core.error import SMRTWarning
 
 

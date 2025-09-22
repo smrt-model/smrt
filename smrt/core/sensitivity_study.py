@@ -19,13 +19,11 @@ plots this timeseries::
 """
 
 import numpy as np
-import xarray as xr
 
 
 class SensitivityStudy(object):
-
     def __init__(self, name, values, snowpacks):
-        #super(self.__class__, self).__init__(snowpacks, dims=[name], coords={name: values})
+        # super(self.__class__, self).__init__(snowpacks, dims=[name], coords={name: values})
 
         self.snowpacks = np.array(snowpacks)
         self.variable = name

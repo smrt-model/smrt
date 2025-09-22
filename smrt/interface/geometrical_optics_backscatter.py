@@ -1,24 +1,23 @@
 """
 Provide the interface boundary condition under the Geometrical Approximation between layers characterized by their
-effective permittivities. 
+effective permittivities.
 
 This code is for backscatter only, that is, to use as a substrate and at low frequency when
 the backscatter is the main mecahnism, and conversely when mulitple scattering and double bounce between snow and
 substrate are negligible. In other case, it is recommended to use :py:mod:`~smrt.interface.geometrical_optics`.
 
 Note:
-    The transmitted energy is also computed in an approximate way suitable for first order scattering such as 
-    :py:mod:`smrt.rtsolver.nadir_lrm_altimetry`. It uses energy conservation to compute the total transmitted energy and considers that 
+    The transmitted energy is also computed in an approximate way suitable for first order scattering such as
+    :py:mod:`smrt.rtsolver.nadir_lrm_altimetry`. It uses energy conservation to compute the total transmitted energy and considers that
     all this energy is transmitted in the  refracted direction. This approach compensates for the deficiencies of first order scattering
     RT solvers.
 """
 
 import numpy as np
 
-from smrt.core.fresnel import fresnel_transmission_matrix, fresnel_coefficients  # a modifier quand on fusionne
-from smrt.core.lib import smrt_matrix, len_atleast_1d
-from smrt.core.interface import Interface
-from smrt.interface.geometrical_optics import shadow_function, GeometricalOptics
+from smrt.core.fresnel import fresnel_coefficients  # a modifier quand on fusionne
+from smrt.core.lib import len_atleast_1d, smrt_matrix
+from smrt.interface.geometrical_optics import GeometricalOptics, shadow_function
 
 
 class GeometricalOpticsBackscatter(GeometricalOptics):
@@ -31,9 +30,9 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
-        Compute the specular reflection coefficients. 
-        
-        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
+        Compute the specular reflection coefficients.
+
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
         beam is transmitted.
 
         Args:
@@ -53,7 +52,7 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
         """
         Compute the diffuse reflection coefficients.
 
-        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
         beam is transmitted.
 
         Args:
@@ -128,8 +127,8 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
         """
         Compute the coherent transmission coefficients.
 
-        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
-        beam is transmitted. While Geometrical Optics, it here considers that power not reflected is scattered in the specular 
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
+        beam is transmitted. While Geometrical Optics, it here considers that power not reflected is scattered in the specular
         transmitted direction. This is an approximation which is reasonable in the context of a "1st order" geometrical optics.
 
         Args:
@@ -142,7 +141,10 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
         Returns:
             The transmission matrix.
         """
-        go = GeometricalOptics(mean_square_slope=self.mean_square_slope, shadow_function=self.shadow_correction)
+        go = GeometricalOptics(
+            mean_square_slope=self.mean_square_slope,
+            shadow_function=self.shadow_correction,
+        )
         total_reflection = go.reflection_coefficients(frequency, eps_1, eps_2, mu1)
 
         transmission_matrix = smrt_matrix.zeros((npol, len_atleast_1d(mu1)))

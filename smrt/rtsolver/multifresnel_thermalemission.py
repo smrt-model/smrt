@@ -40,12 +40,12 @@ temperatures: application to melt detection on the Antarctic and Greenland ice s
 # other import
 import numpy as np
 
-from .multifresnel.multifresnel import compute_emerging_radiation, compute_matrix_slab
-
 # local import
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.result import make_result
 from smrt.rtsolver.rtsolver_utils import prepare_kskaeps_profile_information
+
+from .multifresnel.multifresnel import compute_emerging_radiation, compute_matrix_slab
 
 
 class MultiFresnelThermalEmission(object):
@@ -125,7 +125,7 @@ class MultiFresnelThermalEmission(object):
             prune_deep_snowpack=self.prune_deep_snowpack,
         )
 
-        if tau_snowpack < 5 and snowpack.substrate is None :
+        if tau_snowpack < 5 and snowpack.substrate is None:
             smrt_warn(
                 "Multifresnel has detected that the snowpack is optically shallow (tau=%g) and no substrate has been set, meaning that the space "
                 "under the snowpack is 'empty' with snowpack shallow enough to affect the measured signal at the surface."
@@ -139,6 +139,8 @@ class MultiFresnelThermalEmission(object):
         coords = [("theta", sensor.theta_deg), ("polarization", ["V", "H"])]
 
         # store other diagnostic information
-        other_data = prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity[0:snowpack.nlayer], mu=mu)
+        other_data = prepare_kskaeps_profile_information(
+            snowpack, emmodels, effective_permittivity[0 : snowpack.nlayer], mu=mu
+        )
 
         return make_result(sensor, np.transpose((Tbv, Tbh)), coords, other_data=other_data)

@@ -1,18 +1,18 @@
 """This module contains useful functions and classes for rtsolvers"""
 
-from typing import Optional, cast
-from collections.abc import Sequence
 from abc import ABCMeta
+from collections.abc import Sequence
+from typing import Optional, cast
 
 import numpy as np
-import xarray as xr
 import scipy.interpolate
+import xarray as xr
 
-from smrt.rtsolver.streams import compute_stream
 from smrt.core.error import SMRTError
 from smrt.core.result import make_result
 from smrt.core.sensor import Sensor
 from smrt.core.snowpack import Snowpack
+from smrt.rtsolver.streams import compute_stream
 
 
 class RTSolverBase(metaclass=ABCMeta):
@@ -82,7 +82,6 @@ class DiscreteOrdinatesMixin(metaclass=ABCMeta):
 
     def prepare_streams(self):
         """Compute the streams angle using a quadrature or equivalent"""
-
 
         rtsolver = cast(RTSolverBase, self)
 
@@ -224,7 +223,6 @@ class CoherentLayerMixin(metaclass=ABCMeta):
         self._process_coherent_layers = process_coherent_layers
 
     def process_coherent_layers(self):
-
         if self._process_coherent_layers:
             from smrt.interface.coherent_flat import (
                 process_coherent_layers,

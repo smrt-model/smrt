@@ -1,14 +1,12 @@
-
-from typing import Type, Union
 import os
-
 from collections.abc import Sequence
+from typing import Type, Union
+
 import numpy as np
 import pandas as pd
-import scipy.sparse
-from smrt.core.optional_numba import numba
 
 from smrt.core.error import SMRTError
+from smrt.core.optional_numba import numba
 
 
 def get(x, i, name=None):
@@ -50,10 +48,7 @@ def check_argument_size(x, n, name=None):
 def is_sequence(x):
     # maybe not the smartest way...
     return (
-        isinstance(x, Sequence) or
-        isinstance(x, np.ndarray) or
-        isinstance(x, pd.DataFrame) or
-        isinstance(x, pd.Series)
+        isinstance(x, Sequence) or isinstance(x, np.ndarray) or isinstance(x, pd.DataFrame) or isinstance(x, pd.Series)
     ) and not isinstance(x, str)
 
 
@@ -66,6 +61,7 @@ def class_specializer(domain: str, cls: Union[str, Type], **options) -> Type:
     """
     if isinstance(cls, str):
         from smrt.core.plugin import import_class  # lazy import
+
         cls = import_class(domain, cls)
 
     if not options:
@@ -79,11 +75,11 @@ def class_specializer(domain: str, cls: Union[str, Type], **options) -> Type:
         old_doc = "No original documentation."
 
     attributes = {
-        '__init__': __init__,
-        '__doc__':  f'{old_doc}\n\nThis class was specialized with the following options: {options}',
-        '__module__': cls.__module__,
+        "__init__": __init__,
+        "__doc__": f"{old_doc}\n\nThis class was specialized with the following options: {options}",
+        "__module__": cls.__module__,
     }
-    new_name = f'Specialized {getattr(cls, "__name__", "X")}'
+    new_name = f"Specialized {getattr(cls, '__name__', 'X')}"
     specialized_cls = type(new_name, (cls,), attributes)
     return specialized_cls
 
@@ -153,7 +149,7 @@ class smrt_diag(object):
     def __add__(self, other):
         if isinstance(other, smrt_diag):
             return smrt_diag(other.diag + self.diag)
-        elif np.isscalar(other) and other == 0:
+        elif other is None or (np.isscalar(other) and other == 0):
             return self
         elif isinstance(other, np.ndarray):
             assert other.shape == self.shape  # we do not allow broadcasting (not yet)...
@@ -169,7 +165,7 @@ class smrt_diag(object):
     def __sub__(self, other):
         if isinstance(other, smrt_diag):
             return smrt_diag(other.diag - self.diag)
-        elif np.isscalar(other) and other == 0:
+        elif other is None or (np.isscalar(other) and other == 0):
             return self
         else:
             raise NotImplementedError
@@ -186,17 +182,16 @@ class smrt_diag(object):
             self.diag -= other.diag
             return self
         else:
-
             raise NotImplementedError
 
     def __getitem__(self, key):
         try:
             i, j = key
         except TypeError:
-            raise IndexError("The index of a diag object must be a tuple with two indices. See smrt.core.lib for the rational of this diag object.")
+            raise IndexError(
+                "The index of a diag object must be a tuple with two indices. See smrt.core.lib for the rational of this diag object."
+            )
         return self.diag[i] if i == j else 0
-
-
 
 
 class smrt_matrix(object):
@@ -209,9 +204,8 @@ class smrt_matrix(object):
     """
 
     def __init__(self, mat, mtype=None):
-
         if is_zero_scalar(mat):
-            self.values = np.float64(0.)  # 0, but can be used as a numpy thing
+            self.values = np.float64(0.0)  # 0, but can be used as a numpy thing
             self.mtype = "0"
         else:
             self.values = mat
@@ -278,7 +272,7 @@ class smrt_matrix(object):
         3) convert the format of the matrix to compressed numpy, involving a change of the dimension order (pola and streams are merged).
         """
         if self.mtype == "0":
-            return np.float64(0.)  # 0, but can be used as a numpy thing
+            return np.float64(0.0)  # 0, but can be used as a numpy thing
 
         if self.mtype == "dense5":
             if mode is not None:
@@ -300,7 +294,7 @@ class smrt_matrix(object):
                 mat = self.values
 
             # reorder from pola_s, pola_i, mu_s, mu_i to  mu_s, pola_s, mu_i, pola_i
-            assert(len(mat.shape) == 4)
+            assert len(mat.shape) == 4
             mat = np.moveaxis(mat, (0, 1), (1, 3))  # 0 becomes 1, 1 becomes 3, so 2 becomes 0 and 3 becomes 2
             # merge mu_s * pola_s and mu_i * pola_i
             return np.reshape(mat, (mat.shape[0] * mat.shape[1], mat.shape[2] * mat.shape[3]))  # return an 2x2 array !
@@ -318,7 +312,7 @@ class smrt_matrix(object):
             else:
                 mat = self.values
             # reorder from pola, mu to mu*pola and compress
-            assert(len(mat.shape) == 2)
+            assert len(mat.shape) == 2
             return smrt_diag(np.reshape(np.transpose(mat), mat.shape[0] * mat.shape[1]))
 
         else:
@@ -336,12 +330,16 @@ class smrt_matrix(object):
     def __add__(self, other):
         if isinstance(other, smrt_matrix):
             return smrt_matrix(other.values + self.values)
+        elif other is None:  # convenient hack, for disabling some part of the calculations
+            return smrt_matrix(self)
         else:
             raise NotImplementedError
 
     def __sub__(self, other):
         if isinstance(other, smrt_matrix):
             return smrt_matrix(other.values - self.values)
+        elif other is None:  # convenient hack, for disabling some part of the calculations
+            return smrt_matrix(self)
         else:
             raise NotImplementedError
 
@@ -350,7 +348,7 @@ class smrt_matrix(object):
 
     def __getitem__(self, key):
         if self.mtype == "0":
-            return np.float64(0.)  # 0, but can be used as a numpy thing
+            return np.float64(0.0)  # 0, but can be used as a numpy thing
 
         else:
             return self.values[key]
@@ -361,47 +359,47 @@ class smrt_matrix(object):
     @property
     def diagonal(self):
         if self.mtype == "0":
-            return np.array([[0.]])
+            return np.array([[0.0]])
         if self.mtype.startswith("diagonal"):
             return self.values
         else:
-            return np.moveaxis(np.diagonal(np.diagonal(self.values, axis1=-2, axis2=-1)), -1, 0)  # diagonal in incidence angle and pola
+            return np.moveaxis(
+                np.diagonal(np.diagonal(self.values, axis1=-2, axis2=-1)), -1, 0
+            )  # diagonal in incidence angle and pola
             # the moveaxis is necessary to put back the pola indice at the first position because diagonal move the diagonale "index" to the end of the array.
 
     def to_dense(self):
-            if self.mtype in ["dense5", "dense4"]:
-                return self.copy()
-            elif self.mtype == "diagonal4":
-                pola, inc = self.values.shape
+        if self.mtype in ["dense5", "dense4"]:
+            return self.copy()
+        elif self.mtype == "diagonal4":
+            pola, inc = self.values.shape
 
-                mat = np.diagflat(self.values).reshape((pola, pola, inc, inc))
-                return smrt_matrix(mat, mtype='dense4')
+            mat = np.diagflat(self.values).reshape((pola, pola, inc, inc))
+            return smrt_matrix(mat, mtype="dense4")
 
-            elif self.mtype == "diagonal5":
-                pola, mode, inc = self.values.shape
+        elif self.mtype == "diagonal5":
+            pola, mode, inc = self.values.shape
 
-                # in numba with two loops it would be much faster
-                mat = np.stack([np.diagflat(self.values[:, i, :]).reshape((pola, pola, inc, inc)) for i in range(mode)])
-                mat = np.moveaxis(mat, 0, 2)
+            # in numba with two loops it would be much faster
+            mat = np.stack([np.diagflat(self.values[:, i, :]).reshape((pola, pola, inc, inc)) for i in range(mode)])
+            mat = np.moveaxis(mat, 0, 2)
 
-                return smrt_matrix(mat, mtype='dense5')
-            else:
-                raise NotImplementedError
-
+            return smrt_matrix(mat, mtype="dense5")
+        else:
+            raise NotImplementedError
 
     def sel(self, **kwargs):
-
-        if 'mode' in kwargs:
-            mode = kwargs['mode']
+        if "mode" in kwargs:
+            mode = kwargs["mode"]
             # 3pol->2pol
-            if self.values.shape[0] == 3 and kwargs['auto_reduce_npol'] and mode == 0:
+            if self.values.shape[0] == 3 and kwargs["auto_reduce_npol"] and mode == 0:
                 pola = slice(0, 2)
             else:
                 pola = slice(None)
             if self.mtype == "dense5":
-                return smrt_matrix(self.values[pola, pola, mode, :, :], mtype='dense4')
+                return smrt_matrix(self.values[pola, pola, mode, :, :], mtype="dense4")
             elif self.mtype == "diagonal5":
-                return smrt_matrix(self.values[pola, mode, :], mtype='diagonal4')
+                return smrt_matrix(self.values[pola, mode, :], mtype="diagonal4")
 
             elif self.mtype == "dense4":
                 raise SMRTError("Dense4 matrix can not be selected by mode")
@@ -414,7 +412,6 @@ class smrt_matrix(object):
             raise SMRTError("Currently only selection by mode is implemented")
 
     def __repr__(self):
-
         shape = getattr(self.values, "shape", "")
         return str("smrt_matrix %s %s" % (self.mtype, shape)) + "\n" + str(self.values)
 
@@ -431,16 +428,16 @@ def is_equal_zero(m):
     if isinstance(m, smrt_diag):
         m = m.diagonal()
 
-    return is_zero_scalar(m) or \
-        (getattr(m, "mtype", None) == "0") or \
-        (not np.any(m))
+    return is_zero_scalar(m) or (getattr(m, "mtype", None) == "0") or (not np.any(m))
 
 
 if numba:
+
     @numba.vectorize([numba.float64(numba.complex128), numba.float32(numba.complex64)], cache=True)
     def abs2(x):
         return x.real**2 + x.imag**2
 else:
+
     def abs2(x):
         return x.real**2 + x.imag**2
 
@@ -471,7 +468,7 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
 
     # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
     if nsamples is None:
-        nsamples = 2**np.ceil(3 + np.log(m_max + 1) / np.log(2))
+        nsamples = 2 ** np.ceil(3 + np.log(m_max + 1) / np.log(2))
 
     assert nsamples > 2 * m_max
 
@@ -492,14 +489,13 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
     assert len(p.values.shape) == 5
     p_mirror = p.values[:, :, -2:0:-1, :, :].copy()
 
-
     if npol >= 3:
         p_mirror[0:2, 2] = -p_mirror[0:2, 2]
         p_mirror[2, 0:2] = -p_mirror[2, 0:2]
 
     # concatenate the two mirrored phase function
     p = np.concatenate((p.values, p_mirror), axis=2)
-    assert(p.shape[2] == nsamples)
+    assert p.shape[2] == nsamples
 
     # compute the Fourier Transform of the phase function along phi axis (axis=2)
     ft_p = np.fft.fft(p, axis=2)
@@ -512,20 +508,20 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
 
     #
     # m>=1 modes
-    delta = 2.0 / nsamples # the factor 2 comes from the change exp -> cos, i.e. exp(-ix) + exp(+ix)= 2 cos(x)
+    delta = 2.0 / nsamples  # the factor 2 comes from the change exp -> cos, i.e. exp(-ix) + exp(+ix)= 2 cos(x)
 
     if npol == 2:
-        ft_even_p[:, :, 1:] = ft_p[:, :, 1:m_max + 1].real * delta
+        ft_even_p[:, :, 1:] = ft_p[:, :, 1 : m_max + 1].real * delta
 
     else:
-        ft_even_p[0:2, 0:2, 1:] = ft_p[0:2, 0:2, 1:m_max + 1].real * delta
+        ft_even_p[0:2, 0:2, 1:] = ft_p[0:2, 0:2, 1 : m_max + 1].real * delta
 
         # For the even matrix:
         # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
         # The sign for 0:2, 2 and 2, 0:2 have been double check with Rayleigh and Mazter 2006 formulation of the Rayeligh Matrix (p111-112)
-        ft_even_p[0:2, 2, 1:] = ft_p[0:2, 2, 1:m_max + 1].imag * delta
-        ft_even_p[2, 0:2, 1:] = - ft_p[2, 0:2, 1:m_max + 1].imag * delta
-        ft_even_p[2, 2, 1:] = ft_p[2, 2, 1:m_max + 1].real * delta
+        ft_even_p[0:2, 2, 1:] = ft_p[0:2, 2, 1 : m_max + 1].imag * delta
+        ft_even_p[2, 0:2, 1:] = -ft_p[2, 0:2, 1 : m_max + 1].imag * delta
+        ft_even_p[2, 2, 1:] = ft_p[2, 2, 1 : m_max + 1].real * delta
 
     return ft_even_p  # order is pola_s, pola_i, m, mu_s, mu_i
 
@@ -538,11 +534,11 @@ def set_max_numerical_threads(nthreads):
     """
 
     nthreads = str(nthreads)
-    os.environ['MKL_NUM_THREADS'] = nthreads
-    os.environ['OPENBLAS_NUM_THREADS'] = nthreads
-    os.environ['OMP_NUM_THREADS'] = nthreads
-    os.environ['VECLIB_MAXIMUM_THREADS'] = nthreads
-    os.environ['NUMEXPR_NUM_THREADS'] = nthreads
+    os.environ["MKL_NUM_THREADS"] = nthreads
+    os.environ["OPENBLAS_NUM_THREADS"] = nthreads
+    os.environ["OMP_NUM_THREADS"] = nthreads
+    os.environ["VECLIB_MAXIMUM_THREADS"] = nthreads
+    os.environ["NUMEXPR_NUM_THREADS"] = nthreads
 
 
 def cached_roots_legendre(n):

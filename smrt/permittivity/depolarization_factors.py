@@ -1,11 +1,13 @@
 """
 Provide formaluations for the depolarization factors used with the Polden van Santen or Maxwell Garnett mixing formulations.
 """
+
 from typing import Optional
+
 import numpy as np
 
 
-def depolarization_factors_spheroids(length_ratio: Optional[float]=None, **kwargs):
+def depolarization_factors_spheroids(length_ratio: Optional[float] = None, **kwargs):
     """
     Calculate depolarization factors for use in effective permittivity models. These
     are a measure of the anisotropy of the snow. Default is spherical isotropy.
@@ -17,7 +19,7 @@ def depolarization_factors_spheroids(length_ratio: Optional[float]=None, **kwarg
         [x, y, z] depolarization factor array.
 
     **Usage**::
-    
+
         from smrt.permittivity.generic_mixing_formula import depolarization_factors
         #default depol of 1
         depol_xyz = depolarization_factors()
@@ -25,7 +27,7 @@ def depolarization_factors_spheroids(length_ratio: Optional[float]=None, **kwarg
         depol_xyz = depolarization_factors(length_ratio=1.2)
 
     References:
-        Mätzler, C. (1996). Microwave permittivity of dry snow. Geoscience and Remote Sensing, EEE Transactions on 
+        Mätzler, C. (1996). Microwave permittivity of dry snow. Geoscience and Remote Sensing, EEE Transactions on
         Geoscience and Remote Sensing,, 34(2), 573–581. https://doi.org/10.1109/36.485133
 
         Löwe, H., Riche, F., and Schneebeli, M.: A general treatment of snow microstructure exemplified by an improved
@@ -64,7 +66,7 @@ def depolarization_factors_matzler96(frac_volume: float, **kwargs):
         [x, y, z] depolarization factor array.
 
     References:
-        Mätzler, C. (1996). Microwave permittivity of dry snow. Geoscience and Remote Sensing, EEE Transactions on 
+        Mätzler, C. (1996). Microwave permittivity of dry snow. Geoscience and Remote Sensing, EEE Transactions on
         Geoscience and Remote Sensing,, 34(2), 573–581. https://doi.org/10.1109/36.485133
 
         Sihvola, A.: Electromagnetic Mixing Formulas and Applications, 1999, INSTITUTION OF ENGINEERING & T
@@ -85,20 +87,22 @@ def depolarization_factors_oblate_matzler98(frac_volume: float, **kwargs):
 
     Args:
         frac_volume: fractional volume of ice.
-    
+
     Returns:
         [x, y, z] depolarization factor array.
-        
+
     References:
-        Mätzler, C. (1998). Improved Born approximation for scattering of radiation in a granular 
+        Mätzler, C. (1998). Improved Born approximation for scattering of radiation in a granular
         medium. J. Appl. Phys., 83(11), 6111–6117. https://doi.org/10.1063/1.367496
-    
+
         Sihvola, A.: Electromagnetic Mixing Formulas and Applications, 1999, INSTITUTION OF ENGINEERING & T
         http://www.ebook.de/de/product/21470462/a_sihvola_electromagnetic_mixing_formulas_and_applications.html
     """
 
     anisotropy_q = np.where(
-        frac_volume < 0.33, 01.0 + 0.5 * frac_volume, np.where(frac_volume < 0.6, 0.476 - 0.64 * frac_volume, 0.092)
+        frac_volume < 0.33,
+        01.0 + 0.5 * frac_volume,
+        np.where(frac_volume < 0.6, 0.476 - 0.64 * frac_volume, 0.092),
     )  # Eq 44a
     # The value 0.092 is 0.476 - 0.64 * 0.6 and is taken to limit the decrease but this equation is not valid in this
     # range anyway

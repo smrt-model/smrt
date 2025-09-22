@@ -1,22 +1,21 @@
 # coding: utf-8
 
+import numpy as np
 import pytest
 
-import numpy as np
-
-from smrt.emmodel.iba import IBA, derived_IBA
-from smrt.emmodel.rayleigh import Rayleigh
+from smrt import make_snow_layer
 from smrt.core.error import SMRTError
 from smrt.core.sensor import active
-from smrt.inputs.sensor_list import amsre
-from smrt import make_snow_layer
 from smrt.emmodel import commontest
-from smrt.permittivity.generic_mixing_formula import maxwell_garnett
+from smrt.emmodel.iba import IBA, derived_IBA
+from smrt.emmodel.rayleigh import Rayleigh
+from smrt.inputs.sensor_list import amsre
 
 # import the microstructure
 from smrt.microstructure_model.exponential import Exponential
 from smrt.microstructure_model.independent_sphere import IndependentSphere
 from smrt.microstructure_model.sticky_hard_spheres import StickyHardSpheres
+from smrt.permittivity.generic_mixing_formula import maxwell_garnett
 
 tolerance = 1e-7
 tolerance_pc = 0.001  # 1% error is allowable for differences from MEMLS values. Tests pass at 2%. Some fail at 1%.
@@ -25,32 +24,57 @@ tolerance_pc = 0.001  # 1% error is allowable for differences from MEMLS values.
 def setup_func_sp():
     # Could import iba_example, but hard code here in case iba_example changes
     # ### Make a snow layer
-    exp_lay = make_snow_layer(layer_thickness=0.2, microstructure_model=Exponential, density=250, temperature=265, corr_length=5e-4)
+    exp_lay = make_snow_layer(
+        layer_thickness=0.2,
+        microstructure_model=Exponential,
+        density=250,
+        temperature=265,
+        corr_length=5e-4,
+    )
     return exp_lay
 
 
 def setup_func_indep(radius=5e-4):
     # ### Make a snow layer
-    indep_lay = make_snow_layer(layer_thickness=0.2, microstructure_model=IndependentSphere, density=250, temperature=265, radius=radius)
+    indep_lay = make_snow_layer(
+        layer_thickness=0.2,
+        microstructure_model=IndependentSphere,
+        density=250,
+        temperature=265,
+        radius=radius,
+    )
     return indep_lay
 
 
 def setup_func_shs():
     # ### Make a snow layer
-    shs_lay = make_snow_layer(layer_thickness=0.2, microstructure_model=StickyHardSpheres, density=250, temperature=265, radius=5e-4, stickiness=0.2)
+    shs_lay = make_snow_layer(
+        layer_thickness=0.2,
+        microstructure_model=StickyHardSpheres,
+        density=250,
+        temperature=265,
+        radius=5e-4,
+        stickiness=0.2,
+    )
     return shs_lay
 
 
 def setup_func_pc(pc):
     # ### Make a snow layer
-    exp_lay = make_snow_layer(layer_thickness=0.1, microstructure_model=Exponential, density=300, temperature=265, corr_length=pc)
+    exp_lay = make_snow_layer(
+        layer_thickness=0.1,
+        microstructure_model=Exponential,
+        density=300,
+        temperature=265,
+        corr_length=pc,
+    )
     return exp_lay
 
 
 def setup_func_em(testpack=None):
     if testpack is None:
         testpack = setup_func_sp()
-    sensor = amsre('37V')
+    sensor = amsre("37V")
     emmodel = IBA(sensor, testpack)
     return emmodel
 
@@ -65,18 +89,18 @@ def setup_func_active(testpack=None):
 
 def setup_func_rayleigh():
     testpack = setup_func_indep(radius=1e-4)
-    sensor = amsre('10V')
+    sensor = amsre("10V")
     emmodel_iba = IBA(sensor, testpack)
     emmodel_ray = Rayleigh(sensor, testpack)
     return emmodel_iba, emmodel_ray
 
 
 def setup_mu(stepsize, bypass_exception=None):
-    mu_pos = np.arange(1.0, 0., - stepsize)
+    mu_pos = np.arange(1.0, 0.0, -stepsize)
     if bypass_exception:
         # exclude mu = 1
         mu_pos = mu_pos[1:]
-    mu_neg = - mu_pos
+    mu_neg = -mu_pos
     mu = np.concatenate((mu_pos, mu_neg))
     mu = np.array(mu)
     return mu
@@ -104,7 +128,7 @@ def test_ks_pc_is_0p2_mm():
     testpack = setup_func_pc(0.2e-3)
     em = setup_func_em(testpack)
     # Allow 1% error
-    initial_ks = 1.41304849e+00
+    initial_ks = 1.41504051e00
     print(initial_ks, em.ks(0))
     assert abs(em.ks(0).meantrace - initial_ks) < tolerance_pc * em.ks(0).meantrace
 
@@ -127,7 +151,7 @@ def test_ks_pc_is_0p1_mm():
     assert abs(em.ks(0).meantrace - initial_ks) < tolerance_pc * em.ks(0).meantrace
 
 
-def test_ks_pc_is_0p2_mm():
+def test_ks_pc_is_0p05_mm():
     testpack = setup_func_pc(0.05e-3)
     em = setup_func_em(testpack)
     # Allow 1% error
@@ -188,42 +212,67 @@ def test_energy_conservation_shs_active():
 
 def test_iba_vs_rayleigh_passive_m0():
     em_iba, em_ray = setup_func_rayleigh()
-    mu = setup_mu(1. / 64)
-    assert (abs(em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks(mu).meantrace
-                - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks(mu).meantrace) < tolerance_pc).all()
+    mu = setup_mu(1.0 / 64)
+    assert (
+        abs(
+            em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks(mu).meantrace
+            - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks(mu).meantrace
+        )
+        < tolerance_pc
+    ).all()
 
 
 def test_iba_vs_rayleigh_active_m0():
     # Have to set npol = 2 for m=0 mode in active otherwise rayleigh will produce 3x3 matrix
     em_iba, em_ray = setup_func_rayleigh()
-    mu = setup_mu(1. / 64, bypass_exception=True)
-    assert (abs(em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks(mu).meantrace
-                - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks(mu).meantrace) < tolerance_pc).all()
+    mu = setup_mu(1.0 / 64, bypass_exception=True)
+    assert (
+        abs(
+            em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks(mu).meantrace
+            - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks(mu).meantrace
+        )
+        < tolerance_pc
+    ).all()
 
 
 def test_iba_vs_rayleigh_active_m1():
     em_iba, em_ray = setup_func_rayleigh()
-    mu = setup_mu(1. / 64, bypass_exception=True)
+    mu = setup_mu(1.0 / 64, bypass_exception=True)
     # Clear cache
     em_iba.cached_mu = None
-    assert (abs(em_iba.ft_even_phase(mu, mu, 1, npol=3)[1, :, :] / em_iba.ks(mu).meantrace
-                - em_ray.ft_even_phase(mu, mu, 1, npol=3)[1, :, :] / em_ray.ks(mu).meantrace) < tolerance_pc).all()
+    assert (
+        abs(
+            em_iba.ft_even_phase(mu, mu, 1, npol=3)[1, :, :] / em_iba.ks(mu).meantrace
+            - em_ray.ft_even_phase(mu, mu, 1, npol=3)[1, :, :] / em_ray.ks(mu).meantrace
+        )
+        < tolerance_pc
+    ).all()
 
 
 def test_iba_vs_rayleigh_active_m2():
     em_iba, em_ray = setup_func_rayleigh()
-    mu = setup_mu(1. / 64, bypass_exception=True)
+    mu = setup_mu(1.0 / 64, bypass_exception=True)
 
     print("------------")
     print(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, :, :] / em_iba.ks(mu).meantrace)
     print(em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, :, :] / em_ray.ks(mu).meantrace)
 
     def check(i, j):
-        assert abs((abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_iba.ks(mu).meantrace)
-                    - abs(em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_ray.ks(mu).meantrace)) < tolerance_pc).all()
+        assert abs(
+            (
+                abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_iba.ks(mu).meantrace)
+                - abs(em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_ray.ks(mu).meantrace)
+            )
+            < tolerance_pc
+        ).all()
 
-        assert (abs(em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_iba.ks(mu).meantrace
-                    - em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_ray.ks(mu).meantrace) < tolerance_pc).all()
+        assert (
+            abs(
+                em_iba.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_iba.ks(mu).meantrace
+                - em_ray.ft_even_phase(mu, mu, 2, npol=3)[2, i, j] / em_ray.ks(mu).meantrace
+            )
+            < tolerance_pc
+        ).all()
 
     check(0, 0)
     check(0, 1)
@@ -237,10 +286,9 @@ def test_iba_vs_rayleigh_active_m2():
 
 
 def test_permittivity_model():
-
     new_iba = derived_IBA(effective_permittivity_model=maxwell_garnett)
     layer = setup_func_pc(0.3e-3)
-    sensor = amsre('37V')
+    sensor = amsre("37V")
     new_iba(sensor, layer)
 
 

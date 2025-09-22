@@ -1,11 +1,13 @@
-from smrt.inputs.make_medium import make_snowpack
-from smrt import sensor_list, make_model
-from smrt.inputs.sensor_list import amsre
-from smrt.core.model import Model
-import numpy as np
-from smrt.core.error import SMRTWarning
 import warnings
 from abc import ABC, abstractmethod
+
+import numpy as np
+
+from smrt import make_model, sensor_list
+from smrt.core.error import SMRTWarning
+from smrt.core.model import Model
+from smrt.inputs.make_medium import make_snowpack
+from smrt.inputs.sensor_list import amsre
 
 
 class Benchmark(ABC):
@@ -33,8 +35,20 @@ class ManySemiInfiniteSnowpacks(Benchmark):
     Inspired from smrt/test/test_model.py
     """
 
-    params = [{"solver": "dort", "emmodel": "iba", "n_snowpacks": 200, "parallel_computation": True},
-              {"solver": "dort", "emmodel": "iba", "n_snowpacks": 20, "parallel_computation": False}]  # Add values for multiple benchmarks
+    params = [
+        {
+            "solver": "dort",
+            "emmodel": "iba",
+            "n_snowpacks": 200,
+            "parallel_computation": True,
+        },
+        {
+            "solver": "dort",
+            "emmodel": "iba",
+            "n_snowpacks": 20,
+            "parallel_computation": False,
+        },
+    ]  # Add values for multiple benchmarks
 
     def setup(self, params):
         """
@@ -57,7 +71,11 @@ class ManySemiInfiniteSnowpacks(Benchmark):
             )
             for i in range(params["n_snowpacks"])
         ]
-        self.model.run(self.sensor, snowpack_list, parallel_computation=params['parallel_computation'])
+        self.model.run(
+            self.sensor,
+            snowpack_list,
+            parallel_computation=params["parallel_computation"],
+        )
 
 
 class MultiLayerSnowpack(Benchmark):
@@ -67,8 +85,20 @@ class MultiLayerSnowpack(Benchmark):
     Inspired from smrt/test/test_coherent_layer.py
     """
 
-    params = [{"solver": "dort", "emmodel": "iba", "n_layers": 200, "parallel_computation": True},
-              {"solver": "dort", "emmodel": "iba", "n_layers": 200, "parallel_computation": False}]  # Add values for multiple benchmarks
+    params = [
+        {
+            "solver": "dort",
+            "emmodel": "iba",
+            "n_layers": 200,
+            "parallel_computation": True,
+        },
+        {
+            "solver": "dort",
+            "emmodel": "iba",
+            "n_layers": 200,
+            "parallel_computation": False,
+        },
+    ]  # Add values for multiple benchmarks
 
     def setup(self, params):
         """
@@ -78,10 +108,12 @@ class MultiLayerSnowpack(Benchmark):
         self.thickness = np.full(params["n_layers"], 200 / params["n_layers"])
         self.temperature = np.linspace(200, 270, params["n_layers"])
         self.corr_length = 200e-6
-        self.radiometer = sensor_list.amsre('19')
+        self.radiometer = sensor_list.amsre("19")
         # create the EM Model - Equivalent DMRTML
         self.model = make_model(
-            params["emmodel"], params["solver"], rtsolver_options={"n_max_stream": 64, "process_coherent_layers": True}
+            params["emmodel"],
+            params["solver"],
+            rtsolver_options={"n_max_stream": 64, "process_coherent_layers": True},
         )
         warnings.simplefilter("ignore", category=SMRTWarning)
 
@@ -93,4 +125,4 @@ class MultiLayerSnowpack(Benchmark):
             temperature=self.temperature,
             corr_length=self.corr_length,
         )
-        self.model.run(self.radiometer, sp, parallel_computation=params['parallel_computation'])
+        self.model.run(self.radiometer, sp, parallel_computation=params["parallel_computation"])

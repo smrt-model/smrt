@@ -1,9 +1,9 @@
-
-import os
 import glob
+import os
 import pickle
 import random
 from uuid import uuid4
+
 from .error import SMRTError
 from .filelock import FileLock, Timeout
 
@@ -17,10 +17,10 @@ def honour_all_promises(directory_or_filename, save_result_to=None, show_progres
     save_result_to: directory where to save the results. If None, the results are not saved. The results are always returned as a list by this function.
     show_progress: print progress of the calculation.
     force_computate: If False and if a result or lock file is present, the computation is skipped. The order of promise processing is randomized
-     to allow more efficient parallel computation using many calls of this function on the same directory. A lock file is used between the start of a computation and 
+     to allow more efficient parallel computation using many calls of this function on the same directory. A lock file is used between the start of a computation and
      writting the result in order to prevent from running several times the same computation. If the process is interupted (e.g. walltime on clusters), the lock file may persist and prevent any future computation. In this case,
      lock files must be manually deleted.
-     IF False, the `save_result_to` argument must be set to a valid directory where the results. 
+     IF False, the `save_result_to` argument must be set to a valid directory where the results.
     """
 
     if isinstance(directory_or_filename, str):
@@ -33,7 +33,9 @@ def honour_all_promises(directory_or_filename, save_result_to=None, show_progres
         elif os.path.isfile(item):
             filename_list.append(item)
         else:
-            raise SMRTError("directory_or_filename argument must be an existing directory or a filename or a list of them.")
+            raise SMRTError(
+                "directory_or_filename argument must be an existing directory or a filename or a list of them."
+            )
 
     if not force_compute:
         random.shuffle(filename_list)
@@ -71,7 +73,8 @@ def honour_promise(filename, save_result_to=None, force_compute=True):
         if os.path.isdir(save_result_to):
             if getattr(promise, "result_filename", None) is None:
                 raise SMRTError(
-                    "promise has no predefined output filename and save_result_to is a directory. Either rebuild the promise or provide a file for save_result_to.")
+                    "promise has no predefined output filename and save_result_to is a directory. Either rebuild the promise or provide a file for save_result_to."
+                )
             outfilename = os.path.join(save_result_to, promise.result_filename)
         elif os.path.isfile(save_result_to):
             outfilename = save_result_to
@@ -87,7 +90,9 @@ def honour_promise(filename, save_result_to=None, force_compute=True):
         lock = FileLock(outfilename + ".lock", timeout=0)
         try:
             with lock:
-                if os.path.exists(outfilename):  # check the result file has not been written between the first check and the lock acquisition.
+                if os.path.exists(
+                    outfilename
+                ):  # check the result file has not been written between the first check and the lock acquisition.
                     return  # done!
                 result = promise.run()
                 result.save(outfilename)
@@ -103,7 +108,6 @@ def honour_promise(filename, save_result_to=None, force_compute=True):
 
 
 def load_promise(filename):
-
     with open(filename, "rb") as f:
         obj = pickle.load(f)
     if not isinstance(obj, RunPromise):
@@ -113,9 +117,7 @@ def load_promise(filename):
 
 
 class RunPromise(object):
-
     def __init__(self, model, sensor, snowpack, kwargs):
-
         super().__init__()
 
         self.model = model
@@ -125,11 +127,9 @@ class RunPromise(object):
         self.result_filename = None
 
     def run(self):
-
         return self.model.run(self.sensor, self.snowpack, **self.kwargs)
 
     def save(self, directory=None, filename=None):
-
         if (filename is None) == (directory is None):
             raise RuntimeError("Either directory or filename must be given")
 
@@ -141,12 +141,13 @@ class RunPromise(object):
             basename = os.path.basename(filename)
             if basename.startswith("smrt-promise-"):
                 basename = "smrt-result-" + basename[13:]
-            self.result_filename = os.path.splitext(basename)[0] + '.nc'
+            self.result_filename = os.path.splitext(basename)[0] + ".nc"
 
         with open(filename, "wb") as f:
             pickle.dump(self, f)
 
         return filename
+
 
 # class RunPromiseBatch(object):
 

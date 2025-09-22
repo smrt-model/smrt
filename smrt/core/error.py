@@ -1,23 +1,23 @@
-""" 
+"""
 Definition of the Exception specific to SMRT.
 """
 
 import warnings
 
-from numpy import stack
-
 
 class SMRTError(Exception):
-    """ 
+    """
     Error raised by the model.
     """
+
     pass
 
 
 class SMRTWarning(Warning):
-    """ 
+    """
     Warning raised by the model.
     """
+
     pass
 
 
@@ -27,8 +27,8 @@ warnings.filterwarnings("ignore", smrt.error.SMRTWarning). See the warnings Pyth
 controls.
 
 """
-    if 'stacklevel' in kwargs:
-        kwargs['stacklevel'] += 1
+    if "stacklevel" in kwargs:
+        kwargs["stacklevel"] += 1
     else:
-        kwargs['stacklevel'] = 2
-    warnings.warn(message + '\n\n' + disable_warning_message, category=SMRTWarning, **kwargs)
+        kwargs["stacklevel"] = 2
+    warnings.warn(message + "\n\n" + disable_warning_message, category=SMRTWarning, **kwargs)

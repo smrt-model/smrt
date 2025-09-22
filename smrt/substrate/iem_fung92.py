@@ -7,8 +7,9 @@ The reflection and transmission are computed using the Fresnel coefficients. Thi
 """
 
 # local import
-from smrt.interface.iem_fung92 import IEM_Fung92 as iIEM_Fung92
 from smrt.core.interface import substrate_from_interface
+from smrt.interface.iem_fung92 import IEM_Fung92 as iIEM_Fung92
+
 
 # autogenerate from interface.Flat
 @substrate_from_interface(iIEM_Fung92)

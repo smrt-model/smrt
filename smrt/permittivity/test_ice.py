@@ -1,17 +1,14 @@
-
-import pytest
-
-import warnings
 import numpy as np
 
-from smrt.permittivity.ice import ice_permittivity_maetzler06, \
-                                    ice_permittivity_maetzler87,\
-                                    ice_permittivity_tiuri84,\
-                                    _ice_permittivity_HUT,\
-                                    _ice_permittivity_DMRTML,\
-                                    _ice_permittivity_MEMLS,\
-                                    ice_permittivity_hufford91_maetzler87
-from smrt.core.error import SMRTError
+from smrt.permittivity.ice import (
+    _ice_permittivity_DMRTML,
+    _ice_permittivity_HUT,
+    _ice_permittivity_MEMLS,
+    ice_permittivity_hufford91_maetzler87,
+    ice_permittivity_maetzler06,
+    ice_permittivity_maetzler87,
+    ice_permittivity_tiuri84,
+)
 
 # Input temperature array functionality removed. If ever needed, use numpy instead of math in ice.py, but slower.
 
@@ -30,6 +27,7 @@ from smrt.core.error import SMRTError
 #     assert len(w) == 1
 #     assert 'Warning: temperature is below 240K. Ice permittivity is out of range of applicability' in str(w[-1].message)
 
+
 # Test output of this module against output from MEMLS code
 # Not exact as MEMLS references to 273, not 273.15
 def test_ice_permittivity_output_matzler_temp_270():
@@ -38,6 +36,7 @@ def test_ice_permittivity_output_matzler_temp_270():
     np.testing.assert_allclose(eps.real, 3.18567, atol=1e-3)
     np.testing.assert_allclose(eps.imag, 9.093e-04, atol=1e-4)
 
+
 # Test output of this module against output from MEMLS code
 # Weaker tolerance for 250K as MEMLS calculation is based on freezing point temperature of 273K not 273.15K
 def test_ice_permittivity_output_matzler_temp_250():
@@ -45,6 +44,7 @@ def test_ice_permittivity_output_matzler_temp_250():
     print(eps)
     np.testing.assert_allclose(eps.real, 3.1675, atol=1e-3)
     np.testing.assert_allclose(eps.imag, 6.0571e-4, atol=1e-4)
+
 
 def test_imaginary_ice_permittivity_output_matzler_temp_270_freq_20GHz():
     eps = ice_permittivity_maetzler06(20e9, 270)
@@ -125,6 +125,7 @@ def test_ice_permittivity_output_tuiri84_temp_250K_freq_40GHz():
     print(eps)
     np.testing.assert_allclose(eps.real, 3.1466272230000003, atol=1e-8)
     np.testing.assert_allclose(eps.imag, 0.0027354559325573355, atol=1e-8)
+
 
 # Test output of HUT version
 def test_real_ice_permittivity_output_HUT():

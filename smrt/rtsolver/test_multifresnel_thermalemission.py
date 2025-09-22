@@ -1,14 +1,12 @@
+import pytest
 from numpy.testing import assert_allclose
 
-import pytest
-
 from smrt import make_snowpack
-
-from smrt.core.sensor import passive
 from smrt.core.model import Model
+from smrt.core.sensor import passive
 from smrt.emmodel.nonscattering import NonScattering
-from smrt.rtsolver.multifresnel_thermalemission import MultiFresnelThermalEmission
 from smrt.rtsolver.dort import DORT
+from smrt.rtsolver.multifresnel_thermalemission import MultiFresnelThermalEmission
 
 
 @pytest.fixture

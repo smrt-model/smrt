@@ -4,7 +4,6 @@ from .autocorrelation import Autocorrelation
 
 
 class UnifiedAutocorrelation(Autocorrelation):
-
     args = ["frac_volume", "porod_length", "polydispersity"]
     optional_args = {}
 

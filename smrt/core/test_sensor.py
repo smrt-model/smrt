@@ -1,7 +1,5 @@
-
-import pytest
-
 import numpy as np
+import pytest
 
 from smrt.core import sensor
 from smrt.core.error import SMRTError, SMRTWarning
@@ -22,7 +20,7 @@ def test_iterate():
     freqs = [1e9, 2e9, 3e9]
     s = sensor.active(freqs, 55)
 
-    freqs_bis = [sub_s.frequency for sub_s in s. iterate("frequency")]
+    freqs_bis = [sub_s.frequency for sub_s in s.iterate("frequency")]
 
     np.testing.assert_equal(freqs, freqs_bis)
 
@@ -76,4 +74,4 @@ def test_active_wrong_frequency_units_warning():
 
 def test_active_mode():
     se = sensor.active(35e9, 55)
-    assert se.mode == 'A'
+    assert se.mode == "A"

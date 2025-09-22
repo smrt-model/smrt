@@ -10,16 +10,22 @@ may be performed. All properties relate to a single layer.
 
 # other import
 import numpy as np
-import scipy.integrate
 import scipy.fftpack
+import scipy.integrate
 
 # local import
 from ..core.error import SMRTError, smrt_warn
 from ..core.globalconstants import C_SPEED
-from ..permittivity.generic_mixing_formula import polder_van_santen
+from ..core.lib import smrt_matrix
 from ..permittivity.depolarization_factors import depolarization_factors_spheroids
-from ..core.lib import smrt_matrix, generic_ft_even_matrix
-from .common import rayleigh_scattering_matrix_and_angle, AdjustableEffectivePermittivityMixin, IsotropicScatteringMixin, GenericFTPhaseMixin, derived_EMModel
+from ..permittivity.generic_mixing_formula import polder_van_santen
+from .common import (
+    AdjustableEffectivePermittivityMixin,
+    GenericFTPhaseMixin,
+    IsotropicScatteringMixin,
+    derived_EMModel,
+    rayleigh_scattering_matrix_and_angle,
+)
 
 #
 # For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
@@ -39,9 +45,7 @@ def derived_IBA(effective_permittivity_model=polder_van_santen):
     return derived_EMModel(IBA, effective_permittivity_model)
 
 
-class IBA(AdjustableEffectivePermittivityMixin,
-          IsotropicScatteringMixin,
-          GenericFTPhaseMixin):
+class IBA(AdjustableEffectivePermittivityMixin, IsotropicScatteringMixin, GenericFTPhaseMixin):
     """
     Improved Born Approximation electromagnetic model class.
 
@@ -74,11 +78,10 @@ class IBA(AdjustableEffectivePermittivityMixin,
     effective_permittivity_model = staticmethod(polder_van_santen)
 
     def __init__(self, sensor, layer, dense_snow_correction=None):
-
         super().__init__()
 
         # Set size of phase matrix: active needs an extended phase matrix
-        if sensor.mode == 'P':
+        if sensor.mode == "P":
             self.npol = 2
         else:
             self.npol = 3
@@ -123,18 +126,21 @@ become a default in the future.""")
         self._ks = self.compute_ks()
 
         if not (self._ks >= 0):
-            print("ks, the scattering coefficient has an invalid value '%g' in layer nb '%i'" % (self._ks, getattr(layer, 'number', 0)))
+            print(
+                "ks, the scattering coefficient has an invalid value '%g' in layer nb '%i'"
+                % (self._ks, getattr(layer, "number", 0))
+            )
 
     def compute_iba_coeff(self):
-        """ Calculate angular independent IBA coefficient: used in both scattering coefficient and phase function calculations
+        """Calculate angular independent IBA coefficient: used in both scattering coefficient and phase function calculations
 
-            .. note::
+        .. note::
 
-                Requires mean squared field ratio (uses mean_sq_field_ratio method)
+            Requires mean squared field ratio (uses mean_sq_field_ratio method)
 
         """
         y2 = self.mean_sq_field_ratio()
-        iba_coeff = (1. / (4. * np.pi)) * np.absolute(self.eps - self.e0)**2. * y2 * (self.k0)**4
+        iba_coeff = (1.0 / (4.0 * np.pi)) * np.absolute(self.eps - self.e0) ** 2.0 * y2 * (self.k0) ** 4
         return iba_coeff
 
     def mean_sq_field_ratio(self):
@@ -145,7 +151,9 @@ become a default in the future.""")
         """
 
         apparent_permittivity = self._effective_permittivity * (1 - self.depol_xyz) + self.e0 * self.depol_xyz
-        y2 = (1. / 3.) * np.sum(np.absolute(apparent_permittivity / (apparent_permittivity + (self.eps - self.e0) * self.depol_xyz))**2.)
+        y2 = (1.0 / 3.0) * np.sum(
+            np.absolute(apparent_permittivity / (apparent_permittivity + (self.eps - self.e0) * self.depol_xyz)) ** 2.0
+        )
         return y2
 
     def basic_check(self):
@@ -165,7 +173,7 @@ become a default in the future.""")
         mu = np.linspace(1, -1, 2**k + 1)
         y = self.ks_integrand(mu)
         ks_int = scipy.integrate.romb(y, mu[0] - mu[1])  # integrate on mu between -1 and 1
-        return ks_int / 4.  # Ding et al. (2010), normalised by (1/4pi)
+        return ks_int / 4.0  # Ding et al. (2010), normalised by (1/4pi)
 
     def ks_integrand(self, mu):
         """Scattering function for the IBA model.
@@ -193,39 +201,41 @@ become a default in the future.""")
         # phi in the 1-2 frame for calculation of p11 is pi
         # phi in the 1-2 frame for calculation of p22 is pi / 2
         # Calculate wavevector difference
-        sintheta_2 = np.sqrt((1. - mu) / 2.)  # = np.sin(theta / 2.)
+        sintheta_2 = np.sqrt((1.0 - mu) / 2.0)  # = np.sin(theta / 2.)
 
-        k_diff = np.asarray(2. * self.k0 * sintheta_2 * abs(np.sqrt(self._effective_permittivity)))
+        k_diff = np.asarray(2.0 * self.k0 * sintheta_2 * abs(np.sqrt(self._effective_permittivity)))
 
         # Calculate microstructure term
-        if hasattr(self.microstructure, 'ft_autocorrelation_function'):
+        if hasattr(self.microstructure, "ft_autocorrelation_function"):
             ft_corr_fn = self.microstructure.ft_autocorrelation_function(k_diff)
         else:
-            raise SMRTError("Fourier Transform of this microstructure model has not been defined, or there is "
-                            "a problem with its calculation")
+            raise SMRTError(
+                "Fourier Transform of this microstructure model has not been defined, or there is "
+                "a problem with its calculation"
+            )
 
         p11 = (self.iba_coeff * ft_corr_fn).real * mu**2
-        p22 = (self.iba_coeff * ft_corr_fn).real * 1.
+        p22 = (self.iba_coeff * ft_corr_fn).real * 1.0
 
-        ks_int = (p11 + p22)
+        ks_int = p11 + p22
 
         return ks_int.real
 
     def phase(self, mu_s, mu_i, dphi, npol=2):
-        """IBA Phase function (not decomposed).
-
-"""
+        """IBA Phase function (not decomposed)."""
         p, sin_half_scatt = rayleigh_scattering_matrix_and_angle(mu_s, mu_i, dphi, npol)
 
         # IBA phase function = rayleigh phase function * angular part of microstructure term
-        k_diff = 2. * self.k0 * np.sqrt(self._effective_permittivity).real * sin_half_scatt
+        k_diff = 2.0 * self.k0 * np.sqrt(self._effective_permittivity).real * sin_half_scatt
 
         # Calculate microstructure term
-        if hasattr(self.microstructure, 'ft_autocorrelation_function'):
+        if hasattr(self.microstructure, "ft_autocorrelation_function"):
             ft_corr_fn = self.microstructure.ft_autocorrelation_function(k_diff)
         else:
-            raise SMRTError("Fourier Transform of this microstructure model has not been defined, or there is a "
-                            "problem with its calculation")
+            raise SMRTError(
+                "Fourier Transform of this microstructure model has not been defined, or there is a "
+                "problem with its calculation"
+            )
 
         return smrt_matrix(ft_corr_fn * self.iba_coeff * p)
 
@@ -267,22 +277,24 @@ class IBA_MM(IBA):
 
         self.iba_coeff = self.compute_iba_coeff()
         ks_int, ks_err = scipy.integrate.quad(self._mm_integrand, 0, np.pi)
-        self.ks = ks_int / 2.  # Matzler and Wiesmann, RSE, 1999, eqn (8)
+        self.ks = ks_int / 2.0  # Matzler and Wiesmann, RSE, 1999, eqn (8)
         # General lossy medium under assumption of low-loss medium.
         self.ka = self.compute_ka()
 
     def _mm_integrand(self, theta):
         # Calculate wavevector difference
-        k_diff = np.asarray(2. * self.k0 * np.sin(theta / 2.) * np.sqrt(self._effective_permittivity).real)
+        k_diff = np.asarray(2.0 * self.k0 * np.sin(theta / 2.0) * np.sqrt(self._effective_permittivity).real)
 
         # Calculate microstructure term
-        if hasattr(self.microstructure, 'ft_autocorrelation_function'):
+        if hasattr(self.microstructure, "ft_autocorrelation_function"):
             ft_corr_fn = self.microstructure.ft_autocorrelation_function(k_diff)
         else:
-            raise SMRTError("Fourier Transform of this microstructure model has not been defined, or there is a problem with its calculation")
+            raise SMRTError(
+                "Fourier Transform of this microstructure model has not been defined, or there is a problem with its calculation"
+            )
 
         # MEMLS phase function has mean of H and V polarisation angle. Eqn 17c of Matzler and Wiesmann 1999.
-        p_mm = self.iba_coeff * ft_corr_fn.real * (1. - 0.5 * np.square(np.sin(theta)))
+        p_mm = self.iba_coeff * ft_corr_fn.real * (1.0 - 0.5 * np.square(np.sin(theta)))
         ks_int = p_mm * np.sin(theta)
 
         return ks_int.real

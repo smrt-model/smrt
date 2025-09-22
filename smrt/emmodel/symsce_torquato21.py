@@ -1,6 +1,6 @@
 # coding: utf-8
 """
-Computes scattering with the symmetrized version of the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021 
+Computes scattering with the symmetrized version of the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021
 under the non-local approximation, a.k.a long range in Tsang's books. The truncation of the series is at second order.
 """
 
@@ -10,9 +10,9 @@ under the non-local approximation, a.k.a long range in Tsang's books. The trunca
 
 # local import
 from smrt.permittivity.generic_mixing_formula import polder_van_santen
+
 from .common import AdjustableEffectivePermittivityMixin, derived_EMModel
 from .sce_common import SCEBase
-
 
 #
 # For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
@@ -36,9 +36,7 @@ def derived_SymSCETK21(effective_permittivity_model):
 
 
 class SymSCETK21(AdjustableEffectivePermittivityMixin, SCEBase):
-
     effective_permittivity_model = staticmethod(polder_van_santen)
 
     def __init__(self, sensor, layer, scaled=True):
-
         super().__init__(sensor, layer, local=False, symmetrical=True, scaled=scaled)
