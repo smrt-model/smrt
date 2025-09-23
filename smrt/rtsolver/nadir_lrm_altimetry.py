@@ -452,7 +452,7 @@ class NadirLRMAltimetry(object):
                     .squeeze()
                     # use the rms_height of the interface and if not use the "macroscopic" sigma_surface
                     * coherent_reflection_factor(self.sensor, self.snowpack.substrate.roughness_rms, mu_last_layer)
-                    if self.compute_coherent_reflection
+                    if self.compute_coherent_reflection and hasattr(self.snowpack.substrate, "roughness_rms")
                     else 0
                 )
             ]
