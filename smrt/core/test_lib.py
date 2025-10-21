@@ -41,4 +41,4 @@ def test_generic_ft_even_matrix():
 
     for m in [0, 1, 2]:
         print("mode=", m)
-        assert np.allclose(ft_even_p[:, :, m, :, :], ft_even_p2[:, :, m, :, :])
+        np.testing.assert_allclose(ft_even_p[:, :, m, :, :], ft_even_p2[:, :, m, :, :])
