@@ -12,7 +12,7 @@ Here are some recommendations to choose an appropriate solver:
 
 .. list-table:: SMRT Solvers Overview
    :header-rows: 1
-   :widths: 20 50 30 20
+   :class: tight-table
 
    * - Solver Name
      - Description
