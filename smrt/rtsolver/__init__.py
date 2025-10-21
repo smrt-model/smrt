@@ -43,7 +43,8 @@ Here are some recommendations to choose an appropriate solver:
      - Altimetry in Low Rate Mode (LRM).
      -
 
-Note: **For Developers**
+.. admonition:: **For Developers**
+
     To experiment with DORT code, it is recommended to copy the file dort.py to e.g. dort_mytest.py so it is immediately available through
     :py:mod:`smrt.core.model.make_model`.
 
