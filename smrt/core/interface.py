@@ -8,6 +8,7 @@ rather than the class constructor.
 """
 
 import inspect
+import numbers
 
 from smrt.core import lib
 from smrt.core.error import SMRTError
@@ -108,9 +109,19 @@ class SubstrateBase(object):
         # super().__init__()  # must not be call. This interfers with substrate_from_interface presumably
 
         self.temperature = temperature
-        self.permittivity_model = (
-            permittivity_model  # this is a function, so it automatically becomes a method of substrate
-        )
+        # this is a function, so it automatically becomes a method of substrate
+
+        if permittivity_model is not None and not callable(permittivity_model):
+            if not isinstance(permittivity_model, numbers.Number):
+                raise SMRTError("permittivity_model must be either a function or a numerical value.")
+
+            # make a function that returns the constant value
+            def const_permittivity_model(*args, permittivity_value=permittivity_model, **kwargs):
+                return permittivity_value
+
+            self.permittivity_model = const_permittivity_model
+        else:
+            self.permittivity_model = permittivity_model
 
     def permittivity(self, frequency):
         """
@@ -122,9 +133,12 @@ class SubstrateBase(object):
         """
 
         if self.permittivity_model is None:
-            return None
-        else:
-            return self.permittivity_model(frequency, self.temperature)
+            raise SMRTError(
+                "No permittivity_model have been given to the substrate. "
+                "This substrate is not suitable with RT solvers that require a permittivity."
+            )
+
+        return self.permittivity_model(frequency, self.temperature)
 
     def __add__(self, other):
         raise SMRTError(

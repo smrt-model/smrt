@@ -436,7 +436,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
                 (streams.n[l - 1] * npol) if l > 0 else (streams.n_air * npol)
             )  # number of streams * npol in the layer l - 1 (lm1)
             # number of streams * npol in the layer l + 1 (lp1)
-            nslp1_npol = (streams.n[l + 1] * npol) if l < nlayer - 1 else (streams.n_substrate * npol)
+            nslp1_npol = (streams.n[l + 1] * npol) if l < nlayer - 1 else None
 
             # solve the eigenvalue problem for layer l
 
