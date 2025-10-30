@@ -3,40 +3,7 @@ import inspect
 import numpy as np
 
 from smrt.core.error import SMRTError
-from smrt.core.lib import abs2, len_atleast_1d, smrt_matrix
-
-
-def vectorize_angles(mu_s, mu_i, dphi, compute_cross_product=True, compute_sin=True):
-    """return angular cosines and sinus with proper dimensions, ready for vectorized calculations.
-
-    Args:
-        mu_s: scattering cosine angle.
-        mu_i: incident cosine angle.
-        dphi: azimuth angle between the scattering and incident directions.
-        compute_cross_product: if True perform the computation for all elements in mu_s, mu_i, dphi (cross product)
-            and if False perform the computation for each successive configuration in mu_s, mu_i and dphi (they must
-            have the same shape).
-
-    Returns:
-        vectorize angles
-    """
-
-    mu_s = np.atleast_1d(mu_s)
-    mu_i = np.atleast_1d(mu_i)
-    dphi = np.atleast_1d(dphi)
-
-    if compute_cross_product:
-        mu_s = mu_s[np.newaxis, :, np.newaxis]
-        mu_i = mu_i[np.newaxis, np.newaxis, :]
-        dphi = dphi[:, np.newaxis, np.newaxis]
-
-    sin_i = np.sqrt(1.0 - mu_i**2) if compute_sin else np.nan
-    sin_s = np.sqrt(1.0 - mu_s**2) if compute_sin else np.nan
-
-    sinphi = np.sin(dphi)
-    cosphi = np.cos(dphi)
-
-    return mu_s, sin_s, mu_i, sin_i, cosphi, sinphi
+from smrt.core.lib import abs2, len_atleast_1d, smrt_matrix, vectorize_angles
 
 
 def rayleigh_scattering_matrix_and_angle_tsang00(mu_s, mu_i, dphi, npol=2):

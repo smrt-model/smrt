@@ -526,6 +526,39 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
     return ft_even_p  # order is pola_s, pola_i, m, mu_s, mu_i
 
 
+def vectorize_angles(mu_s, mu_i, dphi, compute_cross_product=True, compute_sin=True):
+    """return angular cosines and sinus with proper dimensions, ready for vectorized calculations.
+
+    Args:
+        mu_s: scattering cosine angle.
+        mu_i: incident cosine angle.
+        dphi: azimuth angle between the scattering and incident directions.
+        compute_cross_product: if True perform the computation for all elements in mu_s, mu_i, dphi (cross product)
+            and if False perform the computation for each successive configuration in mu_s, mu_i and dphi (they must
+            have the same shape).
+
+    Returns:
+        vectorize angles
+    """
+
+    mu_s = np.atleast_1d(mu_s)
+    mu_i = np.atleast_1d(mu_i)
+    dphi = np.atleast_1d(dphi)
+
+    if compute_cross_product:
+        mu_s = mu_s[np.newaxis, :, np.newaxis]
+        mu_i = mu_i[np.newaxis, np.newaxis, :]
+        dphi = dphi[:, np.newaxis, np.newaxis]
+
+    sin_i = np.sqrt(1.0 - mu_i**2) if compute_sin else np.nan
+    sin_s = np.sqrt(1.0 - mu_s**2) if compute_sin else np.nan
+
+    sinphi = np.sin(dphi)
+    cosphi = np.cos(dphi)
+
+    return mu_s, sin_s, mu_i, sin_i, cosphi, sinphi
+
+
 def set_max_numerical_threads(nthreads):
     """
     Sets the maximum number of threads for a few known library. This is useful to disable parallel computing in
