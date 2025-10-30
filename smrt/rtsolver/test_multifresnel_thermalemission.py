@@ -7,6 +7,7 @@ from smrt.core.sensor import passive
 from smrt.emmodel.nonscattering import NonScattering
 from smrt.rtsolver.dort import DORT
 from smrt.rtsolver.multifresnel_thermalemission import MultiFresnelThermalEmission
+from smrt.substrate.flat import Flat
 
 
 @pytest.fixture
@@ -17,6 +18,12 @@ def snowpack():
         density=[100, 200, 300, 200, 400, 917],
         temperature=[273, 260, 250, 240, 230, 250],
     )
+
+
+@pytest.fixture
+def snowpack_with_substrate(snowpack):
+    snowpack.substrate = Flat(permittivity_model=5 + 0.1j, temperature=270)
+    return snowpack
 
 
 def test_basic_mfte(snowpack):
@@ -30,6 +37,20 @@ def test_basic_mfte(snowpack):
     print(res.data.coords)
     assert_allclose(res.TbV(), [244.445812, 245.941421])
     assert_allclose(res.TbH(), [240.111885, 237.916166])
+
+
+def test_basic_mfte_with_substrate(snowpack_with_substrate):
+    """test MFTE against some values calculated earlier."""
+    theta = [30, 40]
+    sensor = passive(1.4e9, theta)
+
+    m = Model(NonScattering, MultiFresnelThermalEmission)
+    res = m.run(sensor, snowpack_with_substrate)
+
+    print(res.TbV())
+    print(res.TbH())
+    assert_allclose(res.TbV(), [244.64466342, 246.10130472])
+    assert_allclose(res.TbH(), [240.30696257, 238.07046098])
 
 
 def test_mfte_vs_dort(snowpack):
