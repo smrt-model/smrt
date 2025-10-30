@@ -120,11 +120,13 @@ class NadirLRMAltimetry(object):
             mu_i = 1.0
             t_inc_sample = [0]
 
+        local_mu_i = local_incidence_cosine(sensor, mu_i)
+
         # compute the vertical backscatter
         self.z_gate, _ = self.gate_depth()
 
         backscatter = self.vertical_scattering_distribution(
-            mu_i=mu_i, return_contributions=self.return_contributions or (self.theta_inc_sampling > 1)
+            mu_i=local_mu_i, return_contributions=self.return_contributions or (self.theta_inc_sampling > 1)
         )
 
         # compute the t_gate, taking into account the oversampling but not the shift
@@ -561,3 +563,12 @@ def coherent_reflection_factor(sensor, roughness_rms, mu):
     beta12 = coherent_reflection_square_decay(sensor)
 
     return np.exp(-4 * (sensor.wavenumber * roughness_rms) ** 2 - theta2 / beta12) / beta12 / (4 * np.pi)
+
+
+def local_incidence_cosine(sensor, mu):
+    """compute the cosine of the local incidence angle considering a small pitch and roll.
+
+    This function assumes pitch and roll are small, otherwise yaw would be involved in the equation
+    """
+
+    return mu * np.cos(np.deg2rad(sensor.pitch_angle)) * np.cos(np.deg2rad(sensor.roll_angle))
