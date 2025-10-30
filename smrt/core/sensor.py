@@ -400,7 +400,8 @@ class Altimeter(Sensor):
         pulse_bandwidth,
         sigma_p=None,
         antenna_gain=1,
-        off_nadir_angle=0,
+        pitch_angle=0,
+        roll_angle=0,
         beam_asymmetry=0,
         ngate=1024,
         nominal_gate=40,
@@ -426,6 +427,11 @@ class Altimeter(Sensor):
         self.pulse_bandwidth = pulse_bandwidth
         self.pulse_sigma = sigma_p if sigma_p is not None else 0.513 / pulse_bandwidth
         self.nominal_gate = nominal_gate
-        self.off_nadir_angle = off_nadir_angle
+        self.pitch_angle = pitch_angle
+        self.roll_angle = roll_angle
         self.beam_asymmetry = beam_asymmetry
         self.antenna_gain = antenna_gain
+
+    @property
+    def off_nadir_angle(self):
+        return np.arccos(np.cos(self.pitch_angle) * np.cos(self.roll_angle))
