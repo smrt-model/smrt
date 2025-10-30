@@ -31,6 +31,18 @@ def test_basic_mfte(snowpack):
     assert_allclose(res.TbV(), [244.445812, 245.941421])
     assert_allclose(res.TbH(), [240.111885, 237.916166])
 
+def test_mfte_derivatives(snowpack):
+    """test MFTE against some values calculated earlier."""
+    theta = [30, 40]
+    sensor = passive(1.4e9, theta)
+
+    m = Model(NonScattering, MultiFresnelThermalEmission, rtsolver_options={'derivatives':True})
+    res = m.run(sensor, snowpack)
+
+    print(res.data.coords)
+    assert_allclose(res.TbV(), [244.445812, 245.941421])
+    assert_allclose(res.TbH(), [240.111885, 237.916166])
+    assert res.other_data['dTBvsdTi'].values.shape == (6,2)
 
 def test_mfte_vs_dort(snowpack):
     """test MFTE against DORT."""

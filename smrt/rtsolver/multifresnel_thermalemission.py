@@ -34,11 +34,8 @@ temperatures: application to melt detection on the Antarctic and Greenland ice s
 
 """
 
-
-# Stdlib import
-
-# other import
 import numpy as np
+import xarray as xr
 
 # local import
 from smrt.core.error import SMRTError, smrt_warn
@@ -46,6 +43,7 @@ from smrt.core.result import make_result
 from smrt.rtsolver.rtsolver_utils import prepare_kskaeps_profile_information
 
 from .multifresnel.multifresnel import compute_emerging_radiation, compute_matrix_slab
+from .multifresnel import multifresnel_derivatives
 
 
 class MultiFresnelThermalEmission(object):
@@ -60,16 +58,18 @@ class MultiFresnelThermalEmission(object):
             This prevents numerical unstability inherent to the MFTE formulation for a very deep snowpack.
             A value of 10 is used by default which is already very large / safe. In case of problems of stability, this
             value should be decreased. Set to None to deactivate pruning, but this is not recommended.
+        derivatives: set to True to compute the senitivity of the result to the temperautre of each layer
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta", "polarization"}
 
-    def __init__(self, error_handling: str = "exception", prune_deep_snowpack: int = 10):
+    def __init__(self, error_handling: str = "exception", prune_deep_snowpack: int = 10, derivatives: bool = False):
         self.error_handling = error_handling
         # self.process_coherent_layers = process_coherent_layers
         self.prune_deep_snowpack = prune_deep_snowpack
+        self.derivatives = derivatives
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
         """
@@ -115,15 +115,25 @@ class MultiFresnelThermalEmission(object):
             temperature = np.append(temperature, snowpack.substrate.temperature)
 
         mu = np.cos(sensor.theta)
-
-        M, tau_snowpack = compute_matrix_slab(
-            frequency=sensor.frequency,
-            outmu=mu,
-            permittivity=effective_permittivity,
-            temperature=temperature,
-            thickness=thickness,
-            prune_deep_snowpack=self.prune_deep_snowpack,
-        )
+        if self.derivatives:
+            #dM is not implemented yet
+            M, dM, tau_snowpack = multifresnel_derivatives.compute_matrix_slab_derivatives(
+                frequency=sensor.frequency,
+                outmu=mu,
+                permittivity=effective_permittivity,
+                temperature=temperature,
+                thickness=thickness,
+                prune_deep_snowpack=self.prune_deep_snowpack,
+            )
+        else:
+            M, tau_snowpack = compute_matrix_slab(
+                frequency=sensor.frequency,
+                outmu=mu,
+                permittivity=effective_permittivity,
+                temperature=temperature,
+                thickness=thickness,
+                prune_deep_snowpack=self.prune_deep_snowpack,
+            )
 
         if tau_snowpack < 5 and snowpack.substrate is None:
             smrt_warn(
@@ -142,5 +152,15 @@ class MultiFresnelThermalEmission(object):
         other_data = prepare_kskaeps_profile_information(
             snowpack, emmodels, effective_permittivity[0 : snowpack.nlayer], mu=mu
         )
+        #This could be added to prepare_kskaeps_profile_information
+        if self.derivatives:
+            #compute_emerging_radiation is not implemented yet for derivatives
+            dtbsdti = [compute_emerging_radiation(dm) for dm in dM]
+            derivative_array_v = [rad[0] for rad in dtbsdti]
+            derivative_array_h = [rad[1] for rad in dtbsdti]
+            layer_index = 'layer', range(len(effective_permittivity))
+            polarization_index = 'polarization', range(2)
+            other_data['dTBvsdTi'] = xr.DataArray(derivative_array_v, coords=[layer_index, polarization_index])
+            other_data['dTBhsdTi'] = xr.DataArray(derivative_array_h, coords=[layer_index, polarization_index])
 
         return make_result(sensor, np.transpose((Tbv, Tbh)), coords, other_data=other_data)
