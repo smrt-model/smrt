@@ -93,9 +93,9 @@ def make_soil(
                 return cst
         elif not callable(permittivity_model):
             raise SMRTError(
-                "The permittivity_model argument is not of the accepted types."
-                "It must be a string with an implemented permittivity model name,"
-                " a number or a function with two arguments."
+                "The permittivity_model argument is not of the accepted types. "
+                "It must be a string with an implemented permittivity model name, "
+                "a number or a function with two arguments."
             )
         # check that other parameters are
         if moisture is not None or sand is not None or clay is not None or drymatter is not None:
