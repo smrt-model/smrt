@@ -40,7 +40,7 @@ class Brown1977(WaveformModel):
         self.sensor = sensor
 
         log2 = 0.6931471805599453
-        self.gamma = 2 / log2 * np.sin(self.sensor.beamwidth / 2) ** 2
+        self.gamma = 2 / log2 * np.sin(np.deg2rad(self.sensor.beamwidth) / 2) ** 2
 
         self.numerical_convolution = numerical_convolution
 
@@ -152,7 +152,7 @@ class Newkrik1992(WaveformModel):
         self.G0 = 1
 
         log2 = 0.6931471805599453
-        self.gamma = 2 / log2 * np.sin(self.sensor.beamwidth / 2) ** 2
+        self.gamma = 2 / log2 * np.sin(np.deg2rad(self.sensor.beamwidth) / 2) ** 2
 
     def G(self, theta, phi):
         rho_h = np.tan(theta)
