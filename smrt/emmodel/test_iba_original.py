@@ -58,8 +58,11 @@ def setup_func_shs():
     return shs_lay
 
 
-def setup_func_pc(pc):
-    # ### Make a snow layer
+@pytest.fixture
+def setup_func_pc(request):
+    ### Make a snow layer 
+    # request.param will be set by the test parameterization
+    pc = request.param
     exp_lay = make_snow_layer(
         layer_thickness=0.1,
         microstructure_model=Exponential,
@@ -107,55 +110,19 @@ def setup_mu(stepsize, bypass_exception=None):
 
 # Tests to compare with MEMLS IBA, graintype = 2 (small spheres) outputs
 
-
-def test_ks_pc_is_0p3_mm():
-    testpack = setup_func_pc(0.3e-3)
+@pytest.mark.parametrize("setup_func_pc,memls_ks",
+                         [ (0.3e-3, 4.13718676e00),
+                           (0.25e-3, 2.58158887e00),
+                           (0.2e-3, 1.41304849e00),
+                           (0.15e-3, 6.30218291e-01),
+                           (0.1e-3, 1.94727497e-01),
+                           (0.05e-3, 2.49851702e-02)],
+                         indirect=["setup_func_pc"])
+def test_ks_pc(setup_func_pc, memls_ks):
+    testpack = setup_func_pc
     em = setup_func_em(testpack)
     # Allow 5% error
-    memls_ks = 4.13718676e00
     assert abs(em.ks(0).meantrace - memls_ks) < tolerance_pc * em.ks(0).meantrace
-
-
-def test_ks_pc_is_0p25_mm():
-    testpack = setup_func_pc(0.25e-3)
-    em = setup_func_em(testpack)
-    # Allow 5% error
-    memls_ks = 2.58158887e00
-    # eq_(em.ks(0), memls_ks)
-    assert abs(em.ks(0).meantrace - memls_ks) < tolerance_pc * em.ks(0).meantrace
-
-
-def test_ks_pc_is_0p2_mm():
-    testpack = setup_func_pc(0.2e-3)
-    em = setup_func_em(testpack)
-    # Allow 5% error
-    memls_ks = 1.41304849e00
-    assert abs(em.ks(0).meantrace - memls_ks) < tolerance_pc * em.ks(0).meantrace
-
-
-def test_ks_pc_is_0p15_mm():
-    testpack = setup_func_pc(0.15e-3)
-    em = setup_func_em(testpack)
-    # Allow 5% error
-    memls_ks = 6.30218291e-01
-    assert abs(em.ks(0).meantrace - memls_ks) < tolerance_pc * em.ks(0).meantrace
-
-
-def test_ks_pc_is_0p1_mm():
-    testpack = setup_func_pc(0.1e-3)
-    em = setup_func_em(testpack)
-    # Allow 5% error
-    memls_ks = 1.94727497e-01
-    assert abs(em.ks(0).meantrace - memls_ks) < tolerance_pc * em.ks(0).meantrace
-
-
-def test_ks_pc_is_0p05_mm():
-    testpack = setup_func_pc(0.05e-3)
-    em = setup_func_em(testpack)
-    # Allow 5% error
-    memls_ks = 2.49851702e-02
-    assert abs(em.ks(0).meantrace - memls_ks) < tolerance_pc * em.ks(0).meantrace
-
 
 def test_energy_conservation_exp():
     em = setup_func_em()
