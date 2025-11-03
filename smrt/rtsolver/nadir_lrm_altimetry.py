@@ -196,12 +196,12 @@ class NadirLRMAltimetry(object):
     def convolve_with_PFS_PTR_PDF(self, t_gate, backscatter, t_inc_sample):
         # take into account the PFS (flat surface) and PTR (point target response=pulse width effect)
         sigma_surface = getattr(self.snowpack, "sigma_surface", 0)
-        surface_slope = getattr(self.snowpack, "surface_slope", 0)
+        surface_slope_rad = np.deg2rad(getattr(self.snowpack, "surface_slope", 0))
 
         if hasattr(self.waveform_model, "PFS_PTR_PDF") and self.theta_inc_sampling == 1:
             # good, we have PFS and PTR already convoluted, fast pathway
             pfs_ptr_pdf = self.waveform_model.PFS_PTR_PDF(
-                t_gate, sigma_surface=sigma_surface, surface_slope=surface_slope
+                t_gate, sigma_surface=sigma_surface, surface_slope=surface_slope_rad
             )
 
             def do_convolve_by_PFS_PTR_PDF(backscatter):
@@ -235,7 +235,7 @@ class NadirLRMAltimetry(object):
             # first compute the PFS
             if hasattr(self.waveform_model, "PFS"):
                 # at least we have an analytical PFS
-                pfs = self.waveform_model.PFS(extended_t_gate, surface_slope=surface_slope)
+                pfs = self.waveform_model.PFS(extended_t_gate, surface_slope=surface_slope_rad)
             else:
                 # we've no PFS, we need numerical integration
                 pfs = self.PFS_numerical(extended_t_gate)
@@ -571,4 +571,4 @@ def local_incidence_cosine(sensor, mu):
     This function assumes pitch and roll are small, otherwise yaw would be involved in the equation
     """
 
-    return mu * np.cos(np.deg2rad(sensor.pitch_angle)) * np.cos(np.deg2rad(sensor.roll_angle))
+    return mu * np.cos(sensor.pitch_angle) * np.cos(sensor.roll_angle)
