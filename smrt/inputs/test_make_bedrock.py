@@ -4,7 +4,7 @@ import numpy as np
 from smrt.core.error import SMRTError
 from smrt.core.globalconstants import PERMITTIVITY_OF_FREE_SPACE
 from smrt.substrate.flat import Flat
-from smrt.inputs.make_bedrock import make_bedrock, BEDROCK_COMPLEX_PERMITTIVITY_DATA
+from smrt.inputs.make_bedrock import make_bedrock, _BEDROCK_COMPLEX_PERMITTIVITY_DATA_TABLE
 
 
 def test_make_bedrock_constant_permittivity():
@@ -62,7 +62,7 @@ def test_make_bedrock_callable_permittivity():
 
 # Test data table sanity
 def test_bedrock_data_consistency():
-    for name, (complex_permittivity, conductivity) in BEDROCK_COMPLEX_PERMITTIVITY_DATA.items():
+    for name, (complex_permittivity, conductivity) in _BEDROCK_COMPLEX_PERMITTIVITY_DATA_TABLE.items():
         # If conductivity is non-zero, the imaginary part of complex_permittivity must be zero !
         if conductivity != 0:
             assert complex_permittivity.imag == 0, f"Model '{name}': Conductivity is non-zero, but imaginary permittivity is also non-zero."

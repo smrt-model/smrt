@@ -16,7 +16,7 @@ from smrt.core.interface import get_substrate_model
 
 # --- 1. DATA TABLES ---
 
-BEDROCK_COMPLEX_PERMITTIVITY_DATA: Dict[str, Tuple[complex, float]] = {
+_BEDROCK_COMPLEX_PERMITTIVITY_DATA_TABLE: Dict[str, Tuple[complex, float]] = {
     # This tabe handle two formating:
     # Pure complex permivitivty format (hartlieb) or tuple of real permivity and conductivity (tulaczyk)
     # If conductivity is non-zero, the imaginary part of complex_permittivity must be zero !
@@ -63,27 +63,19 @@ BEDROCK_COMPLEX_PERMITTIVITY_DATA: Dict[str, Tuple[complex, float]] = {
     'unfrozen_bedrock_christianson16': (12.0+0j, 0.0048),# data give real permittivity and conductivity for 5MHZ
 }
 
+def list_bedock_permittivity_models():
+    return _BEDROCK_COMPLEX_PERMITTIVITY_DATA_TABLE.keys()
+
 # --- 2. PERMITIVITY FUNCTIONS  --
 
 def _get_bedrock_permittivity_model_from_table(bedrock_permittivity_model: str, temperature: float) -> Callable[[float, float], complex]:
 
-    complex_permittivity, conductivity = BEDROCK_COMPLEX_PERMITTIVITY_DATA[bedrock_permittivity_model]
+    complex_permittivity, conductivity = _BEDROCK_COMPLEX_PERMITTIVITY_DATA_TABLE[bedrock_permittivity_model]
 
     def permittivity_model(frequency: float, temperature: float) -> complex:
         angular_frequency = 2*np.pi * frequency
         return complex_permittivity + 1j*(conductivity / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
     return permittivity_model
-
-
-def _get_constant_permittivity_model(constant_value: complex | Number | Callable[[float, float], complex | Number]) -> Callable[[float, float], complex | Number]:
-    """
-    Returns a permittivity model function that always returns a constant value.
-    """
-    def permittivity_model(frequency: float, temperature: float) -> complex | Number:
-        return constant_value(frequency, temperature) if callable(constant_value) else constant_value
-    return permittivity_model
-
-
 
 # --- 3. BUILD FUNCTION (MAKE_BEDROCK) ---
 
@@ -94,37 +86,49 @@ def make_bedrock(
     **kwargs: Any,
 ) -> SubstrateBase:
     """
-    Construct a bedrock instance based on a given surface electromagnetic model, rock type, and parameters.
-    :param substrate_model: The substrate model to use (e.g., "flat", or a SubstrateBase class).
-    :param bedrock_permittivity_model: The permittivity model for the bedrock. This can be:
-        - A string name (e.g., "granite_hartlieb16", "frozen_bedrock_tulaczyk20") which refers to predefined data.
-        - A constant complex number for a fixed permittivity (e.g., `3.15+0.001j`).
-        - A callable function `(frequency_Hz: float, temperature: float) -> complex` that returns the permittivity.
-    :param temperature: The physical temperature of the bedrock in Kelvin (K). This parameter is mandatory.
-    :param kwargs: Additional keyword arguments passed to the final substrate model constructor.
-    :raises SMRTError: If `temperature` is not provided, if `bedrock_permittivity_model` is an unrecognized string,
-                       or if other required parameters for the chosen substrate model are missing.
-    :return: An instance of a `SubstrateBase` model configured with the specified bedrock properties.
+    Constructs a bedrock substrate model based on a given substrate model,
+    bedrock permittivity model and temperature.  
+
+    :param substrate_model: The electromagnetic surface model to apply to the
+        bedrock. This can be a string (e.g., "flat", "rough_choudhury79")
+        referring to a predefined model, or a direct `SubstrateBase` class.
+    :param bedrock_permittivity_model: Defines the dielectric properties of the
+        bedrock. This can be specified in different ways:
+        -   **A string name**: Refers to a predefined bedrock type from a
+            geophysical database (e.g., "granite_hartlieb16",
+            "frozen_bedrock_tulaczyk20"). These models include complex
+            permittivity and/or conductivity values derived from scientific
+            literature, suitable for various rock types and conditions.
+            You can list available models using `list_bedrock_permittivity_models()`.
+        -   **A constant complex number**: For a fixed, frequency- and
+            temperature-independent permittivity (e.g., `3.15 + 0.001j`).
+        -   **A callable function**: A function with the signature
+            `(frequency_Hz: float, temperature: float) -> complex`.
+    :param temperature: The physical temperature of the bedrock in Kelvin (K). 
+        This parameter is mandatory.
+    :param kwargs: Additional keyword arguments.
+    :raises SMRTError: If `temperature` is not provided, if
+        `bedrock_permittivity_model` is an unrecognized string (not found in
+        the predefined list), or if other required parameters for the chosen
+        substrate model are missing or invalid.
+    :return: An initialized instance of a `SubstrateBase` model, representing
+        the bedrock with its specified electromagnetic and physical properties.
+        This object can then be used in radiative transfer simulations.
     """
-    # Select the bedrock permittivity model.
+    # 1. Select the bedrock permittivity model.
 
     if isinstance(bedrock_permittivity_model, str):
         try:
             permittivity_model = _get_bedrock_permittivity_model_from_table(bedrock_permittivity_model, temperature)
         except KeyError:
             raise SMRTError(f"The bedrock permittivity model name '{bedrock_permittivity_model}' is not recognized. "
-                            f"Choose from: {', '.join(BEDROCK_COMPLEX_PERMITTIVITY_DATA.keys())}, a complex number, or a callable function.")
+                            f"Choose from: {', '.join(list_bedock_permittivity_models())}, a complex number, or a callable function.")
 
-    # 2. Handle constant number or callable permittivity
-    else :
-        try:
-            permittivity_model = _get_constant_permittivity_model(bedrock_permittivity_model)
-        except Exception as e:
-            raise SMRTError(f"The permittivity model name '{bedrock_permittivity_model}' is not recognized. "
-                            f"Choose from: {', '.join(BEDROCK_COMPLEX_PERMITTIVITY_DATA.keys())}, a complex number, or a callable function."
-                            f"Exception: {e}")
+    # 2. Handle constant number or callable permittivity model
+    else : 
+        permittivity_model = bedrock_permittivity_model
 
-    # process the substrate_model argument (assumes get_substrate_model returns a class/type)
+    # 3. Process the substrate_model argument (assumes get_substrate_model returns a class/type)
     if isinstance(substrate_model, str):
         SubstrateClass = get_substrate_model(substrate_model)
     else:
