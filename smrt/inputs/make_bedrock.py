@@ -74,12 +74,13 @@ def _get_bedrock_permittivity_model_from_table(bedrock_permittivity_model: str, 
         return complex_permittivity + 1j*(conductivity / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
     return permittivity_model
 
-def _get_constant_permittivity_model(constant_value: complex | Number) -> Callable[[float, float], complex | Number]:
+
+def _get_constant_permittivity_model(constant_value: complex | Number | Callable[[float, float], complex | Number]) -> Callable[[float, float], complex | Number]:
     """
     Returns a permittivity model function that always returns a constant value.
     """
     def permittivity_model(frequency: float, temperature: float) -> complex | Number:
-        return constant_value
+        return constant_value(frequency, temperature) if callable(constant_value) else constant_value
     return permittivity_model
 
 
@@ -112,19 +113,16 @@ def make_bedrock(
             permittivity_model = _get_bedrock_permittivity_model_from_table(bedrock_permittivity_model, temperature)
         except KeyError:
             raise SMRTError(f"The bedrock permittivity model name '{bedrock_permittivity_model}' is not recognized. "
-                            f"Choose from: {', '.join(BEDROCK_COMPLEX_PERMITTIVITY_DATA.keys())}.")
+                            f"Choose from: {', '.join(BEDROCK_COMPLEX_PERMITTIVITY_DATA.keys())}, a complex number, or a callable function.")
 
-    # 2. Handle constant number (real or complex) permittivity
-    elif isinstance(bedrock_permittivity_model, complex):  # a constant complex value
-        permittivity_model = _get_constant_permittivity_model(bedrock_permittivity_model)
-    elif isinstance(bedrock_permittivity_model, (float, int)):
-        raise SMRTError("When providing a constant permittivity, it must be a complex number (e.g., 3.15+0.0j). "
-                        "Pure real numbers (float or int) are not allowed for constant permittivity.")
-    elif callable(bedrock_permittivity_model):
-        permittivity_model = bedrock_permittivity_model
-    else:
-        raise SMRTError(f"The permittivity model name '{bedrock_permittivity_model}' is not recognized. "
-                        f"Choose from: {', '.join(BEDROCK_COMPLEX_PERMITTIVITY_DATA.keys())}, a complex number, or a callable function.")
+    # 2. Handle constant number or callable permittivity
+    else :
+        try:
+            permittivity_model = _get_constant_permittivity_model(bedrock_permittivity_model)
+        except Exception as e:
+            raise SMRTError(f"The permittivity model name '{bedrock_permittivity_model}' is not recognized. "
+                            f"Choose from: {', '.join(BEDROCK_COMPLEX_PERMITTIVITY_DATA.keys())}, a complex number, or a callable function."
+                            f"Exception: {e}")
 
     # process the substrate_model argument (assumes get_substrate_model returns a class/type)
     if isinstance(substrate_model, str):
