@@ -21,13 +21,15 @@ BEDROCK_COMPLEX_PERMITTIVITY_DATA: Dict[str, Tuple[complex, float]] = {
     # Pure complex permivitivty format (hartlieb) or tuple of real permivity and conductivity (tulaczyk)
     # If conductivity is non-zero, the imaginary part of complex_permittivity must be zero !
 
-    # Hartlieb et al. (2016) Data: {rock_type: (real_permittivity + imaginary_permittivity*j, no conductivity)}
-    # frequency = 2450 MHz, temperature = 20 degc
+    # Hartlieb et al. (2016) 10.1016/j.mineng.2015.11.008 
+    # Data: {rock_type: (real_permittivity + imaginary_permittivity*j, no conductivity)}
+    # Frequency = 2450 MHz, temperature = 20 degc
     'granite_hartlieb16': (5.45 + 0.038j, 0),   # data give complex permitivity for 2450MHZ, no conductivity needed
     'basalt_hartlieb16': (7.67 + 0.270j, 0),    # data give complex permitivity for 2450MHZ, no conductivity needed
     'sandstone_hartlieb16': (7.67 + 0.081j, 0), # data give complex permitivity for 2450MHZ, no conductivity needed
 
-    # Tulaczyk and Foley (2020) Data from Table 1: {material_type: (real permittivity, conductivity)}
+    # Tulaczyk and Foley (2020) 10.5194/tc-14-4495-2020 
+    # Data from Table 1: {material_type: (real permittivity, conductivity)}
     # Frequency: various (tens to hundreads of MHZ), see legend of Table 1, temperature : close to 0°c whenever possible
     #'glacier_ice_tulaczyk20': (3.2+0j, 0.00007),      # conductivity measurment frequency 5e6HZ
     'frozen_bedrock_tulaczyk20': (2.7+0j, 0.0002),     # conductivity measurment frequency 5e6HZ
@@ -43,8 +45,9 @@ BEDROCK_COMPLEX_PERMITTIVITY_DATA: Dict[str, Tuple[complex, float]] = {
     #'seawater_tulaczyk20': (79.0+0j, 2.90 ),          # unclear frequency in paper
     #'brine_tulaczyk20': (62.0+0j, 4.89 ),             # unclear frequency in paper
 
-    # Christianson et al. (2016) Data: {material_type: (real permittivity, conductivity)}
-    # frequency = 5MHZ, temperature ? (depend of medium)
+    # Christianson et al. (2016) 10.1002/2015JF003806 
+    # Data: {material_type: (real permittivity, conductivity)}
+    # Frequency = 5MHZ, temperature ? (depend of medium)
     #'glacier_ice_christianson16': (3.2+0j, 7.0e-5),    # data give real permittivity and conductivity for 5MHZ
     #'marine_ice_christianson16': (3.4+0j, 5.7e-4),
     #'groundwater_ice_christianson16': (3.2+0j, 6.6e-4),
