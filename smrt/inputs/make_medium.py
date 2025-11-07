@@ -492,8 +492,8 @@ def make_ice_column(
         wp = water_parameters(ice_type, **kwargs)
 
         # create a permittivity_function that depends only on frequency and temperature by setting other arguments
-        def permittivity_model(f, t):
-            return wp.water_permittivity_model(f, t, wp.water_salinity)
+        def permittivity_model(frequency, temperature):
+            return wp.water_permittivity_model(frequency, temperature, wp.water_salinity)
 
         substrate = Flat(temperature=wp.water_temperature, permittivity_model=permittivity_model)
     else:

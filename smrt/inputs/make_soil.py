@@ -15,7 +15,6 @@ models.
 """
 
 from functools import partial
-from numbers import Number
 
 import numpy as np
 import scipy
@@ -62,42 +61,32 @@ def make_soil(
 
     # process the permittivity_model argument
     if isinstance(permittivity_model, str):
-        if permittivity_model == "hut_epss":
-            # return soil_dielectric_constant_hut after setting the parameters
-            if moisture is None or sand is None or clay is None or drymatter is None:
-                raise SMRTError("The parameters moisture, sand, clay and drymatter must be set")
+        match permittivity_model:
+            case "hut_epss":
+                # return soil_dielectric_constant_hut after setting the parameters
+                if moisture is None or sand is None or clay is None or drymatter is None:
+                    raise SMRTError("The parameters moisture, sand, clay and drymatter must be set")
 
-            permittivity_model = partial(
-                soil_dielectric_constant_hut,
-                SM=moisture,
-                sand=sand,
-                clay=clay,
-                dm_rho=drymatter,
-            )
+                permittivity_model = partial(
+                    soil_dielectric_constant_hut,
+                    SM=moisture,
+                    sand=sand,
+                    clay=clay,
+                    dm_rho=drymatter,
+                )
 
-        elif permittivity_model == "dobson85":
-            # return soil_dielectric_constant_dobson after setting the parameters
-            if moisture is None or sand is None or clay is None:
-                raise SMRTError("The parameters moisture, sand, clay must be set")
-            permittivity_model = partial(soil_dielectric_constant_dobson, SM=moisture, S=sand, C=clay)
+            case "dobson85":
+                # return soil_dielectric_constant_dobson after setting the parameters
+                if moisture is None or sand is None or clay is None:
+                    raise SMRTError("The parameters moisture, sand, clay must be set")
+                permittivity_model = partial(soil_dielectric_constant_dobson, SM=moisture, S=sand, C=clay)
 
-        elif permittivity_model == "montpetit2008":
-            permittivity_model = soil_dielectric_constant_monpetit2008
-
-        else:
-            raise SMRTError("The permittivity model '%s' is not recongized" % permittivity_model)
+            case "montpetit2008":
+                permittivity_model = soil_dielectric_constant_monpetit2008
+            case _:
+                raise SMRTError("The permittivity model '%s' is not recongized" % permittivity_model)
     else:
-        if isinstance(permittivity_model, Number):  # a constant value
-            # create a function with 2 args that always return the same value
-            def permittivity_model(frequency, temperature, cst=permittivity_model):
-                return cst
-        elif not callable(permittivity_model):
-            raise SMRTError(
-                "The permittivity_model argument is not of the accepted types. "
-                "It must be a string with an implemented permittivity model name, "
-                "a number or a function with two arguments."
-            )
-        # check that other parameters are
+        # check that other parameters are defined
         if moisture is not None or sand is not None or clay is not None or drymatter is not None:
             raise Warning(
                 "Setting moisture, clay, sand or drymatter when permittivity_model is a number or function is useless"
@@ -116,14 +105,14 @@ def make_soil(
 # !(extracted from DMRTML)
 
 
-def soil_dielectric_constant_dobson(frequency, tempK, SM, S, C):
+def soil_dielectric_constant_dobson(frequency, temperature, SM, S, C):
     e_0 = PERMITTIVITY_OF_FREE_SPACE
     e_w_inf = 4.9
     e_s = 4.7
     rho_b = 1.3
     rho_s = 2.664
 
-    temp = tempK - 273.15
+    temp = temperature - 273.15
 
     beta1 = 1.2748 - 0.519 * S - 0.152 * C
     beta2 = 1.33797 - 0.603 * S - 0.166 * C
@@ -148,11 +137,11 @@ def soil_dielectric_constant_dobson(frequency, tempK, SM, S, C):
 #! extracted from DMRTML
 
 
-def soil_dielectric_constant_hut(frequency, tempK, SM, sand, clay, dm_rho):
+def soil_dielectric_constant_hut(frequency, temperature, SM, sand, clay, dm_rho):
     # Parameters for soil dielectric constant calculation with water
     ew_inf = 4.9
 
-    tempC = tempK - 273.15
+    tempC = temperature - 273.15
 
     if tempC >= 0:  # liquid water
         # calculates real and imag. part of water dielectricity (code HUT 20.12.95 [epsw.m]; K.Tigerstedt)
