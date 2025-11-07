@@ -13,6 +13,12 @@ def test_make_bedrock_constant_permittivity():
     assert bedrock.permittivity(1e9) == 3.14+0j
     assert bedrock.temperature == 273.15
 
+def test_make_bedrock_constant_permittivity_real():
+    bedrock = make_bedrock(substrate_model=Flat, bedrock_permittivity_model=3.14, temperature=273.35)
+    assert isinstance(bedrock, Flat)
+    assert bedrock.permittivity(1e9) == 3.14
+    assert bedrock.temperature == 273.35
+
 def test_make_bedrock_named_model():
     bedrock = make_bedrock(
         substrate_model=Flat,
@@ -52,12 +58,6 @@ def test_make_bedrock_callable_permittivity():
     assert isinstance(bedrock, Flat)
     assert bedrock.permittivity(1e9) == (5.0 + 0.1j)
     assert bedrock.permittivity(2e9) == (5.0 + 0.2j)
-
-def test_make_bedrock_real_number_permittivity_raises_error():
-    with pytest.raises(SMRTError, match="When providing a constant permittivity, it must be a complex number"):
-        make_bedrock(substrate_model=Flat, bedrock_permittivity_model=3.14, temperature=273.15)
-    with pytest.raises(SMRTError, match="When providing a constant permittivity, it must be a complex number"):
-        make_bedrock(substrate_model=Flat, bedrock_permittivity_model=5, temperature=273.15)
 
 
 # Test data table sanity
