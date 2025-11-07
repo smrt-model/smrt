@@ -1,6 +1,6 @@
 # coding: utf-8
 
-"""Provides a function to build soil model and some soil permittivity formulae.
+"""This module provides a function to build soil model and some soil permittivity formulae.
 
 To create a substrate, use or implement a helper function such as `make_soil`. This function is able to
 automatically load a specific soil model and provides some soil permittivity formulae as well.
