@@ -1,7 +1,7 @@
 # coding: utf-8
 
 """
-This package implements the base class for all the substrate models.
+This module implements the base class for all the substrate models.
 To create a substrate, it is recommended to use help functions such as :py:func:`~smrt.inputs.make_soil.make_soil`
 rather than the class constructor.
 
@@ -17,7 +17,7 @@ from smrt.core.plugin import import_class
 
 def make_interface(inst_class_or_modulename, broadcast=True, **kwargs):
     """
-    Returns an instance corresponding to the interface model with the provided arguments.
+    Return an instance corresponding to the interface model with the provided arguments.
 
     This function imports the interface module if necessary and
     returns an instance of the interface class with the provided arguments in \\**kwargs.
@@ -68,10 +68,11 @@ class Interface(object):
 
     def __init__(self, **kwargs):
         """
-        Builds the interface.
+        Build the interface.
 
-        :param **kwargs: parameters such as roughness_rms, corr_length, Q, N, etc are required or optional depending on the model.
-        See the document of the model.
+        Args:
+            **kwargs: parameters such as roughness_rms, corr_length, Q, N, etc are required or optional depending on the
+                model. See the documentation of the model.
 
         """
 
@@ -96,13 +97,15 @@ class SubstrateBase(object):
 
     def __init__(self, temperature=None, permittivity_model=None):
         """
-        Builds the substrate at the base of the snowpack.
+        Build the substrate at the base of the snowpack.
 
-        :param temperature: temperature of the base of the snowpack. Can be the effective temperature if the substrate is slightly transparent
-
-        :param permittivity_model: a function that returns the permittivity as a function of frequency and temperature. Can also be a numerical value.
-
-        :param **kwargs: other parameters such as roughness_rms, corr_length, Q, N, etc are required or optional depending on the model. See the document of the model.
+        Args:
+            temperature: temperature of the base of the snowpack. Can be the effective temperature if the substrate is
+                slightly transparent.
+            permittivity_model: a function that returns the permittivity as a function of frequency and temperature. Can
+                also be a numerical value.
+            **kwargs: other parameters such as roughness_rms, corr_length, Q, N, etc are
+                required or optional depending on the model. See the document of the model.
 
         """
 
@@ -125,11 +128,11 @@ class SubstrateBase(object):
 
     def permittivity(self, frequency):
         """
-        Computes the permittivity for the given frequency using permittivity_model. This method returns None when no permittivity model is
+        Compute the permittivity for the given frequency using permittivity_model. This method returns None when no permittivity model is
         available. This must be handled by the calling code and interpreted suitably.
 
         Args:
-            frequency:
+            frequency: frenquency in Hz
         """
 
         if self.permittivity_model is None:
@@ -155,7 +158,7 @@ class SubstrateBase(object):
 
 def substrate_from_interface(interface_cls):
     """
-    this decorator transform an interface class into a substrate class with automatic method
+    Decorator to transform an interface class into a substrate class with automatic method
 
     Args:
         interface_cls:
@@ -233,7 +236,7 @@ class Substrate(SubstrateBase, Interface):
 
 def get_substrate_model(substrate_model):
     """
-    Returns the class corresponding to the substrate model called name.
+    Return the class corresponding to the substrate model called name.
 
     Args:
         substrate_model:

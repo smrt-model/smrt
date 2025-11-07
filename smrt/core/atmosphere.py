@@ -14,7 +14,7 @@ class AtmosphereBase(object):
 
     def __add__(self, other):
         """
-        Returns a new snowpack made by setting the atmosphere.
+        Return a new snowpack made by setting the atmosphere.
 
         Args:
             other: The snowpack to add.

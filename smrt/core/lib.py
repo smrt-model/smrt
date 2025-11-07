@@ -10,17 +10,31 @@ from smrt.core.optional_numba import numba
 
 
 def get(x, i, name=None):
+    """
+    Return the i-th value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the value.
+
+    Args:
+        x: flexible array like object or scalar
+        i: i index to get
+        name: name of the object x, for reporting error messages. Defaults to None.
+
+    Raises:
+        SMRTError: if x is too short compared to i
+
+    Returns:
+        : element from x
+    """
     # function to take the i-eme value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the value.
 
     if isinstance(x, str):
         return x
     elif isinstance(x, pd.DataFrame) or isinstance(x, pd.Series):
         if i >= len(x.values):
-            raise SMRTError("The array '%s' is too short compared to the thickness array" % name)
+            raise SMRTError(f"The array {name} is too short compared to the thickness array")
         return x.values[i]
     if isinstance(x, Sequence) or isinstance(x, np.ndarray):
         if i >= len(x):
-            raise SMRTError("The array '%s' is too short compared to the thickness array." % name)
+            raise SMRTError(f"The array {name} is too short compared to the thickness array.")
         return x[i]
     elif isinstance(x, dict):
         return {k: get(x[k], i, k) for k in x}
@@ -29,7 +43,16 @@ def get(x, i, name=None):
 
 
 def check_argument_size(x, n, name=None):
-    # this function check that x is either a scalar or a sequence of exactly n items
+    """
+    Check that x is either a scalar or a sequence of exactly n items and raise an error otherwise.
+
+    Args:
+        x: array like object or scalar
+        n: expected size
+        name: name of the object x, for reporting error messages. Defaults to None.
+    Raises:
+        SMRTError: if x is not a scalar or a sequence of size n
+    """
 
     if isinstance(x, pd.DataFrame) or isinstance(x, pd.Series):
         error = len(x.values) != n
@@ -42,10 +65,19 @@ def check_argument_size(x, n, name=None):
     else:
         return
     if error:
-        raise SMRTError("The array '%s' must be a scalar or have the same size as the 'thickness' array." % name)
+        raise SMRTError(f"The array {name} must be a scalar or have the same size as the 'thickness' array.")
 
 
 def is_sequence(x):
+    """
+    Check that x is a sequence
+
+    Args:
+        x: flexible object
+
+    Returns:
+        : True if x is a sequence, False otherwise
+    """
     # maybe not the smartest way...
     return (
         isinstance(x, Sequence) or isinstance(x, np.ndarray) or isinstance(x, pd.DataFrame) or isinstance(x, pd.Series)
@@ -54,10 +86,12 @@ def is_sequence(x):
 
 def class_specializer(domain: str, cls: Union[str, Type], **options) -> Type:
     """
-    Returns a subclass of cls (imported from the domain if cls is a string) that use the provided "options" for __init__. This is
-    equivalent to functools.partial but for a class.
+    Return a subclass of cls (imported from the domain if cls is a string) that use the provided "options" for __init__.
 
-    This is the same idea as: https://stackoverflow.com/questions/38911146/python-equivalent-of-functools-partial-for-a-class-constructor
+    This is equivalent to functools.partial but for a class.
+
+    This is the same idea as:
+    https://stackoverflow.com/questions/38911146/python-equivalent-of-functools-partial-for-a-class-constructor
     """
     if isinstance(cls, str):
         from smrt.core.plugin import import_class  # lazy import
@@ -85,6 +119,15 @@ def class_specializer(domain: str, cls: Union[str, Type], **options) -> Type:
 
 
 def len_atleast_1d(x):
+    """
+    Return length of x if it is an array or similar, otherwise return 1, or 0 if None.
+
+    Args:
+        x: object to return the length of
+
+    Returns:
+        : length of x
+    """
     try:
         return len(x)
     except TypeError:
@@ -93,6 +136,8 @@ def len_atleast_1d(x):
 
 class smrt_diag(object):
     """
+    Define a simple diagonal matrix class.
+
     Scipy.sparse is very slow for diagonal matrix and numpy has no good support for linear algebra. This diag class
     implements simple diagonal object without numpy subclassing (but without much features).
     It seems that proper subclassing numpy and overloading matmul is a very difficult problem.
@@ -196,6 +241,8 @@ class smrt_diag(object):
 
 class smrt_matrix(object):
     """
+    Return a smrt_matrix object.
+
     SMRT uses two formats of matrix: one most suitable to implement emmodel where equations are different for each
     polarization and another one suitable for DORT computation where stream and polarization are collapsed in one
     dimension to allow matrix operation. In addition, the reflection and transmission matrix are often diagonal matrix,
@@ -417,12 +464,25 @@ class smrt_matrix(object):
 
 
 def is_zero_scalar(m):
+    """
+    Returns true if the object is a scalar equal to zero
+
+    Args:
+        m: object to test
+    Returns:
+        : True if m is a scalar equal to zero
+    """
     return np.isscalar(m) and (m == 0)
 
 
 def is_equal_zero(m):
     """
     Returns true if the smrt matrix is null
+
+    Args:
+        m: object to test
+    Returns:
+        : True if m is equal to zero
     """
 
     if isinstance(m, smrt_diag):
@@ -444,9 +504,9 @@ else:
 
 def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
     """
-    Calculation of the Fourier decomposed of the phase or reflection or transmission matrix provided by the function.
+    Compute the Fourier transform of an even matrix.
 
-    This method calculates the Fourier decomposition modes and return the output.
+    This matrix can be a phase function, reflection or transmission matrix.
 
     Coefficients within the phase function are
 
@@ -464,6 +524,7 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
     Args:
         phase_function: must be a function taking dphi as input. It is assumed that phi is symmetrical (it is in cos(phi))
         m_max: maximum Fourier decomposition mode needed
+        nsamples: number of samples to use for the Fourier decomposition. If None, it is automatically computed.
     """
 
     # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
@@ -527,7 +588,8 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
 
 
 def vectorize_angles(mu_s, mu_i, dphi, compute_cross_product=True, compute_sin=True):
-    """return angular cosines and sinus with proper dimensions, ready for vectorized calculations.
+    """
+    Return angular cosines and sinus with proper dimensions, ready for vectorized calculations.
 
     Args:
         mu_s: scattering cosine angle.
@@ -546,9 +608,9 @@ def vectorize_angles(mu_s, mu_i, dphi, compute_cross_product=True, compute_sin=T
     dphi = np.atleast_1d(dphi)
 
     if compute_cross_product:
+        dphi = dphi[:, np.newaxis, np.newaxis]
         mu_s = mu_s[np.newaxis, :, np.newaxis]
         mu_i = mu_i[np.newaxis, np.newaxis, :]
-        dphi = dphi[:, np.newaxis, np.newaxis]
 
     sin_i = np.sqrt(1.0 - mu_i**2) if compute_sin else np.nan
     sin_s = np.sqrt(1.0 - mu_s**2) if compute_sin else np.nan
@@ -561,9 +623,10 @@ def vectorize_angles(mu_s, mu_i, dphi, compute_cross_product=True, compute_sin=T
 
 def set_max_numerical_threads(nthreads):
     """
-    Sets the maximum number of threads for a few known library. This is useful to disable parallel computing in
-    SMRT when using parallel computing to call multiple // SMRT runs. This avoid over-committing the CPUs and results
-    in much better performance. Inspire from joblib.
+    Set the maximum number of threads for a few known library.
+
+    This is useful to disable parallel computing in SMRT when using parallel computing to call multiple // SMRT runs.
+    This avoid over-committing the CPUs and results in much better performance. Inspire from joblib.
     """
 
     nthreads = str(nthreads)
