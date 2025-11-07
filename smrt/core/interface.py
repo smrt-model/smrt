@@ -116,8 +116,8 @@ class SubstrateBase(object):
                 raise SMRTError("permittivity_model must be either a function or a numerical value.")
 
             # make a function that returns the constant value
-            def const_permittivity_model(*args, permittivity_value=permittivity_model, **kwargs):
-                return permittivity_value
+            def const_permittivity_model(frequency, _private_permittivity_value=permittivity_model, **kwargs):
+                return _private_permittivity_value
 
             self.permittivity_model = const_permittivity_model
         else:
@@ -138,7 +138,7 @@ class SubstrateBase(object):
                 "This substrate is not suitable with RT solvers that require a permittivity."
             )
 
-        return self.permittivity_model(frequency, self.temperature)
+        return self.permittivity_model(frequency, temperature=self.temperature)
 
     def __add__(self, other):
         raise SMRTError(
