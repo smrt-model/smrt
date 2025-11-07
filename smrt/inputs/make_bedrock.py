@@ -11,7 +11,7 @@ Example::
 
     print("Available bedrock permittivity models:", list_bedrock_permittivity_models())
 
-    bedrock = make_bedrock("granite_hartlieb16", "rough_choudhury79", temperature=273.15, roughness_rms=0.01, corr_length=0.1)
+    bedrock = make_bedrock("rough_choudhury79", "granite_hartlieb16", temperature=273.15, roughness_rms=0.01, corr_length=0.1)
 
 References:
  - Hartlieb, P., Gloaguen, R., & Zimmermann, R. (2016). Dielectric properties of common rocks at microwave frequencies
