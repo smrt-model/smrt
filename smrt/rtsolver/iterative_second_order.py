@@ -1,35 +1,38 @@
 # coding: utf-8
 
 """
-Provide the iterative second-order radiative transfer solver.
+Provide an iterative second-order radiative transfer solver based on Karam et al. 1995.
 
-This module implements a second-order iterative solution for the radiative transfer equation
-to calculate backscatter coefficients. The solver computes both zeroth, first-order, second
-backscatter contributions and is computationally more efficient than the DORT solver,
+This module implements a second-order iterative solution of the radiative transfer equation
+to calculate backscatter coefficients. The solver computes zeroth, first and second-order
+backscatter contributions. It is computationally more efficient than the DORT solver,
 but should be used with caution.
+
 
 Key Features:
         - Separate different backscatter mechanisms for analysis.
         - More computationally efficient than full DORT solver.
-        - Provide diagnostic information about scattering contributions.
+        - Provide diagnostic information about scattering contributions of each order (i.e. interaction mechanisms).
 
 Backscatter Components:
     Zeroth Order:
-        Should be zero for flat interfaces and off-nadir angles. Represents the incident intensity that attenuates exponentially inside
-        the medium. Scattering is only included through its contribution to extinction.
+        order0_backscatter: Backscatter from the surface, interfaces, and substrate after attenuation through the snowpack.
+        Volume Scattering is only included through its contribution to extinction.
         (Reference: Ulaby et al. 2014, first term of Eq. 11.74)
+
 
     First Order:
         Calculate three main contributions (Ulaby et al. 2014, Eqs. 11.75 and 11.62):
-            - direct_backscatter: Single volume backscatter upwards by the layer.
-            - double_bounce: Single volume backscatter downward by the layer and double specular reflection by the boundary.
-            - reflected_scattering: 2× single bistatic scattering by the layer and single reflection by the lower boundary.
+            - order1_direct_backscatter: Single volume backscatter upwards by the layer.
+            - order1_double_bounce: Single volume scattering and single reflection by the interfaces and the substrate.
+            - order1_reflected_backscatter: Single volume backscatter and double specular reflection by the interfaces and the substrate.
 
     Second Order:
         Calculate three main contributions of second order (Karam et al. 1995):
-            - double_scattering_intralayer: Double scattering of the snow microstructure inside one layer.
-            - ground_layer_scattering: Substrate diffuse reflection with one snow microstructure scattering.
-            - double_scattering_interlayer: Double scattering of the snow microstructure between all two layer combinations. 
+            - order2_intralayer_scattering: Double volume scattering inside one layer.
+            - order2_substrate_layer_scattering: Substrate diffuse reflection with one volume scattering event.
+            - order2_interlayer_scattering: Double volume scattering between all layer pair combinations. The snow interfaces diffuse 
+            reflection with one volume scattering event is neglected in this solver.
 
 Usage:
     Basic usage with default settings and iba emmodel:
@@ -63,8 +66,6 @@ References:
 """
 # Stdlib import
 import numpy as np
-import xarray as xr
-#from numba import njit
 
 # local import
 from smrt.core.error import SMRTError, smrt_warn
@@ -88,23 +89,21 @@ class IterativeSecondOrder(RTSolverBase):
             the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
         return_contributions: If False (default), returns only total backscatter.
             If True, returns individual contributions:
-                - 'direct_backscatter': Single volume backscatter upwards.
-                - 'reflected_scattering': Bistatic scattering + single boundary reflection.
-                - 'double_bounce': Volume backscatter + double boundary reflection.
-                - 'zeroth': Zeroth-order contribution.
-                - 'double_scattering_intralayer': Double scattering of the snow microstructure inside one layer.
-                - 'ground_layer_scattering' : Substrate diffuse reflection with one snow microstructure scattering.
-                - 'double_scattering_interlayer' : Double scattering of the snow microstructure between two layer. Calculate all 
-                combinations possible.
                 - 'total': Sum of all contributions.
+                - 'order0_backscatter': Backscatter from the surface, interfaces, and substrate after attenuation through the snowpack.
+                - 'order1_direct_backscatter': Single volume backscatter upwards by the layer.
+                - 'order1_double_bounce': Single volume scattering and single reflection by the interfaces and the substrate.
+                - 'order1_reflected_backscatter': Single volume backscatter and double specular reflection by the interfaces and the substrate.
+                - 'order2_intralayer_scattering': Double volume scattering inside one layer.
+                - 'order2_substrate_layer_scattering' : Substrate diffuse reflection with one volume scattering event.
+                - 'order2_interlayer_scattering' : Double volume scattering between all layer pair combinations.
         n_max_stream: Stream for integral of theta 0 to pi/2.
         stream_mode: If set to "most_refringent" (the default) or "air", streams arecalculated using the Gauss-Legendre 
             polynomials and then use Snell-law to prograpate the direction in the other layers. If set to "uniform_air", 
             streams are calculated uniformly in air and then according to Snells law.
         m_max: Number of mode for integral of phi from 0 to 2pi.
-        interlayer: If False (default), skip interlayer calculation. Using interlayer with a large number of layer will increase 
+        compute_scattering_interlayer: If False (default), skip interlayer calculation. Using interlayer with a large number of layer will increase 
             computation time significantly.
-        compute_substrate_integral: If True (default), compute 'ground_layer_scattering'.
     """
 
     # this specifies which dimension this solver is able to deal with.
@@ -119,19 +118,28 @@ class IterativeSecondOrder(RTSolverBase):
         n_max_stream=32,  # stream for integral of theta 0 to pi/2
         stream_mode="most_refringent",
         m_max=5,  # mode for integral of phi from 0 to 2pi
-        interlayer = False, #using interlayer with a large number of layer will increase computation time significantly
-        compute_substrate_integral = True
+        compute_scattering_interlayer= False, #using interlayer with a large number of layer will increase computation time significantly
     ):
         self.error_handling = error_handling
         self.return_contributions = return_contributions
         self.n_max_stream = n_max_stream
         self.stream_mode = stream_mode
         self.m_max = m_max
-        self.interlayer = interlayer
-        self.compute_substrate_integral = compute_substrate_integral
+        self.compute_scattering_interlayer = compute_scattering_interlayer
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
-        # """solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration."""
+        """
+        Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
+
+        Args:
+            snowpack: Snowpack object.
+            emmodels: List of electromagnetic models object.
+            sensor: Sensor object.
+            atmosphere: [Optional] Atmosphere object.
+
+        Returns:
+            result: Result object.
+        """
         if sensor.mode != "A":
             raise SMRTError(
                 "the iterative_rt solver is only suitable for activate microwave. Use an adequate sensor falling in" + "this catergory."
@@ -207,13 +215,13 @@ class IterativeSecondOrder(RTSolverBase):
                 coords=[
                     (
                         "contribution", ["total", 
-                                         "direct_backscatter", 
-                                         "reflected_scattering", 
-                                         "double_bounce",
-                                         "zeroth", 
-                                         "double_scattering_intralayer",
-                                         "ground_layer_scattering",
-                                         "double_scattering_interlayer"],
+                                         "order0_backscatter", 
+                                         "order1_direct_backscatter", 
+                                         "order1_double_bounce",
+                                         "order1_reflected_backscatter", 
+                                         "order2_intralayer_scattering",
+                                         "order2_substrate_layer_scattering",
+                                         "order2_interlayer_scattering"],
                     )
                 ]
                 + coords,
@@ -223,6 +231,23 @@ class IterativeSecondOrder(RTSolverBase):
             return make_result(sensor, total_I, coords=coords, other_data=other_data)
 
     def compute_intensity(self, snowpack, emmodels, streams, sensor, effective_permittivity, mu0):
+        # """
+        # Compute second order backscatter contributions 
+
+        # Args:
+        #     snowpack (Snowpack): Snowpack object with layer properties.
+        #     emmodels (list): List of electromagnetic models for each layer.
+        #     streams (Streams):  Streams object for integral of mu    
+        #     sensor (Sensor): Sensor configuration.
+        #     effective_permittivity (list): Complex permittivity for each layer.
+        #     mu0 (array_like): Cosine of incident angles.
+        
+        # Returns:
+        #     np.ndarray: intensity_up_intra array with shape (n, npol, npol)
+        #     np.ndarray: intensity_up_ground array with shape (n, npol, npol)
+        #     np.ndarray: intensity_up_inter array with shape (n, npol, npol)
+        # """
+
         # mode for integral of phi from 0 to 2pi
         npol = self.npol
         dphi = self.dphi
@@ -236,21 +261,21 @@ class IterativeSecondOrder(RTSolverBase):
         )
 
         # check if layer to ground interaction can to be calculated if True, need bistatic coef from diffuse matrix
-        if self.compute_substrate_integral:
-            if (substrate is not None) and (hasattr(substrate, "ft_even_diffuse_reflection_matrix")):
-                try:   
-                    #try for a different angle
-                    substrate.ft_even_diffuse_reflection_matrix(sensor.frequency, 
-                                                                complex(16,0.1), 
-                                                                mu0, 
-                                                                mu0 + 0.5, 
-                                                                self.m_max, 
-                                                                self.npol)
-                    self.compute_substrate_integral = True
-                except:
-                    self.compute_substrate_integral = False
-            else:
+        # TO-DO Maybe theres is a better way to check if bi-static coefs are available from the substrate
+        if (substrate is not None) and (hasattr(substrate, "ft_even_diffuse_reflection_matrix")):
+            try:   
+                #try for a different angle
+                substrate.ft_even_diffuse_reflection_matrix(sensor.frequency, 
+                                                            complex(16,0.1), 
+                                                            mu0, 
+                                                            mu0 + 0.5, 
+                                                            self.m_max, 
+                                                            self.npol)
+                self.compute_substrate_integral = True
+            except:
                 self.compute_substrate_integral = False
+        else:
+            self.compute_substrate_integral = False
 
         # mu for all layer and can have more than 1 if theta from sensor is a list
         mus = interface_l.mu
@@ -259,7 +284,6 @@ class IterativeSecondOrder(RTSolverBase):
 
 
         # intensity in the layer
-        # dense snow factor (I think) eq 22a and eq 22b in Tsang et al 2007
         refraction_factor_0 = compute_refraction_factor(1, effective_permittivity[0], mu0, mus[0])[:, np.newaxis, np.newaxis]
         transmission_bottom_surface = interface_l.transmission_bottom(-1)
         I_l = transmission_bottom_surface @ I_i * refraction_factor_0
@@ -310,12 +334,6 @@ class IterativeSecondOrder(RTSolverBase):
                 layer_optical_depth_ln_ground = np.sum([(emmodels[lng]._ks + emmodels[lng].ka) * thickness[lng] 
                                                         for lng in range(ln+1, nlayer)])
                 
-                # #calculate the cumulative refraction factor in between layer n and ground
-                # cumulative_refraction_factor = np.prod([compute_refraction_factor(effective_permittivity[lng], 
-                #                                                           effective_permittivity[lng + 1], 
-                #                                                           mus[lng], 
-                #                                                           mus[lng+1]) for lng in range(ln+1, nlayer-1)])
-
                 intensity_up_ground += transmission_top @ self.compute_scattering_layer_ground(emmodels[ln], 
                                                                                     I_l, 
                                                                                     weight_ln, 
@@ -326,7 +344,7 @@ class IterativeSecondOrder(RTSolverBase):
                                                                                     layer_optical_depth_ln_ground, 
                                                                                     Rbottom_diff_int)
 
-            if self.interlayer:
+            if self.compute_scattering_interlayer:
                 # r is a layer located betwenn n and m, to compute cumulative attenuation between layer n and m
                 layer_optical_depth_lr = layer_optical_depth_ln
                 #scattering interlayer
@@ -363,9 +381,6 @@ class IterativeSecondOrder(RTSolverBase):
             gamma2_ln = compute_gamma(mus[ln], layer_optical_depth_ln) ** 2
             #transmitted intensity
             if ln < nlayer - 1:
-                # dense snow factor (I think) eq 22a and eq 22b in Tsang et al 2007
-                # dense_factor_ln = ((effective_permittivity[ln].real / effective_permittivity[ln + 1].real) \
-                #     * (mus[ln] / interface_l.mu[ln + 1]))[:, np.newaxis, np.newaxis]
                 refraction_factor_ln = compute_refraction_factor(effective_permittivity[ln], 
                                                                 effective_permittivity[ln + 1],
                                                                 mus[ln],
@@ -388,12 +403,16 @@ class IterativeSecondOrder(RTSolverBase):
 
 
     def compute_double_scattering_intralayer(self, emmodel, I_l, weight, mu_int, mus_i, ke, layer_optical_depth):
-        #eqn A11 Karam et al 1995
-        # A and B are functions of theta, define explicitely in the book
-        # integral of phi and theta
-        # Compute summation of the Gauss quadrature (integral of theta) G.Picard thesis eq. 2.22
-        # integral of theta from 0 to 1, for mu with change of variable
-        # need weight and mu_int from streams
+        # scattering within the n layer, eqn A11 Karam et al 1995
+        # A and B are functions of theta (mu here) and are everything else in equation except phase function
+        # integral phi:
+        #   approximation of the integral of phi
+        #   compute the summation of all the mode between two decomposed matrix
+        #   integral of phi (0, 2pi) using fourier decomposition Appendix 2 tsang et al 2007
+        # integral theta:
+        #   Compute summation of the Gauss quadrature (integral of theta) G.Picard thesis eq. 2.22
+        #   integral of theta from 0 to 1, for mu with change of variable
+        #   need weight and mu_int from streams
 
         # multiple incident angle
         m_max = self.m_max
@@ -446,8 +465,16 @@ class IterativeSecondOrder(RTSolverBase):
         return I_mu
 
     def compute_scattering_layer_ground(self, emmodel, I_l, weight, mu_int, mus_i, ke, layer_optical_depth, layer_optical_depth_ln_ground, Rbottom_diff_int):
-        # volume-ground interaction contribution
-        #eqn A8 Karam et al 1995
+        # volume-ground interaction contribution, eqn A8 Karam et al 1995
+        # E is a function of theta (mu here) and are everything else in equation except phase function
+        # integral phi:
+        #   approximation of the integral of phi
+        #   compute the summation of all the mode between two decomposed matrix
+        #   integral of phi (0, 2pi) using fourier decomposition Appendix 2 tsang et al 2007
+        # integral theta:
+        #   Compute summation of the Gauss quadrature (integral of theta) G.Picard thesis eq. 2.22
+        #   integral of theta from 0 to 1, for mu with change of variable
+        #   need weight and mu_int from streams
 
         # multiple incident angle
         m_max = self.m_max
@@ -470,7 +497,7 @@ class IterativeSecondOrder(RTSolverBase):
         R2 = Rbottom_diff_int['i_int'][:, :, :, n_mu_i:, 0:n_stream]  # R(mu_i, -mu_int)
         P2 = phase_mu_int_mu[:, :, :, n_stream:, 0:n_mu_i]  # P(mu_int, -mu_i)
 
-        sum_e, sum_f = 0, 0
+        sum_e = 0
         for mu, w, i in zip(mu_int, weight, range(n_stream)):
             # bound 1 of the integral
             # integral of mu (G.Picard thesis p.72)
@@ -501,12 +528,16 @@ class IterativeSecondOrder(RTSolverBase):
                                             layer_optical_depth_ln, 
                                             layer_optical_depth_lm,
                                             layer_optical_depth_lr):
-        #scattering from the m layer with scattering from the n layer,
-        # eqn A13a Karam et al 1995
-        # integral of phi and theta
-        # Compute summation of the Gauss quadrature (integral of theta) G.Picard thesis eq. 2.22
-        # integral of theta from 0 to 1, for mu with change of variable
-        # need weight and mu_int from streams
+        #scattering from the m layer with scattering from the n layer, eqn A13a Karam et al 1995
+        # C and D are a function of theta (mu here) and are everything else in equation except phase function
+        # integral phi:
+        #   approximation of the integral of phi
+        #   compute the summation of all the mode between two decomposed matrix
+        #   integral of phi (0, 2pi) using fourier decomposition Appendix 2 tsang et al 2007
+        # integral theta:
+        #   Compute summation of the Gauss quadrature (integral of theta) G.Picard thesis eq. 2.22
+        #   integral of theta from 0 to 1, for mu with change of variable
+        #   need weight and mu_int from streams
 
         # multiple incident angle
 
@@ -567,17 +598,19 @@ class IterativeSecondOrder(RTSolverBase):
         return I_mu
 
 
-def decompose_ft_phase(ft_p, m_max, len_mu, npol):
+def separate_ft_phase(ft_matrix, m_max, len_mu, npol):
+    # Allow to separate the fourier matrix combining cosine and sine (SMRT paper eqn:A10)
+    # into one cosine matrix (SMRT paper eqn:A5) matrix and one sine matrix (SMRT paper eqn:A6).
     mode = np.arange(0, m_max)
     n_mu = np.arange(0, len_mu)
     # cosines
-    ft_p_c = np.array(
+    ft_cosine = np.array(
         [
             [
                 [
-                    [ft_p[0, 0, m, n], ft_p[0, 1, m, n], 0],
-                    [ft_p[1, 0, m, n], ft_p[1, 1, m, n], 0],
-                    [0, 0, ft_p[2, 2, m, n]],
+                    [ft_matrix[0, 0, m, n], ft_matrix[0, 1, m, n], 0],
+                    [ft_matrix[1, 0, m, n], ft_matrix[1, 1, m, n], 0],
+                    [0, 0, ft_matrix[2, 2, m, n]],
                 ]
                 for m in mode
             ]
@@ -586,43 +619,41 @@ def decompose_ft_phase(ft_p, m_max, len_mu, npol):
     )
 
     # sines
-    ft_p_s = np.array(
-        [[[[0, 0, -ft_p[0, 2, m, n]], [0, 0, -ft_p[1, 2, m, n]], [ft_p[2, 0, m, n], ft_p[2, 1, m, n], 0]] for m in mode] for n in n_mu]
+    ft_sine = np.array(
+        [[[[0, 0, -ft_matrix[0, 2, m, n]], [0, 0, -ft_matrix[1, 2, m, n]], [ft_matrix[2, 0, m, n], ft_matrix[2, 1, m, n], 0]] for m in mode] for n in n_mu]
     )
 
     # sine = 0 for mode 0
-    ft_p_s[:, 0, ] = np.zeros((len_mu, npol, npol))
+    ft_sine[:, 0, ] = np.zeros((len_mu, npol, npol))
 
-    return ft_p_c, ft_p_s
+    return ft_cosine, ft_sine
 
-def compute_int_phi(mat1, mat2, m_max, len_mu, npol, dphi):
-    # approximation of the integral of phi
-    # compute the summation of all the mode between two decomposed matrix
-    # integral of phi (0, 2pi) using fourier decomposition Appendix 2 tsang et al 2007
+def compute_int_phi(ft_matrix1, ft_matrix2, m_max, len_mu, npol, dphi):
+    # approximation of the integral of phi (0, 2pi) between two ft matrix (Appendix 2, Tsang et al., 2007)
+    # summation of all the mode 
 
-    m1_c, m1_s = decompose_ft_phase(mat1, m_max, len_mu, npol)
-    m2_c, m2_s = decompose_ft_phase(mat2, m_max, len_mu, npol)
+    m1_cosine, m1_sine = separate_ft_phase(ft_matrix1, m_max, len_mu, npol)
+    m2_cosine, m2_sine = separate_ft_phase(ft_matrix2, m_max, len_mu, npol)
 
-    # error in fourier expansion of tsang? should be mode 0 for second matrix?
-    # reshape to match shape of decompose array (len_mu, npol, npol)
-    m1_0 = np.array([mat1[:, :, 0, i] for i in range(len_mu)])
-    m2_0 = np.array([mat2[:, :, 0, i] for i in range(len_mu)])
+    # calculation of mode 0
+    matrix1_0 = np.array([ft_matrix1[:, :, 0, i] for i in range(len_mu)])
+    matrix2_0 = np.array([ft_matrix2[:, :, 0, i] for i in range(len_mu)])
 
-    int_0 = 2 * np.pi * (m1_0 @ m2_0)
-    sum_mc = 0
-    # sum_ms = 0
+    int_0 = 2 * np.pi * (matrix1_0 @ matrix2_0)
+    sum_m_cosine = 0
+    # sum_m_sine = 0
     # summation of m=1 to m_max, skip 0
     for m in range(m_max)[1:]:
-        sum_mc += (m1_c[:, m] @ m2_c[:, m] - m1_s[:, m] @ m2_s[:, m]) * np.cos(m * dphi)
-        # sum_ms += (m1_c[:,m] @ m2_s[:,m]  + m1_s[:,m] @ m2_c[:,m]) * np.sin(m * self.dphi) # equal to 0
+        sum_m_cosine += (m1_cosine[:, m] @ m2_cosine[:, m] - m1_sine[:, m] @ m2_sine[:, m]) * np.cos(m * dphi)
+        # sum_m_sine += (m1_cosine[:,m] @ m2_sine[:,m]  + m1_sine[:,m] @ m2_cosine[:,m]) * np.sin(m * self.dphi) # equal to 0
 
-    int_phi = int_0 + np.pi * sum_mc  # + np.pi * sum_ms
+    int_phi = int_0 + np.pi * sum_m_cosine  # + np.pi * sum_m_sine
 
     return int_phi
 
 def get_substrate_reflectivity_integral(substrate, frequency, eps_l, mu_i, mu_int, m_max, npol):
-    # Compute the reflectivity matrix need for integrals
-    # Need full bi-static to work... doesnt work for iem and geo optics backscatter
+    # Compute the reflectivity matrix for integrals
+    # Need full bi-static to work...
     Rbottom_diff_i_int = (substrate.ft_even_diffuse_reflection_matrix(frequency, eps_l, mu_i, mu_int, m_max, npol))
     Rbottom_diff_int_i = (substrate.ft_even_diffuse_reflection_matrix(frequency, eps_l, mu_int, mu_i, m_max, npol))
 
@@ -634,40 +665,39 @@ def get_substrate_reflectivity_integral(substrate, frequency, eps_l, mu_i, mu_in
 
 
 def compute_A(mu_i, mu_int, ke, layer_optical_depth):
+    # eqn A11a Karam et al 1995 (everything else except attenuation (Sn), phase function and integral)
     # function of mu and mu'
     mu_i = mu_i[:, np.newaxis, np.newaxis]
-    #mu_i = mu_i.reshape((-1, 1, 1))
+
     gamma_i = compute_gamma(mu_i, layer_optical_depth)
     gamma_int = compute_gamma(mu_int, layer_optical_depth)
 
-    #eqn A11a Karam et al 1995 (everything else except attenuatuin (Sn), phase function and integral)
     A = 1/mu_i * (gamma_i * ((gamma_i - gamma_int) / (ke * (1/mu_i - 1/mu_int)) + 
                                 mu_i / (2*ke) * (1 - gamma_i**2))) * mu_i / (ke * (mu_i + mu_int))
     return A
 
 def compute_B(mu_i, mu_int, ke, layer_optical_depth):
+    # eqn A11b Karam et al 1995 (everything else except attenuation (Sn), phase function and integral)
     # function of mu and mu'
     mu_i = mu_i[:, np.newaxis, np.newaxis]
-    #mu_i = mu_i.reshape((-1, 1, 1))
+
     gamma_i = compute_gamma(mu_i, layer_optical_depth)
     gamma_int = compute_gamma(mu_int, layer_optical_depth)
 
-    #eqn A11b Karam et al 1995 (everything else except attenuatuin (Sn), phase function and integral)
     B = 1 / (ke * (mu_int + mu_i)) * ((mu_i * (1 - gamma_i**2))/(2*ke) + 
                                         gamma_i * (gamma_int - gamma_i)/(ke * (1/mu_int - 1/mu_i)))
     return B
 
 def compute_C(mu_i, mu_int, ke_n, ke_m, layer_optical_depth_n, layer_optical_depth_m, layer_optical_depth_lr):
+    # eqn A13a Karam et al 1995 (everything else except attenuation (Sn), phase function and integral)
     # function of mu and mu'
     mu_i = mu_i[:, np.newaxis, np.newaxis]
-    #mu_i = mu_i.reshape((-1, 1, 1))
 
     gamma_i_n = compute_gamma(mu_i, layer_optical_depth_n)
     gamma_i_m = compute_gamma(mu_i, layer_optical_depth_m)
     gamma_int_n = compute_gamma(mu_int, layer_optical_depth_n)
     gamma_int_m = compute_gamma(mu_int, layer_optical_depth_m)
 
-    #eqn A13a Karam et al 1995 (everything else except phase function and integral)
     C = gamma_int_n * (1 - gamma_i_n * gamma_int_n) / (ke_n * (mu_int + mu_i)) * (gamma_int_m - gamma_i_m) / (ke_m * (1/mu_int - 1/mu_i))
     attenuation_lr = compute_gamma(mu_i, layer_optical_depth_lr) * compute_gamma(mu_int, layer_optical_depth_lr) 
 
@@ -675,28 +705,27 @@ def compute_C(mu_i, mu_int, ke_n, ke_m, layer_optical_depth_n, layer_optical_dep
 
 
 def compute_D(mu_i, mu_int, ke_n, ke_m, layer_optical_depth_n, layer_optical_depth_m, layer_optical_depth_lr):
+    # eqn A13b Karam et al 1995 (everything else except attenuation (Sn), phase function and integral)
     # function of mu and mu'
     mu_i = mu_i[:, np.newaxis, np.newaxis]
-    #mu_i = mu_i.reshape((-1, 1, 1))
 
     gamma_i_n = compute_gamma(mu_i, layer_optical_depth_n)
     gamma_i_m = compute_gamma(mu_i, layer_optical_depth_m)
     gamma_int_n = compute_gamma(mu_int, layer_optical_depth_n)
     gamma_int_m = compute_gamma(mu_int, layer_optical_depth_m)
 
-    #eqn A13b Karam et al 1995 (everything else except phase function and integral)
     D = (gamma_i_m - gamma_int_m) / (ke_m * (mu_i - mu_int)) * gamma_i_m * (1 - gamma_int_n * gamma_i_n) / (ke_n * (1/mu_int - 1/mu_i))
     attenuation_lr = compute_gamma(mu_i, layer_optical_depth_lr) * compute_gamma(mu_int, layer_optical_depth_lr) 
 
     return D * attenuation_lr
 
 def compute_E(mu_i, mu_int, ke, layer_optical_depth, layer_optical_depth_ln_ground):
+    #eqn A8a Karam et al 1995 (everything else except attenuation (Sn), phase function and integral)
     # function of mu and mu'
     mu_i = mu_i[:, np.newaxis, np.newaxis]
     gamma_i = compute_gamma(mu_i, layer_optical_depth)
     gamma_int = compute_gamma(mu_int, layer_optical_depth)
 
-    #eqn A8a Karam et al 1995 (everything else except attenuation (Sn), phase function and integral)
     E = mu_i * (gamma_int - gamma_i) / (ke * (mu_int - mu_i))
     #attenuation of layer n to the ground
     attenuation_ln_ground = compute_gamma(mu_i, layer_optical_depth_ln_ground) * compute_gamma(mu_int, layer_optical_depth_ln_ground) 

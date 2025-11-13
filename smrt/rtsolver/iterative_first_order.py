@@ -15,15 +15,16 @@ Key Features:
 
 Backscatter Components:
     Zeroth Order:
-        Should be zero for flat interfaces and off-nadir angles. Represents the incident intensity that attenuates exponentially inside
-        the medium. Scattering is only included through its contribution to extinction.
+        order0_backscatter: Backscatter from the surface, interfaces, and substrate after attenuation through the snowpack.
+        Volume Scattering is only included through its contribution to extinction.
         (Reference: Ulaby et al. 2014, first term of Eq. 11.74)
+
 
     First Order:
         Calculate three main contributions (Ulaby et al. 2014, Eqs. 11.75 and 11.62):
-            - direct_backscatter: Single volume backscatter upwards by the layer.
-            - double_bounce: Single volume backscatter downward by the layer and double specular reflection by the boundary.
-            - reflected_scattering: 2× single bistatic scattering by the layer and single reflection by the lower boundary.
+            - order1_direct_backscatter: Single volume backscatter upwards by the layer.
+            - order1_double_bounce: Single volume scattering and single reflection by the interfaces and the substrate.
+            - order1_reflected_backscatter: Single volume backscatter and double specular reflection by the interfaces and the substrate.
 
 Usage:
     Basic usage with default settings and iba emmodel:
@@ -84,11 +85,11 @@ class IterativeFirstOrder(RTSolverBase):
 
         return_contributions: If False (default), returns only total backscatter.
             If True, returns individual contributions:
-                - 'direct_backscatter': Single volume backscatter upwards.
-                - 'reflected_scattering': Bistatic scattering + single boundary reflection.
-                - 'double_bounce': Volume backscatter + double boundary reflection.
-                - 'zeroth': Zeroth-order contribution.
                 - 'total': Sum of all contributions.
+                - 'order0_backscatter': Backscatter from the surface, interfaces, and substrate after attenuation through the snowpack.
+                - 'order1_direct_backscatter': Single volume backscatter upwards by the layer.
+                - 'order1_double_bounce': Single volume scattering and single reflection by the interfaces and the substrate.
+                - 'order1_reflected_backscatter': Single volume backscatter and double specular reflection by the interfaces and the substrate.
     """
 
     # Dimensions that this solver can handle directly:
@@ -182,8 +183,11 @@ class IterativeFirstOrder(RTSolverBase):
                 intensity,
                 coords=[
                     (
-                        "contribution",
-                        ["total", "direct_backscatter", "reflected_scattering", "double_bounce", "zeroth"],
+                        "contribution", ["total",
+                                        "order0_backscatter", 
+                                        "order1_direct_backscatter", 
+                                        "order1_double_bounce",
+                                        "order1_reflected_backscatter"],
                     )
                 ]
                 + coords,
@@ -258,7 +262,7 @@ class IterativeFirstOrder(RTSolverBase):
         # 3 for the number of contribution for the first order backscatter
         intensity_up = np.zeros((4, n, npol, npol))
         # add surface contribution to I0 
-        intensity_up[3] = I0_surface
+        intensity_up[0] = I0_surface
 
         optical_depth = 0
         for l in range(nlayer):
@@ -317,7 +321,8 @@ class IterativeFirstOrder(RTSolverBase):
             Scattering is not included, except for its contribution to extinction.
             Should be zero for flat interface and off-nadir.
             """
-            I0_mu = transmission_top @ (gammas2 * backscatter_bottom @ I_l)
+            I0 = transmission_top @ (gammas2 * backscatter_bottom @ I_l)
+
 
             """
             First order, ulaby et al 2014 (11.75 and 11.62 )
@@ -327,24 +332,15 @@ class IterativeFirstOrder(RTSolverBase):
             - Single volume backscatter downward by the layer and double specular reflection by the boundary (double bounce)
 
             """
-            I1_back = transmission_top @ ((1 - gammas2) / (2 * ke) * P_Up) @ I_l
-
-            I1_2B = transmission_top @ (((1 - gammas2) / (2 * ke) * gammas2) * (reflection_bottom @ P_Down @ reflection_bottom)) @ I_l  # fmt: skip
-
-            I1_ref_scat = transmission_top @ (thickness[l] * gammas2 / mus_l * (P_Bi_Down @ reflection_bottom + reflection_bottom @ P_Bi_Up)) @ I_l  # fmt: skip
-
+            I1_backscatter = transmission_top @ ((1 - gammas2) / (2 * ke) * P_Up) @ I_l
             
-            if l < nlayer - 1:
-                #for all other layers except substrate, calculate interactions with substrate
-                I1_2B +=  transmission_top @ (((1 - gammas2) / (2 * ke) * gammas2) * 
-                                                (reflection_bottom_substrate @ P_Down @ reflection_bottom_substrate)) @ I_l
+            I1_double_bounce = transmission_top @ (thickness[l] * gammas2 / mus_l * (P_Bi_Down @ reflection_bottom + reflection_bottom @ P_Bi_Up)) @ I_l  # fmt: skip
 
-                I1_ref_scat +=  transmission_top @ (thickness[l] * gammas2 / mus_l * 
-                                                        (P_Bi_Down @ reflection_bottom_substrate + 
-                                                        reflection_bottom_substrate @ P_Bi_Up)) @ I_l
+            I1_reflected_backscatter = transmission_top @ (((1 - gammas2) / (2 * ke) * gammas2) * (reflection_bottom @ P_Down @ reflection_bottom)) @ I_l  # fmt: skip
+
 
             # shape of intensity (incident angle, first order contribution, npo, npol)
-            I1 = np.array([I1_back, I1_ref_scat, I1_2B, I0_mu]).reshape(4, n, npol, npol)
+            I1 = np.array([I0, I1_backscatter, I1_double_bounce, I1_reflected_backscatter]).reshape(4, n, npol, npol)
             # add intensity
             intensity_up += I1
 
