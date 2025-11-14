@@ -1,16 +1,11 @@
 import numpy as np
-import warnings
 
-import pytest
-
-from smrt import make_snowpack, make_emmodel
-from smrt.core.sensor import active
+from smrt import make_snowpack
 from smrt.core.model import Model
-from smrt.core.error import SMRTWarning
-from smrt.interface.transparent import Transparent
+from smrt.core.sensor import active
 from smrt.emmodel.nonscattering import NonScattering
+from smrt.interface.transparent import Transparent
 from smrt.rtsolver.iterative_second_order import IterativeSecondOrder
-from smrt.core.fresnel import snell_angle
 
 
 def setup_snowpack():
@@ -63,7 +58,6 @@ def test_selectby_theta():
     res.sigmaVV_dB(theta=50)
 
 
-
 def test_depth_hoar_stream_numbers():
     # Will throw error if doesn't run
     sp = setup_snowpack_with_DH()
@@ -85,14 +79,15 @@ def test_normal_call():
 
     sensor = active(17.25e9, 30)
 
-    m = Model('iba', "iterative_second_order")
+    m = Model("iba", "iterative_second_order")
     res = m.run(sensor, sp)
+
 
 def test_return_contributions():
     sp = setup_inf_snowpack()
 
     sensor = active(17.25e9, 30)
 
-    m = Model('iba', "iterative_second_order", rtsolver_options = {'return_contributions' : True})
+    m = Model("iba", "iterative_second_order", rtsolver_options={"return_contributions": True})
     res = m.run(sensor, sp)
     np.testing.assert_allclose(len(res.sigmaVV().contribution), 8)

@@ -69,7 +69,6 @@ from smrt.core.result import make_result
 from smrt.rtsolver.rtsolver_utils import RTSolverBase, prepare_kskaeps_profile_information
 
 
-
 class IterativeFirstOrder(RTSolverBase):
     """
     Implement the iterative radiative transfer solver using first-order approximation.
@@ -123,7 +122,7 @@ class IterativeFirstOrder(RTSolverBase):
                 "the iterative_rt solver can not handle atmosphere yet. "
                 "Please put an issue on github if this feature is needed."
             )
-        
+
         self.init_solve(snowpack, emmodels, sensor, atmosphere)
 
         substrate = snowpack.substrate
@@ -166,7 +165,7 @@ class IterativeFirstOrder(RTSolverBase):
         #  describe the results list of (dimension name, dimension array of value)
         coords = [("theta_inc", sensor.theta_inc_deg), ("polarization_inc", self.pola), ("polarization", self.pola)]
 
-        #store other diagnostic information
+        # store other diagnostic information
         other_data = prepare_kskaeps_profile_information(
             snowpack, emmodels, effective_permittivity=self.effective_permittivity, mu=mu0
         )
@@ -183,11 +182,14 @@ class IterativeFirstOrder(RTSolverBase):
                 intensity,
                 coords=[
                     (
-                        "contribution", ["total",
-                                        "order0_backscatter", 
-                                        "order1_direct_backscatter", 
-                                        "order1_double_bounce",
-                                        "order1_reflected_backscatter"],
+                        "contribution",
+                        [
+                            "total",
+                            "order0_backscatter",
+                            "order1_direct_backscatter",
+                            "order1_double_bounce",
+                            "order1_reflected_backscatter",
+                        ],
                     )
                 ]
                 + coords,
@@ -195,8 +197,7 @@ class IterativeFirstOrder(RTSolverBase):
             )
         else:
             return make_result(sensor, total_I, coords=coords, other_data=other_data)
-        
-        
+
     def compute_intensity(self, snowpack, emmodels, sensor, interfaces, substrate, effective_permittivity, mu0):
         # """
         # Calculate the intensity contributions for first-order backscatter.
@@ -245,15 +246,17 @@ class IterativeFirstOrder(RTSolverBase):
         # mu for all layer and can have more than 1 if theta from sensor is a list
         mus = interface_l.mu
 
-        #get specular reflection of the substrate
-        reflection_bottom_substrate = interface_l.reflection_bottom(nlayer -1)
+        # get specular reflection of the substrate
+        reflection_bottom_substrate = interface_l.reflection_bottom(nlayer - 1)
 
-        #add backscatter from surface if rough surface
+        # add backscatter from surface if rough surface
         backscatter_surface = _get_np_matrix(interface_l.Rbottom_backscatter[-1], npol, n)
         I0_surface = backscatter_surface @ I_i
 
         # refraction_factor for first layer
-        refraction_factor_0 = compute_refraction_factor(1, effective_permittivity[0], mu0, mus[0])[:, np.newaxis, np.newaxis]
+        refraction_factor_0 = compute_refraction_factor(1, effective_permittivity[0], mu0, mus[0])[
+            :, np.newaxis, np.newaxis
+        ]
 
         # Intensity incident transmitted to first layer from air
         transmission_bottom_surface = interface_l.transmission_bottom(-1)
@@ -261,7 +264,7 @@ class IterativeFirstOrder(RTSolverBase):
 
         # 3 for the number of contribution for the first order backscatter
         intensity_up = np.zeros((4, n, npol, npol))
-        # add surface contribution to I0 
+        # add surface contribution to I0
         intensity_up[0] = I0_surface
 
         optical_depth = 0
@@ -323,7 +326,6 @@ class IterativeFirstOrder(RTSolverBase):
             """
             I0 = transmission_top @ (gammas2 * backscatter_bottom @ I_l)
 
-
             """
             First order, ulaby et al 2014 (11.75 and 11.62 )
             Four contributions are taken into account
@@ -333,11 +335,10 @@ class IterativeFirstOrder(RTSolverBase):
 
             """
             I1_backscatter = transmission_top @ ((1 - gammas2) / (2 * ke) * P_Up) @ I_l
-            
+
             I1_double_bounce = transmission_top @ (thickness[l] * gammas2 / mus_l * (P_Bi_Down @ reflection_bottom + reflection_bottom @ P_Bi_Up)) @ I_l  # fmt: skip
 
             I1_reflected_backscatter = transmission_top @ (((1 - gammas2) / (2 * ke) * gammas2) * (reflection_bottom @ P_Down @ reflection_bottom)) @ I_l  # fmt: skip
-
 
             # shape of intensity (incident angle, first order contribution, npo, npol)
             I1 = np.array([I0, I1_backscatter, I1_double_bounce, I1_reflected_backscatter]).reshape(4, n, npol, npol)
@@ -346,10 +347,9 @@ class IterativeFirstOrder(RTSolverBase):
 
             if l < nlayer - 1:
                 mus_l1 = mus[l + 1][:, np.newaxis, np.newaxis]
-                refraction_factor_l = compute_refraction_factor(effective_permittivity[l], 
-                                                                effective_permittivity[l + 1],
-                                                                mus_l,
-                                                                mus_l1)
+                refraction_factor_l = compute_refraction_factor(
+                    effective_permittivity[l], effective_permittivity[l + 1], mus_l, mus_l1
+                )
                 # intensity in the layer transmitted downward for upper layer with one way attenuation
                 I_l = transmission_bottom @ (gammas2 * refraction_factor_l * I_l)
 
@@ -364,12 +364,15 @@ class IterativeFirstOrder(RTSolverBase):
 
         return intensity_up
 
+
 def compute_gamma(mu, layer_optical_depth):
     return np.exp(-1 * layer_optical_depth / mu)
+
 
 def compute_refraction_factor(effective_permittivity_1, effective_permittivity_2, mu_1, mu_2):
     # refraction factor for layer l, eq 22a and eq 22b in Tsang et al 2007
     return (effective_permittivity_1.real / effective_permittivity_2.real) * (mu_1 / mu_2)
+
 
 def _get_np_matrix(smrt_m, npol, n_mu):
     # """
@@ -447,8 +450,8 @@ class _InterfaceProperties(object):
         self.Rbottom_forward = dict()
         self.Tbottom_coh = dict()
         self.Tbottom_diff = dict()
-        #compute refracted angle
-        self.mu = {l : snell_angle(1, permittivity[l], mu0) for l in range(nlayer)}
+        # compute refracted angle
+        self.mu = {l: snell_angle(1, permittivity[l], mu0) for l in range(nlayer)}
         self.mu[-1] = mu0
         self.npol = npol
         self.len_mu = len(mu0)
@@ -457,10 +460,10 @@ class _InterfaceProperties(object):
         # index -1 refers to air layer
         self.Tbottom_coh[-1] = interfaces[0].coherent_transmission_matrix(frequency, 1, permittivity[0], mu0, npol)
         self.Tbottom_diff[-1] = (
-                interfaces[0].diffuse_transmission_matrix(frequency, 1, permittivity[0], self.mu[0], self.mu[-1], 0, npol) 
-                if hasattr(interfaces[0], "diffuse_transmission_matrix") / permittivity[0].real 
-                else smrt_matrix(0)
-            )
+            interfaces[0].diffuse_transmission_matrix(frequency, 1, permittivity[0], self.mu[0], self.mu[-1], 0, npol)
+            if hasattr(interfaces[0], "diffuse_transmission_matrix") / permittivity[0].real
+            else smrt_matrix(0)
+        )
 
         # air-snow DOWN
         self.Rbottom_coh[-1] = interfaces[0].specular_reflection_matrix(frequency, 1, permittivity[0], mu0, npol)
@@ -490,7 +493,9 @@ class _InterfaceProperties(object):
 
             self.Ttop_coh[l] = interfaces[l].coherent_transmission_matrix(frequency, eps_l, eps_lm1, self.mu[l], npol)
             self.Ttop_diff[l] = (
-                interfaces[l].diffuse_transmission_matrix(frequency, eps_l, eps_lm1, self.mu[l-1], self.mu[l], 0, npol)
+                interfaces[l].diffuse_transmission_matrix(
+                    frequency, eps_l, eps_lm1, self.mu[l - 1], self.mu[l], 0, npol
+                )
                 if hasattr(interfaces[l], "diffuse_transmission_matrix") * (eps_l.real / eps_lm1.real)
                 else smrt_matrix(0)
             )
@@ -506,13 +511,15 @@ class _InterfaceProperties(object):
                 # other than flat interface
                 self.Rbottom_backscatter[l] = interfaces[l + 1].diffuse_reflection_matrix(
                     frequency, eps_l, eps_lp1, self.mu[l], self.mu[l], dphi, npol
-                )          
+                )
                 try:
                     self.Rbottom_forward[l] = (
-                            interfaces[l + 1].diffuse_reflection_matrix(frequency, eps_l, self.mu[l], self.mu[l], dphi, npol)
-                            if hasattr(interfaces[l+1], "diffuse_reflection_matrix")
-                            else smrt_matrix(0)
+                        interfaces[l + 1].diffuse_reflection_matrix(
+                            frequency, eps_l, self.mu[l], self.mu[l], dphi, npol
                         )
+                        if hasattr(interfaces[l + 1], "diffuse_reflection_matrix")
+                        else smrt_matrix(0)
+                    )
                 except:
                     self.Rbottom_forward[l] = smrt_matrix(0)
 
@@ -520,10 +527,12 @@ class _InterfaceProperties(object):
                     frequency, eps_l, eps_lp1, self.mu[l], npol
                 )
                 self.Tbottom_diff[l] = (
-                        interfaces[l + 1].diffuse_transmission_matrix(frequency, eps_l, eps_lm1, self.mu[l+1], self.mu[l], 0, npol)
-                        if hasattr(interfaces[l+1], "diffuse_transmission_matrix")* (eps_l.real / eps_lm1.real)
-                        else smrt_matrix(0)
+                    interfaces[l + 1].diffuse_transmission_matrix(
+                        frequency, eps_l, eps_lm1, self.mu[l + 1], self.mu[l], 0, npol
                     )
+                    if hasattr(interfaces[l + 1], "diffuse_transmission_matrix") * (eps_l.real / eps_lm1.real)
+                    else smrt_matrix(0)
+                )
 
             elif substrate is not None:
                 self.Rbottom_coh[l] = substrate.specular_reflection_matrix(frequency, eps_l, self.mu[l], npol)
@@ -554,16 +563,20 @@ class _InterfaceProperties(object):
                 self.Tbottom_coh[l] = smrt_matrix(0)
                 self.Tbottom_diff[l] = smrt_matrix(0)
 
-
     def reflection_bottom(self, l):
-        return _InterfaceProperties.combine_coherent_diffuse_matrix(self.Rbottom_coh[l], self.Rbottom_forward[l], self.npol, self.len_mu)
+        return _InterfaceProperties.combine_coherent_diffuse_matrix(
+            self.Rbottom_coh[l], self.Rbottom_forward[l], self.npol, self.len_mu
+        )
 
     def transmission_top(self, l):
-        return _InterfaceProperties.combine_coherent_diffuse_matrix(self.Ttop_coh[l], self.Ttop_diff[l], self.npol, self.len_mu)
-
+        return _InterfaceProperties.combine_coherent_diffuse_matrix(
+            self.Ttop_coh[l], self.Ttop_diff[l], self.npol, self.len_mu
+        )
 
     def transmission_bottom(self, l):
-        return _InterfaceProperties.combine_coherent_diffuse_matrix(self.Tbottom_coh[l], self.Tbottom_diff[l], self.npol, self.len_mu)
+        return _InterfaceProperties.combine_coherent_diffuse_matrix(
+            self.Tbottom_coh[l], self.Tbottom_diff[l], self.npol, self.len_mu
+        )
 
     @staticmethod
     def combine_coherent_diffuse_matrix(coh, diff, npol, len_mu):
