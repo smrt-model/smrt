@@ -3,21 +3,34 @@
 import numpy as np
 import pytest
 
+from smrt import make_snow_layer
 from smrt.core.sensor import active
 from smrt.emmodel import commontest
 from smrt.emmodel.symsce_torquato21 import SymSCETK21, derived_SymSCETK21
 from smrt.emmodel.test_iba import (
     setup_func_indep,
     setup_func_pc,
-    setup_func_shs,
     setup_func_sp,
 )  # move to a common test file
 from smrt.inputs.sensor_list import amsre
 from smrt.permittivity.generic_mixing_formula import maxwell_garnett
+from smrt.microstructure_model.sticky_hard_spheres import StickyHardSpheres
 
 tolerance = 1e-7
 tolerance_pc = 0.001  # 1% error is allowable for differences from MEMLS values. Tests pass at 2%. Some fail at 1%.
 
+@pytest.fixture
+def setup_func_shs():
+    # ### Make a snow layer
+    shs_lay = make_snow_layer(
+        layer_thickness=0.2,
+        microstructure_model=StickyHardSpheres,
+        density=250,
+        temperature=265,
+        radius=5e-4,
+        stickiness=0.2,
+    )
+    return shs_lay
 
 def setup_func_em(testpack=None):
     if testpack is None:
