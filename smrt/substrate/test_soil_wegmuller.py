@@ -2,11 +2,6 @@ import numpy as np
 
 from smrt.inputs.make_soil import make_soil
 
-
-def test_make_soil_wegmuller():
-    make_soil("soil_wegmuller", "dobson85", 275, moisture=0.9, sand=0.2, clay=0.3, drymatter=1100, roughness_rms=1e-2)
-
-
 def test_soil_wegmuller_reflection():
     s = make_soil(
         "soil_wegmuller", "dobson85", 275, moisture=0.9, sand=0.2, clay=0.3, drymatter=1100, roughness_rms=1e-2
