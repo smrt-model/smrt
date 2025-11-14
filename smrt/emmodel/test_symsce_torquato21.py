@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import numpy as np
+import pytest
 
 from smrt.core.sensor import active
 from smrt.emmodel import commontest
@@ -33,60 +34,18 @@ def setup_func_active(testpack=None):
     emmodel = SymSCETK21(scatt, testpack)
     return emmodel
 
-
-def test_ks_pc_is_0p3_mm():
-    testpack = setup_func_pc(0.3e-3)
+@pytest.mark.parametrize("pc,initial_ks", [(0.3e-3, 7.4438717),
+                                           (0.25e-3, 4.62265399),
+                                           (0.2e-3, 2.51748175e00),
+                                           (0.15e-3, 1.11772796),
+                                           (0.1e-3, 0.344311),
+                                           (0.05e-3, 0.04413892)])
+def test_ks(pc, initial_ks):
+    testpack = setup_func_pc(pc)
     em = setup_func_em(testpack)
     # Allow 1% error
-    initial_ks = 7.4438717
     print(initial_ks, em.ks(0))
     np.testing.assert_allclose(em.ks(0).meantrace, initial_ks, rtol=tolerance_pc)
-
-
-def test_ks_pc_is_0p25_mm():
-    testpack = setup_func_pc(0.25e-3)
-    em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks = 4.62265399
-    print(initial_ks, em.ks(0))
-    np.testing.assert_allclose(em.ks(0).meantrace, initial_ks, rtol=tolerance_pc)
-
-
-def test_ks_pc_is_0p2_mm():
-    testpack = setup_func_pc(0.2e-3)
-    em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks = 2.51748175e00
-    print(initial_ks, em.ks(0))
-    np.testing.assert_allclose(em.ks(0).meantrace, initial_ks, rtol=tolerance_pc)
-
-
-def test_ks_pc_is_0p15_mm():
-    testpack = setup_func_pc(0.15e-3)
-    em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks = 1.11772796
-    print(initial_ks, em.ks(0))
-    np.testing.assert_allclose(em.ks(0).meantrace, initial_ks, rtol=tolerance_pc)
-
-
-def test_ks_pc_is_0p1_mm():
-    testpack = setup_func_pc(0.1e-3)
-    em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks = 0.344311
-    print(initial_ks, em.ks(0))
-    np.testing.assert_allclose(em.ks(0).meantrace, initial_ks, rtol=tolerance_pc)
-
-
-def test_ks_pc_is_0p05_mm():
-    testpack = setup_func_pc(0.05e-3)
-    em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks = 0.04413892
-    print(initial_ks, em.ks(0))
-    np.testing.assert_allclose(em.ks(0).meantrace, initial_ks, rtol=tolerance_pc)
-
 
 def test_energy_conservation_exp():
     em = setup_func_em()
@@ -99,8 +58,8 @@ def test_energy_conservation_indep():
     commontest.test_energy_conservation(em, tolerance_pc)
 
 
-def test_energy_conservation_shs():
-    shs_pack = setup_func_shs()
+def test_energy_conservation_shs(setup_func_shs):
+    shs_pack = setup_func_shs
     em = setup_func_em(testpack=shs_pack)
     commontest.test_energy_conservation(em, tolerance_pc)
 
@@ -116,8 +75,8 @@ def test_energy_conservation_indep_active():
     commontest.test_energy_conservation(em, tolerance_pc, npol=2)
 
 
-def test_energy_conservation_shs_active():
-    shs_pack = setup_func_shs()
+def test_energy_conservation_shs_active(setup_func_shs):
+    shs_pack = setup_func_shs
     em = setup_func_active(testpack=shs_pack)
     commontest.test_energy_conservation(em, tolerance_pc, npol=2)
 
