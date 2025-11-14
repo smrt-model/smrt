@@ -1,17 +1,17 @@
 # coding: utf-8
 
 import numpy as np
-
+import pytest
 # local import
 from smrt import make_model, make_snowpack, make_soil, sensor_list
 from smrt.permittivity.water import water_permittivity
 
-
-def setup_snowpack(l):
-    nl = l // 2  # // Forces integer division
+@pytest.fixture
+def setup_snowpack_2():
+    nl = 2 // 2  # // Forces integer division
     thickness = np.array([0.1, 0.1] * nl)
     thickness[-1] = 100  # last one is semi-infinit
-    p_ex = np.array([5e-5] * l)
+    p_ex = np.array([5e-5] * 2)
     temperature = np.array([250.0, 250.0] * nl)
     density = [200, 400] * nl
 
@@ -29,9 +29,9 @@ def setup_snowpack(l):
     return snowpack
 
 
-def test_geometrical_optics():
+def test_geometrical_optics(setup_snowpack_2):
     # prepare inputs
-    snowpack = setup_snowpack(l=2)
+    snowpack = setup_snowpack_2
 
     # create the snowpack
     m = make_model("iba", "dort")
