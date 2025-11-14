@@ -223,7 +223,6 @@ def mixing_formula():
 
     return mixing_formula
 
-
 @pytest.fixture
 def default_snowpack_args():
     return dict(
@@ -234,39 +233,25 @@ def default_snowpack_args():
         temperature=273,
     )
 
-
-def test_warning_mixing_formula_in_make_snowpack(mixing_formula, default_snowpack_args):
+def test_warning_mixing_formula(mixing_formula, default_snowpack_args):
     with pytest.warns(SMRTWarning):
         make_snowpack(**default_snowpack_args, ice_permittivity_model=mixing_formula)
-
-
-def test_warning_mixing_formula_in_make_snowpack2(mixing_formula, default_snowpack_args):
     with pytest.warns(SMRTWarning):
         make_snowpack(**default_snowpack_args, background_permittivity_model=mixing_formula)
-
-
-def test_warning_mixing_formula_in_make_ice_column(mixing_formula, default_snowpack_args):
     with pytest.warns(SMRTWarning):
         make_ice_column(
             "firstyear",
             **default_snowpack_args,
             brine_permittivity_model=mixing_formula,
         )
-
-
-def test_warning_mixing_formula_in_make_ice_column2(mixing_formula, default_snowpack_args):
     with pytest.warns(SMRTWarning):
         make_ice_column("firstyear", **default_snowpack_args, ice_permittivity_model=mixing_formula)
-
-
-def test_warning_mixing_formula_in_make_ice_column3(mixing_formula, default_snowpack_args):
     with pytest.warns(SMRTWarning):
         make_ice_column(
             "multiyear",
             **default_snowpack_args,
             saline_ice_permittivity_model=mixing_formula,
         )
-
 
 def test_warning_saline_snow(default_snowpack_args):
     with pytest.warns(SMRTWarning):

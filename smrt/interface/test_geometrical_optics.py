@@ -1,5 +1,5 @@
 import numpy as np
-
+import pytest
 from smrt.interface.geometrical_optics import GeometricalOptics
 from smrt.interface.geometrical_optics_backscatter import GeometricalOpticsBackscatter
 
@@ -36,13 +36,13 @@ def test_compare_geometrical_optics():
     assert np.allclose(m[0], m_back[0])
     assert np.allclose(m[1], m_back[1])
 
-
-def test_parameters_geometrical_optics():
+@pytest.mark.parametrize("interface", [(GeometricalOptics), (GeometricalOpticsBackscatter)])
+def test_parameters_geometrical_optics_and_backscatter(interface):
     s = 2.8e-2
     l = 7.5e-2
 
-    go_mss = GeometricalOptics(mean_square_slope=2 * s**2 / l**2)
-    go_rms_corr = GeometricalOptics(roughness_rms=s, corr_length=l)
+    go_mss = interface(mean_square_slope=2 * s**2 / l**2)
+    go_rms_corr = interface(roughness_rms=s, corr_length=l)
 
     m_mss = get_diffuse_reflection(go_mss)
     m_rms_corr = get_diffuse_reflection(go_rms_corr)
@@ -50,21 +50,7 @@ def test_parameters_geometrical_optics():
     np.testing.assert_allclose(m_mss[0], m_rms_corr[0])
     np.testing.assert_allclose(m_mss[1], m_rms_corr[1])
 
-
-def test_parameters_geometrical_optics_backscatter():
-    s = 2.8e-2
-    l = 7.5e-2
-
-    go_mss = GeometricalOpticsBackscatter(mean_square_slope=2 * s**2 / l**2)
-    go_rms_corr = GeometricalOpticsBackscatter(roughness_rms=s, corr_length=l)
-
-    m_mss = get_diffuse_reflection(go_mss)
-    m_rms_corr = get_diffuse_reflection(go_rms_corr)
-
-    np.testing.assert_allclose(m_mss[0], m_rms_corr[0])
-    np.testing.assert_allclose(m_mss[1], m_rms_corr[1])
-
-
+#The two following tests seem difficult to factorise
 def test_reflectance_reciprocity():
     eps_1 = 1
     eps_2 = 1.6
@@ -82,7 +68,6 @@ def test_reflectance_reciprocity():
             assert np.allclose(R[1, 0, :] * mu_i, Rs[0, 1, :] * mu_s, atol=1e-3)
             assert np.allclose(R[0, 0, :] * mu_i, Rs[0, 0, :] * mu_s, atol=1e-3)
             assert np.allclose(R[1, 1, :] * mu_i, Rs[1, 1, :] * mu_s, atol=1e-3)
-
 
 def test_transmission_reciprocity():
     eps_1 = 1

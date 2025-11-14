@@ -16,16 +16,15 @@ def test_profile():
     assert np.allclose(sp.mid_layer_depths, [0.05, 0.2, 0.45])
     assert np.allclose(sp.profile("density"), [100, 200, 300])
 
-
+@pytest.fixture
 def create_two_snowpacks():
     sp1 = make_snowpack([0.1], "exponential", density=300, corr_length=200e-6)
     sp2 = make_snowpack([0.5], "exponential", density=400, corr_length=100e-6)
-
     return sp1, sp2
 
 
-def test_addition():
-    sp1, sp2 = create_two_snowpacks()
+def test_addition(create_two_snowpacks):
+    sp1, sp2 = create_two_snowpacks
     sp = sp1 + sp2
 
     assert len(sp.layers) == 2
@@ -33,8 +32,8 @@ def test_addition():
     assert sp.layers[0].density == 300
 
 
-def test_layer_addition():
-    sp1, sp2 = create_two_snowpacks()
+def test_layer_addition(create_two_snowpacks):
+    sp1, sp2 = create_two_snowpacks
 
     sp = sp1 + sp2.layers[0]
 
@@ -49,8 +48,8 @@ def test_layer_addition():
     assert sp.layers[0].density == 300
 
 
-def test_inplace_addition():
-    sp1, sp2 = create_two_snowpacks()
+def test_inplace_addition(create_two_snowpacks):
+    sp1, sp2 = create_two_snowpacks
 
     sp1 += sp2
 
@@ -59,8 +58,8 @@ def test_inplace_addition():
     assert sp1.layers[0].density == 300
 
 
-def test_inplace_layer_addition():
-    sp1, sp2 = create_two_snowpacks()
+def test_inplace_layer_addition(create_two_snowpacks):
+    sp1, sp2 = create_two_snowpacks
 
     sp1 += sp2.layers[0]
 

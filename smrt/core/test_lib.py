@@ -1,7 +1,7 @@
 # coding: utf-8
 
 import numpy as np
-
+import pytest
 from smrt.core.lib import generic_ft_even_matrix
 from smrt.emmodel.rayleigh import Rayleigh
 from smrt.inputs.make_medium import make_snow_layer
@@ -10,7 +10,7 @@ from smrt.microstructure_model.independent_sphere import IndependentSphere
 
 tolerance_pc = 0.01  # 5% tolerance
 
-
+# todo: difficult fixture case
 def setup_func_sp():
     # ### Make a snow layer
     shs_lay = make_snow_layer(
@@ -22,7 +22,7 @@ def setup_func_sp():
     )
     return shs_lay
 
-
+@pytest.fixture
 def setup_func_em(testpack=None):
     if testpack is None:
         testpack = setup_func_sp()
@@ -31,8 +31,8 @@ def setup_func_em(testpack=None):
     return emmodel
 
 
-def test_generic_ft_even_matrix():
-    em = setup_func_em()
+def test_generic_ft_even_matrix(setup_func_em):
+    em = setup_func_em
 
     mu = np.arange(0.1, 1, 0.4)
     npol = 3
