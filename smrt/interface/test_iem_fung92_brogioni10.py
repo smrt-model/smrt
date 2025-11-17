@@ -25,8 +25,8 @@ def test_iem_fung92_biogoni10_continuty():
     sigma_vv2 = dB(4 * np.pi * mu * R2[0])
     sigma_hh2 = dB(4 * np.pi * mu * R2[1])
 
-    assert np.allclose(sigma_vv, sigma_vv2)
-    assert np.allclose(sigma_hh, sigma_hh2)
+    np.testing.assert_allclose(sigma_vv, sigma_vv2)
+    np.testing.assert_allclose(sigma_hh, sigma_hh2)
 
 
 def test_iem_fung92_brogioni10():

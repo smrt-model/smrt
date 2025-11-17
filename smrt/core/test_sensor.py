@@ -28,7 +28,7 @@ def test_iterate():
 def test_wavelength():
     s = sensor.Sensor(wavelength=0.21, theta_deg=0)
     assert s.wavelength == 0.21
-    assert np.allclose(s.frequency, 1427583133)
+    np.testing.assert_allclose(s.frequency, 1427583133)
 
 
 def test_no_theta():

@@ -65,7 +65,7 @@ def test_real_ice_permittivity_output_maetzler87_temp_268():
 # Should be exact
 def test_ice_permittivity_output_matzler_temp_270_MEMLS():
     eps = _ice_permittivity_MEMLS(10e9, 270, 0)
-    assert np.allclose(eps.real, 3.18567)
+    np.testing.assert_allclose(eps.real, 3.18567)
     np.testing.assert_allclose(eps.imag, 9.09298888985990e-04, atol=1e-8)
 
 # Test output MEMLS version

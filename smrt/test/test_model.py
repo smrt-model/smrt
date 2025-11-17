@@ -77,7 +77,7 @@ def test_snowpack_dimension(onelayer_snowpack_sequence):
     res = m.run(sensor, onelayer_snowpack_sequence, snowpack_dimension=("temperature", temperatures))
 
     assert hasattr(res, "temperature")
-    assert np.allclose(res.temperature, temperatures)
+    np.testing.assert_allclose(res.temperature, temperatures)
 
     with pytest.raises(SMRTError):
         m.run(sensor, onelayer_snowpack_sequence, snowpack_dimension=(temperatures, "temperature"))

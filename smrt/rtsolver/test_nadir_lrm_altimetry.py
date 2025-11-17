@@ -36,4 +36,6 @@ def test_scattering_noabsorption(setup_scattering_snowpack):
     res = m.run(sensor, sp)
     print(np.sum(res.data))
 
-    assert np.allclose(np.sum(res.waveform()), 4.25624771e-24)
+    np.testing.assert_allclose(np.sum(res.waveform()), 4.25624771e-24, atol=1e-8) #atol is subjective
+
+
