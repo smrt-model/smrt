@@ -126,40 +126,21 @@ class IterativeFirstOrder(RTSolverBase):
         self.init_solve(snowpack, emmodels, sensor, atmosphere)
 
         substrate = snowpack.substrate
-        if substrate is not None and substrate.permittivity(sensor.frequency) is not None:
-            substrate_permittivity = substrate.permittivity(sensor.frequency)
-            if substrate_permittivity.imag < 1e-8:
-                smrt_warn("the permittivity of the substrate has a too small imaginary part for reliable results")
-                thickness.append(1e10)
-                temperature.append(snowpack.substrate.temperature)
-        else:
-            substrate = snowpack.substrate
-            substrate_permittivity = None
-
-        thickness = snowpack.layer_thicknesses
-        temperature = snowpack.profile("temperature")
 
         # Active sensor
         # only V and H are necessary for first order
         self.pola = ["V", "H"]
-        self.npol = len(self.pola)
+        npol = len(self.pola)
         self.nlayer = snowpack.nlayer
         self.temperature = None
 
         # effective_permittivity = np.array(effective_permittivity)
 
         mu0 = np.cos(sensor.theta)
-        self.dphi = np.pi
 
         # solve with first order iterative solution
-        I = self.compute_intensity(
-            snowpack,
-            emmodels,
-            sensor,
-            snowpack.interfaces,
-            substrate,
-            self.effective_permittivity,
-            mu0,
+        I = compute_intensity(
+            snowpack, emmodels, sensor, snowpack.interfaces, substrate, self.effective_permittivity, mu0, npol
         )
 
         #  describe the results list of (dimension name, dimension array of value)
@@ -198,171 +179,171 @@ class IterativeFirstOrder(RTSolverBase):
         else:
             return make_result(sensor, total_I, coords=coords, other_data=other_data)
 
-    def compute_intensity(self, snowpack, emmodels, sensor, interfaces, substrate, effective_permittivity, mu0):
-        # """
-        # Calculate the intensity contributions for first-order backscatter.
 
-        # Computes zeroth and first-order backscatter contributions including direct
-        # backscatter, reflection backscatter, and double bounce scattering.
+def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effective_permittivity, mu0, npol):
+    # """
+    # Calculate the intensity contributions for first-order backscatter.
 
-        # Args:
-        #     snowpack (Snowpack): Snowpack object with layer properties.
-        #     emmodels (list): List of electromagnetic models for each layer.
-        #     sensor (Sensor): Sensor configuration.
-        #     interfaces (list): List of interface objects.
-        #     substrate (Substrate): Substrate object.
-        #     effective_permittivity (list): Complex permittivity for each layer.
-        #     mu0 (array_like): Cosine of incident angles.
+    # Computes zeroth and first-order backscatter contributions including direct
+    # backscatter, reflection backscatter, and double bounce scattering.
 
-        # Returns:
-        #     np.ndarray: Intensity array with shape (4, n, npol, npol) containing:
-        #         - [0]: Direct backscatter contribution
-        #         - [1]: Reflected scattering contribution
-        #         - [2]: Double bounce contribution
-        #         - [3]: Zeroth order contribution
-        # """
-        nlayer = snowpack.nlayer
-        dphi = self.dphi
-        n = len(mu0)  # number of streams
-        npol = self.npol
+    # Args:
+    #     snowpack (Snowpack): Snowpack object with layer properties.
+    #     emmodels (list): List of electromagnetic models for each layer.
+    #     sensor (Sensor): Sensor configuration.
+    #     interfaces (list): List of interface objects.
+    #     substrate (Substrate): Substrate object.
+    #     effective_permittivity (list): Complex permittivity for each layer.
+    #     mu0 (array_like): Cosine of incident angles.
 
-        # no need for 3x3 in first order solution
-        I_i = np.array([[1, 0], [0, 1]])
+    # Returns:
+    #     np.ndarray: Intensity array with shape (4, n, npol, npol) containing:
+    #         - [0]: Direct backscatter contribution
+    #         - [1]: Reflected scattering contribution
+    #         - [2]: Double bounce contribution
+    #         - [3]: Zeroth order contribution
+    # """
+    nlayer = snowpack.nlayer
+    dphi = np.pi
+    n = len(mu0)  # number of streams
 
-        interface_l = _InterfaceProperties(
-            sensor.frequency,
-            interfaces,
-            substrate,
-            effective_permittivity,
-            mu0,
-            npol,
-            nlayer,
-            dphi,
-        )
+    # no need for 3x3 in first order solution
+    I_i = np.array([[1, 0], [0, 1]])
 
-        # get list of thickness for each layer
-        thickness = snowpack.layer_thicknesses
+    interface_l = _InterfaceProperties(
+        sensor.frequency,
+        interfaces,
+        substrate,
+        effective_permittivity,
+        mu0,
+        npol,
+        nlayer,
+        dphi,
+    )
 
-        # mu for all layer and can have more than 1 if theta from sensor is a list
-        mus = interface_l.mu
+    # get list of thickness for each layer
+    thickness = snowpack.layer_thicknesses
 
-        # get specular reflection of the substrate
-        reflection_bottom_substrate = interface_l.reflection_bottom(nlayer - 1)
+    # mu for all layer and can have more than 1 if theta from sensor is a list
+    mus = interface_l.mu
 
-        # add backscatter from surface if rough surface
-        backscatter_surface = _get_np_matrix(interface_l.Rbottom_backscatter[-1], npol, n)
-        I0_surface = backscatter_surface @ I_i
+    # get specular reflection of the substrate
+    # unsused reflection_bottom_substrate = interface_l.reflection_bottom(nlayer - 1)
 
-        # refraction_factor for first layer
-        refraction_factor_0 = compute_refraction_factor(1, effective_permittivity[0], mu0, mus[0])[
-            :, np.newaxis, np.newaxis
-        ]
+    # add backscatter from surface if rough surface
+    backscatter_surface = _get_np_matrix(interface_l.Rbottom_backscatter[-1], npol, n)
+    I0_surface = backscatter_surface @ I_i
 
-        # Intensity incident transmitted to first layer from air
-        transmission_bottom_surface = interface_l.transmission_bottom(-1)
-        I_l = transmission_bottom_surface @ I_i * refraction_factor_0
+    # refraction_factor for first layer
+    refraction_factor_0 = compute_refraction_factor(1, effective_permittivity[0], mu0, mus[0])[
+        :, np.newaxis, np.newaxis
+    ]
 
-        # 3 for the number of contribution for the first order backscatter
-        intensity_up = np.zeros((4, n, npol, npol))
-        # add surface contribution to I0
-        intensity_up[0] = I0_surface
+    # Intensity incident transmitted to first layer from air
+    transmission_bottom_surface = interface_l.transmission_bottom(-1)
+    I_l = transmission_bottom_surface @ I_i * refraction_factor_0
 
-        optical_depth = 0
-        for l in range(nlayer):
-            # check scat albedo for validity of iterative solution
-            ke = emmodels[l]._ks + emmodels[l].ka
-            scat_albedo = emmodels[l]._ks / (ke)
-            if scat_albedo > 0.5:
-                smrt_warn(
-                    f"Warning : scattering albedo ({np.round(scat_albedo, 2)}) might be too high"
-                    + " for iterative method. Limit is around 0.5."
-                )
+    # 3 for the number of contribution for the first order backscatter
+    intensity_up = np.zeros((4, n, npol, npol))
+    # add surface contribution to I0
+    intensity_up[0] = I0_surface
 
-            # prepare matrix of interface
-            # transmission matrix of the top layer to l-1
-            transmission_top = interface_l.transmission_top(l)
-
-            # transmission matrix of the bottom layer to l+1
-            transmission_bottom = interface_l.transmission_bottom(l)
-
-            # Reflection matrix of the bottom layer
-            reflection_bottom = interface_l.reflection_bottom(l)
-
-            # backscatter matrix of the bottom layer
-            backscatter_bottom = _get_np_matrix(interface_l.Rbottom_backscatter[l], npol, n)
-
-            # get phase function for array of mu and -mu
-            mus_sym = np.concatenate([-mus[l], mus[l]])
-            # Note that the phase calculation is inefficiant as it calculates all combinations of (mus_sym, mus_sym).
-            # Solving this issue would require to rewrite all the phase methods. For the future, maybe.
-            phases = emmodels[l].phase(mus_sym, mus_sym, dphi, npol).values
-
-            # 1/4pi normalization of the RT equation for SMRT
-            # applied to phase here, interface and substrate already have the smrt_norm
-            phases /= 4 * np.pi
-
-            def reshape_phase(p):
-                return np.rollaxis(p.diagonal(axis1=-2, axis2=-1), -1)  # take the diagonal of the last two axes
-
-            P_Up = reshape_phase(phases[:, :, 0, 0:n, n:])  # P(-mu, mu)
-            P_Down = reshape_phase(phases[:, :, 0, n:, 0:n])  # P(mu, -mu)
-            P_Bi_Up = reshape_phase(phases[:, :, 0, n:, n:])  # P(mu, mu)
-            P_Bi_Down = reshape_phase(phases[:, :, 0, 0:n, 0:n])  # P(-mu, -mu)
-
-            layer_optical_depth = ke * thickness[l]
-            optical_depth += layer_optical_depth
-
-            # convert to 3d array for computation of intensity
-            # allow computation of incident angle
-            # two way attenuation (ulaby et al 2014, eq: 11.2)
-            mus_l = mus[l][:, np.newaxis, np.newaxis]
-            gammas2 = np.exp(-2 * layer_optical_depth / mus_l)
-
-            """
-            Zeroth order, ulaby et al 2014 (first term of 11.74)
-            Simply the reduced incident intensity, which attenuates exponentially inside the medium.
-            Scattering is not included, except for its contribution to extinction.
-            Should be zero for flat interface and off-nadir.
-            """
-            I0 = transmission_top @ (gammas2 * backscatter_bottom @ I_l)
-
-            """
-            First order, ulaby et al 2014 (11.75 and 11.62 )
-            Four contributions are taken into account
-            - Single volume backscatter upwards by the layer (direct backscatter)
-            - 2x single bistatic scattering by the layer and single reflection by the lower boundary. (reflected scattering)
-            - Single volume backscatter downward by the layer and double specular reflection by the boundary (double bounce)
-
-            """
-            I1_backscatter = transmission_top @ ((1 - gammas2) / (2 * ke) * P_Up) @ I_l
-
-            I1_double_bounce = transmission_top @ (thickness[l] * gammas2 / mus_l * (P_Bi_Down @ reflection_bottom + reflection_bottom @ P_Bi_Up)) @ I_l  # fmt: skip
-
-            I1_reflected_backscatter = transmission_top @ (((1 - gammas2) / (2 * ke) * gammas2) * (reflection_bottom @ P_Down @ reflection_bottom)) @ I_l  # fmt: skip
-
-            # shape of intensity (incident angle, first order contribution, npo, npol)
-            I1 = np.array([I0, I1_backscatter, I1_double_bounce, I1_reflected_backscatter]).reshape(4, n, npol, npol)
-            # add intensity
-            intensity_up += I1
-
-            if l < nlayer - 1:
-                mus_l1 = mus[l + 1][:, np.newaxis, np.newaxis]
-                refraction_factor_l = compute_refraction_factor(
-                    effective_permittivity[l], effective_permittivity[l + 1], mus_l, mus_l1
-                )
-                # intensity in the layer transmitted downward for upper layer with one way attenuation
-                I_l = transmission_bottom @ (gammas2 * refraction_factor_l * I_l)
-
-        if substrate is None and optical_depth < 5:
+    optical_depth = 0
+    for l in range(nlayer):
+        # check scat albedo for validity of iterative solution
+        ke = emmodels[l]._ks + emmodels[l].ka
+        scat_albedo = emmodels[l]._ks / (ke)
+        if scat_albedo > 0.5:
             smrt_warn(
-                "The solver has detected that the snowpack is optically shallow (tau=%g) and no substrate has"
-                "been set, meaning that the space under the snowpack is vaccum and that the snowpack is"
-                "shallow enough to affect the signal measured at the surface. This is usually not wanted. "
-                "Either increase the thickness of the snowpack or set a substrate."
-                "If wanted, add a transparent substrate to supress this warning" % optical_depth
+                f"Warning : scattering albedo ({np.round(scat_albedo, 2)}) might be too high"
+                + " for iterative method. Limit is around 0.5."
             )
 
-        return intensity_up
+        # prepare matrix of interface
+        # transmission matrix of the top layer to l-1
+        transmission_top = interface_l.transmission_top(l)
+
+        # transmission matrix of the bottom layer to l+1
+        transmission_bottom = interface_l.transmission_bottom(l)
+
+        # Reflection matrix of the bottom layer
+        reflection_bottom = interface_l.reflection_bottom(l)
+
+        # backscatter matrix of the bottom layer
+        backscatter_bottom = _get_np_matrix(interface_l.Rbottom_backscatter[l], npol, n)
+
+        # get phase function for array of mu and -mu
+        mus_sym = np.concatenate([-mus[l], mus[l]])
+        # Note that the phase calculation is inefficiant as it calculates all combinations of (mus_sym, mus_sym).
+        # TODO: Solving this issue would require to rewrite all the phase methods.
+        phases = emmodels[l].phase(mus_sym, mus_sym, dphi, npol).values
+
+        # 1/4pi normalization of the RT equation for SMRT
+        # applied to phase here, interface and substrate already have the smrt_norm
+        phases /= 4 * np.pi
+
+        def reshape_phase(p):
+            return np.rollaxis(p.diagonal(axis1=-2, axis2=-1), -1)  # take the diagonal of the last two axes
+
+        P_Up = reshape_phase(phases[:, :, 0, 0:n, n:])  # P(-mu, mu)
+        P_Down = reshape_phase(phases[:, :, 0, n:, 0:n])  # P(mu, -mu)
+        P_Bi_Up = reshape_phase(phases[:, :, 0, n:, n:])  # P(mu, mu)
+        P_Bi_Down = reshape_phase(phases[:, :, 0, 0:n, 0:n])  # P(-mu, -mu)
+
+        layer_optical_depth = ke * thickness[l]
+        optical_depth += layer_optical_depth
+
+        # convert to 3d array for computation of intensity
+        # allow computation of incident angle
+        # two way attenuation (ulaby et al 2014, eq: 11.2)
+        mus_l = mus[l][:, np.newaxis, np.newaxis]
+        gammas2 = np.exp(-2 * layer_optical_depth / mus_l)
+
+        """
+        Zeroth order, ulaby et al 2014 (first term of 11.74)
+        Simply the reduced incident intensity, which attenuates exponentially inside the medium.
+        Scattering is not included, except for its contribution to extinction.
+        Should be zero for flat interface and off-nadir.
+        """
+        I0 = transmission_top @ (gammas2 * backscatter_bottom @ I_l)
+
+        """
+        First order, ulaby et al 2014 (11.75 and 11.62 )
+        Four contributions are taken into account
+        - Single volume backscatter upwards by the layer (direct backscatter)
+        - 2x single bistatic scattering by the layer and single reflection by the lower boundary. (reflected scattering)
+        - Single volume backscatter downward by the layer and double specular reflection by the boundary (double bounce)
+
+        """
+        I1_backscatter = transmission_top @ ((1 - gammas2) / (2 * ke) * P_Up) @ I_l
+
+        I1_double_bounce = transmission_top @ (thickness[l] * gammas2 / mus_l * (P_Bi_Down @ reflection_bottom + reflection_bottom @ P_Bi_Up)) @ I_l  # fmt: skip
+
+        I1_reflected_backscatter = transmission_top @ (((1 - gammas2) / (2 * ke) * gammas2) * (reflection_bottom @ P_Down @ reflection_bottom)) @ I_l  # fmt: skip
+
+        # shape of intensity (incident angle, first order contribution, npo, npol)
+        I1 = np.array([I0, I1_backscatter, I1_double_bounce, I1_reflected_backscatter]).reshape(4, n, npol, npol)
+        # add intensity
+        intensity_up += I1
+
+        if l < nlayer - 1:
+            mus_l1 = mus[l + 1][:, np.newaxis, np.newaxis]
+            refraction_factor_l = compute_refraction_factor(
+                effective_permittivity[l], effective_permittivity[l + 1], mus_l, mus_l1
+            )
+            # intensity in the layer transmitted downward for upper layer with one way attenuation
+            I_l = transmission_bottom @ (gammas2 * refraction_factor_l * I_l)
+
+    if substrate is None and optical_depth < 5:
+        smrt_warn(
+            "The solver has detected that the snowpack is optically shallow (tau=%g) and no substrate has"
+            "been set, meaning that the space under the snowpack is vaccum and that the snowpack is"
+            "shallow enough to affect the signal measured at the surface. This is usually not wanted. "
+            "Either increase the thickness of the snowpack or set a substrate."
+            "If wanted, add a transparent substrate to supress this warning" % optical_depth
+        )
+
+    return intensity_up
 
 
 def compute_gamma(mu, layer_optical_depth):
@@ -520,7 +501,7 @@ class _InterfaceProperties(object):
                         if hasattr(interfaces[l + 1], "diffuse_reflection_matrix")
                         else smrt_matrix(0)
                     )
-                except:
+                except SMRTError:  # TODO: check and remove Rbottom_forward or change the Exception system
                     self.Rbottom_forward[l] = smrt_matrix(0)
 
                 self.Tbottom_coh[l] = interfaces[l + 1].coherent_transmission_matrix(
@@ -548,7 +529,7 @@ class _InterfaceProperties(object):
                         if hasattr(substrate, "diffuse_reflection_matrix")
                         else smrt_matrix(0)
                     )
-                except:
+                except SMRTError:  # TODO: check and remove Rbottom_forward or change the Exception system
                     self.Rbottom_forward[l] = smrt_matrix(0)
 
                 # sub-snow

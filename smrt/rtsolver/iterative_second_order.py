@@ -72,10 +72,12 @@ import numpy as np
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.result import make_result
 from smrt.rtsolver.iterative_first_order import (
-    IterativeFirstOrder,
     _InterfaceProperties,
     compute_gamma,
     compute_refraction_factor,
+)
+from smrt.rtsolver.iterative_first_order import (
+    compute_intensity as first_order_compute_intensity,
 )
 from smrt.rtsolver.rtsolver_utils import RTSolverBase, prepare_kskaeps_profile_information
 from smrt.rtsolver.streams import compute_stream
@@ -182,7 +184,6 @@ class IterativeSecondOrder(RTSolverBase):
         temperature = None
         mu0 = np.cos(sensor.theta)
         self.len_mu = len(mu0)
-        self.dphi = np.pi
 
         # # create the model
         # self.emmodels = emmodels
@@ -195,12 +196,8 @@ class IterativeSecondOrder(RTSolverBase):
         streams = compute_stream(self.n_max_stream, self.effective_permittivity, mode=self.stream_mode)
 
         # get the first order
-        first_solver = IterativeFirstOrder(return_contributions=True)
-        # 2 pol for first order
-        first_solver.npol = 2
-        first_solver.dphi = self.dphi
-        I1 = first_solver.compute_intensity(
-            snowpack, emmodels, sensor, snowpack.interfaces, substrate, self.effective_permittivity, mu0
+        I1 = first_order_compute_intensity(
+            snowpack, emmodels, sensor, snowpack.interfaces, substrate, self.effective_permittivity, mu0, npol=2
         )
         total_I1 = I1[0] + I1[1] + I1[2] + I1[3]
 
@@ -266,27 +263,18 @@ class IterativeSecondOrder(RTSolverBase):
 
         # mode for integral of phi from 0 to 2pi
         npol = self.npol
-        dphi = self.dphi
-        len_mu = self.len_mu
         nlayer = snowpack.nlayer
         thickness = snowpack.layer_thicknesses
         substrate = snowpack.substrate
 
         interface_l = _InterfaceProperties(
-            sensor.frequency, snowpack.interfaces, substrate, effective_permittivity, mu0, npol, nlayer, dphi
+            sensor.frequency, snowpack.interfaces, substrate, effective_permittivity, mu0, npol, nlayer, np.pi
         )
 
         # check if layer to ground interaction can to be calculated if True, need bistatic coef from diffuse matrix
         # TO-DO Maybe theres is a better way to check if bi-static coefs are available from the substrate
         if (substrate is not None) and (hasattr(substrate, "ft_even_diffuse_reflection_matrix")):
-            try:
-                # try for a different angle
-                substrate.ft_even_diffuse_reflection_matrix(
-                    sensor.frequency, complex(16, 0.1), mu0, mu0 + 0.5, self.m_max, self.npol
-                )
-                self.compute_substrate_integral = True
-            except:
-                self.compute_substrate_integral = False
+            self.compute_substrate_integral = hasattr(substrate, "ft_even_diffuse_reflection_matrix")
         else:
             self.compute_substrate_integral = False
 
@@ -331,7 +319,7 @@ class IterativeSecondOrder(RTSolverBase):
 
             if self.compute_substrate_integral:
                 # reflection matrix of the ground
-                Rbottom_diff_int = get_substrate_reflectivity_integral(
+                Rbottom_diff_int = substrate_reflectivity_integral(
                     substrate,
                     sensor.frequency,
                     effective_permittivity[ln],
@@ -429,7 +417,6 @@ class IterativeSecondOrder(RTSolverBase):
         m_max = self.m_max
         len_mu = self.len_mu
         npol = self.npol
-        dphi = self.dphi
 
         # get negative and positive mu
         mu_i_sym = np.concatenate([-mus_i, mus_i])
@@ -460,15 +447,15 @@ class IterativeSecondOrder(RTSolverBase):
 
             A = compute_A(mus_i, mu, ke, layer_optical_depth)
             sum_a += w * (
-                (A * compute_int_phi(P1[:, :, :, :, i], P2[:, :, :, i, :], m_max, len_mu, npol, dphi))
-                + (A * compute_int_phi(P3[:, :, :, :, i], P4[:, :, :, i, :], m_max, len_mu, npol, dphi))
+                (A * compute_integral_phi(P1[:, :, :, :, i], P2[:, :, :, i, :], m_max, len_mu, npol, np.pi))
+                + (A * compute_integral_phi(P3[:, :, :, :, i], P4[:, :, :, i, :], m_max, len_mu, npol, np.pi))
             )
 
             # P(mu_i, -mu)* P(-mu_int, -mu_i) + P(mu_i, mu_int)* P(mu_int, mu_i)
             B = compute_B(mus_i, mu, ke, layer_optical_depth)
             sum_b += w * (
-                (B * compute_int_phi(P5[:, :, :, :, i], P6[:, :, :, i, :], m_max, len_mu, npol, dphi))
-                + (B * compute_int_phi(P7[:, :, :, :, i], P8[:, :, :, i, :], m_max, len_mu, npol, dphi))
+                (B * compute_integral_phi(P5[:, :, :, :, i], P6[:, :, :, i, :], m_max, len_mu, npol, np.pi))
+                + (B * compute_integral_phi(P7[:, :, :, :, i], P8[:, :, :, i, :], m_max, len_mu, npol, np.pi))
             )
 
         I_mu = (sum_a + sum_b) @ I_l
@@ -502,7 +489,6 @@ class IterativeSecondOrder(RTSolverBase):
         m_max = self.m_max
         len_mu = self.len_mu
         npol = self.npol
-        dphi = self.dphi
 
         # get negative and positive mu
         mu_i_sym = np.concatenate([-mus_i, mus_i])
@@ -528,8 +514,8 @@ class IterativeSecondOrder(RTSolverBase):
 
             E = compute_E(mus_i, mu, ke, layer_optical_depth, layer_optical_depth_ln_ground)
             sum_e += w * (
-                (E * compute_int_phi(R1[:, :, :, :, i], P1[:, :, :, i, :], m_max, len_mu, npol, dphi))
-                + (E * compute_int_phi(R2[:, :, :, :, i], P2[:, :, :, i, :], m_max, len_mu, npol, dphi))
+                (E * compute_integral_phi(R1[:, :, :, :, i], P1[:, :, :, i, :], m_max, len_mu, npol, np.pi))
+                + (E * compute_integral_phi(R2[:, :, :, :, i], P2[:, :, :, i, :], m_max, len_mu, npol, np.pi))
             )
 
         return sum_e @ I_l
@@ -567,7 +553,6 @@ class IterativeSecondOrder(RTSolverBase):
         m_max = self.m_max
         len_mu = self.len_mu
         npol = self.npol
-        dphi = self.dphi
 
         # get negative and positive mu
         mu_i_phase_ln = np.concatenate([-mu_i_ln, mu_i_ln])
@@ -611,8 +596,8 @@ class IterativeSecondOrder(RTSolverBase):
                 mu_i_ln, mu_ln, ke_ln, ke_lm, layer_optical_depth_ln, layer_optical_depth_lm, layer_optical_depth_lr
             )
             sum_c += w_ln * (
-                (C * compute_int_phi(P1n[:, :, :, :, i_ln], P2m[:, :, :, i_lm, :], m_max, len_mu, npol, dphi))
-                + (C * compute_int_phi(P3n[:, :, :, :, i_ln], P4m[:, :, :, i_lm, :], m_max, len_mu, npol, dphi))
+                (C * compute_integral_phi(P1n[:, :, :, :, i_ln], P2m[:, :, :, i_lm, :], m_max, len_mu, npol, np.pi))
+                + (C * compute_integral_phi(P3n[:, :, :, :, i_ln], P4m[:, :, :, i_lm, :], m_max, len_mu, npol, np.pi))
             )
 
             # P(mu_i, -mu)* P(-mu_int, -mu_i) + P(mu_i, mu_int)* P(mu_int, mu_i)
@@ -620,8 +605,8 @@ class IterativeSecondOrder(RTSolverBase):
                 mu_i_ln, mu_ln, ke_ln, ke_lm, layer_optical_depth_ln, layer_optical_depth_lm, layer_optical_depth_lr
             )
             sum_d += w_ln * (
-                (D * compute_int_phi(P5m[:, :, :, :, i_lm], P6n[:, :, :, i_ln, :], m_max, len_mu, npol, dphi))
-                + (D * compute_int_phi(P7m[:, :, :, :, i_lm], P8n[:, :, :, i_ln, :], m_max, len_mu, npol, dphi))
+                (D * compute_integral_phi(P5m[:, :, :, :, i_lm], P6n[:, :, :, i_ln, :], m_max, len_mu, npol, np.pi))
+                + (D * compute_integral_phi(P7m[:, :, :, :, i_lm], P8n[:, :, :, i_ln, :], m_max, len_mu, npol, np.pi))
             )
 
         I_mu = (sum_c + sum_d) @ I_l
@@ -673,7 +658,7 @@ def separate_ft_matrix(ft_matrix, m_max, len_mu, npol):
     return ft_cosine, ft_sine
 
 
-def compute_int_phi(ft_matrix1, ft_matrix2, m_max, len_mu, npol, dphi):
+def compute_integral_phi(ft_matrix1, ft_matrix2, m_max, len_mu, npol, dphi):
     # approximation of the integral of phi (0, 2pi) between two ft matrix (Appendix 2, Tsang et al., 2007)
     # summation of all the mode
 
@@ -697,7 +682,7 @@ def compute_int_phi(ft_matrix1, ft_matrix2, m_max, len_mu, npol, dphi):
     return int_phi
 
 
-def get_substrate_reflectivity_integral(substrate, frequency, eps_l, mu_i, mu_int, m_max, npol):
+def substrate_reflectivity_integral(substrate, frequency, eps_l, mu_i, mu_int, m_max, npol):
     # Compute the reflectivity matrix for integrals
     # Need full bi-static to work...
     Rbottom_diff_i_int = substrate.ft_even_diffuse_reflection_matrix(frequency, eps_l, mu_i, mu_int, m_max, npol)
