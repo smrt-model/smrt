@@ -1,6 +1,6 @@
 # coding: utf-8
 
-""" Compute Strong Fluctuation Theory scattering. This theory requires the scatterers to be smaller than the wavelength
+"""Compute Strong Fluctuation Theory scattering. This theory requires the scatterers to be smaller than the wavelength
 
 This model is only compatible with the Exponential autocorrelation function only
 
@@ -8,18 +8,15 @@ This model is only compatible with the Exponential autocorrelation function only
 
 import numpy as np
 
-from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
 from ..permittivity.generic_mixing_formula import polder_van_santen
 from .rayleigh import Rayleigh
 
 
 class SFT_Rayleigh(Rayleigh):
-    """
-    """
+    """ """
 
     def __init__(self, sensor, layer):
-
         # super().__init__()  # must not be called. Todo: write a generic RayleighBase object with phase function methods only
 
         # check here the limit of the Rayleigh model
@@ -39,7 +36,7 @@ class SFT_Rayleigh(Rayleigh):
         eg = self._effective_permittivity  # short
         kg = k0 * np.sqrt(eg / e0)
 
-        delta = 9 * eg**2 / e0**2 * (f * ((es - eg) / (es + 2 * eg))**2 + (1 - f) * ((eb - eg) / (eb + 2 * eg))**2)
+        delta = 9 * eg**2 / e0**2 * (f * ((es - eg) / (es + 2 * eg)) ** 2 + (1 - f) * ((eb - eg) / (eb + 2 * eg)) ** 2)
 
         beta = 1 / corr_length - 1j * kg
 

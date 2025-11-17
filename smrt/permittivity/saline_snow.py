@@ -16,12 +16,27 @@ import warnings
 
 import numpy as np
 
-from smrt.core.globalconstants import DENSITY_OF_ICE, FREEZING_POINT, GHz, PERMITTIVITY_OF_FREE_SPACE, PSU
-from .brine import brine_conductivity_stogryn85, brine_relaxation_time_stogryn85, brine_salinity, \
-    permittivity_high_frequency_limit_stogryn85, static_brine_permittivity_stogryn85
-from .saline_water import seawater_permittivity_stogryn71, seawater_permittivity_stogryn95
+from smrt.core.globalconstants import (
+    DENSITY_OF_ICE,
+    FREEZING_POINT,
+    PERMITTIVITY_OF_FREE_SPACE,
+    PSU,
+    GHz,
+)
+
 from ..core.error import SMRTError
 from ..core.layer import layer_properties
+from .brine import (
+    brine_conductivity_stogryn85,
+    brine_relaxation_time_stogryn85,
+    brine_salinity,
+    permittivity_high_frequency_limit_stogryn85,
+    static_brine_permittivity_stogryn85,
+)
+from .saline_water import (
+    seawater_permittivity_stogryn71,
+    seawater_permittivity_stogryn95,
+)
 
 
 @layer_properties("density", "temperature", "salinity")
@@ -30,7 +45,7 @@ def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salin
     Compute permittivity of saline snow using the frequency dispersion model published by Geldsetzer et al. (2009).
 
     Note:
-        In-situ measurements collected had salinity concentration between 0.1e-3 and 12e3 kg/kg, temperatures 
+        In-situ measurements collected had salinity concentration between 0.1e-3 and 12e3 kg/kg, temperatures
         ranging between 257 and 273 K, and a mean snow density of 352 kg/m3. Validity between 10 MHz and 40 GHz.
 
     Args:
@@ -42,19 +57,20 @@ def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salin
     Returns:
         complex permittivity of saline snow.
 
-    Source: 
+    Source:
         Matlab code, Ludovic Brucker.
 
     References:
-        Geldsetzer, T., Langlois, A., Yackel, J., (2009) Dielectric properties of brine-wetted snow on first-year sea ice, 
+        Geldsetzer, T., Langlois, A., Yackel, J., (2009) Dielectric properties of brine-wetted snow on first-year sea ice,
         Cold Regions Science and Technology, Volume 58, Issues 1–2,pp 47-56. https://doi.org/10.1016/j.coldregions.2009.03.009.
     """
 
     if np.max(frequency) > 40e9:
         warnings.warn(
-                "The permittivity model of Geldsetzer et al. 2009 "
-                "(doi:10.1016/j.coldregions.2009.03.009) "
-                "was developed for the frequency range 10 MHz - 40 GHz.")
+            "The permittivity model of Geldsetzer et al. 2009 "
+            "(doi:10.1016/j.coldregions.2009.03.009) "
+            "was developed for the frequency range 10 MHz - 40 GHz."
+        )
 
     freqGHz = frequency / GHz
     tempC = temperature - FREEZING_POINT
@@ -74,15 +90,17 @@ def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salin
     density_brine = 1e3 + 0.8 * brine_sal
 
     # True brine volume fraction, Vb
-    true_brine_volume = (initial_brine_volume * density_brine) / (
-            (1 - initial_brine_volume) * density_ice + initial_brine_volume * density_brine) * (
-                                density / density_brine)
+    true_brine_volume = (
+        (initial_brine_volume * density_brine)
+        / ((1 - initial_brine_volume) * density_ice + initial_brine_volume * density_brine)
+        * (density / density_brine)
+    )
 
     real_brine = eps_inf + (eps_static - eps_inf) / (1 + (freqGHz / fr) ** 2)
     real_mix = eps_drysnow + 1.33 * true_brine_volume * real_brine
     lossb_rel = (eps_static - eps_inf) * (freqGHz / fr) / (1 + (freqGHz / fr) ** 2)
     lossb_con = sigma_brine / (omega_brine * PERMITTIVITY_OF_FREE_SPACE)
-    lossmix_con = lossb_con * true_brine_volume ** 1.778
+    lossmix_con = lossb_con * true_brine_volume**1.778
     loss_mix = 0.002 + 1.33 * true_brine_volume * lossb_rel + lossmix_con
 
     return real_mix + 1j * loss_mix
@@ -91,32 +109,40 @@ def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salin
 @layer_properties("density", "temperature", "salinity")
 def saline_snow_permittivity_scharien_with_stogryn71(frequency, density, temperature, salinity):
     """
-    Compute permittivity of saline snow with :py:mod:`seawater_permittivity_stogryn71`. 
-    
+    Compute permittivity of saline snow with :py:mod:`seawater_permittivity_stogryn71`.
+
     See :py:mod:`saline_snow_permittivity_scharien` documentation.
     """
 
-    return saline_snow_permittivity_scharien(density, temperature, salinity,
-                                             seawater_permittivity_stogryn71(frequency, temperature))
+    return saline_snow_permittivity_scharien(
+        density,
+        temperature,
+        salinity,
+        seawater_permittivity_stogryn71(frequency, temperature),
+    )
 
 
 @layer_properties("density", "temperature", "salinity")
 def saline_snow_permittivity_scharien_with_stogryn95(frequency, density, temperature, salinity):
     """
-    Compute permittivity of saline snow with :py:mod:`seawater_permittivity_stogryn95`. 
-    
+    Compute permittivity of saline snow with :py:mod:`seawater_permittivity_stogryn95`.
+
     See :py:mod:`saline_snow_permittivity_scharien` documentation.
     """
 
-    return saline_snow_permittivity_scharien(density, temperature, salinity,
-                                             seawater_permittivity_stogryn95(frequency, temperature, salinity))
+    return saline_snow_permittivity_scharien(
+        density,
+        temperature,
+        salinity,
+        seawater_permittivity_stogryn95(frequency, temperature, salinity),
+    )
 
 
 def saline_snow_permittivity_scharien(density, temperature, salinity, brine_permittivity):
     """
     Compute permittivity of saline snow using the Denoth / Matzler Mixture Model - Dielectric Constant of Saline Snow.
 
-    Note: 
+    Note:
         Assumptions:
             (1) Brine inclusion geometry as oblate spheroids. Depolarization factor, A0 = 0.053 (Denoth, 1980).
             (2) Brine inclusions are isotropically oriented. Coupling factor, X = 2/3 (Drinkwater and Crocker, 1988).
@@ -131,10 +157,10 @@ def saline_snow_permittivity_scharien(density, temperature, salinity, brine_perm
         temperature: snow temperature in K.
         salinity: snow salinity in kg/kg (see PSU constant in smrt module).
         brine_permittivity: brine_permittivity.
-    
+
     Returns:
         complex permittivity of saline snow.
-    
+
     Source:
         Matlab code, Randall Scharien.
 
@@ -142,9 +168,9 @@ def saline_snow_permittivity_scharien(density, temperature, salinity, brine_perm
         Denoth A. The Pendular-Funicular Liquid Transition in Snow. Journal of Glaciology. 1980;25(91):93-98.
         https://doi.org/10.3189/S0022143000010315
 
-        Drinkwater MR, Crocker GB. Modelling Changes in Scattering Properties of the Dielectric and Young Snow-Covered 
-        Sea Ice at GHz Requencies. Journal of Glaciology. 1988;34(118):274-282. 
-        https://doi.org/10.3189/S0022143000007012 
+        Drinkwater MR, Crocker GB. Modelling Changes in Scattering Properties of the Dielectric and Young Snow-Covered
+        Sea Ice at GHz Requencies. Journal of Glaciology. 1988;34(118):274-282.
+        https://doi.org/10.3189/S0022143000007012
     """
 
     # convert units
@@ -175,12 +201,14 @@ def saline_snow_permittivity_scharien(density, temperature, salinity, brine_perm
 
     if (tempC < -22.9) and (salinity == 0):
         raise SMRTError(
-                'Snow temperatures may be too low to be valid for calculating correct brine density and volume in snow.')
+            "Snow temperatures may be too low to be valid for calculating correct brine density and volume in snow."
+        )
 
     # true brine volume fraction, initial_brine_volume
-    true_brine_volume = ((initial_brine_volume * density_brine) / (
-            (1 - initial_brine_volume) * density_ice + initial_brine_volume * density_brine)) * (
-                                density / density_brine)
+    true_brine_volume = (
+        (initial_brine_volume * density_brine)
+        / ((1 - initial_brine_volume) * density_ice + initial_brine_volume * density_brine)
+    ) * (density / density_brine)
 
     # Equivalent dry snow density; removal of brine from original snow density
     density_drysnow = density - true_brine_volume * density_brine
@@ -196,7 +224,8 @@ def saline_snow_permittivity_scharien(density, temperature, salinity, brine_perm
 
     # Output dielectric constant of mixture
     eps_brine = eps_drysnow + (
-            (coupling_factor * true_brine_volume) * ((brine_permittivity - eps_drysnow) / (
-            1 + (brine_permittivity / eps_drysnow - 1) * depolarization_factor)))
+        (coupling_factor * true_brine_volume)
+        * ((brine_permittivity - eps_drysnow) / (1 + (brine_permittivity / eps_drysnow - 1) * depolarization_factor))
+    )
 
     return eps_brine

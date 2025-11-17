@@ -59,14 +59,13 @@ References:
 
 # other import
 import numpy as np
-import xarray as xr
 
 # local import
 from smrt.core.error import SMRTError, smrt_warn
-from smrt.core.lib import smrt_matrix, is_equal_zero
+from smrt.core.fresnel import snell_angle
+from smrt.core.lib import is_equal_zero, smrt_matrix
 from smrt.core.result import make_result
 from smrt.rtsolver.rtsolver_utils import prepare_kskaeps_profile_information
-from smrt.core.fresnel import snell_angle
 
 
 class IterativeFirstOrder(object):
@@ -90,6 +89,7 @@ class IterativeFirstOrder(object):
                 - 'zeroth': Zeroth-order contribution.
                 - 'total': Sum of all contributions.
     """
+
     # Dimensions that this solver can handle directly:
     _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "polarization"}
 
@@ -112,12 +112,14 @@ class IterativeFirstOrder(object):
         """
         if sensor.mode != "A":
             raise SMRTError(
-                "the iterative_rt solver is only suitable for activate microwave. " "Use an adequate sensor falling in this catergory."
+                "the iterative_rt solver is only suitable for activate microwave. "
+                "Use an adequate sensor falling in this catergory."
             )
 
         if atmosphere is not None:
             raise SMRTError(
-                "the iterative_rt solver can not handle atmosphere yet. " "Please put an issue on github if this feature is needed."
+                "the iterative_rt solver can not handle atmosphere yet. "
+                "Please put an issue on github if this feature is needed."
             )
 
         thickness = snowpack.layer_thicknesses
@@ -163,7 +165,9 @@ class IterativeFirstOrder(object):
         coords = [("theta_inc", sensor.theta_inc_deg), ("polarization_inc", self.pola), ("polarization", self.pola)]
 
         # store other diagnostic information
-        other_data = prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity=effective_permittivity, mu=mu0)
+        other_data = prepare_kskaeps_profile_information(
+            snowpack, emmodels, effective_permittivity=effective_permittivity, mu=mu0
+        )
 
         # get total intensity from the three contributions
         # first index is the number of mu
@@ -313,9 +317,9 @@ class IterativeFirstOrder(object):
 
             I1_back = Ttop_coh_m**2 @ ((1 - gammas2) / (2 * ke) * P_Up) @ I_l
 
-            I1_2B = Ttop_coh_m**2 @ (((1 - gammas2) / (2 * ke) * gammas2) * (Rbottom_coh_m @ P_Down @ Rbottom_coh_m)) @ I_l
+            I1_2B = Ttop_coh_m**2 @ (((1 - gammas2) / (2 * ke) * gammas2) * (Rbottom_coh_m @ P_Down @ Rbottom_coh_m)) @ I_l  # fmt: skip
 
-            I1_ref_scat = Ttop_coh_m**2 @ (thickness[l] * gammas2 / mus_l * (P_Bi_Down @ Rbottom_coh_m + Rbottom_coh_m @ P_Bi_Up)) @ I_l
+            I1_ref_scat = Ttop_coh_m**2 @ (thickness[l] * gammas2 / mus_l * (P_Bi_Down @ Rbottom_coh_m + Rbottom_coh_m @ P_Bi_Up)) @ I_l  # fmt: skip
 
             # shape of intensity (incident angle, first order contribution, npo, npol)
             I1 = np.array([I1_back, I1_ref_scat, I1_2B, I0_mu]).reshape(4, n, npol, npol)
@@ -326,7 +330,9 @@ class IterativeFirstOrder(object):
             if l < nlayer - 1:
                 mus_l1 = mus[l + 1][:, np.newaxis, np.newaxis]
                 # refraction factor for layer l, eq 22a and eq 22b in Tsang et al 2007
-                refraction_factor_l = (effective_permittivity[l].real / effective_permittivity[l + 1].real) * (mus_l / mus_l1)
+                refraction_factor_l = (effective_permittivity[l].real / effective_permittivity[l + 1].real) * (
+                    mus_l / mus_l1
+                )
                 # intensity in the layer transmitted downward for upper layer with one way attenuation
                 I_l = Tbottom_coh_m @ (gammas2 * refraction_factor_l * I_l)
 
@@ -412,7 +418,6 @@ class _InterfaceProperties(object):
     # """
 
     def __init__(self, frequency, interfaces, substrate, permittivity, mu0, npol, nlayer, dphi):
-
         self.Rtop_coh = dict()
         self.Rtop_diff = dict()
         self.Ttop_coh = dict()
@@ -461,14 +466,18 @@ class _InterfaceProperties(object):
                 # set up interfaces
                 # snow - snow
                 # Upward
-                self.Rbottom_coh[l] = interfaces[l + 1].specular_reflection_matrix(frequency, eps_l, eps_lp1, self.mu[l], npol)
+                self.Rbottom_coh[l] = interfaces[l + 1].specular_reflection_matrix(
+                    frequency, eps_l, eps_lp1, self.mu[l], npol
+                )
 
                 # other than flat interface
                 self.Rbottom_diff[l] = interfaces[l + 1].diffuse_reflection_matrix(
                     frequency, eps_l, eps_lp1, self.mu[l], self.mu[l], dphi, npol
                 )
 
-                self.Tbottom_coh[l] = interfaces[l + 1].coherent_transmission_matrix(frequency, eps_l, eps_lp1, self.mu[l], npol)
+                self.Tbottom_coh[l] = interfaces[l + 1].coherent_transmission_matrix(
+                    frequency, eps_l, eps_lp1, self.mu[l], npol
+                )
 
             elif substrate is not None:
                 self.Rbottom_coh[l] = substrate.specular_reflection_matrix(frequency, eps_l, self.mu[l], npol)

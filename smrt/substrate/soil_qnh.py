@@ -21,34 +21,34 @@ Examples:
 
 import numpy as np
 
+from smrt.core.fresnel import fresnel_reflection_matrix, fresnel_transmission_matrix
+
 # local import
 from smrt.core.interface import Substrate
-from smrt.core.fresnel import fresnel_reflection_matrix, fresnel_transmission_matrix
-from smrt.core import lib
 
 
 class SoilQNH(Substrate):
-
-    args = ['H']
-    optional_args = {'Q': 0., 'N': 0., 'Nv': np.nan, 'Nh': np.nan}
+    args = ["H"]
+    optional_args = {"Q": 0.0, "N": 0.0, "Nv": np.nan, "Nh": np.nan}
 
     def adjust(self, rh, rv, mu1):
         # in place modification of rh and rv for the rough soil QNH reflectivity model
 
         if np.isnan(self.Nv):
-            Nv = N
+            self.Nv = self.N
         if np.isnan(self.Nh):
-            Nh = N
+            self.Nh = self.N
 
         coef_h = np.exp(-self.H * (mu1**self.Nh))
         coef_v = np.exp(-self.H * (mu1**self.Nv))
 
-        trv = ((1-self.Q) * rv + self.Q * rh)*coef_v  # trv is temporary because rv (which is a view) is needed in the next line.
-        rh[:] = ((1-self.Q) * rh + self.Q * rv)*coef_h
+        trv = (
+            (1 - self.Q) * rv + self.Q * rh
+        ) * coef_v  # trv is temporary because rv (which is a view) is needed in the next line.
+        rh[:] = ((1 - self.Q) * rh + self.Q * rv) * coef_h
         rv[:] = trv  # copy back to the view.
 
     def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
-
         eps_2 = self.permittivity(frequency)
 
         reflection_coefficients = fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
@@ -65,7 +65,6 @@ class SoilQNH(Substrate):
         return reflection_coefficients
 
     def emissivity_matrix(self, frequency, eps_1, mu1, npol):
-
         # this function is a bit complex because we have to change first and second component but not the third one.
         # this is an approximation, as the third component should be affected by the roughness...
 

@@ -8,7 +8,7 @@ The recommended way to build these objects::
 
     radiometer = sensor_list.amsre()
 
-Note that the function :py:func:`~smrt.inputs.make_medium.make_snowpack` and the module :py:mod:`~smrt.inputs.sensor_list` is directly imported from smrt, which is convenient but they effectively lie 
+Note that the function :py:func:`~smrt.inputs.make_medium.make_snowpack` and the module :py:mod:`~smrt.inputs.sensor_list` is directly imported from smrt, which is convenient but they effectively lie
 in the package :py:mod:`smrt.inputs`. They could be imported using the full path as follows::
 
     from smrt.inputs.make_medium import make_snowpack

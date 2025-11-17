@@ -3,13 +3,14 @@ Fresnel coefficients formulae used in the packages :py:mod:`smrt.interface` and 
 """
 
 import numpy as np
-from smrt.core.lib import smrt_matrix, abs2
+
+from smrt.core.lib import abs2, smrt_matrix
 
 
 def fresnel_coefficients_old(eps_1, eps_2, mu1):
     """
-    Computes the reflection in two polarizations (H and V). The equations are only valid for lossless media.
-    Applying these equations for (strongly) lossy media results in (large) errors. Don't use it. It is here for reference only.
+    Compute the reflection in two polarizations (H and V). The equations are only valid for lossless media. Applying
+    these equations for (strongly) lossy media results in (large) errors. Don't use it. It is here for reference only.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
     reflection coefficient.
 
@@ -34,7 +35,7 @@ def fresnel_coefficients_old(eps_1, eps_2, mu1):
 
 def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=False):
     """
-    Computes the reflection in two polarizations (H and V) for lossly media with the "classical Fresnel" based
+    Compute the reflection in two polarizations (H and V) for lossly media with the "classical Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
     Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
 
@@ -47,7 +48,7 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=Fals
         eps_1: permittivity of medium 1.
         eps_2: permittivity of medium 2.
         mu1: cosine zenith angle in medium 1.
-        full_output: (Default value = False)
+        full_output: return full output (Default value = False).
 
     Returns:
         : rv, rh, mu2 the cosine of the angle in medium 2
@@ -57,24 +58,24 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=Fals
     # incident wavenumber
     n1 = np.sqrt(eps_1)
 
-    kiz2 = n1.real**2 * (1 - mu1**2)   # kiz = n1 * sin(theta)
-    kyi = - np.sqrt(eps_1 - kiz2)                  # Eq 8 for i
+    kiz2 = n1.real**2 * (1 - mu1**2)  # kiz = n1 * sin(theta)
+    kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
 
-    ktz2 = kiz2   # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-    kyt = - np.sqrt(complex(eps_2) - ktz2)                  # Eq 8 for t
+    ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
+    kyt = -np.sqrt(complex(eps_2) - ktz2)  # Eq 8 for t
 
     rh = (kyi - kyt) / (kyi + kyt)  # Eq 30
 
     rv = (eps_2 * kyi - eps_1 * kyt) / (eps_2 * kyi + eps_1 * kyt)  # Eq 32
 
-    mu2 = - kyt.real / np.sqrt(eps_2).real  # by definition of kyt
+    mu2 = -kyt.real / np.sqrt(eps_2).real  # by definition of kyt
 
     if full_output:
         n2 = np.sqrt(eps_2)
 
         th = 2 * kyi / (kyi + kyt)  # Eq 31
 
-        tv = 2 * n1 * n2 * kyi / (eps_2 * kyi + eps_1 * kyt)   # Eq 33
+        tv = 2 * n1 * n2 * kyi / (eps_2 * kyi + eps_1 * kyt)  # Eq 33
         Rv = abs2(rv)  # Eq 34
         Rh = abs2(rh)  # Eq 34
         # Th = (kyt + kyt.conjugate()) / (kyi + kyi.conjugate()) * abs2(th)  # Eq 35
@@ -83,18 +84,18 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=Fals
         # Tv = abs2(n1) * (eps_2.conjugate() * kyt + eps_2 * kyt.conjugate()) \
         #     / (abs2(n2) * (eps_1.conjugate() * kyi + eps_1 * kyi.conjugate())) \
         #     * abs2(tv)                                                      # Eq 36
-        Tv = abs2(n1) * (eps_2.conjugate() * kyt).real \
-            / (abs2(n2) * (eps_1.conjugate() * kyi).real) \
-            * abs2(tv)                                                      # Optimized Eq 36
+        Tv = (
+            abs2(n1) * (eps_2.conjugate() * kyt).real / (abs2(n2) * (eps_1.conjugate() * kyi).real) * abs2(tv)
+        )  # Optimized Eq 36
 
         return rv, rh, th, tv, Rv, Rh, Tv, Th, mu2
     else:
         return rv, rh, mu2
 
 
-def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1):
+def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1) -> tuple[complex, complex, float]:
     """
-    Computes the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
+    Compute the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
     Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
 
@@ -116,24 +117,26 @@ def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1):
 
     # incident wavenumber
     n1 = np.sqrt(eps_1)
-    kiz2 = n1.real**2 * (1 - mu1**2)   # this the square of kiz = n1 * sin(theta)
-    kyi = - np.sqrt(eps_1 - kiz2)                  # Eq 8 for i
+    kiz2 = n1.real**2 * (1 - mu1**2)  # this the square of kiz = n1 * sin(theta)
+    kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
 
-    ktz2 = kiz2   # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-    kyt = - np.sqrt(complex(eps_2) - ktz2)                  # Eq 8 for t
+    ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
+    kyt = -np.sqrt(complex(eps_2) - ktz2)  # Eq 8 for t
 
     rh = (kyi - kyt) / (kyi.conjugate() + kyt)  # Eq 59
 
-    rv = n1.conjugate() * (eps_2 * kyi - eps_1 * kyt) / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))  # Eq 61
+    rv = (
+        n1.conjugate() * (eps_2 * kyi - eps_1 * kyt) / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))
+    )  # Eq 61
 
-    mu2 = - kyt.real / np.sqrt(eps_2).real  # by definition of kyt
+    mu2 = -kyt.real / np.sqrt(eps_2).real  # by definition of kyt
 
     return rv, rh, mu2
 
 
 def fresnel_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu1):
     """
-    Computes the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
+    Compute the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
     Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
 
@@ -147,7 +150,7 @@ def fresnel_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu1):
         eps_1: permittivity of medium 1.
         eps_2: permittivity of medium 2.
         mu1: cosine zenith angle in medium 1.
-        full_output: (Default value = False)
+        full_output: return full output (Default value = False).
 
     Returns:
         : rv, rh, mu2 the cosine of the angle in medium 2
@@ -158,18 +161,21 @@ def fresnel_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu1):
     # the duplication is for numba compilation to work as returning different set of parameters is not allowed
 
     # incident wavenumber
-    n1 = np.sqrt(eps_1)
-    kiz2 = n1.real**2 * (1 - mu1**2)   # this the square of kiz = n1 * sin(theta)
-    kyi = - np.sqrt(eps_1 - kiz2)                  # Eq 8 for i
 
-    ktz2 = kiz2   # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-    kyt = - np.sqrt(complex(eps_2) - ktz2)                  # Eq 8 for t
+    n1 = np.sqrt(eps_1)
+    kiz2 = n1.real**2 * (1 - mu1**2)  # this the square of kiz = n1 * sin(theta)
+    kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
+
+    ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
+    kyt = -np.sqrt(complex(eps_2) - ktz2)  # Eq 8 for t
 
     rh = (kyi - kyt) / (kyi.conjugate() + kyt)  # Eq 59
 
-    rv = n1.conjugate() * (eps_2 * kyi - eps_1 * kyt) / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))  # Eq 61
+    rv = (
+        n1.conjugate() * (eps_2 * kyi - eps_1 * kyt) / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))
+    )  # Eq 61
 
-    mu2 = - kyt.real / np.sqrt(eps_2).real  # by definition of kyt
+    mu2 = -kyt.real / np.sqrt(eps_2).real  # by definition of kyt
 
     # this part is for the full_output
     # full_output
@@ -178,7 +184,7 @@ def fresnel_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu1):
 
     th = 2 * kyi.real / (kyi.conjugate() + kyt)  # Eq 60
 
-    tv = n2 * 2 * (eps_1.conjugate() * kyi).real / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))   # Eq 62
+    tv = n2 * 2 * (eps_1.conjugate() * kyi).real / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))  # Eq 62
 
     Rv = abs2(rv)  # Eq 34
     Rh = abs2(rh)  # Eq 34
@@ -188,9 +194,9 @@ def fresnel_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu1):
     # Tv = abs2(n1) * (eps_2.conjugate() * kyt + eps_2 * kyt.conjugate()) \
     #     / (abs2(n2) * (eps_1.conjugate() * kyi + eps_1 * kyi.conjugate())) \
     #     * abs2(tv)                                                      # Eq 36
-    Tv = abs2(n1) * (eps_2.conjugate() * kyt).real \
-        / (abs2(n2) * (eps_1.conjugate() * kyi).real) \
-        * abs2(tv)                                                      # Optimized Eq 36
+    Tv = (
+        abs2(n1) * (eps_2.conjugate() * kyt).real / (abs2(n2) * (eps_1.conjugate() * kyi).real) * abs2(tv)
+    )  # Optimized Eq 36
 
     assert np.allclose(Rv + Tv, 1)  # check energy conservation
     assert np.allclose(Rh + Th, 1)  # check energy conservation
@@ -204,45 +210,45 @@ fresnel_coefficients = fresnel_coefficients_maezawa09_rigorous
 
 def snell_angle(eps_1, eps_2, mu1):
     """
-    Computes mu2 the cos(angle) in the second medium according to Snell's law.
+    Compute mu2 the cos(angle) in the second medium according to Snell's law.
 
     Args:
-        eps_1:
-        eps_2:
-        mu1:
+        eps_1: permittivity of medium 1.
+        eps_2: permittivity of medium 2.
+        mu1: cosine zenith angle in medium 1.
+    Returns:
+        mu2: cosine zenith angle in medium 2.
     """
 
     # incident wavenumber
     n1 = np.sqrt(eps_1)
-    kiz2 = n1.real**2 * (1 - mu1**2)   # this the square of kiz = n1 * sin(theta)
+    kiz2 = n1.real**2 * (1 - mu1**2)  # this the square of kiz = n1 * sin(theta)
 
-    ktz2 = kiz2   # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-    kyt = - np.sqrt(complex(eps_2) - ktz2)                  # Eq 8 for t
+    ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
+    kyt = -np.sqrt(complex(eps_2) - ktz2)  # Eq 8 for t
 
-    mu2 = - kyt.real / np.sqrt(eps_2).real  # by definition of kyt
+    mu2 = -kyt.real / np.sqrt(eps_2).real  # by definition of kyt
 
     return mu2
 
 
-
-
 def brewster_angle(eps_1, eps_2):
     """
-    Computes the brewster angle.
+    Compute the brewster angle.
 
     Args:
         eps_1: permittivity of medium 1.
         eps_2: permittivity of medium 2.
 
     Returns:
-        : angle in radians
+        : angle in radians.
     """
     return np.arctan(np.sqrt(eps_2 / eps_1).real)
 
 
 def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
     """
-    Computes the fresnel power reflection matrix for/in medium 1 laying above medium 2.
+    Compute the fresnel power reflection matrix for/in medium 1 laying above medium 2.
 
     Args:
         eps_1: permittivity of medium 1.
@@ -265,7 +271,7 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
     reflection_coefficients[1] = abs2(rh)
 
     if npol >= 3:
-        reflection_coefficients[2] = (rv * np.conj(rh)).real   # TsangI  Eq 7.2.93
+        reflection_coefficients[2] = (rv * np.conj(rh)).real  # TsangI  Eq 7.2.93
         # It is not sure this equation is valid for strongly loosly materails
 
     return reflection_coefficients
@@ -273,7 +279,7 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
 
 def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol):
     """
-    Computes the fresnel power transmission matrix for/in medium 1 lying above medium 2.
+    Compute the fresnel power transmission matrix for/in medium 1 lying above medium 2.
 
     Args:
         eps_1: permittivity of medium 1.

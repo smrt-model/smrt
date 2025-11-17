@@ -41,30 +41,29 @@ Note:
 
 import numpy as np
 
+from smrt import SMRTError
+
 # local import
 from smrt.core.interface import Substrate
-from smrt import SMRTError
 from smrt.core.lib import smrt_matrix
 
 
 def make_reflector(temperature=None, specular_reflection=None, backscattering_coefficient=None):
-
-    """ Construct a reflector or absorber instance.
-
-    """
+    """Construct a reflector or absorber instance."""
 
     # create the instance
-    return ReflectorBackscatter(temperature=temperature, specular_reflection=specular_reflection,
-                     backscattering_coefficient=backscattering_coefficient)
+    return ReflectorBackscatter(
+        temperature=temperature,
+        specular_reflection=specular_reflection,
+        backscattering_coefficient=backscattering_coefficient,
+    )
 
 
 class ReflectorBackscatter(Substrate):
-
     args = []
-    optional_args = {'specular_reflection': None, 'backscattering_coefficient': None}
+    optional_args = {"specular_reflection": None, "backscattering_coefficient": None}
 
     def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
-
         if npol > 2 and not hasattr(ReflectorBackscatter, "stop_pol2_warning"):
             print("active model is not yet fully implemented, need modification for the third component")  # !!!
             ReflectorBackscatter.stop_pol2_warning = True
@@ -74,15 +73,14 @@ class ReflectorBackscatter(Substrate):
 
         spec_refl_coeff = smrt_matrix.zeros((npol, len(mu1)))
         if isinstance(self.specular_reflection, dict):  # we have a dictionary with polarization
-            spec_refl_coeff[0] = self._get_refl(self.specular_reflection['V'], mu1)
-            spec_refl_coeff[1] = self._get_refl(self.specular_reflection['H'], mu1)
+            spec_refl_coeff[0] = self._get_refl(self.specular_reflection["V"], mu1)
+            spec_refl_coeff[1] = self._get_refl(self.specular_reflection["H"], mu1)
         else:  # we have a scalar, both polarization are the same
             spec_refl_coeff[0] = spec_refl_coeff[1] = self._get_refl(self.specular_reflection, mu1)
 
         return spec_refl_coeff
 
     def ft_even_diffuse_reflection_matrix(self, frequency, eps_1, mu_s, mu_i, m_max, npol):
-
         assert mu_s is mu_i
 
         if isinstance(self.backscattering_coefficient, dict):  # we have a dictionary with polarization
@@ -96,12 +94,14 @@ class ReflectorBackscatter(Substrate):
                 else:
                     coef = 2.0
 
-                coef /= 1 + 2 * m_max  # this normalization is used to spread the energy in the backscatter over all modes
+                coef /= (
+                    1 + 2 * m_max
+                )  # this normalization is used to spread the energy in the backscatter over all modes
 
-                coef /= 4 * np.pi * mu_i    # convert the backscattering coefficient into scattering
+                coef /= 4 * np.pi * mu_i  # convert the backscattering coefficient into scattering
 
-                diffuse_refl_coeff[0, m, :] += coef * self._get_refl(self.backscattering_coefficient['VV'], mu_i)
-                diffuse_refl_coeff[1, m, :] += coef * self._get_refl(self.backscattering_coefficient['HH'], mu_i)
+                diffuse_refl_coeff[0, m, :] += coef * self._get_refl(self.backscattering_coefficient["VV"], mu_i)
+                diffuse_refl_coeff[1, m, :] += coef * self._get_refl(self.backscattering_coefficient["HH"], mu_i)
 
         elif self.backscattering_coefficient is not None:
             raise SMRTError("backscattering_coefficient must be a dictionary with keys VV and HH")
@@ -111,7 +111,6 @@ class ReflectorBackscatter(Substrate):
         return diffuse_refl_coeff
 
     def emissivity_matrix(self, frequency, eps_1, mu1, npol):
-
         if self.specular_reflection is None and self.backscattering_coefficient is None:
             self.specular_reflection = 1
 
@@ -121,8 +120,8 @@ class ReflectorBackscatter(Substrate):
 
         emissivity = smrt_matrix.zeros((npol, len(mu1)))
         if isinstance(self.specular_reflection, dict):  # we have a dictionary with polarization
-            emissivity[0] = 1 - self._get_refl(self.specular_reflection['V'], mu1)
-            emissivity[1] = 1 - self._get_refl(self.specular_reflection['H'], mu1)
+            emissivity[0] = 1 - self._get_refl(self.specular_reflection["V"], mu1)
+            emissivity[1] = 1 - self._get_refl(self.specular_reflection["H"], mu1)
         else:  # we have a scalar, both polarization are the same
             emissivity[0] = emissivity[1] = 1 - self._get_refl(self.specular_reflection, mu1)
 

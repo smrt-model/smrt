@@ -12,12 +12,10 @@ from .autocorrelation import Autocorrelation
 
 
 class Homogeneous(Autocorrelation):
-
-    args = ['frac_volume']
+    args = ["frac_volume"]
     optional_args = {}
 
     def __init__(self, params):
-
         super().__init__(params)  # don't forget this line in our classes!
 
     @property

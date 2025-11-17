@@ -9,23 +9,40 @@ Rayleigh, SCE) using the generic mixing formula Polder van Staten that automatic
 background (e.g.) and the scatterer materials (e.g. ice) to compute the effective permittivity of snow in a proportion
 determined by frac_volume.
 
-Note: 
+Note:
     They should not be used to set the material permittivities as input of :py:func:`smrt.inputs.make_medium.make_snowpack` and
     similar functions (because the emmodel would re-mix the already mixed materials with the background material).
 """
 
 import numpy as np
-from ..core.layer import layer_properties
-from ..core.globalconstants import FREEZING_POINT, DENSITY_OF_ICE, DENSITY_OF_WATER
+
 from ..core.error import SMRTError, smrt_warn
-from .generic_mixing_formula import polder_van_santen, polder_van_santen_three_components, polder_van_santen_three_spherical_components
+from ..core.globalconstants import DENSITY_OF_ICE, DENSITY_OF_WATER, FREEZING_POINT
+from ..core.layer import layer_properties
+from .generic_mixing_formula import (
+    polder_van_santen,
+    polder_van_santen_three_components,
+    polder_van_santen_three_spherical_components,
+)
 
 
-@layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
-def wetsnow_permittivity_tinga73(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
+@layer_properties(
+    "temperature",
+    "density",
+    "liquid_water",
+    optional_arguments=["ice_permittivity_model", "water_permittivity_model"],
+)
+def wetsnow_permittivity_tinga73(
+    frequency,
+    temperature,
+    density,
+    liquid_water,
+    ice_permittivity_model=None,
+    water_permittivity_model=None,
+):
     """
-    Compute the effective permittivity proposed by Tinga et al. 1(973) for three-component mixing. 
-    
+    Compute the effective permittivity proposed by Tinga et al. 1(973) for three-component mixing.
+
     The component 1 is the background ("a" here), the compoment 2 ("w" here) is a spherical shell surrounding the component 3 ("i" here).
     It was used by Tiuri as well as T. Mote to compute wet snolw permittivity.
 
@@ -46,7 +63,7 @@ def wetsnow_permittivity_tinga73(frequency, temperature, density, liquid_water, 
         Microwave remote sensing of snowpack properties. Proceedings of a workshop ... Fort Collins, Colorado, May 20-22, 1980.
         Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publication 2153.)
 
-"""
+    """
 
     if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
         raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
@@ -66,9 +83,11 @@ def wetsnow_permittivity_tinga73(frequency, temperature, density, liquid_water, 
 
     if water_permittivity_model is None:
         from .water import water_permittivity_tiuri80
+
         water_permittivity_model = water_permittivity_tiuri80
     if ice_permittivity_model is None:
         from .ice import ice_permittivity_tiuri84
+
         ice_permittivity_model = ice_permittivity_tiuri84
 
     eps_a = 1
@@ -79,9 +98,12 @@ def wetsnow_permittivity_tinga73(frequency, temperature, density, liquid_water, 
     diff_wi = eps_w - eps_i
     diff_wa = eps_w - eps_a
 
-    denominator = (2 * eps_a + eps_w) * alpha - 2 * (1 / Vw_i) * diff_wa * diff_wi \
-        - (Vw_i / Va_i) * diff_wa * alpha \
+    denominator = (
+        (2 * eps_a + eps_w) * alpha
+        - 2 * (1 / Vw_i) * diff_wa * diff_wi
+        - (Vw_i / Va_i) * diff_wa * alpha
         + (1 / Va_i) * diff_wi * (2 * eps_w + eps_a)
+    )
 
     Es = eps_a * (1 + 3 * ((Vw_i / Va_i) * diff_wa * alpha - (1 / Va_i) * diff_wi * (2 * eps_w + eps_a)) / denominator)
 
@@ -94,16 +116,16 @@ def wetsnow_permittivity_tinga73(frequency, temperature, density, liquid_water, 
 
 def compute_frac_volumes(density, liquid_water):
     """
-    Compute the fractional volume of ice+water, the fractional volume of ice, and the fractional volume of water from the (wet) 
+    Compute the fractional volume of ice+water, the fractional volume of ice, and the fractional volume of water from the (wet)
     snow density and the liquid_water which is the volume fraction of liquid with respect to ice + liquid (but no air).
 
     Args:
         density: snow density in kg m-3.
         liquid_water: fractional volume of water with respect to ice+water volume.
-    
+
     Returns:
         frac_volume, fi, fw
-"""
+    """
     density_melange = DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water
     # variations of density with temperature (a few kg/m3) and air mass (less than 1 kg/m3) are not taken into account.
 
@@ -116,8 +138,20 @@ def compute_frac_volumes(density, liquid_water):
     return frac_volume, fi, fw
 
 
-@layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
-def wetsnow_permittivity_colbeck80_caseI(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
+@layer_properties(
+    "temperature",
+    "density",
+    "liquid_water",
+    optional_arguments=["ice_permittivity_model", "water_permittivity_model"],
+)
+def wetsnow_permittivity_colbeck80_caseI(
+    frequency,
+    temperature,
+    density,
+    liquid_water,
+    ice_permittivity_model=None,
+    water_permittivity_model=None,
+):
     """
     Compute the effective permittivity proposed by Colbeck, 1980 for the pendular regime.
 
@@ -130,17 +164,19 @@ def wetsnow_permittivity_colbeck80_caseI(frequency, temperature, density, liquid
 
     Returns:
         Complex permittivity of snow.
-    
+
     References:
         Colbeck, S. C. (1980). Liquid distribution and the dielectric constant of wet snow.
         Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21–40.
         https://apps.dtic.mil/sti/tr/pdf/ADP000148.pdf
 
-"""
+    """
     if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
         raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
 
-    ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
+    ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(
+        ice_permittivity_model, water_permittivity_model
+    )
 
     Ac = 0.422  # page 24
     Asnow = [(1 - Ac) / 2, (1 - Ac) / 2, 0.422]
@@ -160,12 +196,24 @@ def wetsnow_permittivity_colbeck80_caseI(frequency, temperature, density, liquid
         eps1=ice_permittivity_model(frequency, temperature=temperature),
         eps2=water_permittivity_model(frequency, temperature=FREEZING_POINT),
         A1=Asnow,
-        A2=Awater
+        A2=Awater,
     )
 
 
-@layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
-def wetsnow_permittivity_colbeck80_caseII(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
+@layer_properties(
+    "temperature",
+    "density",
+    "liquid_water",
+    optional_arguments=["ice_permittivity_model", "water_permittivity_model"],
+)
+def wetsnow_permittivity_colbeck80_caseII(
+    frequency,
+    temperature,
+    density,
+    liquid_water,
+    ice_permittivity_model=None,
+    water_permittivity_model=None,
+):
     """
     Compute the effective permittivity proposed by Colbeck, 1980 for the funicular regime and low dry snow density.
 
@@ -178,31 +226,46 @@ def wetsnow_permittivity_colbeck80_caseII(frequency, temperature, density, liqui
 
     Returns:
         Complex permittivity of snow.
-    
+
     References:
         Colbeck, S. C. (1980). Liquid distribution and the dielectric constant of wet snow.
         Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21–40.
         https://apps.dtic.mil/sti/tr/pdf/ADP000148.pdf
 
-"""
+    """
 
     if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
         raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
 
-    ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
+    ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(
+        ice_permittivity_model, water_permittivity_model
+    )
 
     frac_volume, fi, fw = compute_frac_volumes(density, liquid_water)
 
     return polder_van_santen_three_spherical_components(
-        f1=fi,               # ice fractional volume
+        f1=fi,  # ice fractional volume
         f2=1 - frac_volume,  # air fractional volume
         eps0=water_permittivity_model(frequency, temperature=FREEZING_POINT),
         eps1=ice_permittivity_model(frequency, temperature=temperature),
         eps2=1,
     )
 
-@layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
-def wetsnow_permittivity_colbeck80_caseIII(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
+
+@layer_properties(
+    "temperature",
+    "density",
+    "liquid_water",
+    optional_arguments=["ice_permittivity_model", "water_permittivity_model"],
+)
+def wetsnow_permittivity_colbeck80_caseIII(
+    frequency,
+    temperature,
+    density,
+    liquid_water,
+    ice_permittivity_model=None,
+    water_permittivity_model=None,
+):
     """
     Compute the effective permittivity proposed by Colbeck, 1980 for the low porosity.
 
@@ -215,7 +278,7 @@ def wetsnow_permittivity_colbeck80_caseIII(frequency, temperature, density, liqu
 
     Returns:
         Complex permittivity of snow.
-    
+
     References:
         Colbeck, S. C. (1980). Liquid distribution and the dielectric constant of wet snow.
         Goddard Space Flight Center Microwave Remote Sensing of Snowpack Properties, 21–40.
@@ -224,14 +287,15 @@ def wetsnow_permittivity_colbeck80_caseIII(frequency, temperature, density, liqu
     if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
         raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
 
-    ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
+    ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(
+        ice_permittivity_model, water_permittivity_model
+    )
 
     # for n = 3.5 (page 26), we read in Fig 2 page 31:
-    m = 0.072  
+    m = 0.072
     Ac = 1 / (1 + 2 / m)
 
     Awater = [(1 - Ac) / 2, (1 - Ac) / 2, Ac]
-
 
     Ac = 1 / 3  # air bubble
     Aair = [Ac, Ac, Ac]
@@ -245,18 +309,19 @@ def wetsnow_permittivity_colbeck80_caseIII(frequency, temperature, density, liqu
         eps1=water_permittivity_model(frequency, temperature=FREEZING_POINT),
         eps2=1,
         A1=Awater,
-        A2=Aair
+        A2=Aair,
     )
+
 
 @layer_properties("density", "liquid_water")
 def wetsnow_permittivity_hallikainen86(frequency, density, liquid_water):
     """
     Compute the effective permittivity of a snow mixture calculated with the Modified Debye model by Hallikainen 1986
 
-    The implementation of this function follows the equations formulation of the original paper 
-    (Hallikainen et al. 1986). Anyway this formulation does not allow the reproduction of the results 
+    The implementation of this function follows the equations formulation of the original paper
+    (Hallikainen et al. 1986). Anyway this formulation does not allow the reproduction of the results
     as reported in the paper. A new formulation of eq. 12a have been presented in the book
-    Microwave Radar and Radiometric Remote Sensing by Ulaby et al. 2014 from which the SMRT function 
+    Microwave Radar and Radiometric Remote Sensing by Ulaby et al. 2014 from which the SMRT function
     ``wetsnow_permittivity_hallikainen86_ulaby14`` have been implemented. The users are pointed to that definition.
 
     Note:
@@ -278,8 +343,10 @@ def wetsnow_permittivity_hallikainen86(frequency, density, liquid_water):
 
     """
 
-    smrt_warn("This model cannot reproduce the results of the original paper. " \
-            "You may want to use wetsnow_permittivity_hallikainen86_ulaby14 instead.")
+    smrt_warn(
+        "This model cannot reproduce the results of the original paper. "
+        "You may want to use wetsnow_permittivity_hallikainen86_ulaby14 instead."
+    )
 
     frac_volume, fi, fw = compute_frac_volumes(density, liquid_water)
 
@@ -304,9 +371,9 @@ def wetsnow_permittivity_hallikainen86(frequency, density, liquid_water):
 
     freq0 = 9.07  # GHz
 
-    eps_ws_r = A + B * mv**x / (1 + (freqGHz / freq0)**2)
+    eps_ws_r = A + B * mv**x / (1 + (freqGHz / freq0) ** 2)
 
-    eps_ws_i = C * mv**x * (freqGHz / freq0) / (1 + (freqGHz / freq0)**2)
+    eps_ws_i = C * mv**x * (freqGHz / freq0) / (1 + (freqGHz / freq0) ** 2)
 
     return eps_ws_r + 1j * eps_ws_i
 
@@ -316,10 +383,10 @@ def wetsnow_permittivity_hallikainen86_ulaby14(frequency, density, liquid_water)
     """
     Compute the effective permittivity of a snow mixture calculated with the Modified Debye model by Hallikainen 1986
     and revised in Microwave Radar and Radiometric Remote Sensing by Ulaby et al. 2014.
-    
+
     Note:
         Equations implemented are ch 4 pp 143-15 4.60a - 4.61h. The validity of the model is: frequency between 3 and 37GHz;
-        mv between 1% and 12%; dry_snow_density between 0.09 and 0.38g/cm3. Same formulation can be reproduced by the book 
+        mv between 1% and 12%; dry_snow_density between 0.09 and 0.38g/cm3. Same formulation can be reproduced by the book
         code https://mrs.eecs.umich.edu/codes/Module4_6/Module4_6.html
 
     Args:
@@ -346,15 +413,21 @@ def wetsnow_permittivity_hallikainen86_ulaby14(frequency, density, liquid_water)
 
     freqGHz = frequency * 1e-9
 
-    if np.any(mv > 12) \
-            or np.any(dry_snow_density_gcm3 < 0.09) or np.any(dry_snow_density_gcm3 > 0.38) \
-            or np.any(freqGHz < 3) or np.any(freqGHz > 37):
-        smrt_warn("Hallikainen86_ulaby14 is only valid for mv < 12  dry_snow_density in [0.09...0.38] and freq in [3...37 GHz]")
+    if (
+        np.any(mv > 12)
+        or np.any(dry_snow_density_gcm3 < 0.09)
+        or np.any(dry_snow_density_gcm3 > 0.38)
+        or np.any(freqGHz < 3)
+        or np.any(freqGHz > 37)
+    ):
+        smrt_warn(
+            "Hallikainen86_ulaby14 is only valid for mv < 12  dry_snow_density in [0.09...0.38] and freq in [3...37 GHz]"
+        )
 
     # Eq 4.61 f - h
     A1 = 0.78 + 0.03 * freqGHz - 0.58e-3 * freqGHz**2
     A2 = 0.97 - 0.39e-2 * freqGHz + 0.39e-3 * freqGHz**2
-    B1 = 0.31 - 0.05 * freqGHz + 0.87e-3 * freqGHz**2   # <-- this leads to a too low epsilon compared to the H86 graphs
+    B1 = 0.31 - 0.05 * freqGHz + 0.87e-3 * freqGHz**2  # <-- this leads to a too low epsilon compared to the H86 graphs
 
     # Eq 4.61 a - e
     A = A1 * (1.0 + 1.83 * dry_snow_density_gcm3 + 0.02 * mv**1.015) + B1
@@ -364,17 +437,22 @@ def wetsnow_permittivity_hallikainen86_ulaby14(frequency, density, liquid_water)
     freq0 = 9.07  # GHz
 
     # Eq 4.60 a - b
-    eps_ws_r = A + B * mv**x / (1 + (freqGHz / freq0)**2)
-    eps_ws_i = C * mv**x * (freqGHz / freq0) / (1 + (freqGHz / freq0)**2)
+    eps_ws_r = A + B * mv**x / (1 + (freqGHz / freq0) ** 2)
+    eps_ws_i = C * mv**x * (freqGHz / freq0) / (1 + (freqGHz / freq0) ** 2)
 
     return eps_ws_r + 1j * eps_ws_i
 
 
-@layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model"])
+@layer_properties(
+    "temperature",
+    "density",
+    "liquid_water",
+    optional_arguments=["ice_permittivity_model"],
+)
 def wetsnow_permittivity_wiesmann99(frequency, temperature, density, liquid_water, ice_permittivity_model=None):
     """
-    Compute the effective permittivity of a snow mixture as presented in MEMLS by Wiesmann and Matzler, 1999. 
-    
+    Compute the effective permittivity of a snow mixture as presented in MEMLS by Wiesmann and Matzler, 1999.
+
     Note:
         The version implemented in MEMLS v3 is different.
 
@@ -385,7 +463,7 @@ def wetsnow_permittivity_wiesmann99(frequency, temperature, density, liquid_wate
         ice_permittivity_model: [optional] permittivity model of ice use for mixing, default is ``ice_permittivity_maetzler06``
 
     Returns:
-        Complex permittivity of snow.    
+        Complex permittivity of snow.
 
     References:
         Wiesmann, A., Mätzler, C., (1999). Microwave Emission Model of Layered Snowpacks, Remote Sensing of Environment,
@@ -396,14 +474,17 @@ def wetsnow_permittivity_wiesmann99(frequency, temperature, density, liquid_wate
 
     if ice_permittivity_model is None:
         from .ice import ice_permittivity_maetzler06
+
         ice_permittivity_model = ice_permittivity_maetzler06
 
     frac_volume, fi, Wi = compute_frac_volumes(density, liquid_water)
 
-    eps_dry = polder_van_santen(fi, e0=1, eps=ice_permittivity_model(frequency, temperature=temperature))  # permittivity of dry snow
+    eps_dry = polder_van_santen(
+        fi, e0=1, eps=ice_permittivity_model(frequency, temperature=temperature)
+    )  # permittivity of dry snow
 
-    Aa = 0.005    # depolarisation factors of prolate
-    Ab = 0.4975   # water inclusion (Matzler 1987)
+    Aa = 0.005  # depolarisation factors of prolate
+    Ab = 0.4975  # water inclusion (Matzler 1987)
     Ac = Ab
 
     eps_sw = 88
@@ -424,8 +505,20 @@ def wetsnow_permittivity_wiesmann99(frequency, temperature, density, liquid_wate
     return eps_dry + eps_eff
 
 
-@layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
-def wetsnow_permittivity_memls(frequency, temperature, density, liquid_water, ice_permittivity_model=None, water_permittivity_model=None):
+@layer_properties(
+    "temperature",
+    "density",
+    "liquid_water",
+    optional_arguments=["ice_permittivity_model", "water_permittivity_model"],
+)
+def wetsnow_permittivity_memls(
+    frequency,
+    temperature,
+    density,
+    liquid_water,
+    ice_permittivity_model=None,
+    water_permittivity_model=None,
+):
     """
     Compute the effective permittivity of a snow mixture as calculated in MEMLS using Maxwell-Garnett Mixing rule of water in dry snow
     for prolate spheroidal water with experimentally determined. Dry snow permittivity is here determined with Polder van Santen.
@@ -441,7 +534,7 @@ def wetsnow_permittivity_memls(frequency, temperature, density, liquid_water, ic
         Complex permittivity of snow.
 
     References:
-        Mätzler, C., Wiesmann, A., (2009). Extension of the Microwave Emission Model of Layered Snowpacks to 
+        Mätzler, C., Wiesmann, A., (2009). Extension of the Microwave Emission Model of Layered Snowpacks to
         Coarse-Grained Snow, Remote Sensing of Environment, Volume 70, Issue 3.
         https://doi.org/10.1016/S0034-4257(99)00047-4
     """
@@ -470,18 +563,23 @@ def wetsnow_permittivity_memls(frequency, temperature, density, liquid_water, ic
     if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
         raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
 
-    ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
+    ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(
+        ice_permittivity_model, water_permittivity_model
+    )
 
-    Aa = 0.005    # depolarisation factors of prolate
-    Ab = 0.4975   # water inclusion (Matzler 1987)
+    Aa = 0.005  # depolarisation factors of prolate
+    Ab = 0.4975  # water inclusion (Matzler 1987)
     # Ac = Ab
 
     ew = water_permittivity_model(frequency, temperature=FREEZING_POINT)
 
     frac_volume, fi, Wi = compute_frac_volumes(density, liquid_water)
 
-    epsd = polder_van_santen(np.clip(fi, 0, 1),
-                             e0=1, eps=ice_permittivity_model(frequency, temperature=temperature))  # permittivity of dry snow
+    epsd = polder_van_santen(
+        np.clip(fi, 0, 1),
+        e0=1,
+        eps=ice_permittivity_model(frequency, temperature=temperature),
+    )  # permittivity of dry snow
 
     Ka = epsd / (epsd + Aa * (ew - epsd))
     Kb = epsd / (epsd + Ab * (ew - epsd))
@@ -492,9 +590,20 @@ def wetsnow_permittivity_memls(frequency, temperature, density, liquid_water, ic
     return eps
 
 
-@layer_properties("temperature", "density", "liquid_water", optional_arguments=["ice_permittivity_model", "water_permittivity_model"])
-def wetsnow_permittivity_three_component_polder_van_santen(frequency, temperature, density, liquid_water,
-                                                           ice_permittivity_model=None, water_permittivity_model=None):
+@layer_properties(
+    "temperature",
+    "density",
+    "liquid_water",
+    optional_arguments=["ice_permittivity_model", "water_permittivity_model"],
+)
+def wetsnow_permittivity_three_component_polder_van_santen(
+    frequency,
+    temperature,
+    density,
+    liquid_water,
+    ice_permittivity_model=None,
+    water_permittivity_model=None,
+):
     """
     Compute the effective permittivity of a snow mixture using the three components polder_van_santen, assuming spherical inclusions.
 
@@ -507,7 +616,7 @@ def wetsnow_permittivity_three_component_polder_van_santen(frequency, temperatur
 
     Returns:
         Complex permittivity of snow.
-    
+
     References:
         Sihvola, A.: Electromagnetic Mixing Formulas and Applications, 1999, INSTITUTION OF ENGINEERING & T
         http://www.ebook.de/de/product/21470462/a_sihvola_electromagnetic_mixing_formulas_and_applications.html
@@ -515,65 +624,75 @@ def wetsnow_permittivity_three_component_polder_van_santen(frequency, temperatur
     if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
         raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
 
-    ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model)
+    ice_permittivity_model, water_permittivity_model = default_ice_water_permittivity(
+        ice_permittivity_model, water_permittivity_model
+    )
 
     if (np.array(density).ndim >= 1) or (np.array(liquid_water).ndim >= 1):
         # density = np.array(density)
         # liquid_water = np.array(liquid_water)
         def func(dens, liq):
-            return wetsnow_permittivity_three_component_polder_van_santen(frequency, temperature, dens, liq,
-                                                                          ice_permittivity_model=ice_permittivity_model,
-                                                                          water_permittivity_model=water_permittivity_model)
+            return wetsnow_permittivity_three_component_polder_van_santen(
+                frequency,
+                temperature,
+                dens,
+                liq,
+                ice_permittivity_model=ice_permittivity_model,
+                water_permittivity_model=water_permittivity_model,
+            )
 
         return np.vectorize(func)(density, liquid_water)
 
     frac_volume, fi, fw = compute_frac_volumes(float(density), liquid_water)
 
-    return polder_van_santen_three_spherical_components(fi, fw,
-                                                        eps0=1,
-                                                        eps1=ice_permittivity_model(frequency, temperature=temperature),
-                                                        eps2=water_permittivity_model(frequency, temperature=FREEZING_POINT))
+    return polder_van_santen_three_spherical_components(
+        fi,
+        fw,
+        eps0=1,
+        eps1=ice_permittivity_model(frequency, temperature=temperature),
+        eps2=water_permittivity_model(frequency, temperature=FREEZING_POINT),
+    )
 
 
-@ layer_properties("density")
+@layer_properties("density")
 def depolarization_factors_maetzler96(density):
-    """Compute the empirical depolarization factors of snow estimated by Mäzler 1996. 
-    
+    """Compute the empirical depolarization factors of snow estimated by Mäzler 1996.
+
     Note:
-        It is supposed to provide more accurate permittivity=f(density) than using constant depolarization factors 
+        It is supposed to provide more accurate permittivity=f(density) than using constant depolarization factors
         in Polder van Santen (e.g. spheres).
 
     Args:
         density: snow density in kg m-3.
-    
+
     Returns:
         [x, y, z] depolarization factor array.
-            
+
     References:
-        Matzler, C., (1996). Microwave permittivity of dry snow. IEEE Transactions on Geoscience and Remote Sensing, 
+        Matzler, C., (1996). Microwave permittivity of dry snow. IEEE Transactions on Geoscience and Remote Sensing,
         vol. 34, no. 2, pp. 573-581, March 1996, https://doi.org/10.1109/36.485133
 
-"""
-    frac_volume = density / DENSITY_OF_ICE   # this way to compute frac_volume avoid inversion of the medium. For dry snow only
+    """
+    # this way to compute frac_volume avoid inversion of the medium. For dry snow only
+    frac_volume = density / DENSITY_OF_ICE
 
     if frac_volume < 0.33:
         A = 0.1 + 0.5 * frac_volume
     elif frac_volume < 0.71:
-        A = 0.18 + 3.24 * (frac_volume - 0.49)**2
+        A = 0.18 + 3.24 * (frac_volume - 0.49) ** 2
     else:
         A = 1 / 3
     return np.array([A, A, 1 - 2 * A])
 
 
-@ layer_properties("density")
+@layer_properties("density")
 def drysnow_permittivity_maetzler96(density, e0=1, eps=3.185):
-
     if (e0.real > 1) and (eps == 1):
         e0, eps = eps, e0
 
     assert e0.real < eps.real
 
-    frac_volume = density / DENSITY_OF_ICE   # this way to compute frac_volume avoid inversion of the medium
+    frac_volume = density / DENSITY_OF_ICE  # this way to compute frac_volume avoid inversion of the medium
 
     A = depolarization_factors_maetzler96(density)
 
@@ -588,8 +707,9 @@ def drysnow_permittivity_maetzler96(density, e0=1, eps=3.185):
     for i in range(20):  # use an inefficient iterative approach
         eps_app = e0 * A + eps_eff0 * (1 - A)
 
-        eps_eff = e0 + frac_volume * eps_diff * np.sum(eps_app / (eps_app + A * eps_diff)) \
-            / (3 - frac_volume * eps_diff * np.sum(A / (eps_app + A * eps_diff)))
+        eps_eff = e0 + frac_volume * eps_diff * np.sum(eps_app / (eps_app + A * eps_diff)) / (
+            3 - frac_volume * eps_diff * np.sum(A / (eps_app + A * eps_diff))
+        )
 
         if np.abs(eps_eff - eps_eff0) < 1e-6:
             break
@@ -601,13 +721,14 @@ def drysnow_permittivity_maetzler96(density, e0=1, eps=3.185):
 
 
 def default_ice_water_permittivity(ice_permittivity_model, water_permittivity_model):
-
     if ice_permittivity_model is None:
         from .ice import ice_permittivity_maetzler06
+
         ice_permittivity_model = ice_permittivity_maetzler06
 
     if water_permittivity_model is None:
         from .water import water_permittivity_maetzler87
+
         water_permittivity_model = water_permittivity_maetzler87
 
     return ice_permittivity_model, water_permittivity_model

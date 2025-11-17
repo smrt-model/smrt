@@ -1,42 +1,39 @@
 # coding: utf-8
 
-import numpy as np
-
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib import scale as mscale
 from matplotlib import transforms as mtransforms
 from matplotlib.ticker import FixedLocator, Formatter
 
-from smrt.core.result import make_result
 from smrt.core.model import make_model
+from smrt.core.result import make_result
 
 
 def plot_snowpack(sp, show_vars=None, show_shade=False, ax=None):
-
     if ax is None:
         ax = plt.gca()
 
     depth = np.cumsum(sp.layer_thicknesses)
     xmax = 1.5 * depth[-1]
 
-    ax.plot((0, 100 * xmax), (0, 0), '0.5')
+    ax.plot((0, 100 * xmax), (0, 0), "0.5")
     for lay, z in zip(sp.layers, -depth):
         if show_shade:
-            ax.fill_between((0, 100 * xmax), [z] * 2, [z + lay.thickness] * 2, color='#55a9ff', alpha=lay.frac_volume)
+            ax.fill_between((0, 100 * xmax), [z] * 2, [z + lay.thickness] * 2, color="#55a9ff", alpha=lay.frac_volume)
         else:
-            ax.plot((0, 100 * xmax), (z, z), '0.5')
+            ax.plot((0, 100 * xmax), (z, z), "0.5")
 
         if show_vars:
             ax.text(0.8 * xmax, z + lay.thickness / 2, format_vars(lay, show_vars))
 
     ax.set_frame_on(False)
     ax.get_xaxis().set_visible(False)
-    ax.set_aspect('equal', 'datalim')
+    ax.set_aspect("equal", "datalim")
     ax.set_xlim((0, 1))
 
 
 def plot_streams(sp, emmodel, sensor, ilayer=None, ax=None):
-
     if ax is None:
         ax = plt.gca()
 
@@ -79,12 +76,13 @@ def plot_streams(sp, emmodel, sensor, ilayer=None, ax=None):
 
 
 def format_vars(lay, show_vars, delimiter=" "):
-
     # format string and scale
-    format_map = dict(density=('%i kgm$^{-3}$', 1),
-                      radius=('%i $\mu$m', 1e6),
-                      corr_length=('%i $\mu$m', 1e6),
-                      temperature=('%g.0 K', 1))
+    format_map = dict(
+        density=("%i kgm$^{-3}$", 1),
+        radius=("%i $\mu$m", 1e6),
+        corr_length=("%i $\mu$m", 1e6),
+        temperature=("%g.0 K", 1),
+    )
     txt = []
     for v in show_vars:
         x = getattr(lay, v, None)
@@ -101,10 +99,8 @@ def format_vars(lay, show_vars, delimiter=" "):
 
 
 class CosineComputor(object):
-
     # this class mimics a RT solver but only do very basic computation and return the cosine angle instead of radiances
     def solve(self, snowpack, emmodel_instances, sensor, atmosphere):
-
         eps = np.array([emmodel.effective_permittivity() for emmodel in emmodel_instances])
         n = [1] + list(np.real(np.sqrt(eps)))
 
@@ -112,8 +108,8 @@ class CosineComputor(object):
         if sensor_in_layer:
             n /= n[sensor_in_layer]
 
-        cosine = np.sqrt(1 - (np.sin(sensor.theta) / n)**2)
-        return make_result(sensor, cosine, [('layer', np.arange(1 + len(snowpack.layers)))])
+        cosine = np.sqrt(1 - (np.sin(sensor.theta) / n) ** 2)
+        return make_result(sensor, cosine, [("layer", np.arange(1 + len(snowpack.layers)))])
 
 
 #
@@ -121,8 +117,9 @@ class CosineComputor(object):
 # the placement of the tick could be improved
 #
 
+
 class ReciprocalScale(mscale.LinearScale):
-    name = 'stickiness_reciprocal'
+    name = "stickiness_reciprocal"
 
     def set_default_locators_and_formatters(self, axis):
         axis.set_major_locator(FixedLocator([0.07, 0.08, 0.1, 0.12, 0.15, 0.2, 0.3, 0.5, 1, 1000]))

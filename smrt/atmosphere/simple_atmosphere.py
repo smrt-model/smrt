@@ -105,5 +105,7 @@ class SimpleAtmosphere(AtmosphereBase):
             return np.stack([x] * npol)
 
         return AtmosphereResult(
-            tb_down=interpolate(self.tbdown), tb_up=interpolate(self.tbup), transmittance=interpolate(self.trans)
+            tb_down=interpolate(self.tbdown),
+            tb_up=interpolate(self.tbup),
+            transmittance=interpolate(self.trans),
         )

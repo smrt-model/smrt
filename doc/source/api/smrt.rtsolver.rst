@@ -22,6 +22,13 @@ smrt.rtsolver.iterative\_first\_order module
    :members:
    :show-inheritance:
 
+smrt.rtsolver.successive_order module
+------------------------------------
+
+.. automodule:: smrt.rtsolver.successive_order
+   :members:
+   :show-inheritance:
+
 smrt.rtsolver.multifresnel\_thermalemission module
 ------------------------------------
 
@@ -42,4 +49,3 @@ smrt.rtsolver.waveform\_model module
 .. automodule:: smrt.rtsolver.waveform_model
    :members:
    :show-inheritance:
-

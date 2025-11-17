@@ -45,23 +45,23 @@ def make_atmosphere(tb_down=0, tb_up=0, transmittance=1):
         tb_up:  (Default value = 0)
         transmittance:  (Default value = 1)
     """
-    warn("""This function 'make_atmosphere' is going to be depreciated. Use smrt.inputs.make_medium.make_atmosphere or the
-short cut smrt.make_atmosphere instead.""", DeprecationWarning)
+    warn(
+        """This function 'make_atmosphere' is going to be depreciated. Use smrt.inputs.make_medium.make_atmosphere or the
+short cut smrt.make_atmosphere instead.""",
+        DeprecationWarning,
+    )
 
     # create the instance
     return SimpleIsotropicAtmosphere(tb_down=tb_down, tb_up=tb_up, transmittance=transmittance)
 
 
 class SimpleIsotropicAtmosphere(AtmosphereBase):
-
-    def __init__(self, tb_down=0., tb_up=0., transmittance=1.):
-
+    def __init__(self, tb_down=0.0, tb_up=0.0, transmittance=1.0):
         self.constant_tbdown = tb_down
         self.constant_tbup = tb_up
         self.constant_trans = transmittance
 
     def run(self, frequency, costheta, npol):
-
         def create_array(x):
             if isinstance(x, dict):
                 x = x[frequency]
@@ -70,4 +70,5 @@ class SimpleIsotropicAtmosphere(AtmosphereBase):
         return AtmosphereResult(
             tb_down=create_array(self.constant_tbdown),
             tb_up=create_array(self.constant_tbup),
-            transmittance=create_array(self.constant_trans))
+            transmittance=create_array(self.constant_trans),
+        )

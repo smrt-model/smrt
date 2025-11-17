@@ -8,7 +8,7 @@ Other tools are listed below.
 
 import numpy as np
 
-LOG10 = np.log(10.)
+LOG10 = np.log(10.0)
 
 
 def dB(x):

@@ -23,7 +23,6 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-benchmarks
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -62,7 +61,15 @@ instance/
 .scrapy
 
 # Sphinx documentation
-doc/build/
+!doc/build/
+doc/build/*
+!doc/build/html/
+doc/build/html/*
+!doc/build/html/_static/
+doc/build/html/_static/*
+!doc/build/html/_static/css/
+doc/build/html/_static/css/*
+!doc/build/html/_static/css/custom.css
 doc/octave-workspace
 
 # PyBuilder
@@ -77,13 +84,11 @@ target/
 # celery beat schedule file
 celerybeat-schedule
 
-# dotenv
-.env
-
 # virtualenv
 venv/
 ENV/
 .venv/
+.env
 
 # Spyder project settings
 .spyderproject
@@ -95,3 +100,7 @@ ENV/
 *.patch
 # pixi environments
 .pixi
+# Benchmark results
+benchmarks/results
+# Documentation builds
+doc/source/smrt.*

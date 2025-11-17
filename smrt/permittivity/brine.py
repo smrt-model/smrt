@@ -8,6 +8,7 @@ import numpy as np
 
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.globalconstants import DENSITY_OF_ICE, FREEZING_POINT, PSU
+
 from ..core.layer import layer_properties
 
 
@@ -17,7 +18,7 @@ def brine_conductivity_stogryn85(temperature):
 
     Args:
         temperature: thermometric temperature in K.
-    
+
     Returns:
         Brine conductivity.
 
@@ -59,9 +60,9 @@ def brine_relaxation_time_stogryn85(temperature):
 def brine_salinity(temperature):
     """
     Compute the salinity of brine (in ppt) for a given temperature.
-     
+
     Note:
-        The origin of this code is unknown, to be investigate. It was attributed to (Cox and Weeks, 1975) 
+        The origin of this code is unknown, to be investigate. It was attributed to (Cox and Weeks, 1975)
         in earlier commits but their Eq 15 is different.
 
     Args:
@@ -81,6 +82,7 @@ def brine_salinity(temperature):
 
     return salinity_brine
 
+
 def brine_salinity_coxandweeks75(temperature):
     """
     Compute the salinity of brine (in ppt) for a given temperature (Cox and Weeks, 1975, equation 15).
@@ -91,9 +93,9 @@ def brine_salinity_coxandweeks75(temperature):
     Returns:
         Brine salinity in ppt.
 
-    References: 
-        Cox, G. F. N., and Weeks, W-f., and Cold Regions Research and Engineering Laboratory (U.S.). 1975. 
-        Brine Drainage and Initial Salt Entrapment in Sodium Chloride Ice. Hanover, N.H.: U.S. Dept. of Defense, 
+    References:
+        Cox, G. F. N., and Weeks, W-f., and Cold Regions Research and Engineering Laboratory (U.S.). 1975.
+        Brine Drainage and Initial Salt Entrapment in Sodium Chloride Ice. Hanover, N.H.: U.S. Dept. of Defense,
         Dept. of the Army, Corps of Engineers, Cold Regions Research and Engineering Laboratory.
     """
     tempC = temperature - FREEZING_POINT
@@ -101,11 +103,11 @@ def brine_salinity_coxandweeks75(temperature):
     salinity_brine = -17.5730 * tempC - 0.381246 * tempC**2 - 0.0032866 * tempC**3
 
     return salinity_brine
-    
+
 
 def brine_salinity_assur60poe72(temperature):
     """
-    Compute the salinity of brine (in psu) for a given temperature (Assur, 1960; Poe et al., 1972; 
+    Compute the salinity of brine (in psu) for a given temperature (Assur, 1960; Poe et al., 1972;
     as cited in Ulaby and Long (2014) (equation 4.46)).
 
     Validity range:
@@ -116,8 +118,8 @@ def brine_salinity_assur60poe72(temperature):
     Returns:
         Brine salinity in psu.
 
-    References: 
-        Ulaby, Fawwaz, and David Long. Microwave Radar and Radiometric Remote Sensing. 
+    References:
+        Ulaby, Fawwaz, and David Long. Microwave Radar and Radiometric Remote Sensing.
         University of Michigan Press, 2014. https://doi.org/10.3998/0472119356.
 
     """
@@ -139,13 +141,13 @@ def brine_salinity_assur60poe72(temperature):
     range4 = (tempC >= -43.2) & (tempC < -36.8)
 
     # Apply the conditions and compute the corresponding values for p
-    salinity_brine[range1] = 1.725 - 18.756 * tempC[range1] - 0.3964 * tempC[range1]**2
-    salinity_brine[range2] = 57.041 - 9.929 * tempC[range2] - 0.16204 * tempC[range2]**2 - 0.002396 * tempC[range2]**3
-    salinity_brine[range3] = 242.94 + 1.5299 * tempC[range3] + 0.0429 * tempC[range3]**2
-    salinity_brine[range4] = 508.18 + 14.535 * tempC[range4] + 0.2018 * tempC[range4]**2
-  
-    return salinity_brine 
-    
+    salinity_brine[range1] = 1.725 - 18.756 * tempC[range1] - 0.3964 * tempC[range1] ** 2
+    salinity_brine[range2] = 57.041 - 9.929 * tempC[range2] - 0.16204 * tempC[range2] ** 2 - 0.002396 * tempC[range2] ** 3  # fmt: skip
+    salinity_brine[range3] = 242.94 + 1.5299 * tempC[range3] + 0.0429 * tempC[range3] ** 2
+    salinity_brine[range4] = 508.18 + 14.535 * tempC[range4] + 0.2018 * tempC[range4] ** 2
+
+    return salinity_brine
+
 
 @layer_properties("temperature")
 def static_brine_permittivity_stogryn85(temperature):
@@ -179,16 +181,16 @@ def permittivity_high_frequency_limit_stogryn85(temperature):
     """
 
     tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
-    eps_inf = (82.79 + 8.19 * tempC**2) / (15.68 + tempC**2) # Eq 11
+    eps_inf = (82.79 + 8.19 * tempC**2) / (15.68 + tempC**2)  # Eq 11
     return eps_inf
 
 
 def water_freezing_temperature(salinity):
     """
     Calculate temperature at which saline water freezes.
-    
+
     Note:
-        Use polynomial fits of the Gibbs function given in TEOS-10: The international thermodynamic 
+        Use polynomial fits of the Gibbs function given in TEOS-10: The international thermodynamic
         equation of seawater - 2010 (http://www.teos-10.org/pubs/TEOS-10_Manual.pdf).
         The error of this fit ranges between -5e-4 K and 6e-4 K when compared with the
         temperature calculated from the exact in-situ freezing temperature, which is found
@@ -242,7 +244,7 @@ def water_freezing_temperature(salinity):
 
 def brine_volume_cox83_lepparanta88(temperature, salinity, porosity=0, bulk_density=None):
     """
-    Compute brine volume fraction using coefficients from Cox and Weeks (1983). If ice temperature is below -2 deg C, 
+    Compute brine volume fraction using coefficients from Cox and Weeks (1983). If ice temperature is below -2 deg C,
     coefficients determined by Lepparanta and Manninen (1988).
 
     Args:
@@ -252,10 +254,10 @@ def brine_volume_cox83_lepparanta88(temperature, salinity, porosity=0, bulk_dens
         bulk_density: density of bulk ice in kg m :sup:`-3`.
 
     References:
-        Cox, G. F. N., and Weeks, W-f.. Equations for Determining the Gas and Brine Volumes in Sea-Ice Samples. 
-        Journal of Glaciology. 1983;29(102):306-316. https://doi.org/10.3189/S0022143000008364 
+        Cox, G. F. N., and Weeks, W-f.. Equations for Determining the Gas and Brine Volumes in Sea-Ice Samples.
+        Journal of Glaciology. 1983;29(102):306-316. https://doi.org/10.3189/S0022143000008364
 
-        Leppäranta, M., & Manninen, T. (1988). The brine and gas content of sea ice with attention 
+        Leppäranta, M., & Manninen, T. (1988). The brine and gas content of sea ice with attention
         to low salinities and high temperatures. Finnish Institute of Marine Research. http://hdl.handle.net/1834/23905
     """
 
@@ -345,7 +347,6 @@ def brine_volume(*args, **kwargs):
     return brine_volume_cox83_lepparanta88(*args, **kwargs)
 
 
-
 def brine_volume_frankenstein67(temperature, salinity):
     """
     Compute brine volume fraction using the simpliest equation of Frankenstein and Garner (1967).
@@ -355,7 +356,7 @@ def brine_volume_frankenstein67(temperature, salinity):
         salinity: salinity of ice in kg/kg (see PSU constant in smrt module).
 
     References:
-        Frankenstein G, and Garner R. Equations for Determining the Brine Volume of Sea Ice from −0.5° to −22.9°C. 
+        Frankenstein G, and Garner R. Equations for Determining the Brine Volume of Sea Ice from −0.5° to −22.9°C.
         Journal of Glaciology.1967;6(48):943-944. https://doi.org:/10.3189/S0022143000020244
     """
 
@@ -375,21 +376,22 @@ def brine_volume_function_stogryn_1987(temperature, salinity):
         salinity: salinity of ice in kg/kg (see PSU constant in smrt module).
 
     **Usage**::
+
         salinity = 33*PSU
         temperature = 270
-        make_ice_column('firstyear', 
-                        thickness=[1.0], 
+        make_ice_column('firstyear',
+                        thickness=[1.0],
                         microstructure_model='exponential',
-                        temperature=temperature, 
-                        salinity=salinity, 
-                        corr_length=[0.2e-3], 
+                        temperature=temperature,
+                        salinity=salinity,
+                        corr_length=[0.2e-3],
                         water_salinity=34,
                         brine_volume_fraction=brine_volume_function_stogryn_1987(temperature,salinity))
-    
+
     Note: example usage might change
 
     References:
-        A. Stogryn (1987). An Analysis of the Tensor Dielectnc Constant of Sea Ice at Microwave Frequencies, 
+        A. Stogryn (1987). An Analysis of the Tensor Dielectnc Constant of Sea Ice at Microwave Frequencies,
         IEEE Transactions on Geoscience and Remote Sensing, vol. GE-25, no. 2, pp. 147-158 https://doi.org:/10.1109/TGRS.1987.289814.
     """
 

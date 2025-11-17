@@ -25,12 +25,13 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-    progressbar = ["tqdm"]
-    pyrtlib = ["scikit-learn", "bs4", "netCDF4", "requests", "cdsapi", "cfgrib", "pyrtlib"]
-    gsw = ["gsw"]
+progressbar = ["tqdm"]
+pyrtlib = ["scikit-learn", "bs4", "netCDF4", "requests", "cdsapi", "cfgrib", "pyrtlib"]
+gsw = ["gsw"]
 
 [dependency-groups]
-dev = ["pytest", "ruff"]
+dev = ["pytest", "ruff", "sphinx_rtd_theme", "Sphinx>=1.6"]
+benchmark = ["asv"]
 
 
 [project.urls]
@@ -55,6 +56,7 @@ line-length = 120
 target-version = "py310"
 lint.ignore = ["E741"]
 lint.pydocstyle.convention = "google"
+extend-exclude = ["attic"]
 
 [tool.setuptools_scm]
 
@@ -71,5 +73,6 @@ gsw = { features = ["gsw"], solve-group = "default" }
 progressbar = { features = ["progressbar"], solve-group = "default" }
 pyrtlib = { features = ["pyrtlib"], solve-group = "default" }
 dev = { features = ["dev"], solve-group = "default" }
+benchmark = { features = ["benchmark"], solve-group = "default" }
 
 [tool.pixi.tasks]

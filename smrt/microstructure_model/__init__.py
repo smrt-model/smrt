@@ -7,7 +7,7 @@ the `stickiness` (optional, default value is non-sticky, even though it is recom
 
 Because IBA and SymSCE are important electromagnetic theories provided by SMRT, the first/main role of microstructure models is to provide
 the Fourier transform of the autocorrelation functions. Hence most microstructure models are named after the autocorrelation function.
-For instance, the smrt.microstructure_model.exponential autocorrelation function is that used in MEMLS. Its only parameter is the 
+For instance, the smrt.microstructure_model.exponential autocorrelation function is that used in MEMLS. Its only parameter is the
 `corr_length`.
 
 To use microstructure models, it is only required to read the documentation of each model to determine

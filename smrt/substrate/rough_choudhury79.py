@@ -12,14 +12,14 @@ Args:
 
 import numpy as np
 
+from smrt.core.fresnel import fresnel_reflection_matrix, fresnel_transmission_matrix
+
 # local import
 from smrt.core.interface import Substrate
-from smrt.core.fresnel import fresnel_reflection_matrix, fresnel_transmission_matrix
 
 
 class ChoudhuryReflectivity(Substrate):
-
-    args = ['roughness_rms']
+    args = ["roughness_rms"]
     optional_args = {}
 
     def adjust(self, rh, rv, frequency, eps_1, mu1):
@@ -27,7 +27,7 @@ class ChoudhuryReflectivity(Substrate):
 
         #  Calculate ksigma = wavenumber*soilp%sigma(standard deviation of surface height)
 
-        ksigma = 2 * np.pi * frequency * np.sqrt((1 / 2.9979e8)**2 * eps_1) * self.roughness_rms
+        ksigma = 2 * np.pi * frequency * np.sqrt((1 / 2.9979e8) ** 2 * eps_1) * self.roughness_rms
         ksigma = ksigma.real
 
         # Raise warning if outside validity
@@ -39,7 +39,6 @@ class ChoudhuryReflectivity(Substrate):
         rv *= np.exp(-4 * ksigma**2 * mu1**2)  # V pola
 
     def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
-
         eps_2 = self.permittivity(frequency)
 
         reflection_coefficients = fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
@@ -56,7 +55,6 @@ class ChoudhuryReflectivity(Substrate):
         return reflection_coefficients
 
     def emissivity_matrix(self, frequency, eps_1, mu1, npol):
-
         # this function is a bit complex because we have to change first and second component but not the third one.
         # this is an approximation, as the third component should be affected by the roughness...
 

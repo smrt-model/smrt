@@ -1,7 +1,7 @@
 # coding: utf-8
 
 # local import
-from smrt import make_snowpack, make_model, sensor, make_soil
+from smrt import make_model, make_snowpack, make_soil, sensor
 
 #
 # Ghi: rapid hack, should be splitted in different functions
@@ -9,22 +9,25 @@ from smrt import make_snowpack, make_model, sensor, make_soil
 
 
 def prepare_snowpack(substrate):
-
     density = [300, 300]
     temperature = [245, 245]
     thickness = [0.1, 0.1]
     radius = [200e-6, 400e-6]
     stickiness = [1000, 1000]
 
-    snowpack = make_snowpack(thickness, "sticky_hard_spheres",
-                        density=density, temperature=temperature,
-                        radius=radius, stickiness=stickiness,
-                        substrate=substrate)
+    snowpack = make_snowpack(
+        thickness,
+        "sticky_hard_spheres",
+        density=density,
+        temperature=temperature,
+        radius=radius,
+        stickiness=stickiness,
+        substrate=substrate,
+    )
     return snowpack
 
 
 def run_model(snowpack):
-
     # create the EM Model
     m = make_model("dmrt_qcacp_shortrange", "dort")
 
@@ -47,8 +50,16 @@ def test_soil_wegmuller_dobson85():
     moisture = 0.2
     roughness_rms = 1e-2
 
-    substrate = make_soil("soil_wegmuller", "dobson85", soiltemperature, moisture=moisture, roughness_rms=roughness_rms,
-                          clay=clay, sand=sand, drymatter=drymatter)
+    substrate = make_soil(
+        "soil_wegmuller",
+        "dobson85",
+        soiltemperature,
+        moisture=moisture,
+        roughness_rms=roughness_rms,
+        clay=clay,
+        sand=sand,
+        drymatter=drymatter,
+    )
     snowpack = prepare_snowpack(substrate)
 
     res = run_model(snowpack)

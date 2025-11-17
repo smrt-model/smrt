@@ -1,6 +1,6 @@
 # coding: utf-8
 
-""" Compute scattering with DMRT QCA Short range. Short range means that it is accurate only for small
+"""Compute scattering with DMRT QCA Short range. Short range means that it is accurate only for small
 and weakly sticky spheres (high stickiness value). It diverges (increasing scattering coefficient) if these conditions
 are not met. Numerically the size conditions can be evaluated with the ratio radius/wavelength as for Rayleigh scatterers.
 For the stickiness, it is more difficult as this depends on the size of the scatterers and the fractional volume. In any case, it is
@@ -33,12 +33,11 @@ Examples::
 """
 
 # Stdlib import
-import math
 import cmath
+import math
 
 # other import
 import numpy as np
-
 
 # local import
 from ..core.error import SMRTError, smrt_warn
@@ -54,18 +53,16 @@ npol = 2
 
 
 class DMRT_QCA_ShortRange(Rayleigh):
+    """DMRT electromagnetic model in the short range limit (grains AND aggregates are small) as implemented in DMRTML
 
-    """ DMRT electromagnetic model in the short range limit (grains AND aggregates are small) as implemented in DMRTML
-
-        :param sensor: sensor instance
-        :param layer: layer instance
-        :param dense_snow_correction: set how snow denser than half the ice density (ie. fractional volume larger than 0.5 is handled).
-            "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air.
-            "bridging" should be developed in the future.
+    :param sensor: sensor instance
+    :param layer: layer instance
+    :param dense_snow_correction: set how snow denser than half the ice density (ie. fractional volume larger than 0.5 is handled).
+        "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air.
+        "bridging" should be developed in the future.
     """
 
     def __init__(self, sensor, layer, dense_snow_correction="auto"):
-
         # super().__init__()  # must not be called. Todo: write a generic RayleighBase object with phase function methods only
 
         if layer.frac_volume > 0.5 and dense_snow_correction == "auto":
@@ -73,9 +70,11 @@ class DMRT_QCA_ShortRange(Rayleigh):
 
         f = layer.frac_volume
         if f > 0.5:
-            smrt_warn("Using DMRT with fraction_volume > 0.5 is not recommended, unless for testing."
-                      " See Picard et al. 2022 and references therein (doi: 10.5194/tc-16-3861-2022)"
-                      " for a detailed description of the issue.")
+            smrt_warn(
+                "Using DMRT with fraction_volume > 0.5 is not recommended, unless for testing."
+                " See Picard et al. 2022 and references therein (doi: 10.5194/tc-16-3861-2022)"
+                " for a detailed description of the issue."
+            )
 
         e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
         es = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
@@ -94,16 +93,18 @@ class DMRT_QCA_ShortRange(Rayleigh):
 
         k0 = (2 * math.pi / lmda) * cmath.sqrt(e0).real
         Eeff = e0 + 3 * fy * e0 / (1 - fy) * (1 + 2j / 3 * (k0 * radius)**3 * y
-                                              * (1 - f)**4 / ((1 - fy) * (1 + 2 * f - t * f * (1 - f))**2))
+                                              * (1 - f)**4 / ((1 - fy) * (1 + 2 * f - t * f * (1 - f))**2))  # fmt: skip
         Ks = 2 / (9 * f) * k0 * (k0 * radius)**3 * (
-            np.abs(Eeff / e0 - 1)**2 * (1 - f)**4 / (1 + 2 * f - t * f * (1 - f))**2)  # TODO: to further double check
+            np.abs(Eeff / e0 - 1)**2 * (1 - f)**4 / (1 + 2 * f - t * f * (1 - f))**2)  # fmt: skip
 
         beta = 2 * k0 * cmath.sqrt(Eeff).imag
 
         if Ks >= beta:
-            smrt_warn("Grain diameter is too large for DMRT_QCACP_ShortRange resulting in single scattering albedo "
-                      "larger than 1. It is recommended to decrease the size or used an alternative emmodel able to do "
-                      "Mie calculations.")
+            smrt_warn(
+                "Grain diameter is too large for DMRT_QCACP_ShortRange resulting in single scattering albedo "
+                "larger than 1. It is recommended to decrease the size or used an alternative emmodel able to do "
+                "Mie calculations."
+            )
 
         self._effective_permittivity = Eeff
         self._ks = Ks

@@ -7,8 +7,9 @@ The reflection and transmission are computed using the Fresnel coefficients. Thi
 """
 
 # local import
-from smrt.interface.flat import Flat as iFlat
 from smrt.core.interface import substrate_from_interface
+from smrt.interface.flat import Flat as iFlat
+
 
 # autogenerate from interface.Flat
 @substrate_from_interface(iFlat)

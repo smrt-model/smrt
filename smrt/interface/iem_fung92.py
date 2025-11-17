@@ -15,6 +15,7 @@ Notes:
     when out of this range. There is also limitation for smooth surfaces but no warning is printed.
 
 **Usage**::
+
     # rms height and corr_length values work at 10 GHz
     substrate = make_soil("iem_fung92", "dobson85", temperature=260,
                                             roughness_rms=1e-3,
@@ -24,24 +25,28 @@ Notes:
                                             clay=clay, sand=sand, drymatter=drymatter)
 
 References:
-    Fung, A.K, Zongqian, L., and Chen, K.S. (1992). Backscattering from a randomly rough dielectric surface. IEEE TRANSACTIONS ON 
+    Fung, A.K, Zongqian, L., and Chen, K.S. (1992). Backscattering from a randomly rough dielectric surface. IEEE TRANSACTIONS ON
     GEOSCIENCE AND REMOTE SENSING, 30-2. https://doi.org/10.1109/36.134085
 """
 
 import numpy as np
 
-from smrt.core.fresnel import fresnel_transmission_matrix, fresnel_reflection_matrix, fresnel_coefficients
-from smrt.core.lib import smrt_matrix, abs2
-from smrt.core.interface import Interface
-from smrt.core.globalconstants import C_SPEED
 from smrt.core.error import SMRTError
+from smrt.core.fresnel import (
+    fresnel_coefficients,
+    fresnel_reflection_matrix,
+    fresnel_transmission_matrix,
+)
+from smrt.core.globalconstants import C_SPEED
+from smrt.core.interface import Interface
+from smrt.core.lib import abs2, smrt_matrix
 from smrt.core.vector3 import vector3
 
 
 class IEM_Fung92(Interface):
     """
-    Implement a moderate rough surface model with backscatter, specular reflection and transmission only. 
-    
+    Implement a moderate rough surface model with backscatter, specular reflection and transmission only.
+
     It is not suitable for emissivity calculations. Use with care!
 
     Args:
@@ -51,16 +56,19 @@ class IEM_Fung92(Interface):
         warning_handling: [Optional] Parameter that dictates how to handle wanring. Default is "print".
         series_truncation: [Optional] Number of iterations to use in the summation of roughness spectra.
     """
+
     args = ["roughness_rms", "corr_length"]
-    optional_args = {"autocorrelation_function": "exponential",
-                     "warning_handling": "print",
-                     "series_truncation": 10}
+    optional_args = {
+        "autocorrelation_function": "exponential",
+        "warning_handling": "print",
+        "series_truncation": 10,
+    }
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
         Compute the specular reflection coefficients.
 
-        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the 
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
         beam is transmitted.
 
         Args:
@@ -78,14 +86,17 @@ class IEM_Fung92(Interface):
         return fresnel_reflection_matrix(eps_1, eps_2, mu1, npol) * np.exp(-4 * k2 * self.roughness_rms**2 * mu1**2)
 
     def check_validity(self, ks, kl, eps_r):
-
         # check validity
         if ks > 3:
-            raise SMRTError("Warning, roughness_rms is too high for the given wavelength. Limit is ks < 3. Here ks=%g" % ks)
+            raise SMRTError(
+                "Warning, roughness_rms is too high for the given wavelength. Limit is ks < 3. Here ks=%g" % ks
+            )
 
         if ks * kl > np.sqrt(eps_r):
-            raise SMRTError("Warning, roughness_rms or correlation_length are too high for the given wavelength."
-                            " Limit is ks * kl < sqrt(eps_r). Here ks*kl=%g and sqrt(eps_r)=%g" % (ks * kl, np.sqrt(eps_r)))
+            raise SMRTError(
+                "Warning, roughness_rms or correlation_length are too high for the given wavelength."
+                " Limit is ks * kl < sqrt(eps_r). Here ks*kl=%g and sqrt(eps_r)=%g" % (ks * kl, np.sqrt(eps_r))
+            )
 
     def fresnel_coefficients(self, eps_1, eps_2, mu_i, ks, kl):
         """
@@ -95,12 +106,11 @@ class IEM_Fung92(Interface):
         Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
         return Rv, Rh
 
-
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol, debug=False):
         """
         Compute the diffuse reflection coefficients.
-        
-        Coefficients are calculated for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the 
+
+        Coefficients are calculated for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the
         beam is transmitted.
 
         Args:
@@ -119,8 +129,10 @@ class IEM_Fung92(Interface):
         mu_i = np.atleast_1d(mu_i)
 
         if not np.allclose(mu_s, mu_i) or not np.allclose(dphi, np.pi):
-            raise NotImplementedError("Only the backscattering coefficient is implemented at this stage."
-                                      "This is a very preliminary implementation")
+            raise NotImplementedError(
+                "Only the backscattering coefficient is implemented at this stage."
+                "This is a very preliminary implementation"
+            )
 
         if len(np.atleast_1d(dphi)) != 1:
             raise NotImplementedError("Only the backscattering coefficient is implemented at this stage. ")
@@ -152,7 +164,7 @@ class IEM_Fung92(Interface):
         rms2 = self.roughness_rms**2
 
         # Kirchoff term
-        Iscalar_n = (2 * k.z)**n * np.exp(-rms2 * k.z**2)
+        Iscalar_n = (2 * k.z) ** n * np.exp(-rms2 * k.z**2)
         Ivv_n = Iscalar_n * fvv  # Eq 82 in Fung et al. 1992
         Ihh_n = Iscalar_n * fhh
 
@@ -161,8 +173,8 @@ class IEM_Fung92(Interface):
         sin2 = 1 - mu2
         tan2 = sin2 / mu2
         # part of Eq 91. We don't use all the simplification because we want validity for n>1, especially not np.exp(-rms2 * k.z**2)=1
-        Ivv_n += k.z**n * (sin2 / mu * (1 + Rv)**2 * (1 - 1 / eps_r) * (1 + tan2 / eps_r))
-        Ihh_n += -k.z**n * (sin2 / mu * (1 + Rh)**2 * (eps_r - 1) / mu2)  # part of Eq 95.
+        Ivv_n += k.z**n * (sin2 / mu * (1 + Rv) ** 2 * (1 - 1 / eps_r) * (1 + tan2 / eps_r))
+        Ihh_n += -(k.z**n) * (sin2 / mu * (1 + Rh) ** 2 * (eps_r - 1) / mu2)  # part of Eq 95.
 
         # compute the series
         rms2_over_fractorial = np.cumprod(rms2 / n)[:, None]
@@ -185,21 +197,18 @@ class IEM_Fung92(Interface):
         return reflection_coefficients
 
     def W_n(self, n, k):
-
         if self.autocorrelation_function == "gaussian":
-
             # gaussian C(r) = exp ( -(r/l)**2 )
             lc = self.corr_length
-            return (lc**2 / (2 * n)) * np.exp(-(k * lc)**2 / (4 * n))
+            return (lc**2 / (2 * n)) * np.exp(-((k * lc) ** 2) / (4 * n))
         elif self.autocorrelation_function == "exponential":
             # exponential C(r) = exp( -r/l )
             lc = self.corr_length
-            return (lc / n)**2 * (1 + (k * lc / n)**2)**(-1.5)
+            return (lc / n) ** 2 * (1 + (k * lc / n) ** 2) ** (-1.5)
         else:
             raise SMRTError("The autocorrelation function must be exponential or gaussian")
 
     def ft_even_diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, m_max, npol):
-
         assert mu_s is mu_i
 
         diffuse_refl_coeff = smrt_matrix.zeros((npol, m_max + 1, len(mu_i)))
@@ -223,8 +232,8 @@ class IEM_Fung92(Interface):
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """
         Compute the transmission coefficients.
-        
-        Coefficients are calculated for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1. 
+
+        Coefficients are calculated for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1.
         Medium 2 is where the beam is transmitted.
 
         Args:
@@ -242,4 +251,6 @@ class IEM_Fung92(Interface):
         k_iz = k0 * np.sqrt(eps_1).real * mu1
         k_sz = k0 * np.sqrt(eps_2 - (1 - mu1**2) * eps_1).real
 
-        return fresnel_transmission_matrix(eps_1, eps_2, mu1, npol) * np.exp(- (k_sz - k_iz)**2 * self.roughness_rms**2)
+        return fresnel_transmission_matrix(eps_1, eps_2, mu1, npol) * np.exp(
+            -((k_sz - k_iz) ** 2) * self.roughness_rms**2
+        )

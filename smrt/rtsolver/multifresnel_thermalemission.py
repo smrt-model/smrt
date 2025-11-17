@@ -28,6 +28,7 @@ temperatures: application to melt detection on the Antarctic and Greenland ice s
 
 
 **Usage**::
+
     # Create a model using a nonscattering medium and the rtsolver 'multifresnel_thermalemission'.
     m = make_model("nonscattering", "multifresnel_thermalemission")
 
@@ -39,12 +40,14 @@ temperatures: application to melt detection on the Antarctic and Greenland ice s
 # other import
 import numpy as np
 
-from .multifresnel.multifresnel import compute_emerging_radiation, compute_matrix_slab
-
 # local import
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.result import make_result
+from smrt.interface.flat import Flat as iFlat
 from smrt.rtsolver.rtsolver_utils import prepare_kskaeps_profile_information
+from smrt.substrate.flat import Flat as sFlat
+
+from .multifresnel.multifresnel import compute_emerging_radiation, compute_matrix_slab
 
 
 class MultiFresnelThermalEmission(object):
@@ -84,6 +87,7 @@ class MultiFresnelThermalEmission(object):
         Returns:
             result: Result object.
         """
+
         if sensor.mode != "P":
             raise SMRTError(
                 "the MFTE solver is only suitable for passive microwave. Use an adequate sensor falling in"
@@ -95,27 +99,27 @@ class MultiFresnelThermalEmission(object):
                 "the MFTE solver can not handle atmosphere yet. Please put an issue on github if thisfeature is needed."
             )
 
-        # for em in emmodels:
-        #     if getattr(em, "ks", 0) > 0:
-        #         smrt_warn(
-        #             "the MFTE solver does not take into account scattering. Use the DORT solver if scattering"
-        #             " is significant."
-        #         )
+        for interface in snowpack.interfaces:
+            if not isinstance(interface, iFlat):
+                raise SMRTError("Multi-Fresnel thermal emission only works with flat interfaces.")
 
         thickness = snowpack.layer_thicknesses
         temperature = snowpack.profile("temperature")
         effective_permittivity = [emmodel.effective_permittivity() for emmodel in emmodels]
 
         if snowpack.substrate is not None:
+            if not isinstance(snowpack.substrate, sFlat):
+                raise SMRTError("Multi-Fresnel thermal emission only works with flat substrates.")
+
             effective_permittivity.append(snowpack.substrate.permittivity(sensor.frequency))
             if effective_permittivity[-1].imag < 1e-8:
                 smrt_warn("the permittivity of the substrate has a too small imaginary part for reliable results")
             thickness.append(1e10)  # add an infinite layer (hugly hack)
-            temperature.append(snowpack.substrate.temperature)
+            temperature = np.append(temperature, snowpack.substrate.temperature)
 
         mu = np.cos(sensor.theta)
 
-        M = compute_matrix_slab(
+        M, tau_snowpack = compute_matrix_slab(
             frequency=sensor.frequency,
             outmu=mu,
             permittivity=effective_permittivity,
@@ -124,12 +128,22 @@ class MultiFresnelThermalEmission(object):
             prune_deep_snowpack=self.prune_deep_snowpack,
         )
 
+        if tau_snowpack < 5 and snowpack.substrate is None:
+            smrt_warn(
+                "Multifresnel has detected that the snowpack is optically shallow (tau=%g) and no substrate has been set, meaning that the space "
+                "under the snowpack is 'empty' with snowpack shallow enough to affect the measured signal at the surface."
+                "This is usually not wanted and can produce wrong results. Either increase the thickness of the snowpack or set a substrate."
+                " If wanted, add a transparent substrate to supress this warning" % tau_snowpack
+            )
+
         Tbv, Tbh = compute_emerging_radiation(M)
 
         #  describe the results list of (dimension name, dimension array of value)
         coords = [("theta", sensor.theta_deg), ("polarization", ["V", "H"])]
 
         # store other diagnostic information
-        other_data = prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity, mu=mu)
+        other_data = prepare_kskaeps_profile_information(
+            snowpack, emmodels, effective_permittivity[0 : snowpack.nlayer], mu=mu
+        )
 
         return make_result(sensor, np.transpose((Tbv, Tbh)), coords, other_data=other_data)

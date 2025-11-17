@@ -5,12 +5,11 @@ Implements the radar_calibration_sphere interface boundary for the bottom layer 
 """
 
 # local import
-from smrt.interface.radar_calibration_sphere import RadarCalibrationSphere as iRadarCalibrationSphere
 from smrt.core.interface import substrate_from_interface
+from smrt.interface.radar_calibration_sphere import RadarCalibrationSphere as iRadarCalibrationSphere
+
 
 # autogenerate from interface.radar_calibration_sphere
 @substrate_from_interface(iRadarCalibrationSphere)
 class RadarCalibrationSphere:
     pass
-
-

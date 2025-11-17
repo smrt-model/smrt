@@ -7,15 +7,15 @@ Args:
     acf (array-like): Autocorrelation function values at the given lags.
 """
 
-import numpy as np
 import warnings
+
+import numpy as np
 
 # local import
 from .autocorrelation import Autocorrelation
 
 
 class SampledAutocorrelation(Autocorrelation):
-
     # TODO. Make 3D
     # TODO. Think about density - currently required
     # TODO. SSA as an alternative input or calculated
@@ -25,7 +25,6 @@ class SampledAutocorrelation(Autocorrelation):
     optional_args = {}
 
     def __init__(self, params):
-
         super().__init__(params)  # don't forget this line in our classes!
 
     @property
@@ -43,9 +42,9 @@ class SampledAutocorrelation(Autocorrelation):
 
     def autocorrelation_function(self, r):
         """compute the real space autocorrelation function by interpolation of requested values from known values"""
-        if(r[-1] > self.lag[-1]):
+        if r[-1] > self.lag[-1]:
             warnings.warn("Warning: Autocorrelation function is computed out of range of known values")
 
         return np.interp(r, self.lag, self.acf)
 
-    #def ft_autocorrelation_function(self, k):
+    # def ft_autocorrelation_function(self, k):

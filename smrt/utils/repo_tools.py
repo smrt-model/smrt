@@ -1,4 +1,4 @@
-""" 
+"""
 Provides general tools related to the code repository.
 """
 
@@ -28,8 +28,5 @@ def get_hg_rev(file_path):
     Returns:
         The commit ID as bytes.
     """
-    pipe = subprocess.Popen(
-        ["hg", "id", "-i", "-R", file_path],
-        stdout=subprocess.PIPE
-    )
+    pipe = subprocess.Popen(["hg", "id", "-i", "-R", file_path], stdout=subprocess.PIPE)
     return pipe.stdout.read()

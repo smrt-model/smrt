@@ -6,24 +6,26 @@ It is not to be used by the end-user.
 
 # other import
 import numpy as np
+import scipy.integrate
+
+from ..core.error import SMRTError
 
 # local import
 from ..core.globalconstants import C_SPEED
-from ..core.error import SMRTError
 from ..core.lib import smrt_matrix
-from .common import rayleigh_scattering_matrix_and_angle, IsotropicScatteringMixin, GenericFTPhaseMixin
-
-import scipy.integrate
+from .common import (
+    GenericFTPhaseMixin,
+    IsotropicScatteringMixin,
+    rayleigh_scattering_matrix_and_angle,
+)
 
 
 class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
-
     def __init__(self, sensor, layer, local=False, symmetrical=False, scaled=True):
-
         # set value of interest in self and that's it. No calculation is involved here.
 
         # Set size of phase matrix: active needs an extended phase matrix
-        if sensor.mode == 'P':
+        if sensor.mode == "P":
             self.npol = 2
         else:
             self.npol = 3
@@ -62,7 +64,6 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         self.ka = self.compute_ka()
 
     def compute_A2(self, Q, microstructure):
-
         if self.local:
             return compute_A2_local(Q, microstructure)
         else:
@@ -77,11 +78,11 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         inverted_microstructure = self.microstructure.inverted_medium()
 
         if self.scaled:
-            #eps_HS = permittivity_hashin_shtrikman(self.frac_volume), self.e0, self.eps
-            #eps_HS_inv = permittivity_hashin_shtrikman(self.eps, self.e0, 1 - self.frac_volume)
-            #eps_symHS = (1 - self.frac_volume) * eps_HS + self.frac_volume * eps_HS_inv
+            # eps_HS = permittivity_hashin_shtrikman(self.frac_volume), self.e0, self.eps
+            # eps_HS_inv = permittivity_hashin_shtrikman(self.eps, self.e0, 1 - self.frac_volume)
+            # eps_symHS = (1 - self.frac_volume) * eps_HS + self.frac_volume * eps_HS_inv
             #
-            #k_symHS = self.k0 * np.sqrt(eps_symHS)
+            # k_symHS = self.k0 * np.sqrt(eps_symHS)
 
             k_symHS = self.k0 * np.sqrt(self._effective_permittivity)
 
@@ -94,7 +95,6 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         return A2, A2inv
 
     def compute_ke_ks(self):
-
         assert not self.symmetrical
 
         # equation 67
@@ -110,7 +110,6 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         return ke, ks
 
     def compute_ke_ks_symmetrical(self):
-
         assert self.symmetrical
         # equation D2
         A2, A2inv = self.A2A2inv
@@ -125,15 +124,15 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         prod_eps = self.e0 * self.eps
         weighted_mean_eps = self.e0 * self.frac_volume + self.eps * (1 - self.frac_volume)
 
-        #Eeff = sum_eps / 2 \
+        # Eeff = sum_eps / 2 \
         #    + 1 / (2 * grandA2) * (-3 * weighted_mean_eps
         #                           + np.sqrt(4 * grandA2 * (3 - grandA2) * prod_eps + (sum_eps * grandA2 - 3 * weighted_mean_eps)**2))
 
-        delta = 4 * grandA2 * (3 - grandA2) * prod_eps + (sum_eps * grandA2 - 3 * weighted_mean_eps)**2
+        delta = 4 * grandA2 * (3 - grandA2) * prod_eps + (sum_eps * grandA2 - 3 * weighted_mean_eps) ** 2
 
         Eeff = sum_eps / 2 + 1 / (2 * grandA2) * (-3 * weighted_mean_eps + np.sqrt(delta))
 
-        delta0 = 8 * prod_eps + (sum_eps * 2 - 3 * weighted_mean_eps)**2  # same with grandA2=2
+        delta0 = 8 * prod_eps + (sum_eps * 2 - 3 * weighted_mean_eps) ** 2  # same with grandA2=2
 
         Eeff0 = sum_eps / 2 + 1 / 4 * (-3 * weighted_mean_eps + np.sqrt(delta0))
         # Eeff0 is the same as PvS... we do a lot of calculus here.
@@ -157,29 +156,29 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         if ks_int == 0:
             return 0
 
-        return self._ks / (ks_int / 4.)  # Ding et al. (2010), normalised by (1/4pi)
+        return self._ks / (ks_int / 4.0)  # Ding et al. (2010), normalised by (1/4pi)
 
     def ks_integrand(self, mu):
         """
         This is the scattering function for the IBA model.
-        
+
         It uses the phase matrix in the 1-2 frame. With incident angle chosen to be 0, the scattering
         angle becomes the scattering zenith angle:
-        
+
         .. math::
-        
+
             \\Theta = \\theta
-        
-        
+
+
         Scattering coefficient is determined by integration over the scattering angle (0 to \\pi)
 
         Args:
             mu: cosine of the scattering angle (single angle)
-        
+
         .. math::
-        
+
         ks\\_int = p11 + p22
-        
+
         The integration is performed outside this method.
         """
 
@@ -188,21 +187,23 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         # phi in the 1-2 frame for calculation of p11 is pi
         # phi in the 1-2 frame for calculation of p22 is pi / 2
         # Calculate wavevector difference
-        sintheta_2 = np.sqrt((1. - mu) / 2.)  # = np.sin(theta / 2.)
+        sintheta_2 = np.sqrt((1.0 - mu) / 2.0)  # = np.sin(theta / 2.)
 
-        k_diff = np.asarray(2. * self.k0 * sintheta_2 * np.abs(np.sqrt(self._effective_permittivity)))
+        k_diff = np.asarray(2.0 * self.k0 * sintheta_2 * np.abs(np.sqrt(self._effective_permittivity)))
 
         # Calculate microstructure term
-        if hasattr(self.microstructure, 'ft_autocorrelation_function'):
+        if hasattr(self.microstructure, "ft_autocorrelation_function"):
             ft_corr_fn = self.microstructure.ft_autocorrelation_function(k_diff)
         else:
-            raise SMRTError("Fourier Transform of this microstructure model has not been defined, or there is "
-                            "a problem with its calculation")
+            raise SMRTError(
+                "Fourier Transform of this microstructure model has not been defined, or there is "
+                "a problem with its calculation"
+            )
 
         p11 = ft_corr_fn.real * mu**2
-        p22 = ft_corr_fn.real * 1.
+        p22 = ft_corr_fn.real * 1.0
 
-        ks_int = (p11 + p22)
+        ks_int = p11 + p22
 
         return ks_int.real
 
@@ -211,9 +212,9 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         IBA Phase function (not decomposed).
 
         Args:
-            mu_s: 
-            mu_i: 
-            dphi: 
+            mu_s:
+            mu_i:
+            dphi:
             npol:  (Default value = 2)
         """
 
@@ -223,28 +224,30 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         p, sin_half_scatt = rayleigh_scattering_matrix_and_angle(mu_s, mu_i, dphi, npol)
 
         # IBA phase function = rayleigh phase function * angular part of microstructure term
-        k_diff = 2. * self.k0 * np.sqrt(self._effective_permittivity) * sin_half_scatt
+        k_diff = 2.0 * self.k0 * np.sqrt(self._effective_permittivity) * sin_half_scatt
 
         # Calculate microstructure term
-        if hasattr(self.microstructure, 'ft_autocorrelation_function'):
+        if hasattr(self.microstructure, "ft_autocorrelation_function"):
             ft_corr_fn = self.microstructure.ft_autocorrelation_function(k_diff)
         else:
-            raise SMRTError("Fourier Transform of this microstructure model has not been defined, or there is a "
-                            "problem with its calculation")
+            raise SMRTError(
+                "Fourier Transform of this microstructure model has not been defined, or there is a "
+                "problem with its calculation"
+            )
 
         return smrt_matrix(self._phase_norm * ft_corr_fn * p)
 
     def compute_ka(self):
         """
         SCE absorption coefficient calculated from the low-loss assumption of a general lossy medium.
-        
+
         Calculates ka from wavenumber in free space (determined from sensor), and effective permittivity
         of the medium.
-        
+
         :return ka: absorption coefficient [m :sup:`-1`]
-        
+
         .. note::
-        
+
             This may not be suitable for high density material
 
         """
@@ -257,10 +260,10 @@ def compute_A2_local(Q, microstructure):
     # this is the short range version to compute A2. It is similar to Rechtsman08.
 
     p = 12
-    n = 2**p   # number of samples. This should be adaptative depending on the size/wavelength
+    n = 2**p  # number of samples. This should be adaptative depending on the size/wavelength
 
     # grid resolution, fraction of the unique characteristic scale we have
-    maxr = 2**(p // 4) * microstructure.inv_slope_at_origin
+    maxr = 2 ** (p // 4) * microstructure.inv_slope_at_origin
     r = np.linspace(0, maxr, n + 1)
 
     y = r * microstructure.autocorrelation_function(r)
@@ -272,7 +275,6 @@ def compute_A2_local(Q, microstructure):
 
 
 def compute_A2_nonlocal(Q, microstructure):
-
     margin = 4  # this number must be higher for small grains, because
     # the FT of gamma is wider, so is the integrand of ReF. It means that using the long range version
     # is not recommanded for small grains
@@ -289,33 +291,32 @@ def compute_A2_nonlocal(Q, microstructure):
 
     # start with the imaginary part - Eq (70)
     y = 2 * q * microstructure.ft_autocorrelation_function(2 * q)
-
     # integrate from 0 to 2Q (for Q in 0 to qmax)
     # take the real part to avoid warnings... but this remains to be explored
     primitive = scipy.integrate.cumulative_trapezoid(y.real, 2 * q.real, initial=0)
 
-    ImF = - 1 / (2 * (2 * np.pi)**1.5) * q * primitive
+    ImF = -1 / (2 * (2 * np.pi) ** 1.5) * q * primitive
 
     # continue with the real part. Eq (71) is much more difficult to compute than the imaginary part
     # because of the principal value, but Torquato 2021, suppmat gives a hint with Eq S111.
     # here: M = maxq
 
-    with np.errstate(invalid='ignore'):
+    with np.errstate(invalid="ignore"):
         y1 = ImF / ((Q + q) * q)
         y1[0] = 0  # remove the singularity in 0
 
         y2 = (ImF - ImF[nQ]) / (Q**2 - q**2)
 
-        y2[nQ] = (y2[nQ - 1] + y2[nQ + 1]) / 2   # remove the singularity in Q
+        y2[nQ] = (y2[nQ - 1] + y2[nQ + 1]) / 2  # remove the singularity in Q
 
     y = y1 + y2
 
     asymptotic_integral = (ImF[nQ] - Q / maxq * ImF[-1]) * np.log(np.abs((maxq + Q) / (maxq - Q)))
 
-    ReF = - 2 / np.pi * Q * scipy.integrate.romb(y.real, maxq / n) - 1 / np.pi * asymptotic_integral
+    ReF = -2 / np.pi * Q * scipy.integrate.romb(y.real, maxq.real / n) - 1 / np.pi * asymptotic_integral
 
     gamma_3_2 = 0.5 * np.sqrt(np.pi)
-    A2 = - (2 * np.pi) / (2**1.5 * gamma_3_2) * (ReF + 1j * ImF[nQ])  # the factor is from eq 67
+    A2 = -(2 * np.pi) / (2**1.5 * gamma_3_2) * (ReF + 1j * ImF[nQ])  # the factor is from eq 67
 
     # check ImF(Q)
     # q = np.linspace(0, 2 * Q, n + 1)
@@ -327,7 +328,6 @@ def compute_A2_nonlocal(Q, microstructure):
 
 
 def permittivity_hashin_shtrikman(frac_volume, e0, eps):
-
     # Eq 72 in TK21
     # in fact this is the same as Maxwell-Garnett equation. In principle we don't need to redefinie it.
 

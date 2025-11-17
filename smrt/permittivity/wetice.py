@@ -2,17 +2,19 @@
 """
 Provide equations to compute the effective permittivity of wet ice.
 """
+
 import numpy as np
+
 from ..core.layer import layer_properties
+from .generic_mixing_formula import maxwell_garnett_for_spheres, polder_van_santen
 from .ice import ice_permittivity_maetzler06
 from .water import water_permittivity_maetzler87
-from .generic_mixing_formula import maxwell_garnett_for_spheres, polder_van_santen
 
 
 @layer_properties("temperature", "liquid_water")
 def wetice_permittivity_bohren83(frequency, temperature, liquid_water):
     """
-    Calculate the dielectric constant of wet particules of ice using Maxwell Garnet equation using water as the background and 
+    Calculate the dielectric constant of wet particules of ice using Maxwell Garnet equation using water as the background and
     ice as the inclusions. As reported by Bohren and Huffman 1983 according to Ya Qi Jin (1993), eq 8-69, p282.
 
     Note:
@@ -27,7 +29,7 @@ def wetice_permittivity_bohren83(frequency, temperature, liquid_water):
         Complex permittivity of pure ice.
 
     References:
-         Bohren, C. F., Huffman, D. R. (1983). Absorption and scattering of light by small particles. New York, Wiley-Interscience, 
+         Bohren, C. F., Huffman, D. R. (1983). Absorption and scattering of light by small particles. New York, Wiley-Interscience,
          1983, 541 p.
 
          Chopra, K.L., Reddy, G.B. Optically selective coatings. Pramana - J Phys 27, 193–217 (1986). https://doi.org/10.1007/BF02846338
@@ -48,9 +50,9 @@ def wetice_permittivity_bohren83(frequency, temperature, liquid_water):
 @layer_properties("temperature", "liquid_water")
 def symmetric_wetice_permittivity(frequency, temperature, liquid_water):
     """
-    Calculate the dielectric constant of wet particules of ice using Polder van Santen Maxwell equation 
-    assuming both ice and water are fully mixed. 
-    
+    Calculate the dielectric constant of wet particules of ice using Polder van Santen Maxwell equation
+    assuming both ice and water are fully mixed.
+
     Note:
         This applies to intermediate content of wetness. Typically liquid_water=0.5.
 

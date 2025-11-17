@@ -11,17 +11,14 @@ Args:
 import numpy as np
 
 from ..core.globalconstants import DENSITY_OF_ICE
-
 from .autocorrelation import Autocorrelation
 
 
 class IndependentSphere(Autocorrelation):
-
     args = ["frac_volume", "radius"]
     optional_args = {}
 
     def __init__(self, params):
-
         super().__init__(params)  # don't forget this line in our classes!
 
     @property
@@ -44,16 +41,14 @@ class IndependentSphere(Autocorrelation):
         return 3.0 / (DENSITY_OF_ICE * self.radius)
 
     def autocorrelation_function(self, r):
-        """compute the real space autocorrelation function for an independent sphere
-
-        """
+        """compute the real space autocorrelation function for an independent sphere"""
         # spherical correlation function
         acf = np.empty_like(r)
 
         # the Heaviside factor
         heaviside = r <= 2 * self.radius
 
-        acf[heaviside] = (1 - r[heaviside] / ((4 * self.radius) / 3) + r[heaviside]**3 / ((2*self.radius)**3 * 2))
+        acf[heaviside] = 1 - r[heaviside] / ((4 * self.radius) / 3) + r[heaviside] ** 3 / ((2 * self.radius) ** 3 * 2)
 
         return self.corr_func_at_origin * acf
 
@@ -72,7 +67,6 @@ class IndependentSphere(Autocorrelation):
         non_zero_X = np.logical_not(zero_X)
         X_non_zero = X[non_zero_X]
 
-        bessel_term[non_zero_X] = (9 * ((np.sin(X_non_zero) - X_non_zero * np.cos(X_non_zero))
-                                        / X_non_zero**3)**2)
+        bessel_term[non_zero_X] = 9 * ((np.sin(X_non_zero) - X_non_zero * np.cos(X_non_zero)) / X_non_zero**3) ** 2
         bessel_term[zero_X] = 1.0
         return self.corr_func_at_origin * volume_sphere * bessel_term

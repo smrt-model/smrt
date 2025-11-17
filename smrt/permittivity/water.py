@@ -2,11 +2,12 @@
 """
 Provide equations to compute the effective permittivity of water.
 """
+
 import numpy as np
 
-from ..core.layer import layer_properties
-from ..core.globalconstants import FREEZING_POINT, GHz
 from ..core.error import SMRTError
+from ..core.globalconstants import FREEZING_POINT, GHz
+from ..core.layer import layer_properties
 
 
 @layer_properties("temperature")
@@ -23,9 +24,9 @@ def water_permittivity_maetzler87(frequency, temperature):
 
     Returns:
         complex: Complex permittivity of pure ice.
-    
+
     References:
-        Matzler, C., Wegmuller, U., (1987) Dielectric properties of freshwater ice at microwave frequencies. J. Phys. D: 
+        Matzler, C., Wegmuller, U., (1987) Dielectric properties of freshwater ice at microwave frequencies. J. Phys. D:
         Appl. Phys, 20, 1623–1630, https://doi.org/10.1088/0022-3727/20/12/013.
     """
     if temperature < FREEZING_POINT:
@@ -69,7 +70,7 @@ def water_permittivity_tiuri80(frequency, temperature):
 
     References:
         Tiuri, M. and Schultz, H., Theoretical and experimental studies of microwave radiation from a natural snow field. In Rango, A. , ed.
-        Microwave remote sensing of snowpack properties. Proceedings of a workshop ... Fort Collins, Colorado, May 20-22, 1980. 
+        Microwave remote sensing of snowpack properties. Proceedings of a workshop ... Fort Collins, Colorado, May 20-22, 1980.
         Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publication 2153.)
         https://ntrs.nasa.gov/api/citations/19810010984/downloads/19810010984.pdf
     """
@@ -88,9 +89,6 @@ def water_permittivity_tiuri80(frequency, temperature):
     theta = 1 - 300.0 / temperature
     f1 = 20.2 + 146.4 * theta + 316 * theta**2
 
-
-    Ew = e2 + (e1 - e2) / complex(1, -freqGHz /f1)
+    Ew = e2 + (e1 - e2) / complex(1, -freqGHz / f1)
 
     return Ew
-
-

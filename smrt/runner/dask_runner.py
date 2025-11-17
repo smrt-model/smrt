@@ -12,14 +12,13 @@ Example::
     m.run(sensor, snowpack, runner=runner)
 """
 
+from dask.distributed import Client
 
 from smrt.core import lib
-from dask.distributed import Client
 
 
 class DaskParallelRunner(object):
-    """Run the simulations using dask.distributed on a cluster.
-    """
+    """Run the simulations using dask.distributed on a cluster."""
 
     def __init__(self, progressbar=False, client="localhost:7454", chunk=10):
         """Prepares a dask runner.
@@ -40,7 +39,6 @@ class DaskParallelRunner(object):
         self.chunk = chunk
 
     def __call__(self, function, argument_list):
-
         def function_with_single_numerical_threads(args):
             lib.set_max_numerical_threads(1)
             return function(*args)
@@ -49,8 +47,10 @@ class DaskParallelRunner(object):
         argument_list = list(argument_list)
 
         # prepare the futures with chunks
-        futures = [self.client.map(function_with_single_numerical_threads, argument_list[i: i + self.chunk])
-                   for i in range(0, len(argument_list), self.chunk)]
+        futures = [
+            self.client.map(function_with_single_numerical_threads, argument_list[i : i + self.chunk])
+            for i in range(0, len(argument_list), self.chunk)
+        ]
 
         results = self.client.gather(futures, direct=False)
 
