@@ -1,0 +1,24 @@
+# .pre-commit-config.yaml
+repos:
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  # Ruff version.
+  rev: v0.14.5  # this is optional, use `pre-commit autoupdate` to get the latest rev!
+  hooks:
+    # Run the linter.
+    - id: ruff-check
+      args: [ --fix ]
+    - id: ruff-check
+      args: [ --select I --fix ]
+    # Run the formatter.
+    - id: ruff-format
+
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0  # this is optional, use `pre-commit autoupdate` to get the latest rev!
+    hooks:
+    -   id: trailing-whitespace
+    -   id: end-of-file-fixer
+    -   id: check-toml
+    -   id: check-yaml
+    -   id: check-added-large-files
+    -   id: check-merge-conflict
+    -   id: check-docstring-first

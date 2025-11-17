@@ -30,7 +30,7 @@ pyrtlib = ["scikit-learn", "bs4", "netCDF4", "requests", "cdsapi", "cfgrib", "py
 gsw = ["gsw"]
 
 [dependency-groups]
-dev = ["pytest", "ruff", "sphinx_rtd_theme", "Sphinx>=1.6"]
+dev = ["pytest", "ruff", "sphinx_rtd_theme", "Sphinx>=1.6", "pre-commit"]
 benchmark = ["asv"]
 
 
