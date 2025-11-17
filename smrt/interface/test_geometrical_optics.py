@@ -35,8 +35,8 @@ def test_compare_geometrical_optics():
     m_back = get_diffuse_reflection(go_back)
 
     #print(m[0], m_back[0])
-    np.testing.assert_allclose(m[0], m_back[0])
-    np.testing.assert_allclose(m[1], m_back[1])
+    np.testing.assert_allclose(m[0, 0], m_back[0])
+    np.testing.assert_allclose(m[1, 0], m_back[1])
 
 
 def test_parameters_geometrical_optics():
