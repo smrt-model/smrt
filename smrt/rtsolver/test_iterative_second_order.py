@@ -80,7 +80,7 @@ def test_normal_call():
     sensor = active(17.25e9, 30)
 
     m = Model("iba", "iterative_second_order")
-    res = m.run(sensor, sp)
+    m.run(sensor, sp)
 
 
 def test_return_contributions():
