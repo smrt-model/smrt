@@ -13,6 +13,7 @@ from smrt.microstructure_model.independent_sphere import IndependentSphere
 
 tolerance_pc = 0.01  # 1% tolerance
 
+
 @pytest.fixture
 def setup_func_sp():
     # ### Make a snow layer

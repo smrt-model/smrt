@@ -1,14 +1,15 @@
 # coding: utf-8
-import pytest
 import numpy as np
+import pytest
 
 # local import
 from smrt import make_model, make_snowpack, make_soil, sensor_list
 from smrt.atmosphere.simple_isotropic_atmosphere import SimpleIsotropicAtmosphere
 
-@pytest.mark.parametrize("test,pc,thickness", [("High scattering",0.8e-3, 10),
-                                               ("Low scattering", 0.05e-3, 10),
-                                               ("Shallow", 0.8e-3, 0.1)])
+
+@pytest.mark.parametrize(
+    "test,pc,thickness", [("High scattering", 0.8e-3, 10), ("Low scattering", 0.05e-3, 10), ("Shallow", 0.8e-3, 0.1)]
+)
 def test_isothermal_universe(test, pc, thickness):
     T = 265
 
@@ -40,9 +41,10 @@ def test_isothermal_universe(test, pc, thickness):
     np.testing.assert_allclose(sresult.TbV(), T, atol=0.01)
     np.testing.assert_allclose(sresult.TbH(), T, atol=0.01)
 
-@pytest.mark.parametrize("test,pc,thickness", [("High scattering",0.8e-3, 10),
-                                               ("Low scattering", 0.05e-3, 10),
-                                               ("Shallow", 0.8e-3, 0.1)])
+
+@pytest.mark.parametrize(
+    "test,pc,thickness", [("High scattering", 0.8e-3, 10), ("Low scattering", 0.05e-3, 10), ("Shallow", 0.8e-3, 0.1)]
+)
 def test_kirchoff_law(test, pc, thickness):
     T = 265.0
 

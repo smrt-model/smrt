@@ -171,7 +171,7 @@ def make_model(
 
 def make_rtsolver(rtsolver_class: Union[str, Type], **options) -> Type:
     """
-    Return0 a rtsolver subclass of cls (either given as a string or a class) where the provided options are applied to
+    Return a rtsolver subclass of cls (either given as a string or a class) where the provided options are applied to
     __init__.
 
     Args:

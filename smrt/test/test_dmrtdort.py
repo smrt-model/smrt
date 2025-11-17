@@ -1,8 +1,9 @@
 # coding: utf-8
 
 import warnings
-import pytest
+
 import numpy as np
+import pytest
 
 # local import
 from smrt import make_model, make_snowpack, make_soil
@@ -14,6 +15,7 @@ from smrt.substrate.reflector import make_reflector
 #
 # Ghi: rapid hack, should be splitted in different functions
 #
+
 
 @pytest.fixture
 def setup_snowpack():
@@ -93,6 +95,7 @@ def test_less_refringent_bottom_layer():
     assert abs(res.sigmaVV_dB() - -50.25547167709486) < 1e-1
     assert abs(res.sigmaHH_dB() - -50.52755576862734) < 1e-1
 
+
 def test_less_refringent_bottom_layer_VH():
     # Regression test 19-03-2018: value may change if other bugs found
     snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density=[290.0, 250.0], radius=1e-4, stickiness=0.2)
@@ -103,6 +106,7 @@ def test_less_refringent_bottom_layer_VH():
     print(res.sigmaVV())
     assert abs(res.sigmaVV() - 7.54253344e-05) < 1e-7
     assert abs(res.sigmaHH() - 7.09606407e-05) < 1e-7
+
 
 def test_transparent_volume():
     r = 0.5

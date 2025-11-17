@@ -8,12 +8,14 @@ from smrt.inputs.sensor_list import amsre
 
 tolerance_pc = 0.01  # 1% tolerance
 
+
 @pytest.fixture
 def setup_func_sp():
     # ### Make a generic layer
     lay = make_generic_layer(layer_thickness=0.2, ks=0.1, ka=0.2, effective_permittivity=1.3)
 
     return lay
+
 
 def setup_func_em(setup_func_sp, testpack=None):
     if testpack is None:

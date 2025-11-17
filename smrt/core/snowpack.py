@@ -119,14 +119,14 @@ class Snowpack(object):
         )
         return [lay.density for lay in self.layers]  # TODO Ghi: caching
 
-    def profile(self, property_name, where="all", raise_attributeerror=False) -> np.ndarray:
+    def profile(self, property_name: str, where: str = "all", raise_attributeerror: bool = False) -> np.ndarray:
         """
         Return the vertical profile of property_name. The property is searched either in the layer, microstructure or interface.
 
         Args:
-            property_name (str): Name of the property.
-            where (str): Where to search the property. Can be 'all', 'layer', 'microstructure', or 'interface'.
-            raise_attributeerror (bool): Raise an attribute error if the attribute is not found.
+            property_name: Name of the property.
+            where: Where to search the property. Can be 'all', 'layer', 'microstructure', or 'interface'.
+            raise_attributeerror: Raise an attribute error if the attribute is not found.
 
         Returns:
             np.ndarray: Array of the property values.
@@ -396,7 +396,15 @@ class Snowpack(object):
 
         return self
 
-    def to_dataframe(self, default_columns=True, other_columns=None):
+    def to_dataframe(self):
+        """Transform the snowpack in a DataFrame represation.
+
+        This is not to be used for serialization as some information may be lost.
+
+        Returns:
+            _type_: A pandas DataFrame representing the snowpack.
+        """
+
         columns = [
             "thickness",
             "microstructure_model",
@@ -455,6 +463,9 @@ class Snowpack(object):
         return df.dropna(axis=1, how="all")
 
     def __repr__(self):
+        """
+        Return a string representation of the Snowpack object.
+        """
         return "Snowpack: " + repr(self.to_dataframe())
 
     def _repr_html_(self):

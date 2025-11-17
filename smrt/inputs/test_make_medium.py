@@ -111,9 +111,9 @@ def test_make_medium():
 
     sp = make_medium(sp_dict)
 
-    np.testing.assert_allclose(sp.layer_thicknesses, sp_dict['thickness'])
-    np.testing.assert_allclose([lay.temperature for lay in sp.layers], sp_dict['temperature'])
-    np.testing.assert_allclose([lay.microstructure.radius for lay in sp.layers], sp_dict['radius'])
+    np.testing.assert_allclose(sp.layer_thicknesses, sp_dict["thickness"])
+    np.testing.assert_allclose([lay.temperature for lay in sp.layers], sp_dict["temperature"])
+    np.testing.assert_allclose([lay.microstructure.radius for lay in sp.layers], sp_dict["radius"])
 
 
 def test_make_snowpack_volumetric_liquid_water():
@@ -223,6 +223,7 @@ def mixing_formula():
 
     return mixing_formula
 
+
 @pytest.fixture
 def default_snowpack_args():
     return dict(
@@ -232,6 +233,7 @@ def default_snowpack_args():
         corr_length=200e-6,
         temperature=273,
     )
+
 
 def test_warning_mixing_formula(mixing_formula, default_snowpack_args):
     with pytest.warns(SMRTWarning):
@@ -252,6 +254,7 @@ def test_warning_mixing_formula(mixing_formula, default_snowpack_args):
             **default_snowpack_args,
             saline_ice_permittivity_model=mixing_formula,
         )
+
 
 def test_warning_saline_snow(default_snowpack_args):
     with pytest.warns(SMRTWarning):

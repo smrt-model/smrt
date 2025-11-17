@@ -2,9 +2,11 @@
 
 import numpy as np
 import pytest
+
 # local import
 from smrt import make_model, make_snowpack, make_soil, sensor_list
 from smrt.permittivity.water import water_permittivity
+
 
 @pytest.fixture
 def setup_snowpack_2():

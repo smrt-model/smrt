@@ -13,10 +13,12 @@ from smrt.emmodel.nonscattering import NonScattering
 from smrt.interface.transparent import Transparent
 from smrt.rtsolver.iterative_first_order import IterativeFirstOrder
 
+
 @pytest.fixture
 def setup_snowpack():
     temp = 250
     return make_snowpack([100], "homogeneous", density=[300], temperature=[temp], interface=[Transparent])
+
 
 @pytest.fixture
 def setup_snowpack_with_DH():
@@ -24,11 +26,13 @@ def setup_snowpack_with_DH():
         [0.5, 1000], "homogeneous", density=[300, 250], temperature=2 * [250], interface=2 * [Transparent]
     )
 
+
 @pytest.fixture
 def setup_2layer_snowpack():
     return make_snowpack(
         [0.5, 1000], "homogeneous", density=[250, 300], temperature=2 * [250], interface=2 * [Transparent]
     )
+
 
 @pytest.fixture
 def setup_inf_snowpack():
@@ -53,13 +57,15 @@ def test_returned_theta(setup_snowpack):
     print(res.data.coords)
     res.sigmaVV_dB(theta=30)
 
-#Parametrization of the two following tests failed
+
+# Parametrization of the two following tests failed
 def test_depth_hoar_stream_numbers(setup_snowpack_with_DH):
     # Will throw error if doesn't run
     sp = setup_snowpack_with_DH
     sensor = active(13e9, 45)
     m = Model(NonScattering, IterativeFirstOrder)
     m.run(sensor, sp).sigmaVV()
+
 
 def test_2layer_pack(setup_2layer_snowpack):
     # Will throw error if doesn't run

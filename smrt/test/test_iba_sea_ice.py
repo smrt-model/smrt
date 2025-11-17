@@ -2,12 +2,14 @@
 
 import numpy as np
 import pytest
+
 # local import
 from smrt import PSU, make_model, sensor_list
 from smrt.inputs.make_medium import bulk_ice_density, make_ice_column
 
 # test if this configuration gives values as originally produced by examples/iba_sea_ice.py
 # same structure as test_integration_iba.py
+
 
 @pytest.fixture
 def setup_seaice():
@@ -22,9 +24,14 @@ def setup_seaice():
 
     return l, n_max_stream, thickness, temperature, salinity
 
-@pytest.mark.parametrize("ice_type,porosity,p_ex_value,results",
-                         [("firstyear", 0, 500e-6, [256.0170296269674, 228.4566040823167]),
-                          ("multiyear", 0.08, 1000e-6, [257.57209000420636, 232.01555447145563])])
+
+@pytest.mark.parametrize(
+    "ice_type,porosity,p_ex_value,results",
+    [
+        ("firstyear", 0, 500e-6, [256.0170296269674, 228.4566040823167]),
+        ("multiyear", 0.08, 1000e-6, [257.57209000420636, 232.01555447145563]),
+    ],
+)
 def test_oneconfig_for_sea_ice(setup_seaice, ice_type, porosity, p_ex_value, results):
     # prepare inputs
     l, n_max_stream, thickness, temperature, salinity = setup_seaice
@@ -38,7 +45,7 @@ def test_oneconfig_for_sea_ice(setup_seaice, ice_type, porosity, p_ex_value, res
         microstructure_model="exponential",
         brine_inclusion_shape="spheres",  # inclusion_shape can be "spheres" or "random_needles", or "mix_spheres_needles"
         salinity=salinity,  # either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water ice
-        porosity = porosity,
+        porosity=porosity,
         corr_length=p_ex,
         add_water_substrate="ocean",
     )
@@ -55,6 +62,7 @@ def test_oneconfig_for_sea_ice(setup_seaice, ice_type, porosity, p_ex_value, res
     # absorption with effective permittivity
     assert abs(res.TbV() - results[0]) < 1e-4
     assert abs(res.TbH() - results[1]) < 1e-4
+
 
 def test_equivalence_porosity_density(setup_seaice):
     l, n_max_stream, thickness, temperature, salinity = setup_seaice

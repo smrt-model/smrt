@@ -13,11 +13,12 @@ from smrt.emmodel.test_iba import (
     setup_func_sp,
 )  # move to a common test file
 from smrt.inputs.sensor_list import amsre
-from smrt.permittivity.generic_mixing_formula import maxwell_garnett
 from smrt.microstructure_model.sticky_hard_spheres import StickyHardSpheres
+from smrt.permittivity.generic_mixing_formula import maxwell_garnett
 
 tolerance = 1e-7
 tolerance_pc = 0.001  # 1% error is allowable for differences from MEMLS values. Tests pass at 2%. Some fail at 1%.
+
 
 @pytest.fixture
 def setup_func_shs():
@@ -31,6 +32,7 @@ def setup_func_shs():
         stickiness=0.2,
     )
     return shs_lay
+
 
 def setup_func_em(testpack=None):
     if testpack is None:
@@ -47,18 +49,25 @@ def setup_func_active(testpack=None):
     emmodel = SymSCETK21(scatt, testpack)
     return emmodel
 
-@pytest.mark.parametrize("pc,initial_ks", [(0.3e-3, 7.4438717),
-                                           (0.25e-3, 4.62265399),
-                                           (0.2e-3, 2.51748175e00),
-                                           (0.15e-3, 1.11772796),
-                                           (0.1e-3, 0.344311),
-                                           (0.05e-3, 0.04413892)])
+
+@pytest.mark.parametrize(
+    "pc,initial_ks",
+    [
+        (0.3e-3, 7.4438717),
+        (0.25e-3, 4.62265399),
+        (0.2e-3, 2.51748175e00),
+        (0.15e-3, 1.11772796),
+        (0.1e-3, 0.344311),
+        (0.05e-3, 0.04413892),
+    ],
+)
 def test_ks(pc, initial_ks):
     testpack = setup_func_pc(pc)
     em = setup_func_em(testpack)
     # Allow 1% error
     print(initial_ks, em.ks(0))
     np.testing.assert_allclose(em.ks(0).meantrace, initial_ks, rtol=tolerance_pc)
+
 
 def test_energy_conservation_exp():
     em = setup_func_em()

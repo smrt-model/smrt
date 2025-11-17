@@ -7,9 +7,14 @@ from smrt.permittivity.saline_water import (
     seawwater_permittivity_boutin23_3function,
 )
 
-@pytest.mark.parametrize("permittivity_function, exp_epsi_r, exp_epsi_i",
-                         [(seawwater_permittivity_boutin23_2function, 76.4080, -50.0570),
-                          (seawwater_permittivity_boutin23_3function, 76.4710, -50.0611)])
+
+@pytest.mark.parametrize(
+    "permittivity_function, exp_epsi_r, exp_epsi_i",
+    [
+        (seawwater_permittivity_boutin23_2function, 76.4080, -50.0570),
+        (seawwater_permittivity_boutin23_3function, 76.4710, -50.0611),
+    ],
+)
 def test_permittivity_boutin23_2function(permittivity_function, exp_epsi_r, exp_epsi_i):
     pytest.importorskip("gsw")
 

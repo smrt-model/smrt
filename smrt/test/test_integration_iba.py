@@ -9,6 +9,7 @@ import pytest
 # local import
 from smrt import make_model, make_snowpack, sensor_list
 
+
 @pytest.fixture
 def setup_snowpack_2():
     nl = 2 // 2  # // Forces integer division
@@ -28,7 +29,10 @@ def setup_snowpack_2():
     )
     return snowpack
 
-@pytest.mark.parametrize("method,atol", [('eig', 0.0001), ('shur', 0.0001), ('half_rank_eig', 0.0001), ('stamnes88', 0.4)])
+
+@pytest.mark.parametrize(
+    "method,atol", [("eig", 0.0001), ("shur", 0.0001), ("half_rank_eig", 0.0001), ("stamnes88", 0.4)]
+)
 def test_iba_dort_oneconfig_passive(setup_snowpack_2, method, atol):
     # prepare inputs
     snowpack = setup_snowpack_2
@@ -46,7 +50,10 @@ def test_iba_dort_oneconfig_passive(setup_snowpack_2, method, atol):
     npt.assert_allclose(res.TbV(), 248.08374547409588, atol=atol)
     npt.assert_allclose(res.TbH(), 237.30435496083572, atol=atol)
 
-@pytest.mark.parametrize("method,atol", [('eig', 0.001), ('shur', 0.0001), ('half_rank_eig', 0.001), ('stamnes88', 1.2)])
+
+@pytest.mark.parametrize(
+    "method,atol", [("eig", 0.001), ("shur", 0.0001), ("half_rank_eig", 0.001), ("stamnes88", 1.2)]
+)
 def test_iba_dort_oneconfig_active(setup_snowpack_2, method, atol):
     # prepare inputs
     # create the snowpack

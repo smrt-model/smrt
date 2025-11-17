@@ -9,9 +9,11 @@ from smrt.inputs.altimeter_list import envisat_ra2
 from smrt.interface.transparent import Transparent
 from smrt.rtsolver.nadir_lrm_altimetry import NadirLRMAltimetry
 
+
 @pytest.fixture
 def setup_nonscattering_snowpack():
     return make_snowpack([100], "homogeneous", density=[300], interface=[Transparent])
+
 
 @pytest.fixture
 def setup_scattering_snowpack():
@@ -36,6 +38,4 @@ def test_scattering_noabsorption(setup_scattering_snowpack):
     res = m.run(sensor, sp)
     print(np.sum(res.data))
 
-    np.testing.assert_allclose(np.sum(res.waveform()), 4.25624771e-24, atol=1e-8) #atol is subjective
-
-
+    np.testing.assert_allclose(np.sum(res.waveform()), 4.25624771e-24, atol=1e-8)  # atol is subjective

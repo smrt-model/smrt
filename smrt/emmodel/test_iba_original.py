@@ -44,6 +44,7 @@ def setup_func_indep(radius=5e-4):
     )
     return indep_lay
 
+
 @pytest.fixture
 def setup_func_shs():
     # ### Make a snow layer
@@ -60,7 +61,7 @@ def setup_func_shs():
 
 @pytest.fixture
 def setup_func_pc(request):
-    ### Make a snow layer 
+    ### Make a snow layer
     # request.param will be set by the test parameterization
     pc = request.param
     exp_lay = make_snow_layer(
@@ -88,6 +89,7 @@ def setup_func_active(testpack=None):
     emmodel = IBA_original(scatt, testpack)
     return emmodel
 
+
 @pytest.fixture
 def setup_func_rayleigh():
     testpack = setup_func_indep(radius=1e-4)
@@ -110,19 +112,25 @@ def setup_mu(stepsize, bypass_exception=None):
 
 # Tests to compare with MEMLS IBA, graintype = 2 (small spheres) outputs
 
-@pytest.mark.parametrize("setup_func_pc,memls_ks",
-                         [ (0.3e-3, 4.13718676e00),
-                           (0.25e-3, 2.58158887e00),
-                           (0.2e-3, 1.41304849e00),
-                           (0.15e-3, 6.30218291e-01),
-                           (0.1e-3, 1.94727497e-01),
-                           (0.05e-3, 2.49851702e-02)],
-                         indirect=["setup_func_pc"])
+
+@pytest.mark.parametrize(
+    "setup_func_pc,memls_ks",
+    [
+        (0.3e-3, 4.13718676e00),
+        (0.25e-3, 2.58158887e00),
+        (0.2e-3, 1.41304849e00),
+        (0.15e-3, 6.30218291e-01),
+        (0.1e-3, 1.94727497e-01),
+        (0.05e-3, 2.49851702e-02),
+    ],
+    indirect=["setup_func_pc"],
+)
 def test_ks_pc(setup_func_pc, memls_ks):
     testpack = setup_func_pc
     em = setup_func_em(testpack)
     # Allow 5% error
     assert abs(em.ks(0).meantrace - memls_ks) < tolerance_pc * em.ks(0).meantrace
+
 
 def test_energy_conservation_exp():
     em = setup_func_em()
@@ -173,6 +181,7 @@ def test_energy_conservation_shs_active(setup_func_shs):
 #     em = setup_func_active(testpack=shs_pack)
 #     commontest.test_energy_conservation(em, tolerance_pc, npol=2)
 
+
 @pytest.mark.parametrize("bypass_exception", [(None, True)])
 def test_iba_vs_rayleigh_m0(setup_func_rayleigh, bypass_exception):
     em_iba, em_ray = setup_func_rayleigh
@@ -184,6 +193,7 @@ def test_iba_vs_rayleigh_m0(setup_func_rayleigh, bypass_exception):
         )
         < tolerance_pc
     ).all()
+
 
 def test_iba_vs_rayleigh_active_m1(setup_func_rayleigh):
     em_iba, em_ray = setup_func_rayleigh

@@ -45,6 +45,7 @@ def setup_func_indep(radius=5e-4):
     )
     return indep_lay
 
+
 @pytest.fixture
 def setup_func_shs():
     # ### Make a snow layer
@@ -86,6 +87,7 @@ def setup_func_active(testpack=None):
     emmodel = IBA(scatt, testpack)
     return emmodel
 
+
 @pytest.fixture
 def setup_func_rayleigh():
     testpack = setup_func_indep(radius=1e-4)
@@ -105,18 +107,25 @@ def setup_mu(stepsize, bypass_exception=None):
     mu = np.array(mu)
     return mu
 
-@pytest.mark.parametrize("pc,initial_ks", [(0.3e-3,4.14237510549),
-                                           (0.25e-3, 2.58473097058),
-                                           (0.2e-3, 1.41504051e00),
-                                           (0.15e-3, 0.630947615752),
-                                           (0.1e-3, 0.194948835313),
-                                           (0.05e-3, 0.0250132475909)])
+
+@pytest.mark.parametrize(
+    "pc,initial_ks",
+    [
+        (0.3e-3, 4.14237510549),
+        (0.25e-3, 2.58473097058),
+        (0.2e-3, 1.41504051e00),
+        (0.15e-3, 0.630947615752),
+        (0.1e-3, 0.194948835313),
+        (0.05e-3, 0.0250132475909),
+    ],
+)
 def test_ks_pc(pc, initial_ks):
     testpack = setup_func_pc(pc)
     em = setup_func_em(testpack)
     # Allow 1% error
     print(initial_ks, em.ks(0))
     assert abs(em.ks(0).meantrace - initial_ks) < tolerance_pc * em.ks(0).meantrace
+
 
 def test_energy_conservation_exp():
     em = setup_func_em()
@@ -167,6 +176,7 @@ def test_energy_conservation_shs_active(setup_func_shs):
 #     em = setup_func_active(testpack=shs_pack)
 #     commontest.test_energy_conservation(em, tolerance_pc, npol=2)
 
+
 @pytest.mark.parametrize("bypass_exception", [(None), (True)])
 def test_iba_vs_rayleigh(setup_func_rayleigh, bypass_exception):
     em_iba, em_ray = setup_func_rayleigh
@@ -178,6 +188,7 @@ def test_iba_vs_rayleigh(setup_func_rayleigh, bypass_exception):
         )
         < tolerance_pc
     ).all()
+
 
 def test_iba_vs_rayleigh_active_m1(setup_func_rayleigh):
     em_iba, em_ray = setup_func_rayleigh

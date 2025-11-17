@@ -2,6 +2,7 @@
 
 import numpy as np
 import pytest
+
 from smrt.core.lib import generic_ft_even_matrix
 from smrt.emmodel.rayleigh import Rayleigh
 from smrt.inputs.make_medium import make_snow_layer
@@ -9,6 +10,7 @@ from smrt.inputs.sensor_list import amsre
 from smrt.microstructure_model.independent_sphere import IndependentSphere
 
 tolerance_pc = 0.01  # 5% tolerance
+
 
 # todo: difficult fixture case
 def setup_func_sp():
@@ -21,6 +23,7 @@ def setup_func_sp():
         radius=5e-4,
     )
     return shs_lay
+
 
 @pytest.fixture
 def setup_func_em(testpack=None):
@@ -46,4 +49,4 @@ def test_generic_ft_even_matrix(setup_func_em):
 
     for m in [0, 1, 2]:
         print("mode=", m)
-        np.testing.assert_allclose(ft_even_p[:, :, m, :, :], ft_even_p2[:, :, m, :, :], atol=1e-8) #atol is subjective 
+        np.testing.assert_allclose(ft_even_p[:, :, m, :, :], ft_even_p2[:, :, m, :, :], atol=1e-8)  # atol is subjective

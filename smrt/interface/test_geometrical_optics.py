@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from smrt.interface.geometrical_optics import GeometricalOptics
 from smrt.interface.geometrical_optics_backscatter import GeometricalOpticsBackscatter
 
@@ -32,9 +33,10 @@ def test_compare_geometrical_optics():
     m = get_diffuse_reflection(go)
     m_back = get_diffuse_reflection(go_back)
 
-    #print(m[0], m_back[0])
+    # print(m[0], m_back[0])
     np.testing.assert_allclose(m[0, 0], m_back[0])
     np.testing.assert_allclose(m[1, 0], m_back[1])
+
 
 @pytest.mark.parametrize("interface", [(GeometricalOptics), (GeometricalOpticsBackscatter)])
 def test_parameters_geometrical_optics_and_backscatter(interface):
@@ -50,7 +52,8 @@ def test_parameters_geometrical_optics_and_backscatter(interface):
     np.testing.assert_allclose(m_mss[0], m_rms_corr[0])
     np.testing.assert_allclose(m_mss[1], m_rms_corr[1])
 
-#The two following tests seem difficult to factorise
+
+# The two following tests seem difficult to factorise
 def test_reflectance_reciprocity():
     eps_1 = 1
     eps_2 = 1.6
@@ -68,6 +71,7 @@ def test_reflectance_reciprocity():
             np.testing.assert_allclose(R[1, 0, :] * mu_i, Rs[0, 1, :] * mu_s, atol=1e-3)
             np.testing.assert_allclose(R[0, 0, :] * mu_i, Rs[0, 0, :] * mu_s, atol=1e-3)
             np.testing.assert_allclose(R[1, 1, :] * mu_i, Rs[1, 1, :] * mu_s, atol=1e-3)
+
 
 def test_transmission_reciprocity():
     eps_1 = 1

@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from smrt import PSU
 from smrt.core.globalconstants import FREEZING_POINT
 from smrt.permittivity.ice import ice_permittivity_maetzler06
@@ -17,11 +18,13 @@ def test_impure_permittivity_same_as_pure_for_zero_salinty(impure_model):
     assert abs(pure.real - impure.real) < 1e-4
     assert abs(pure.imag - impure.imag) < 1e-7
 
+
 # Test of impure ice at freezing point temperature, 0.013PSU salinity, 10GHz
 def test_impure_ice_freezing_point_0p013psu_10GHz():
     delta_epsimag = 1.0 / (1866 * np.exp(-3.17))
     ice_permittivity_maetzler06(10e9, FREEZING_POINT) + delta_epsimag
     impure_ice_permittivity_maetzler06(10e9, FREEZING_POINT, 0.013 * PSU)
+
 
 # Test saline_ice permittivity for mixtures
 def test_saline_permittivity_with_mixtures():

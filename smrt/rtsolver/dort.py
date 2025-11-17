@@ -1211,12 +1211,6 @@ class InterfaceProperties(object):
             eps_l = permittivity[l]
             eps_lp1 = permittivity[l + 1] if l < nlayer - 1 else None
 
-            # nsl = streams.n[l]  # number of streams in layer l
-            # nslm1 = streams.n[l - 1] if l > 0 else streams.n_air  # number of streams * npol in the layer l - 1 (lm1)
-            # nslp1 = (
-            #     streams.n[l + 1] if l < nlayer - 1 else streams.n_substrate
-            # )  # number of streams * npol in the layer l + 1 (lp1)
-
             # compute reflection coefficient between layer l and l - 1  UP
             # snow-snow UP
             self.Rtop_coh[l] = interfaces[l].specular_reflection_matrix(frequency, eps_l, eps_lm1, streams.mu[l], npol)
