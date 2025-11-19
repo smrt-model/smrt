@@ -35,5 +35,3 @@ smrt.inputs.altimeter\_list module
 .. automodule:: smrt.inputs.altimeter_list
    :members:
    :show-inheritance:
-
-

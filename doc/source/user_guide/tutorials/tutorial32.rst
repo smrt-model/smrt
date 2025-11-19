@@ -43,22 +43,22 @@ using exponential micro-structure and using scaled debye relationship.
 .. code:: ipython3
 
     import numpy as np
-    
+
     import matplotlib.pyplot as plt
     %matplotlib notebook
-    
+
     from smrt import make_model, make_snowpack, sensor_list
 
 .. code:: ipython3
 
     # prepare the snowpack
-    
+
     thickness = [10]
     density = 350
     temperature = 270
     radius = 100e-6
     stickiness = 0.1
-    
+
     snowpack = make_snowpack(thickness=thickness, microstructure_model='sticky_hard_spheres',
                              radius=radius, density=density, stickiness=stickiness, temperature=temperature)
 
@@ -71,8 +71,8 @@ using exponential micro-structure and using scaled debye relationship.
 
     # a new snowpack with scaled radius
     phi = 2.5
-    
+
     scaled_snowpack = make_snowpack(thickness=thickness, microstructure_model='sticky_hard_spheres',
                              radius=phi*radius, density=density, stickiness=stickiness, temperature=temperature)
-    
+
     #... continue

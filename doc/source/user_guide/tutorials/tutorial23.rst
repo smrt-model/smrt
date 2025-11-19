@@ -38,13 +38,13 @@ investigated the sensivitiy to liquid_water - etc
 .. code:: ipython3
 
     import time
-    
+
     import numpy as np
     import pandas as pd
-    
+
     import matplotlib.pyplot as plt
     %matplotlib notebook
-    
+
     from smrt import make_model, make_snowpack, sensor_list
 
 Build a list of snowpack
@@ -59,13 +59,13 @@ snowpack with different radius.
     # prepare the snowpack
     density = 300.0
     radius = np.arange(0.05, 0.5, 0.01) * 1e-3  # from 0 to 0.5 mm
-    
+
     # the NAIVE APPROACH:
-    
+
     snowpack = list()
     for x in radius:
-        sp = make_snowpack([1000.0], "sticky_hard_spheres", 
-                           density=density, temperature=265, 
+        sp = make_snowpack([1000.0], "sticky_hard_spheres",
+                           density=density, temperature=265,
                            radius=x, stickiness=0.15)
         snowpack.append(sp)
 
@@ -75,19 +75,19 @@ a nice python feature to create list.
 .. code:: ipython3
 
     # a BETTER APPROACH with list comprehension
-    snowpack = [make_snowpack([1000.0], "sticky_hard_spheres", 
+    snowpack = [make_snowpack([1000.0], "sticky_hard_spheres",
                               density=density, temperature=265,
                               radius=x, stickiness=0.15) for x in radius]
-    
+
     # see an even BETTER APPROACH at the end using pandas.DataFrame
 
 .. code:: ipython3
 
     # prepare the sensor and model
-    
+
     model = make_model("iba", "dort")
     sensor = sensor_list.passive(37e9, 55)
-    
+
     #run!
 
 Now we have a list of snowpacks, we want to call the model for each
@@ -98,7 +98,7 @@ snowpack. We can use list comprehension again.
     # a NAIVE APPROACH
     # call many times 'run' and get a list of results
     results = [model.run(sensor, sp) for sp in snowpack]
-    
+
     # look at what we get:
     results
 
@@ -119,7 +119,7 @@ result with a new coordinate** which is much more convenient.
 .. code:: ipython3
 
     # a BETTER APPROACH
-    
+
     results = model.run(sensor, snowpack, snowpack_dimension=('radius', radius))
     # look at what we get:
     results
@@ -167,16 +167,16 @@ And it is easy to save all the result to disk:
 .. code:: ipython3
 
     # and you get // computation for free, just adding parallel_computation=True
-    
+
     t0 = time.time()
     results = model.run(sensor, snowpack, snowpack_dimension=('radius', radius))
     print("sequential duration: ", time.time() - t0)
-    
+
     t0 = time.time()
     results = model.run(sensor, snowpack, snowpack_dimension=('radius', radius), parallel_computation=True)
     print("parallel duration: ", time.time() - t0)
-    
-    
+
+
     results
 
 Using pandas.DataFrame
@@ -186,13 +186,13 @@ Using pandas.DataFrame
 
     # here we build a simple DataFrame with the radius. More complex sensitivity analysis with more variables is possible
     # for instance radius and density could co-vary.
-    
+
     sp = pd.DataFrame({'radius' : np.arange(0.05, 0.5, 0.01) * 1e-3})
-    
-    sp['snowpack'] = [make_snowpack([1000.0], "sticky_hard_spheres", 
+
+    sp['snowpack'] = [make_snowpack([1000.0], "sticky_hard_spheres",
                               density=density, temperature=265,
                               radius=row['radius'], stickiness=0.15) for i, row in sp.iterrows()]
-    
+
     # show the dataframe
     sp
 
@@ -206,11 +206,11 @@ Using pandas.DataFrame
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -458,14 +458,14 @@ Using pandas.DataFrame
 .. code:: ipython3
 
     results = model.run(sensor, sp)
-    
+
     # that's it
     results
 
 .. code:: ipython3
 
     # you can even convert the results object to a dataframe
-    
+
     results = model.run(sensor, sp).to_dataframe()
     # that's it
     results
@@ -486,12 +486,12 @@ Recap:
 
     # with List
     snowpack = [make_snowpack([1000.0], "sticky_hard_spheres", density=density, temperature=265, radius=x, stickiness=0.15) for x in radius]
-    
+
     model = make_model("iba", "dort")
     sensor = sensor_list.passive([19e9, 37e9], 55)
-    
+
     results = model.run(sensor, snowpack, snowpack_dimension=('radius', radius), parallel_computation=True)
-    
+
     plt.figure()
     plt.plot(results.radius, results.TbV(frequency=19e9), label="19 GHz")
     plt.plot(results.radius, results.TbV(frequency=37e9), label="37 GHz")
@@ -501,16 +501,16 @@ Recap:
 
     # with DataFrame
     sp = pd.DataFrame({'radius' : np.arange(0.05, 0.5, 0.01) * 1e-3})
-    
-    sp['snowpack'] = [make_snowpack([1000.0], "sticky_hard_spheres", 
+
+    sp['snowpack'] = [make_snowpack([1000.0], "sticky_hard_spheres",
                               density=density, temperature=265,
                               radius=row['radius'], stickiness=0.15) for i, row in sp.iterrows()]
-    
+
     model = make_model("iba", "dort")
     sensor = sensor_list.amsre(['19', '37'])
-    
+
     results = model.run(sensor, sp, parallel_computation=True).to_dataframe()
-    
+
     plt.figure()
     plt.plot(results['radius'], results['19V'], label="19 GHz")
     plt.plot(results['radius'], results['37V'], label="37 GHz")
