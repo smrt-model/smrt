@@ -23,7 +23,7 @@ Objectives
     import numpy as np
     import pandas as pd
     import matplotlib.pyplot as plt
-    
+
     # local import
     from smrt import make_snowpack, make_model, sensor_list
     from smrt.substrate.reflector import make_reflector
@@ -68,11 +68,11 @@ Let’s have a look at what is inside the dataframe
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -204,11 +204,11 @@ whole row for time 15.08
         .dataframe tbody tr th:only-of-type {
             vertical-align: middle;
         }
-    
+
         .dataframe tbody tr th {
             vertical-align: top;
         }
-    
+
         .dataframe thead th {
             text-align: right;
         }
@@ -337,7 +337,7 @@ surface temperature.
 
     # Make the absorber
     absorber = make_reflector(specular_reflection=0., temperature=FREEZING_POINT)
-    
+
     # Now make the snowpack. The substrate has already been specified
     ## USE EMPTY BRACKETS
     snowpack_exp = make_snowpack(thickness=[0.1],
@@ -374,4 +374,3 @@ Time to run the model for your sensor on your snowpack e.g. m.run(sensor, snowp
 How does it compare with the observation? Can you improve the
 simulation? Look at different frequency / polarization combinations or
 even other microstructure models!
-

@@ -422,6 +422,7 @@ texinfo_documents = [
 #
 # texinfo_no_detailmenu = False
 
+
 # Include custom.css for list-tables
 def setup(app):
-   app.add_css_file('css/custom.css')
+    app.add_css_file("css/custom.css")

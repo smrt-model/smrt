@@ -7,8 +7,8 @@ repos:
     # Run the linter.
     - id: ruff-check
       args: [ --fix ]
-    - id: ruff-check
-      args: [ --select I --fix ]
+    #- id: ruff-check
+    #  args: [ --select I --fix ]
     # Run the formatter.
     - id: ruff-format
 

@@ -19,14 +19,14 @@ Install an editable version
     ```
 
 2.  **Create and activate a virtual environment**
-    
+
     This can be done for example with `venv` but please refer to https://docs.python.org/3/library/venv.html if this is new to you. Most IDE have their own way of generating virtual environments, which may be easier than using `venv`.
 
     ```bash
     python -m venv .venv
     source .venv/bin/activate  # On Windows, use `.venv\Scripts\activate`
     ```
-    
+
 
 3.  **Install the project in editable mode**:
     ```bash

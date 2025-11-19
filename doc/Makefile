@@ -231,4 +231,3 @@ rst:
 
 
 fullhtml:	rst html
-

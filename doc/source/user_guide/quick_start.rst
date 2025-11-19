@@ -41,9 +41,9 @@ All units are SI
     rad = [1e-4]  # m
     rho = [280]  # kg/m3
     stickiness = [0.2]  # no unit
-    
+
     # Make snowpack
-    snowpack = make_snowpack(thickness=thickness, 
+    snowpack = make_snowpack(thickness=thickness,
                              microstructure_model='sticky_hard_spheres',
                              temperature=temperature, radius=rad, density=rho,
                              stickiness=stickiness)
@@ -104,7 +104,7 @@ just the 37V channel
     # Use all amsre channels
     rads = sensor_list.amsre()
     res = m.run(rads, snowpack)
-    
+
     res.TbV()
 
 Sensors in SMRT
@@ -126,11 +126,11 @@ The following imports are valid for both excercices:
 .. code:: ipython3
 
     import numpy as np
-    
+
     import matplotlib.pyplot as plt
-    %matplotlib notebook   
+    %matplotlib notebook
     # use %matplotlib widget if using jupyterlab instead of jupyter notebook
-    
+
     from smrt import make_model, make_snowpack, sensor_list
     from smrt.utils import dB
 
@@ -166,12 +166,12 @@ Emission / backscatter diagram
 
     # for plotting two side by side graphs, the best solution is:
     f, axs = plt.subplots(1, 2, figsize=(8, 3.5))
-    
-    # plot on left graph 
+
+    # plot on left graph
     axs[0].plot(theta, res_a.sigmaVV()) # adapt x and y to your need
     # plot on right graph
     #axs[1].plot(x, y)  # adapt x and y to your need
-    
+
     # to set axis labels:
     axs[0].set_xlabel("Viewing angle")
     # ...
@@ -206,10 +206,10 @@ The following imports are valid for both excercices:
 .. code:: ipython3
 
     import numpy as np
-    
+
     import matplotlib.pyplot as plt
     %matplotlib notebook
-    
+
     from smrt import make_model, make_snowpack, sensor_list
     from smrt.utils import dB
 
@@ -228,7 +228,7 @@ all layers.
 .. code:: ipython3
 
     # prepare the multi-layer snowpack
-    sp = 
+    sp =
 
 .. code:: ipython3
 
@@ -238,7 +238,7 @@ all layers.
 
     # Tips: we can draw the snowpack (a recently added function, maybe buggy) as follow:
     from smrt.utils.mpl_plots import plot_snowpack
-    
+
     plt.figure()
     plot_snowpack(sp, show_vars=['density', 'radius'])
 
@@ -260,7 +260,7 @@ snow, so you can simply add a ‘volumetric_liquid_water’ argument.
     sp = make_snowpack(thickness=[0.1, 10],
                        microstructure_model='sticky_hard_spheres',
                        density=density,
-                       radius=radius,                   
+                       radius=radius,
                        stickiness=0.15,
                        temperature=temperature,
                        volumetric_liquid_water=[0.01, 0])
@@ -278,7 +278,7 @@ accept list of functions!).
 
 .. code:: ipython3
 
-    
+
     from smrt.permittivity.wetsnow import wetsnow_permittivity
     from smrt import make_snowpack
     # prepare the multi-layer snowpack
@@ -288,12 +288,12 @@ accept list of functions!).
     sp = make_snowpack(thickness=[0.1, 10],
                        microstructure_model='sticky_hard_spheres',
                        density=density,
-                       radius=radius,                   
+                       radius=radius,
                        stickiness=0.15,
                        temperature=temperature,
                        ice_permittivity_model=wetsnow_permittivity,
                        volumetric_liquid_water=[0.01, 0])
-    
+
     sp.layers[0].permittivity(1, 10e9)
 
 .. code:: ipython3
@@ -358,17 +358,17 @@ Imports
 .. code:: ipython3
 
     %matplotlib notebook
-    
+
     from IPython.display import HTML, display
-    
+
     import pandas as pd
     import numpy as np
     import matplotlib.pyplot as plt
     import matplotlib.image as img
-    
+
     from scipy import fftpack
     import scipy.optimize as opt
-    
+
     from smrt import make_snowpack, make_model, sensor_list
 
 
@@ -427,28 +427,28 @@ the following cell.
     def ice_indicator_function(image_filename):
         """
             read image and convert it to 1,0 indicator function
-        """ 
+        """
         image=img.imread(image_filename)
         ice_indicator_function = np.asarray(image)
         return ice_indicator_function
-    
-    
+
+
     def ice_volume_fraction(indicator_function):
         """
             compute ice volume fraction from an image indicator function
         """
         return np.mean(indicator_function)
-    
-    
+
+
     def image_size(indicator_function):
         """
             get the size of the image
         """
-        return indicator_function.shape    
-      
-        
-            
-    
+        return indicator_function.shape
+
+
+
+
     def ACF1D(acf2d, axis):
         """
             extract the 1D correlation function along a given axis (0 or 1)
@@ -463,14 +463,14 @@ the following cell.
             return acf2d[0:int((nz+1)/2),0]
         else:
             return "stuss"
-        
+
     def acf1d_fit_exp(r, acf1d, r_max):
         """
-            fit the correlation data acf1d for given lags r in the range [0,r_max] 
+            fit the correlation data acf1d for given lags r in the range [0,r_max]
             to an exponential
             returns:
         """
-        
+
         # set fitrange
         fitrange = (r < r_max)
         # define residual function for least squares fit
@@ -478,25 +478,25 @@ the following cell.
             C0 = p[0]
             correlation_length = p[1]
             return ( C0*np.exp( -r/correlation_length) - acf )
-    
+
         # initial values for the optimization
         p0 = np.array([0.2,1e-3])
-    
+
         # least square fit in the required range
         p_opt, info = opt.leastsq(residual, p0, args=(r[fitrange],acf1d[fitrange]))
         C0 = p_opt[0]
         correlation_length = p_opt[1]
         acf1d_exp = residual( p_opt, r, 0 )
-        
+
         return acf1d_exp, [C0, correlation_length]
-    
-    
+
+
     def acf1d_fit_ts(r, acf1d, r_max):
         """
-            fit the correlation data acf1d for given lags r in the range [0,r_max] 
+            fit the correlation data acf1d for given lags r in the range [0,r_max]
             to an exponential
         """
-        
+
         # set fitrange
         fitrange = (r < r_max)
         # define residual function for least squares fit
@@ -505,10 +505,10 @@ the following cell.
             correlation_length = p[1]
             repeat_distance = p[2]
             return ( C0*np.exp( -r/correlation_length) * np.sinc(2*r/repeat_distance) - acf )
-    
+
         # initial values for the optimization
         p0 = np.array([0.2,1e-3,1e-3])
-    
+
         # least square fit in the required range
         p_opt, info = opt.leastsq(residual, p0, args=(r[fitrange],acf1d[fitrange]))
         C0 = p_opt[0]
@@ -516,13 +516,13 @@ the following cell.
         repeat_distance = p_opt[2]
         acf1d_ts = residual( p_opt, r, 0 )
         return acf1d_ts, [C0, correlation_length, repeat_distance]
-    
-    
+
+
     def ACF2D(indicator_function):
         """
             compute the 2D correlation function for the indicator_function of an image
         """
-    
+
         ##################################################
         # replace the following by the correct code
         ##################################################
@@ -532,10 +532,10 @@ the following cell.
         acf2d = fftpack.ifftn(power_spectrum)
         nx, nz = indicator_function.shape
         return acf2d.real / (nx*nz)
-        
+
         #return np.zeros_like(indicator_function)
-    
-    
+
+
     def ssa_from_acf_slope(volume_fraction, acf_slope_at_origin):
         """
             compute the ssa from given slope of an autocorrelation function
@@ -546,7 +546,7 @@ the following cell.
         # replace the following by the correct code
         ##################################################
         rho_ice = 917
-        return 4 * acf_slope_at_origin / volume_fraction / rho_ice 
+        return 4 * acf_slope_at_origin / volume_fraction / rho_ice
 
 
 Task 1: Compute the correlation functions for the image
@@ -564,24 +564,24 @@ try to understand.
     #
     filename = 'images/1984May9section1_SEG.png'
     pixel_size = 0.021e-3 # in mm
-    
+
     indicator_function = ice_indicator_function(filename)
     # get the volume fraction
     volume_fraction = ice_volume_fraction(indicator_function)
     # ACTION REQUIRED HERE
     # get the 2d correlation function
     acf2d = ACF2D(indicator_function)
-    
-    
+
+
     # get the 1d correlation function along an axis
     acf1d_x = ACF1D(acf2d, 1)
     acf1d_z = ACF1D(acf2d, 0)
-    
+
     # get the corresponding lags
     r_x = pixel_size * np.arange(len(acf1d_x))
     r_z = pixel_size * np.arange(len(acf1d_z))
-    
-    
+
+
     # get the fit versions
     r_max = 100 * pixel_size
     acf1d_fit_exp_x, opt_param_exp_x = acf1d_fit_exp(r_x, acf1d_x, r_max)
@@ -592,25 +592,25 @@ try to understand.
     print(opt_param_ts_x)
     acf1d_fit_ts_z, opt_param_ts_z = acf1d_fit_ts(r_z, acf1d_z, r_max)
     print(opt_param_ts_z)
-    
-    
-    
+
+
+
     # plot
     fig2 = plt.figure()
     ax2 = fig2.add_subplot(111)
-    
+
     ax2.plot(r_x, acf1d_x, 's', color='b', label='x: meas')
     ax2.plot(r_x, acf1d_fit_exp_x, '-', color='b', label='x: fit EXP')
     ax2.plot(r_x, acf1d_fit_ts_x, ':', color='b', label='x: fit TS')
-    
+
     ax2.plot(r_z, acf1d_z, 'o', color='r', label='z: meas')
     ax2.plot(r_z, acf1d_fit_exp_z, '-', color='r', label='z: fit EXP')
     ax2.plot(r_z, acf1d_fit_ts_z, ':', color='r', label='z: fit TS')
-    
+
     ax2.set_xlim([0, 80*pixel_size])
     ax2.set_xlabel("Lag (mm)")
     ax2.set_ylabel("Correlation functions")
-    
+
     ax2.legend()
 
 
@@ -650,20 +650,20 @@ the following cell. Try to understand the differences.
 .. code:: ipython3
 
     ### Check SSA
-    
-    
-    
+
+
+
     SSA_exp_x = ssa_from_acf_slope(volume_fraction, volume_fraction*(1-volume_fraction)/opt_param_exp_x[1])
     SSA_exp_z = ssa_from_acf_slope(volume_fraction, volume_fraction*(1-volume_fraction)/opt_param_exp_z[1])
     SSA_ts_x = ssa_from_acf_slope(volume_fraction, volume_fraction*(1-volume_fraction)/opt_param_ts_x[1])
     SSA_ts_z = ssa_from_acf_slope(volume_fraction, volume_fraction*(1-volume_fraction)/opt_param_ts_z[1])
-    
-    
+
+
     print("SSA from exponential fit in x direction: ", SSA_exp_x, "m^2/kg")
     print("SSA from exponential fit in z direction: ", SSA_exp_z, "m^2/kg")
     print("SSA from Teubner-Strey fit in x direction: ", SSA_ts_x, "m^2/kg")
     print("SSA from Teubner-Strey fit in z direction: ", SSA_ts_z, "m^2/kg")
-    
+
 
 
 
@@ -692,7 +692,7 @@ Task 3: Brighness temperature comparison
     thickness = [100]
     temperature = [270]
     density = volume_fraction * 917
-    
+
     # create an "exponential snowpack"
     corr_length = opt_param_exp_x[1]
     snowpack_exp = make_snowpack(thickness=thickness,
@@ -700,8 +700,8 @@ Task 3: Brighness temperature comparison
                                  density=density,
                                  temperature=temperature,
                                  corr_length=corr_length)
-    
-    
+
+
     # create a "Teubner-Strey snowpack"
     corr_length = opt_param_ts_x[1]
     repeat_distance = opt_param_ts_x[2]
@@ -711,17 +711,17 @@ Task 3: Brighness temperature comparison
                                      temperature=temperature,
                                      corr_length=corr_length,
                                      repeat_distance=repeat_distance)
-    
+
     # create the sensor
     radiometer = sensor_list.amsre('37V')
-    
+
     # create the model
     m = make_model("iba", "dort")
-    
+
     # run the model
     result_exp = m.run(radiometer, snowpack_exp)
     result_ts = m.run(radiometer, snowpack_ts)
-    
+
     # outputs
     print("Brightness temperature (Exponential): ", result_exp.TbV(), "K")
     print("Brightness temperature (Teubner Strey): ", result_ts.TbV(), "K")
@@ -765,10 +765,10 @@ implementing the sea-ice and salty snow in SMRT.
 .. code:: ipython3
 
     import numpy as np
-    
+
     import matplotlib.pyplot as plt
     %matplotlib notebook
-    
+
     from smrt import make_model, make_snowpack, make_ice_column, sensor_list, PSU
     from smrt.utils import dB
 
@@ -804,8 +804,8 @@ make the conversion.
     temperature = 273 - 5
     salinity = 8 * PSU  # ice salinity
     radius = 0.2e-3  # radius of the brines
-    
-    ic = make_ice_column('firstyear', thickness=[1.0], microstructure_model='sticky_hard_spheres', 
+
+    ic = make_ice_column('firstyear', thickness=[1.0], microstructure_model='sticky_hard_spheres',
                          temperature=temperature, salinity=salinity, radius=radius)
 
 .. code:: ipython3
@@ -906,10 +906,10 @@ Ice permittivity in SMRT
 
     # Standard imports
     import numpy as np
-    
+
     import matplotlib.pyplot as plt
     %matplotlib notebook
-    
+
     from smrt import make_model, make_snowpack, make_ice_column, sensor_list, PSU
 
 .. code:: ipython3
@@ -918,8 +918,8 @@ Ice permittivity in SMRT
     temperature = 273 - 5
     salinity = 8 * PSU  # ice salinity
     radius = 0.2e-3  # radius of the brines
-    
-    ic = make_ice_column('firstyear', thickness=[1.0], microstructure_model='sticky_hard_spheres', 
+
+    ic = make_ice_column('firstyear', thickness=[1.0], microstructure_model='sticky_hard_spheres',
                          temperature=temperature, salinity=salinity, radius=radius)
 
 Have a look at the permittivity model used.
@@ -943,7 +943,7 @@ need to import the non-default function
 .. code:: ipython3
 
     from smrt.permittivity.saline_water import seawater_permittivity_klein76
-    
+
 
 
 Calculate the permittivity temperature dependence of this model and
@@ -977,10 +977,10 @@ to snow salinity
 
     # Standard imports
     import numpy as np
-    
+
     import matplotlib.pyplot as plt
     %matplotlib notebook
-    
+
     from smrt import make_model, make_snowpack, make_ice_column, sensor_list, PSU
 
 Make a standard snowpack and ice column
@@ -1019,4 +1019,3 @@ What has happened? Is this expected? How could you fix it?
 Hint:
 
 and optional argument ice_permittivity_model
-
