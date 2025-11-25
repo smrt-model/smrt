@@ -55,9 +55,9 @@ class NadirLRMAltimetry(object):
             the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
     # e.g. here, frequency, time, ... are not managed
-    _broadcast_capability = {}  # "theta_inc", "polarization_inc", "theta", "phi", "polarization"}
+    _broadcast_capability = {}
 
     def __init__(
         self,

@@ -116,7 +116,7 @@ class IterativeSecondOrder(RTSolverBase):
     """
 
     # this specifies which dimension this solver is able to deal with.
-    #  Those not in this list must be managed by the called (Model object)
+    #  Those not in this list must be managed by the caller (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "polarization"}
 

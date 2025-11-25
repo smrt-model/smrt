@@ -78,7 +78,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             to investigate ice lenses, it is recommended to read MEMLS documentation on this topic.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "phi", "polarization"}
 

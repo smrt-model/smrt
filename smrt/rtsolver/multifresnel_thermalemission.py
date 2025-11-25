@@ -64,7 +64,7 @@ class MultiFresnelThermalEmission(object):
             value should be decreased. Set to None to deactivate pruning, but this is not recommended.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta", "polarization"}
 

@@ -88,12 +88,13 @@ def test_shallow_snowpack():
 
 
 def test_infinite_pack(setup_inf_snowpack):
-    # from Ghi thesis p43, setup an infinite snowpack with transparent interface
+    # from Ghislain Picard thesis p43, setup an infinite snowpack with transparent interface
     # also from ulaby et al 2014 (11.75) d -> inf so gamma2 --> 0
     # in this specific case
     # sigma = (1 - 0)/(2 * ke)  * (phase function * (T @ I_i * dense_factor))
     # interface transparent so T is 1
     # I_i = 1 for VV and HH
+
     sp = setup_inf_snowpack
     theta = [30]
     sensor = active(17.25e9, theta)
