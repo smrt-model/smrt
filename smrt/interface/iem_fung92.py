@@ -113,7 +113,7 @@ class IEM_Fung92(
 
         if not np.allclose(mu_s, mu_i) or not np.allclose(dphi, np.pi):
             raise NotImplementedError(
-                "Only the backscattering coefficient is implemented at this stage."
+                "Only the backscattering coefficient is implemented at this stage in iem_fung92."
                 "This is a very preliminary implementation"
             )
 
@@ -192,7 +192,11 @@ class IEM_Fung92(
             raise SMRTError("The autocorrelation function must be exponential or gaussian")
 
     def ft_even_diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, m_max, npol):
-        assert mu_s is mu_i
+        if not np.allclose(mu_s, mu_i):
+            raise NotImplementedError(
+                "Only the backscattering coefficient is implemented at this stage in iem_fung92."
+                "This is a very preliminary implementation"
+            )
 
         diffuse_refl_coeff = smrt_matrix.zeros((npol, m_max + 1, len(mu_i)))
 
