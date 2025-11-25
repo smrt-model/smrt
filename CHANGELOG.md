@@ -7,9 +7,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 ### Added
 	- add two faster diagonalization methods in dort: half_rank_eig and stamnes88. "eig" is still the default, but this 	may change in the future.
+	- add second order iterative rtsolver
 	- add successive_order rtsolver.
 	- add local incidence angles in altimetry calculation from satellite pitch and roll angles.
 	- a make_bedrock function to create rock layers.
+	- add precommit configuration and documentation for developers
+	- add Turner2016 water permittivity for supercoold water
 
 ### Changed
 	- change Python support to >=3.10. Old versions are not supported anymore.
