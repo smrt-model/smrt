@@ -416,19 +416,17 @@ class _InterfaceProperties(object):
     #     Ttop_coh (dict): Coherent transmission matrices for top interfaces.
     #     Rbottom_coh (dict): Coherent reflection matrices for bottom interfaces.
     #     Rbottom_backscatter (dict): Diffuse backward reflection matrices for bottom interfaces.
-    #     Rbottom_forwaed (dict): Diffuse forward reflection matrices for bottom interfaces.
     #     Tbottom_coh (dict): Coherent transmission matrices for bottom interfaces.
     #     mu (dict): Cosine of refraction angles for each layer.
     # """
 
     def __init__(self, frequency, interfaces, substrate, permittivity, mu0, npol, nlayer, dphi):
         self.Rtop_coh = dict()
-        self.Rtop_diff = dict()
+        # self.Rtop_diff = dict()
         self.Ttop_coh = dict()
         self.Ttop_diff = dict()
         self.Rbottom_coh = dict()
         self.Rbottom_backscatter = dict()
-        self.Rbottom_forward = dict()
         self.Tbottom_coh = dict()
         self.Tbottom_diff = dict()
         # compute refracted angle
@@ -473,13 +471,6 @@ class _InterfaceProperties(object):
             # )
 
             self.Ttop_coh[l] = interfaces[l].coherent_transmission_matrix(frequency, eps_l, eps_lm1, self.mu[l], npol)
-            self.Ttop_diff[l] = (
-                interfaces[l].diffuse_transmission_matrix(
-                    frequency, eps_l, eps_lm1, self.mu[l - 1], self.mu[l], 0, npol
-                )
-                if hasattr(interfaces[l], "diffuse_transmission_matrix") * (eps_l.real / eps_lm1.real)
-                else smrt_matrix(0)
-            )
 
             if l < nlayer - 1:
                 # set up interfaces
@@ -493,16 +484,6 @@ class _InterfaceProperties(object):
                 self.Rbottom_backscatter[l] = interfaces[l + 1].diffuse_reflection_matrix(
                     frequency, eps_l, eps_lp1, self.mu[l], self.mu[l], dphi, npol
                 )
-                try:
-                    self.Rbottom_forward[l] = (
-                        interfaces[l + 1].diffuse_reflection_matrix(
-                            frequency, eps_l, self.mu[l], self.mu[l], dphi, npol
-                        )
-                        if hasattr(interfaces[l + 1], "diffuse_reflection_matrix")
-                        else smrt_matrix(0)
-                    )
-                except SMRTError:  # TODO: check and remove Rbottom_forward or change the Exception system
-                    self.Rbottom_forward[l] = smrt_matrix(0)
 
                 self.Tbottom_coh[l] = interfaces[l + 1].coherent_transmission_matrix(
                     frequency, eps_l, eps_lp1, self.mu[l], npol
@@ -523,14 +504,6 @@ class _InterfaceProperties(object):
                     if hasattr(substrate, "diffuse_reflection_matrix")
                     else smrt_matrix(0)
                 )
-                try:
-                    self.Rbottom_forward[l] = (
-                        substrate.diffuse_reflection_matrix(frequency, eps_l, self.mu[l], self.mu[l], 0, npol)
-                        if hasattr(substrate, "diffuse_reflection_matrix")
-                        else smrt_matrix(0)
-                    )
-                except SMRTError:  # TODO: check and remove Rbottom_forward or change the Exception system
-                    self.Rbottom_forward[l] = smrt_matrix(0)
 
                 # sub-snow
                 self.Tbottom_coh[l] = smrt_matrix(0)
@@ -540,28 +513,14 @@ class _InterfaceProperties(object):
                 # fully transparent substrate
                 self.Rbottom_coh[l] = smrt_matrix(0)
                 self.Rbottom_backscatter[l] = smrt_matrix(0)
-                self.Rbottom_forward[l] = smrt_matrix(0)
                 self.Tbottom_coh[l] = smrt_matrix(0)
                 self.Tbottom_diff[l] = smrt_matrix(0)
 
     def reflection_bottom(self, l):
-        return _InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Rbottom_coh[l], self.Rbottom_forward[l], self.npol, self.len_mu
-        )
+        return _get_np_matrix(self.Rbottom_coh[l], self.npol, self.len_mu)
 
     def transmission_top(self, l):
-        return _InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Ttop_coh[l], self.Ttop_diff[l], self.npol, self.len_mu
-        )
+        return _get_np_matrix(self.Ttop_coh[l], self.npol, self.len_mu)
 
     def transmission_bottom(self, l):
-        return _InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Tbottom_coh[l], self.Tbottom_diff[l], self.npol, self.len_mu
-        )
-
-    @staticmethod
-    def combine_coherent_diffuse_matrix(coh, diff, npol, len_mu):
-        if not is_equal_zero(diff):
-            return _get_np_matrix(diff + coh, npol, len_mu)
-        else:
-            return _get_np_matrix(coh, npol, len_mu)
+        return _get_np_matrix(self.Tbottom_coh[l], self.npol, self.len_mu)

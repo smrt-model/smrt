@@ -30,7 +30,8 @@ Backscatter Components:
     Second Order:
         Calculate three main contributions of second order (Karam et al. 1995):
             - order2_intralayer_scattering: Double volume scattering inside one layer.
-            - order2_substrate_layer_scattering: Substrate diffuse reflection with one volume scattering event.
+            - order2_substrate_layer_scattering: Substrate diffuse reflection with one volume scattering event. This needs bi-static
+            coefficients to work. Only geometrical_optics has full bi-static for now.
             - order2_interlayer_scattering: Double volume scattering between all layer pair combinations. The snow interfaces diffuse
             reflection with one volume scattering event is neglected in this solver.
 
