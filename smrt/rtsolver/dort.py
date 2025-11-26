@@ -1,41 +1,42 @@
 # coding: utf-8
 
 """
-Provide the Discrete Ordinate and Eigenvalue Solver as a multi-stream solver of the radiative transfer model.
+Provide the Discrete Ordinate and Eigenvalue Solver as a multi-stream solver of the radiative transfer model in active
+and passive mode.
 
-This solver is precise but less efficient than 2 or 6 flux solvers. Different flavours of DORT (or DISORT) exist in the literature
-depending on the mode (passive or active), on the density of the medium (sparse media have trivial inter-layer boundary
-conditions), on the way the streams are connected between the layers and on the way the phase function is prescribed.
-The actual version is a blend between Picard et al. 2004 (active mode for sparse media) and DMRT-ML (Picard et al. 2013)
-which works in passive mode only for snow. The DISORT often used in optics (Stamnes et al. 1988) only works for sparse
-medium and uses a development of the phase function in Legendre polynomials on theta. The version used in DMRT-QMS (L.
-Tsang's group) is similar to the present implementation except it uses spline interpolation to connect constant-angle
-streams between the layers although we use direct connection by varying the angle according to Snell's law. A practical
-consequence is that the number of streams vary (due to internal reflection) and the value `n_max_stream` only applies in
-the most refringent layer. The number of outgoing streams in the air is usually smaller, sometimes twice smaller
-(depends on the density profile). It is important not to set too low a value for `n_max_stream`. E.g. 32 is usually fine,
-64 or 128 are better but simulations will be much slower.
+This solver is precise but less efficient than 2 or 6 flux solvers. Different flavours of DORT (or DISORT) exist in the
+literature depending on the mode (passive or active), the polarization capabilities, the density of the medium (sparse
+media have trivial inter-layer boundary conditions), on the way the streams are connected between the layers and on the
+way the phase function is prescribed. The actual version is a blend between Picard et al. 2004 (active mode for sparse
+media) and DMRT-ML (Picard et al. 2013) which works in passive mode only for snow. The DISORT often used in optics
+(Stamnes et al. 1988) only works for sparse medium and uses a development of the phase function in Legendre polynomials
+on theta. The version used in DMRT-QMS (L. Tsang's group) is similar to the present implementation except it uses spline
+interpolation to connect constant-angle streams between the layers although we use direct connection by varying the
+angle according to Snell's law. A practical consequence is that the number of streams vary (due to internal reflection)
+and the value `n_max_stream` only applies in the most refringent layer. The number of outgoing streams in the air is
+usually smaller, sometimes twice smaller (depends on the density profile). It is important not to set too low a value
+for `n_max_stream`. E.g. 32 is usually fine, 64 or 128 are better but simulations will be much slower.
 
 Note:
     The DORT solver is very robust in passive mode but may raise exception in active mode due to a matrix
     diagonalisation problem. The exception provides detailed information on how to address this issue. Two new
-    diagonalisation approaches were added in January 2024. They are activated by setting the `diagonalization_method` optional
-    argument (see :py:mod:`smrt.core.make_model`). The first method (``diagonalization_method='shur'``) replaces the
-    scipy.linalg.eig function by a shur decomposition followed by a diagonalisation of the shur matrix. While
-    scipy.linalg.eig performs such a shur decomposition internally in any case, it seems that explicitly calling the shur
-    decomposition beforehand improves the stability. Nevertheless to really solve the problem, the second method
-    (``diagonalization_method='shur_forcedtriu'``) consists in removing the 2x2 and 3x3 blocks from the shur matrix, i.e. forcing
-    the shur matrix to be upper triangular (triu in numpy jargon = zeroing the lower part of this
-    matrix). This problem is due to the structure of the matrix to be diagonalized and the formulation of the DORT method in the polarimetric
-    configuration. The eigenvalues come by triplets and can be very close to each other for the three H, V, U Stokes components
-    when scattering is becoming small (or equiv. the azimuth mode 'm' is large). As a consequence of the Gershgorin theorem,
-    this results in slightly complex eigenvalues (i.e. eigenvalues with very small imaginary part) that comes from 2x2 or
-    3x3 blocks in the shur decomposition. This would not be a problem if the eigenvectors were correctly estimated, but this
-    is not the case. It is indeed difficult to find the correct orientation of eigenvectors associated to very close
-    eigenvalues. To overcome the problem, the solution is to remove the 2x2 and 3x3 blocks. In principle, it would be safer
-    to check that these blocks are nearly diagonal but this is not done in the current implementation. The user is
-    responsible to switch between the options until it works. After sufficient successful reports by users are received the last
-    method (forcedtriu) will certainly be the default.
+    diagonalisation approaches were added in January 2024. They are activated by setting the `diagonalization_method`
+    optional argument (see :py:mod:`smrt.core.make_model`). The first method (``diagonalization_method='shur'``)
+    replaces the scipy.linalg.eig function by a shur decomposition followed by a diagonalisation of the shur matrix.
+    While scipy.linalg.eig performs such a shur decomposition internally in any case, it seems that explicitly calling
+    the shur decomposition beforehand improves the stability. Nevertheless to really solve the problem, the second
+    method (``diagonalization_method='shur_forcedtriu'``) consists in removing the 2x2 and 3x3 blocks from the shur
+    matrix, i.e. forcing the shur matrix to be upper triangular (triu in numpy jargon = zeroing the lower part of this
+    matrix). This problem is due to the structure of the matrix to be diagonalized and the formulation of the DORT
+    method in the polarimetric configuration. The eigenvalues come by triplets and can be very close to each other for
+    the three H, V, U Stokes components when scattering is becoming small (or equiv. the azimuth mode 'm' is large). As
+    a consequence of the Gershgorin theorem, this results in slightly complex eigenvalues (i.e. eigenvalues with very
+    small imaginary part) that comes from 2x2 or 3x3 blocks in the shur decomposition. This would not be a problem if
+    the eigenvectors were correctly estimated, but this is not the case. It is indeed difficult to find the correct
+    orientation of eigenvectors associated to very close eigenvalues. To overcome the problem, the solution is to remove
+    the 2x2 and 3x3 blocks. In principle, it would be safer to check that these blocks are nearly diagonal but this is
+    not done in the current implementation. The user is responsible to switch between the options until it works. After
+    sufficient successful reports by users are received the last method (forcedtriu) will certainly be the default.
 
 Usage:
     Basic usage with default settings and iba emmodel:
@@ -45,21 +46,22 @@ Usage:
         >>> m = make_model("iba", "dort", rtsolver_options = {'error_handling':'nan'})
 
 References:
-    Picard, G., Le Toan, T., Quegan, S., Caraglio, Y., and Castel, T. (2004). Radiative Transfer Modeling of Cross-Polarized  Backscatter
-    From a Pine Forest Using the Discrete  Ordinate and Eigenvalue Method. IEEE TRANSACTIONS ON GEOSCIENCE AND REMOTE SENSING, VOL. 42, NO. 8,
-    https://doi.org/10.1109/TGRS.2004.831229
+    Picard, G., Le Toan, T., Quegan, S., Caraglio, Y., and Castel, T. (2004). Radiative Transfer Modeling of
+    Cross-Polarized  Backscatter From a Pine Forest Using the Discrete  Ordinate and Eigenvalue Method. IEEE
+    TRANSACTIONS ON GEOSCIENCE AND REMOTE SENSING, VOL. 42, NO. 8, https://doi.org/10.1109/TGRS.2004.831229
 
-    Picard, G., Brucker, L., Roy, A., Dupont, F., Fily, M., Royer, A., and Harlow, C. (2013) Simulation of the microwave emission of
-    multi-layered snowpacks using the Dense Media Radiative transfer theory: the DMRT-ML model, Geosci. Model Dev., 6, 1061–1078,
-    https://doi.org/10.5194/gmd-6-1061-2013
+    Picard, G., Brucker, L., Roy, A., Dupont, F., Fily, M., Royer, A., and Harlow, C. (2013) Simulation of the microwave
+    emission of multi-layered snowpacks using the Dense Media Radiative transfer theory: the DMRT-ML model, Geosci.
+    Model Dev., 6, 1061-1078, https://doi.org/10.5194/gmd-6-1061-2013
 
-    Stamnes, K., Tsay, S-C., Wiscombe, W., and Jayaweera, K. (1988). Numerically stable algorithm for discrete-ordinate-method radiative
-    transfer in multiple scattering and emitting layered media. Applied Optics, 27-12, pp.2502-2509. https://doi.org/10.1364/AO.27.002502
+    Stamnes, K., Tsay, S-C., Wiscombe, W., and Jayaweera, K. (1988). Numerically stable algorithm for
+    discrete-ordinate-method radiative transfer in multiple scattering and emitting layered media. Applied Optics,
+    27-12, pp.2502-2509. https://doi.org/10.1364/AO.27.002502
 """
 
-# Stdlib import
 from functools import partial
 
+# Stdlib import
 # other import
 import numpy as np
 import scipy.linalg
@@ -82,42 +84,47 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
     Args:
         n_max_stream: number of stream in the most refringent layer.
         m_max: number of mode (azimuth).
-        stream_mode: If set to "most_refringent" (the default) or "air", streams are calculated using the Gauss-Legendre polynomials and
-            then use Snell-law to prograpate the direction in the other layers. If set to "uniform_air", streams are calculated
-            uniformly in air and then according to Snells law.
+        stream_mode: If set to "most_refringent" (the default) or "air", streams are
+            calculated using the Gauss-Legendre polynomials and then use Snell-law to prograpate the direction in the
+            other layers. If set to "uniform_air", streams are calculated uniformly in air and then according to Snells
+            law.
         phase_normalization: the integral of the phase matrix should in principe be equal to the scattering coefficient.
-            However, some emmodels do not respect this strictly. In general a small difference is due to numerical rounding and is acceptable,
-            but a large difference rather indicates either a bug in the emmodel or input parameters that breaks the
-            assumption of the emmodel. The most typical case is when the grain size is too big compared to wavelength for emmodels
-            that rely on Rayleigh assumption. If this argument is to True, the phase matrix is normalized to be coherent
-            with the scattering coefficient, but only when the difference is moderate (0.7 to 1.3).
-            If set to "forced" the normalization is always performed. This option is dangerous because it may hide bugs or unappropriate
-            input parameters (typically too big grains). If set to False, no normalization is performed.
-            If set to "auto" the normalization is performed except for emmodels not respecting the reciprocity princple
-            (which the normalization relies on).
-        phase_symmetrization: enforce phase function symmetry by replacing the phase function P by (P + P.T)/2 (simplified).
-        error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
-            If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
-            the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
-        process_coherent_layers: Adapt the layers thiner than the wavelegnth using the MEMLS method. The radiative transfer
-            theory is inadequate layers thiner than the wavelength and using DORT with thin layers is generally not recommended.
-            In some parcticular cases (such as ice lenses) where the thin layer is isolated between large layers, it is possible
-            to replace the thin layer by an equivalent reflective interface. This neglects scattering in the thin layer,
-            which is acceptable in most case, because the layer is thin. To use this option and more generally
-            to investigate ice lenses, it is recommended to read MEMLS documentation on this topic.
+            However, some emmodels do not respect this strictly. In general a small difference is due to numerical
+            rounding and is acceptable, but a large difference rather indicates either a bug in the emmodel or input
+            parameters that breaks the assumption of the emmodel. The most typical case is when the grain size is too
+            big compared to wavelength for emmodels that rely on Rayleigh assumption. If this argument is to True, the
+            phase matrix is normalized to be coherent with the scattering coefficient, but only when the difference is
+            moderate (0.7 to 1.3). If set to "forced" the normalization is always performed. This option is dangerous
+            because it may hide bugs or unappropriate input parameters (typically too big grains). If set to False, no
+            normalization is performed. If set to "auto" the normalization is performed except for emmodels not
+            respecting the reciprocity princple (which the normalization relies on).
+        phase_symmetrization: enforce phase function symmetry by replacing the phase function P by (P + P.T)/2
+            (simplified).
+        error_handling: If set to "exception" (the default), raise an exception in case of error, stopping
+            the code. If set to "nan", return a nan, so the calculation can continue, but the result is of course
+            unusuable and the error message is not accessible. This is only recommended for long simulations that
+            sometimes produce an error.
+        process_coherent_layers: Adapt the layers thiner than the wavelegnth using the MEMLS method. The radiative
+            transfer theory is inadequate layers thiner than the wavelength and using DORT with thin layers is generally
+            not recommended. In some parcticular cases (such as ice lenses) where the thin layer is isolated between
+            large layers, it is possible to replace the thin layer by an equivalent reflective interface. This neglects
+            scattering in the thin layer, which is acceptable in most case, because the layer is thin. To use this
+            option and more generally to investigate ice lenses, it is recommended to read MEMLS documentation on this
+            topic.
         prune_deep_snowpack: this value is the optical depth from which the layers are discarded in the calculation.
             It is to be use to accelerate the calculations for deep snowpacks or at high frequencies when the
-            contribution of the lowest layers is neglegible. The optical depth is a good criteria to determine this limit.
-            A value of about 6 is recommended. Use with care, especially values lower than 6.
+            contribution of the lowest layers is neglegible. The optical depth is a good criteria to determine this
+            limit. A value of about 6 is recommended. Use with care, especially values lower than 6.
         diagonalization_method: This value set the method for the diagonalization in the eigenvalue solver. The defaut
-            is "eig" use the scipy.linalg.eig function. The "shur" replaces the scipy.linalg.eig function by a shur
+            is "eig", it uses the scipy.linalg.eig function. The "shur" replaces the scipy.linalg.eig function by a shur
             decomposition followed by a diagonalisation of the shur matrix. The "shur_forcedtriu" forces the shur matrix
-            to be upper triangular. The "half_rank_eig" is the fastest method but requires symmetry and energy conservation
-            which may fail with some EMModels and for some parameters. The "stamnes88" is another a halk rank fast method.
+            to be upper triangular. The "half_rank_eig" is the fastest method but requires symmetry and energy
+            conservation which may fail with some EMModels and for some parameters. The "stamnes88" is another half rank
+            fast method.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
-    # e.g. here, frequency, time, ... are not managed
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the
+    # caller (Model object) e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {
         "theta_inc",
         "polarization_inc",
@@ -429,7 +436,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
                 (streams.n[l - 1] * npol) if l > 0 else (streams.n_air * npol)
             )  # number of streams * npol in the layer l - 1 (lm1)
             # number of streams * npol in the layer l + 1 (lp1)
-            nslp1_npol = (streams.n[l + 1] * npol) if l < nlayer - 1 else (streams.n_substrate * npol)
+            nslp1_npol = (streams.n[l + 1] * npol) if l < nlayer - 1 else None
 
             # solve the eigenvalue problem for layer l
 
@@ -1135,17 +1142,17 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
 
 - single scattering albedo > 1 in a layer. It is often due to a too large grain size (or too low stickiness
 parameter, or too large polydispersity or too high frequency). Some emmodels (DMRT ShortRange, ...) that rely on the
-Rayleigh/low-frequency assumption may produce unphysical single scattering albedo > 1. In this case, it is necessary
-to reduce the grain size. If the phase_normalization option in DORT was desactivated (default is active), it is advised
-to reactivate it.
+Rayleigh/low-frequency assumption may produce unphysical single scattering albedo > 1. In this case, it is necessary to
+reduce the grain size. If the phase_normalization option in DORT was desactivated (default is active), it is advised to
+reactivate it.
 
 - almost diagonal matrix. Such a matrix often arises in active mode when m_max is quite high. However it can
-also arises in passive mode or with low m_max. To solve this issue  you can try to
-activate the diagonalization_method="shur" option and if it does not work the more radical diagonalization_method="shur_forcedtriu".
+also arises in passive mode or with low m_max. To solve this issue  you can try to activate the
+diagonalization_method="shur" option and if it does not work the more radical diagonalization_method="shur_forcedtriu".
 These options are experimental, please report your results (both success and failure).
-diagonalization_method="shur_forcedtriu" should become the default if success are reported.
-Alternatively you could reduce the m_max option progressively but high values of m_max give more accurate results in
-active mode (but tends to produce almost diagonal matrix).
+diagonalization_method="shur_forcedtriu" should become the default if success are reported. Alternatively you could
+reduce the m_max option progressively but high values of m_max give more accurate results in active mode (but tends to
+produce almost diagonal matrix).
 
 For mass simulations, exceptions may be annoying, to avoid raising exception and return NaN as a result instead is
 obtained by setting the option error_handling='nan'.
@@ -1203,12 +1210,6 @@ class InterfaceProperties(object):
             eps_lm1 = permittivity[l - 1] if l > 0 else 1
             eps_l = permittivity[l]
             eps_lp1 = permittivity[l + 1] if l < nlayer - 1 else None
-
-            # nsl = streams.n[l]  # number of streams in layer l
-            # nslm1 = streams.n[l - 1] if l > 0 else streams.n_air  # number of streams * npol in the layer l - 1 (lm1)
-            # nslp1 = (
-            #     streams.n[l + 1] if l < nlayer - 1 else streams.n_substrate
-            # )  # number of streams * npol in the layer l + 1 (lp1)
 
             # compute reflection coefficient between layer l and l - 1  UP
             # snow-snow UP

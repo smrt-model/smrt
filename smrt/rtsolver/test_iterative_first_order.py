@@ -14,23 +14,27 @@ from smrt.interface.transparent import Transparent
 from smrt.rtsolver.iterative_first_order import IterativeFirstOrder
 
 
+@pytest.fixture
 def setup_snowpack():
     temp = 250
     return make_snowpack([100], "homogeneous", density=[300], temperature=[temp], interface=[Transparent])
 
 
+@pytest.fixture
 def setup_snowpack_with_DH():
     return make_snowpack(
         [0.5, 1000], "homogeneous", density=[300, 250], temperature=2 * [250], interface=2 * [Transparent]
     )
 
 
+@pytest.fixture
 def setup_2layer_snowpack():
     return make_snowpack(
         [0.5, 1000], "homogeneous", density=[250, 300], temperature=2 * [250], interface=2 * [Transparent]
     )
 
 
+@pytest.fixture
 def setup_inf_snowpack():
     temp = 250
     return make_snowpack(
@@ -38,8 +42,8 @@ def setup_inf_snowpack():
     )
 
 
-def test_returned_theta():
-    sp = setup_snowpack()
+def test_returned_theta(setup_snowpack):
+    sp = setup_snowpack
 
     theta = [30, 40]
     sensor = active(17.25e9, theta)
@@ -50,32 +54,22 @@ def test_returned_theta():
     res_theta = res.coords["theta_inc"]
     print(res_theta)
     np.testing.assert_allclose(res_theta, theta)
-
-
-def test_selectby_theta():
-    sp = setup_snowpack()
-
-    theta = [30, 40]
-    sensor = active(17.25e9, theta)
-
-    m = Model(NonScattering, IterativeFirstOrder)
-    res = m.run(sensor, sp)
-
     print(res.data.coords)
     res.sigmaVV_dB(theta=30)
 
 
-def test_depth_hoar_stream_numbers():
+# Parametrization of the two following tests failed
+def test_depth_hoar_stream_numbers(setup_snowpack_with_DH):
     # Will throw error if doesn't run
-    sp = setup_snowpack_with_DH()
+    sp = setup_snowpack_with_DH
     sensor = active(13e9, 45)
     m = Model(NonScattering, IterativeFirstOrder)
     m.run(sensor, sp).sigmaVV()
 
 
-def test_2layer_pack():
+def test_2layer_pack(setup_2layer_snowpack):
     # Will throw error if doesn't run
-    sp = setup_2layer_snowpack()
+    sp = setup_2layer_snowpack
     sensor = active(13e9, 45)
     m = Model(NonScattering, IterativeFirstOrder)
     m.run(sensor, sp).sigmaVV()
@@ -93,14 +87,15 @@ def test_shallow_snowpack():
         m.run(sensor, sp, parallel_computation=False).sigmaVV()
 
 
-def test_infinite_pack():
-    # from Ghi thesis p43, setup an infinite snowpack with transparent interface
+def test_infinite_pack(setup_inf_snowpack):
+    # from Ghislain Picard thesis p43, setup an infinite snowpack with transparent interface
     # also from ulaby et al 2014 (11.75) d -> inf so gamma2 --> 0
     # in this specific case
     # sigma = (1 - 0)/(2 * ke)  * (phase function * (T @ I_i * dense_factor))
     # interface transparent so T is 1
     # I_i = 1 for VV and HH
-    sp = setup_inf_snowpack()
+
+    sp = setup_inf_snowpack
     theta = [30]
     sensor = active(17.25e9, theta)
 
@@ -121,8 +116,8 @@ def test_infinite_pack():
     np.testing.assert_allclose(phase[0, 0], scattering_test)
 
 
-def test_normal_call():
-    sp = setup_snowpack()
+def test_normal_call(setup_snowpack):
+    sp = setup_snowpack
 
     theta = [30, 40]
     sensor = active(17.25e9, theta)
@@ -131,8 +126,8 @@ def test_normal_call():
     m.run(sensor, sp)
 
 
-def test_return_contributions():
-    sp = setup_snowpack()
+def test_return_contributions(setup_snowpack):
+    sp = setup_snowpack
 
     sensor = active(17.25e9, 30)
 

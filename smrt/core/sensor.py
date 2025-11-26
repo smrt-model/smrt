@@ -1,10 +1,12 @@
 # coding: utf-8
 
 """
-The sensor configuration includes all the information describing the sensor viewing geometry (incidence, ...)
-and operating parameters (frequency, polarization, ...). The easiest and recommended way to create a :py:class:`Sensor` instance is
-to use one of the convenience functions such as :py:func:`~smrt.inputs.sensor_list.passive`, :py:func:`~smrt.inputs.sensor_list.active`, :py:func:`~smrt.inputs.sensor_list.amsre`, etc.
-Adding a function for a new or unlisted sensor can be done in :py:mod:`~smrt.inputs.sensor_list` if the sensor is common and of general interest.
+This module defines the configuration for sensors used in radiative transfer simulations. The sensor configuration
+includes all the information describing the sensor viewing geometry (incidence, ...) and operating parameters
+(frequency, polarization, ...). The easiest and recommended way to create a :py:class:`Sensor` instance is to use one of
+the convenience functions such as :py:func:`~smrt.inputs.sensor_list.passive`,
+:py:func:`~smrt.inputs.sensor_list.active`, :py:func:`~smrt.inputs.sensor_list.amsre`, etc. Adding a function for a new
+or unlisted sensor can be done in :py:mod:`~smrt.inputs.sensor_list` if the sensor is common and of general interest.
 Otherwise, we recommend to add these functions in your own files (outside of smrt directories).
 """
 
@@ -21,21 +23,26 @@ from .error import SMRTError, smrt_warn
 
 def passive(frequency, theta, polarization=None, channel_map=None, name=None):
     """
-    Generic configuration for passive microwave sensor.
+    Return a generic configuration for passive microwave sensor.
 
     Return a :py:class:`Sensor` for a microwave radiometer with given frequency, incidence angle and polarization
 
     Args:
         frequency: frequency in Hz
+
         theta: viewing angle or list of viewing angles in degrees from vertical. Note that some RT solvers compute all
-    viewing angles whatever this configuration because it is internally needed part of the multiple scattering calculation.
-    It it therefore often more efficient to call the model once with many viewing angles instead of calling it many times
-    with a single angle.
-        polarization (list of characters, optional): H and/or V polarizations. Both polarizations is the default. Note that most RT solvers compute all
-    the polarizations whatever this configuration because the polarizations are coupled in the RT equation.
-        channel_map (dict, optional): map channel names (keys) to configuration (values). A configuration is a dict with frequency, polarization and other
-    such parameters to be used by Result to select the results. (Default value = None)
-        name (string, optional): name of the sensor (Default value = None)
+            viewing angles whatever this configuration because it is internally needed part of the multiple scattering
+            calculation. It it therefore often more efficient to call the model once with many viewing angles instead of
+            calling it many times with a single angle.
+
+        polarization: H and/or V polarizations. Both polarizations is the default. Note that most RT solvers compute all
+            the polarizations whatever this configuration because the polarizations are coupled in the RT equation.
+
+        channel_map: map channel names (keys) to configuration (values). A configuration is a dict with
+            frequency, polarization and other such parameters to be used by Result to select the results. (Default value
+            = None)
+
+        name: name of the sensor (Default value = None)
 
     Returns:
         py:class:`Sensor` instance
@@ -44,10 +51,8 @@ def passive(frequency, theta, polarization=None, channel_map=None, name=None):
 
         ::
 
-        from smrt import sensor_list
-        radiometer = sensor_list.passive(18e9, 50)
-        radiometer = sensor_list.passive(18e9, 50, "V")
-        radiometer = sensor_list.passive([18e9,36.5e9], [50,55], ["V","H"])
+        from smrt import sensor_list radiometer = sensor_list.passive(18e9, 50) radiometer = sensor_list.passive(18e9,
+        50, "V") radiometer = sensor_list.passive([18e9,36.5e9], [50,55], ["V","H"])
     """
 
     if polarization is None:
@@ -71,13 +76,16 @@ def passive(frequency, theta, polarization=None, channel_map=None, name=None):
 
 def channel_map_for_radar(frequency=None, polarization="HV", order="fp"):
     """
+    Create a channel map for radar sensors.
+
     Args:
-        frequency:  (Default value = None)
-        polarization:  (Default value = "HV")
-        order:  (Default value = "fp")
+        frequency:  frequency
+        polarization:  polarization
+        order:  order of the channels
 
     Returns:
-        in GHz with leading 0 if necessary. The polarization is after the frequency if order is 'fp' and before if order is 'pf'.
+        name of the channels is in GHz with leading 0 if necessary.
+        The polarization is after the frequency if order is 'fp' and before if order is 'pf'.
     """
 
     if frequency is None:
@@ -119,25 +127,34 @@ def active(
     name=None,
 ):
     """
-    Configuration for active microwave sensor.
+    Return a generic configuration for active microwave sensor.
 
     Return a :py:class:`Sensor` for a radar with given frequency, incidence and viewing angles and polarization
 
-    If polarizations are not specified, quad-pol is the default (VV, VH, HV and HH).
-    If the angle of incident radiation is not specified, *backscatter* will be simulated
+    If polarizations are not specified, quad-pol is the default (VV, VH, HV and HH). If the angle of incident radiation
+    is not specified, *backscatter* will be simulated
 
     Args:
-        frequency: frequency in Hz
-        theta_inc: incident angle in degrees from the vertical
+        frequency: frequency in Hz.
+
+        theta_inc: incident angle in degrees from the vertical.
+
         theta: viewing zenith angle in degrees from the vertical. By default, it is equal to theta_inc which corresponds
-    to the backscatter direction
+            to the backscatter direction.
+
         phi: viewing azimuth angle in degrees from the incident direction. By default, it is pi which corresponds
-    to the backscatter direction
-        polarization_inc (list of 1-character strings, optional): list of polarizations of the incidence wave ('H' or 'V' or both.) (Default value = None)
-        polarization (list of 1-character strings, optional): list of viewing polarizations ('H' or 'V' or both) (Default value = None)
-        channel_map (dict, optional): map channel names (keys) to configuration (values). A configuration is a dict with frequency, polarization and other
-    such parameters to be used by Result to select the results. (Default value = None)
-        name (string, optional): name of the sensor (Default value = None)
+            to the backscatter direction.
+
+        polarization_inc: list of polarizations of the incidence wave ('H' or
+            'V' or both).
+
+        polarization: list of viewing polarizations ('H' or 'V' or both).
+
+        channel_map (dict, optional): map channel names (keys) to configuration (values). A
+            configuration is a dict with frequency, polarization and other
+            such parameters to be used by Result to select the results.
+
+        name (string, optional): name of the sensor
 
     Returns:
         py:class:`Sensor` instance
@@ -203,7 +220,8 @@ class SensorBase(object):
 
 class Sensor(SensorBase):
     """
-    Configuration for sensor.
+    This class contains a sensor configuration.
+
     Use of the functions :py:func:`passive`, :py:func:`active`, or the sensor specific functions
     e.g. :py:func:`amsre` are recommended to access this class.
     """
@@ -221,19 +239,21 @@ class Sensor(SensorBase):
         wavelength=None,
     ):
         """
-        Builds a Sensor. Setting theta_inc to None means passive mode
+        Build a Sensor.
+
+        Setting theta_inc to None means passive mode
 
         Args:
-        frequency: Microwave frequency in Hz
-        theta_inc_deg: zenith angle in degrees of incident radiation emitted from the active sensor
-        polarization_inc. List of single character (H or V) for the incident wave
-        theta_deg: zenith angle in degrees at which the observation is made
-        phi_deg: azimuth angle at which the observation is made
-        polarization: List of single character (H or V)
-        channel_map: map channel names (keys) to configuration (values). A configuration is a dict with frequency, polarization and other
-            such parameters to be used by Result to select the results.
-        name: name of the sensor
-        wavelength: wavelength of the sensor. Can be set instead of the frequency.
+            frequency: frequency in Hz.
+            theta_inc_deg: zenith angle in degrees of incident radiation emitted from the active sensor.
+            polarization_inc: List of single character (H or V) for the incident wave.
+            theta_deg: zenith angle in degrees at which the observation is made.
+            phi_deg: azimuth angle at which the observation is made.
+            polarization: List of single character (H or V).
+            channel_map: map channel names (keys) to configuration (values). A configuration is a dict with frequency, polarization and other
+                such parameters to be used by Result to select the results.
+            name: name of the sensor.
+            wavelength: wavelength of the sensor. Can be set instead of the frequency.
         """
         super().__init__()
 
@@ -296,7 +316,7 @@ class Sensor(SensorBase):
     @property
     def mode(self):
         """
-        Returns the mode of observation: "A" for active or "P" for passive.
+        Return the mode of observation: "A" for active or "P" for passive.
         """
 
         if self.theta_inc is None:
@@ -329,7 +349,7 @@ class Sensor(SensorBase):
 
     def iterate(self, axis):
         """
-        Iterates over the configuration for the given axis.
+        Iterate over the configuration for the given axis.
 
         Args:
             axis: one of the attribute of the sensor (frequency, ...) to iterate along
@@ -387,7 +407,8 @@ class SensorList(SensorBase):
 
 class Altimeter(Sensor):
     """
-    Configuration for altimeter.
+    This class contains a configuration for altimeter.
+
     Use of the functions :py:func:`altimeter`, or the sensor specific functions
     e.g. :py:func:`envisat_ra2` are recommended to access this class.
     """
@@ -400,7 +421,8 @@ class Altimeter(Sensor):
         pulse_bandwidth,
         sigma_p=None,
         antenna_gain=1,
-        off_nadir_angle=0,
+        pitch_angle_deg=0,
+        roll_angle_deg=0,
         beam_asymmetry=0,
         ngate=1024,
         nominal_gate=40,
@@ -426,6 +448,12 @@ class Altimeter(Sensor):
         self.pulse_bandwidth = pulse_bandwidth
         self.pulse_sigma = sigma_p if sigma_p is not None else 0.513 / pulse_bandwidth
         self.nominal_gate = nominal_gate
-        self.off_nadir_angle = off_nadir_angle
+        self.pitch_angle = np.deg2rad(pitch_angle_deg)
+        self.roll_angle = np.deg2rad(roll_angle_deg)
         self.beam_asymmetry = beam_asymmetry
         self.antenna_gain = antenna_gain
+
+    @property
+    def off_nadir_angle(self):
+        # off nadir angle in radians
+        return np.arccos(np.cos(self.pitch_angle) * np.cos(self.roll_angle))

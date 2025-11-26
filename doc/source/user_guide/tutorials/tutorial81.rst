@@ -19,10 +19,10 @@ First, we import the necessary modules
 
     # Standard imports
     from copy import deepcopy
-    
+
     import numpy as np
     import matplotlib.pyplot as plt
-    
+
     from smrt import make_snowpack, make_ice_column, make_model, make_interface
     from smrt.core.globalconstants import C_SPEED
     from smrt.inputs import altimeter_list
@@ -33,9 +33,9 @@ Let’s create a one layer snowpack
 .. code:: ipython3
 
     # add a rough interface at the top
-    
+
     rough_interface = make_interface("geometrical_optics_backscatter", mean_square_slope=0.05)
-    
+
     snowpack = make_snowpack(thickness=[1000], microstructure_model='exponential',
                          density=[350], corr_length=700e-6, temperature=260,
                          surface=rough_interface)
@@ -78,9 +78,9 @@ plot the waveform
 
     plt.close()
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10,6))
-    
+
     ax.plot(result.sigma(), 'k--')
-    
+
     ax.set_xlabel('Gate number', size = 15)
     ax.set_ylabel('Returned power', size = 15)
     plt.tight_layout()
@@ -101,12 +101,12 @@ waveform plot as a function of time (in nanosecs) instead of gate number
 .. code:: ipython3
 
     # to change to plot as a function of time
-    
+
     plt.close()
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10,6))
-    
+
     ax.plot(result.sigma(), 'k--')
-    
+
     ax.set_xlabel('Gate number', size = 15)
     ax.set_ylabel('Returned power', size = 15)
     plt.tight_layout()
@@ -122,12 +122,12 @@ is lower than in the vaccum.
 .. code:: ipython3
 
     # to change to plot as a function of apparent depth
-    
+
     plt.close()
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10,6))
-    
+
     ax.plot(result.sigma(), 'k--')
-    
+
     ax.set_xlabel('Gate number', size = 15)
     ax.set_ylabel('Returned power', size = 15)
     plt.tight_layout()
@@ -157,12 +157,12 @@ independantly and can return these contributions as follows:
     # plot all the contributions
     plt.close()
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10,6))
-    
+
     ax.plot(result_with_returns.t_gate*1e9, result_with_returns.sigma(contribution='total'), 'k-', linewidth=5, label='Total')
     ax.plot(result_with_returns.t_gate*1e9, result_with_returns.sigma(contribution='interfaces'), 'b+-', label='Interfaces')
     ax.plot(result_with_returns.t_gate*1e9, result_with_returns.sigma(contribution='surface'), 'c-', linewidth=3, label='Surface')
     ax.plot(result_with_returns.t_gate*1e9, result_with_returns.sigma(contribution='volume'), 'm--', linewidth=3, label='Volume')
-    
+
     ax.legend()
     ax.set_xlabel('Time (ns)', size = 15)
     ax.set_ylabel('Returned power', size = 15)
@@ -181,7 +181,7 @@ pattern were infinitely small (like a perfect laser)
 .. code:: ipython3
 
     # This can be done by adjusting the altimeter parameters
-    
+
     from smrt.inputs.altimeter_list import make_multi_channel_altimeter
     def sentinel3_sral_narrow_beam(channel=None):
         config = {
@@ -193,13 +193,13 @@ pattern were infinitely small (like a perfect laser)
                        beamwidth=0.00001,
                        ),
         }
-    
+
         return make_multi_channel_altimeter(config, channel)
 
 .. code:: ipython3
 
     # run SMRT with this new altimeter and plot the result
-    
+
     ...
 
 Another (cleaner) way to achieve the same is to use the
@@ -241,7 +241,7 @@ independantly.
 
     snowpack_topography = deepcopy(snowpack)
     snowpack_topography.sigma_surface = 2  # 2 m RMS height in the footprint.  # the topography is supposed to be normally distributed
-    
+
     results_with_topography = altimodel_with_returns.run(sensor, snowpack_topography)
     results = altimodel_with_returns.run(sensor, snowpack)
 
@@ -250,10 +250,10 @@ independantly.
 
     plt.close()
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10,6))
-    
+
     ax.plot(result_with_returns.t_gate*1e9, results.sigma(contribution='total'), 'k-', linewidth=5, label='without topography')
     ax.plot(result_with_returns.t_gate*1e9, results_with_topography.sigma(contribution='total'), '-', linewidth=5, label='with topography')
-    
+
     ax.legend()
     ax.set_xlabel('Time (ns)', size = 15)
     ax.set_ylabel('Returned power', size = 15)
@@ -279,5 +279,3 @@ Further investigations
 
 or go to the next tutorial to learn more about interfaces, roughness,
 more complex environments.
-
-

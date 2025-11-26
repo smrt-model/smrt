@@ -43,7 +43,9 @@ import numpy as np
 # local import
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.result import make_result
+from smrt.interface.flat import Flat as iFlat
 from smrt.rtsolver.rtsolver_utils import prepare_kskaeps_profile_information
+from smrt.substrate.flat import Flat as sFlat
 
 from .multifresnel.multifresnel import compute_emerging_radiation, compute_matrix_slab
 
@@ -62,7 +64,7 @@ class MultiFresnelThermalEmission(object):
             value should be decreased. Set to None to deactivate pruning, but this is not recommended.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta", "polarization"}
 
@@ -85,6 +87,7 @@ class MultiFresnelThermalEmission(object):
         Returns:
             result: Result object.
         """
+
         if sensor.mode != "P":
             raise SMRTError(
                 "the MFTE solver is only suitable for passive microwave. Use an adequate sensor falling in"
@@ -96,18 +99,18 @@ class MultiFresnelThermalEmission(object):
                 "the MFTE solver can not handle atmosphere yet. Please put an issue on github if thisfeature is needed."
             )
 
-        # for em in emmodels:
-        #     if getattr(em, "ks", 0) > 0:
-        #         smrt_warn(
-        #             "the MFTE solver does not take into account scattering. Use the DORT solver if scattering"
-        #             " is significant."
-        #         )
+        for interface in snowpack.interfaces:
+            if not isinstance(interface, iFlat):
+                raise SMRTError("Multi-Fresnel thermal emission only works with flat interfaces.")
 
         thickness = snowpack.layer_thicknesses
         temperature = snowpack.profile("temperature")
         effective_permittivity = [emmodel.effective_permittivity() for emmodel in emmodels]
 
         if snowpack.substrate is not None:
+            if not isinstance(snowpack.substrate, sFlat):
+                raise SMRTError("Multi-Fresnel thermal emission only works with flat substrates.")
+
             effective_permittivity.append(snowpack.substrate.permittivity(sensor.frequency))
             if effective_permittivity[-1].imag < 1e-8:
                 smrt_warn("the permittivity of the substrate has a too small imaginary part for reliable results")

@@ -20,14 +20,14 @@ This tutorial will help you use the following modules
 
     # Standard imports
     import time
-    
+
     import pandas as pd
     import numpy as np
     import matplotlib.pyplot as plt
-    
+
     from smrt import make_snowpack, make_ice_column, make_model, make_interface, sensor_list
-    
-    
+
+
     %load_ext autoreload
     %autoreload 2
 
@@ -37,9 +37,9 @@ with many layers
 .. code:: ipython3
 
     def create_snowpack(nlayer):
-        
+
         sp = make_snowpack([0.1] * (nlayer - 1) + [1000], "exponential",
-                       density=np.maximum(200, np.random.normal(350, 50, nlayer)), 
+                       density=np.maximum(200, np.random.normal(350, 50, nlayer)),
                        corr_length=np.maximum(50e-6, np.random.normal(500e-6, 200e-6, nlayer)),
                        temperature=250)
         return sp
@@ -53,7 +53,7 @@ with many layers
 
     computations = []
     sps = []
-    
+
     for n in list(range(50, 300, 30)) + list(range(300, 1000, 100)):
         print("nlayer:", n)
         sp = create_snowpack(n)
@@ -62,7 +62,7 @@ with many layers
         # m.run(sensor, sp)  # <-- uncomment this !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         t1 = time.time()
         computations.append({'nlayer': n, 'time': t1 - t0})
-    
+
     computations = pd.DataFrame(computations)
 
 .. code:: ipython3
@@ -117,10 +117,10 @@ machine is super simple:
 
     from dask.distributed import Client
     from smrt.runner.dask_runner import DaskParallelRunner
-    
+
     client = Client()
     runner=DaskParallelRunner(client)
-    
+
     t0 = time.time()
     m.run(sensor, sps, runner=runner)
     t1 = time.time()
@@ -138,16 +138,15 @@ big cluster somewhere.
 .. code:: ipython3
 
     from dask.distributed import Client
-    
+
     url = '127.0.0.1:8799'  # url of your cluster. The easiest way to configure the network is to use ssh tunnel (not the most performant)
     # e.g. ssh -N -f HPCCluster -L8799:localhost:8786 sleep 60
-    
-    
+
+
     client = Client(url, set_as_default=False, direct_to_workers=False)
     runner=DaskParallelRunner(client)
-    
+
     t0 = time.time()
     m.run(sensor, sps, runner=runner)
     t1 = time.time()
     print(f"total computation time: {t1-t0} using DASK")
-

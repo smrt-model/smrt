@@ -18,14 +18,14 @@ simulations.
     import numpy as np
     import matplotlib.pyplot as plt
     %matplotlib inline
-    
+
     from smrt import make_snowpack, make_model, make_soil  # Core model functionality
     from smrt.inputs.sensor_list import active
     from smrt.utils import dB
-    
+
     # Note this is different from the passive substrate.reflector
     from smrt.substrate.reflector_backscatter import make_reflector
-    
+
 
 
 Active: prescribed backscatter
@@ -46,7 +46,7 @@ Make a snowpack with a substrate
 .. code:: ipython3
 
     # snow = ...
-    # medium = ... 
+    # medium = ...
 
 Run model and output results in dB
 
@@ -81,7 +81,7 @@ applied to represent the substrate. Here we’ll use IEM
 
 .. code:: ipython3
 
-    substrate = make_soil("iem_fung92", "dobson85", temperature=260, 
+    substrate = make_soil("iem_fung92", "dobson85", temperature=260,
                                                 roughness_rms=1e-3,
                                                 corr_length=5e-2,
                                                 autocorrelation_function="exponential",
@@ -100,7 +100,7 @@ backscatter model
 
     from smrt.interface.geometrical_optics_backscatter import GeometricalOpticsBackscatter
     from smrt.core.interface import make_interface
-    
+
     rough_interface = make_interface(GeometricalOpticsBackscatter, mean_square_slope=0.03)
     snow.interfaces[-1] = rough_interface
 
@@ -128,4 +128,3 @@ from a smooth snow-sea ice interface.
   interface for each layer in turn.
 - Compare IEM and Geometrical Optics. Where might you use one versus the
   other?
-

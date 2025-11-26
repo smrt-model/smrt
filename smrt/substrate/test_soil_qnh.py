@@ -1,6 +1,19 @@
 import numpy as np
+import pytest
 
 from smrt.inputs.make_soil import make_soil
+
+
+@pytest.fixture
+def soil_setup():
+    s = make_soil(
+        "soil_qnh", "dobson85", 275, moisture=0.9, sand=0.2, clay=0.3, drymatter=1100, Q=0.16, Nv=0.11, Nh=1.63, H=0.65
+    )
+
+    frequency = 1.4e9
+    mu1 = np.cos(np.radians(np.arange(10, 80)))
+
+    return s, frequency, mu1
 
 
 def test_make_soil_qnh():
@@ -13,19 +26,8 @@ def test_make_soil_qnh_params():
     make_soil("soil_qnh", "dobson85", 275, moisture=0.9, sand=0.2, clay=0.3, drymatter=1100, H=0.65)
 
 
-def soil_setup():
-    s = make_soil(
-        "soil_qnh", "dobson85", 275, moisture=0.9, sand=0.2, clay=0.3, drymatter=1100, Q=0.16, Nv=0.11, Nh=1.63, H=0.65
-    )
-
-    frequency = 1.4e9
-    mu1 = np.cos(np.radians(np.arange(10, 80)))
-
-    return s, frequency, mu1
-
-
-def test_soil_qnh_reflection():
-    s, frequency, mu1 = soil_setup()
+def test_soil_qnh_reflection(soil_setup):
+    s, frequency, mu1 = soil_setup
 
     npol = 2
 
@@ -35,8 +37,8 @@ def test_soil_qnh_reflection():
     np.testing.assert_allclose(refl[1, 69], 0.748025, atol=1e-6)
 
 
-def test_soil_qnh_emissivity():
-    s, frequency, mu1 = soil_setup()
+def test_soil_qnh_emissivity(soil_setup):
+    s, frequency, mu1 = soil_setup
 
     npol = 2
 

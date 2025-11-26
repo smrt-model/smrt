@@ -29,7 +29,7 @@ from .plugin import import_class
 
 class Layer(object):
     """
-    Contains the properties for a single layer including the microstructure attribute which holds the microstructure properties.
+    This class contains the properties for a single layer including the microstructure attribute which holds the microstructure properties.
 
     To create a layer, it is recommended to use the functions `make_snow_layer` or similar.
     """
@@ -91,7 +91,7 @@ class Layer(object):
     @property
     def ssa(self):
         """
-        Returns the SSA, computing it if necessary.
+        Return the SSA, computing it if necessary.
         """
         if not hasattr(self, "_ssa") or self._ssa is None:
             self._ssa = self.microstructure.compute_ssa()
@@ -105,9 +105,9 @@ class Layer(object):
     def frac_volume(self, f):
         self.microstructure.frac_volume = f  # set the frac_volume in the microstructure
 
-    def permittivity(self, i, frequency):
+    def permittivity(self, i: int, frequency):
         """
-        Returns the permittivity of the i-th medium depending on the frequency and internal layer properties.
+        Return the permittivity of the i-th medium depending on the frequency and internal layer properties.
 
         Args:
             i (int): Number of the medium. 0 is reserved for the background.
@@ -139,18 +139,17 @@ class Layer(object):
             # be called with the layer argument, but the initial permittivity_model function never heard about layers
             return self.permittivity_model[i](frequency, layer_to_inject=self)
 
-        else:  # assume it is independent of the frequency.
+        else:  # assume it is a constant, independent of the frequency.
             return self.permittivity_model[i]
 
     def basic_checks(self):
         """
-        Performs basic input checks on the layer information.
+        Perform basic input checks on the layer information.
 
         Checks:
             - Temperature is between 100 and the freezing point (Kelvin units check).
             - Density is between 1 and DENSITY_OF_ICE (SI units check).
             - Layer thickness is above zero.
-
 
         Raises:
             SMRTError: If any of the checks fail.
@@ -174,7 +173,7 @@ class Layer(object):
 
     def inverted_medium(self):
         """
-        Returns the layer with inverted autocorrelation and inverted permittivities.
+        Return the layer with inverted autocorrelation and inverted permittivities.
 
         Returns:
             Layer: A new layer object with inverted properties.
@@ -210,7 +209,7 @@ class Layer(object):
 
     def update(self, **kwargs):
         """
-        Updates the attributes. This method is to be used when recalculation of the state of the object
+        Update the attributes. This method is to be used when recalculation of the state of the object
         is necessary. See for instance :py:class:`~smrt.inputs.make_medium.SnowLayer`.
 
         Args:
@@ -222,9 +221,9 @@ class Layer(object):
 
 def get_microstructure_model(modulename, classname=None):
     """
-    Returns the class corresponding to the microstructure_model defined in modulename.
+    Return the class corresponding to the microstructure_model defined in modulename.
 
-    This function imports the correct module if possible and returns the class.
+    This function imports the correct module `modulename` if possible and returns the first class found in the module.
     It is used internally and should not be needed for normal usage.
 
     Args:
@@ -237,7 +236,7 @@ def get_microstructure_model(modulename, classname=None):
 
 def make_microstructure_model(modelname_or_class, **kwargs):
     """
-    Creates a microstructure instance.
+    Create a microstructure instance.
 
     Args:
         modelname_or_class (str or type): Name of the module or directly the class.

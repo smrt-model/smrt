@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import numpy as np
+import pytest
 
 # local import
 from smrt import PSU, make_model, sensor_list
@@ -10,6 +11,7 @@ from smrt.inputs.make_medium import bulk_ice_density, make_ice_column
 # same structure as test_integration_iba.py
 
 
+@pytest.fixture
 def setup_seaice():
     l = 9  # 9 ice layers
     n_max_stream = 64
@@ -23,51 +25,26 @@ def setup_seaice():
     return l, n_max_stream, thickness, temperature, salinity
 
 
-def test_oneconfig_for_firstyear_sea_ice():
+@pytest.mark.parametrize(
+    "ice_type,porosity,p_ex_value,results",
+    [
+        ("firstyear", 0, 500e-6, [256.0170296269674, 228.4566040823167]),
+        ("multiyear", 0.08, 1000e-6, [257.57209000420636, 232.01555447145563]),
+    ],
+)
+def test_oneconfig_for_sea_ice(setup_seaice, ice_type, porosity, p_ex_value, results):
     # prepare inputs
-    l, n_max_stream, thickness, temperature, salinity = setup_seaice()
-    p_ex = np.array([500e-6] * l)  # correlation length
+    l, n_max_stream, thickness, temperature, salinity = setup_seaice
+    p_ex = np.array([p_ex_value] * l)  # correlation length
 
     # create an ice column with assumption of spherical brine inclusions (brine_inclusion_shape="spheres"):
     ice_column = make_ice_column(
-        ice_type="firstyear",
+        ice_type=ice_type,
         thickness=thickness,
         temperature=temperature,
         microstructure_model="exponential",
         brine_inclusion_shape="spheres",  # inclusion_shape can be "spheres" or "random_needles", or "mix_spheres_needles"
         salinity=salinity,  # either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water ice
-        corr_length=p_ex,
-        add_water_substrate="ocean",
-    )
-
-    # create the sensor
-    sensor = sensor_list.passive(1.4e9, 40.0)
-    n_max_stream = 128
-    m = make_model("iba", "dort", rtsolver_options={"n_max_stream": n_max_stream})
-
-    # run the model
-    res = m.run(sensor, ice_column)
-
-    print(res.TbV(), res.TbH())
-    # absorption with effective permittivity
-    assert abs(res.TbV() - 256.0170296269674) < 1e-4
-    assert abs(res.TbH() - 228.4566040823167) < 1e-4
-
-
-def test_oneconfig_for_multiyear_sea_ice():
-    # prepare inputs
-    l, n_max_stream, thickness, temperature, salinity = setup_seaice()
-    p_ex = np.array([1000e-6] * l)  # correlation length
-    porosity = 0.08  # ice porosity, in fraction
-
-    # create an ice column with assumption of spherical brine inclusions (inclusion_shape="spheres"):
-    ice_column = make_ice_column(
-        ice_type="multiyear",
-        thickness=thickness,
-        temperature=temperature,
-        microstructure_model="exponential",
-        brine_inclusion_shape="spheres",
-        salinity=salinity,
         porosity=porosity,
         corr_length=p_ex,
         add_water_substrate="ocean",
@@ -75,7 +52,6 @@ def test_oneconfig_for_multiyear_sea_ice():
 
     # create the sensor
     sensor = sensor_list.passive(1.4e9, 40.0)
-
     n_max_stream = 128
     m = make_model("iba", "dort", rtsolver_options={"n_max_stream": n_max_stream})
 
@@ -84,12 +60,12 @@ def test_oneconfig_for_multiyear_sea_ice():
 
     print(res.TbV(), res.TbH())
     # absorption with effective permittivity
-    assert abs(res.TbV() - 257.57209000420636) < 1e-4
-    assert abs(res.TbH() - 232.01555447145563) < 1e-4
+    assert abs(res.TbV() - results[0]) < 1e-4
+    assert abs(res.TbH() - results[1]) < 1e-4
 
 
-def test_equivalence_porosity_density():
-    l, n_max_stream, thickness, temperature, salinity = setup_seaice()
+def test_equivalence_porosity_density(setup_seaice):
+    l, n_max_stream, thickness, temperature, salinity = setup_seaice
     p_ex = np.array([1.0e-3] * (l))  # correlation length
     ice_type = "multiyear"  # first-year (FY) or multi-year (MY) sea ice
     porosity = 0.08  # ice porosity, in fraction

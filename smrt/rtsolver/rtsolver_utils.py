@@ -19,7 +19,7 @@ class RTSolverBase(metaclass=ABCMeta):
     """RTSolverBase is an abstract class"""
 
     effective_permittivity: np.ndarray
-    substrate_permittivity: np.ndarray
+    # substrate_permittivity: np.ndarray
     sensor: Sensor
     snowpack: Snowpack
     emmodels: list
@@ -45,9 +45,9 @@ class RTSolverBase(metaclass=ABCMeta):
         self.atmosphere = atmosphere
 
         self.effective_permittivity = np.array([emmodel.effective_permittivity() for emmodel in emmodels])
-        self.substrate_permittivity = (
-            self.snowpack.substrate.permittivity(self.sensor.frequency) if self.snowpack.substrate is not None else None
-        )
+        # self.substrate_permittivity = (
+        #     self.snowpack.substrate.permittivity(self.sensor.frequency) if self.snowpack.substrate is not None else None
+        # )
 
         self.check_sensor()
 
@@ -85,9 +85,7 @@ class DiscreteOrdinatesMixin(metaclass=ABCMeta):
 
         rtsolver = cast(RTSolverBase, self)
 
-        self.streams = compute_stream(
-            self.n_max_stream, rtsolver.effective_permittivity, rtsolver.substrate_permittivity, mode=self.stream_mode
-        )
+        self.streams = compute_stream(self.n_max_stream, rtsolver.effective_permittivity, mode=self.stream_mode)
 
     def prepare_incident_streams(self) -> list:
         """Compute the streams nearest to the user-requested incident angle (for radar only)."""

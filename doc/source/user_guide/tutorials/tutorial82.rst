@@ -22,10 +22,10 @@ First, we import the necessary modules
     import numpy as np
     import matplotlib.pyplot as plt
     from copy import deepcopy
-    
+
     from smrt import make_snowpack, make_ice_column, make_model, make_interface, PSU
     from smrt.inputs import altimeter_list
-    
+
     from smrt.permittivity.saline_snow import saline_snow_permittivity_scharien_with_stogryn95 as ssp
 
 
@@ -47,19 +47,19 @@ to be flat.
 
     # specified ice permittivity model of snow with ssp
     snow = make_snowpack(thickness=[0.1, 0.2], microstructure_model='exponential',
-                         ice_permittivity_model=ssp,density=[300, 350], 
+                         ice_permittivity_model=ssp,density=[300, 350],
                          corr_length=0.5e-4, temperature=260, salinity=[0.001, 0.006] )
-    
+
     #specfied ice type (firstyear or multiyear)
     ice = make_ice_column(ice_type='firstyear',
-                        thickness=[2], temperature=260, 
+                        thickness=[2], temperature=260,
                         microstructure_model='independent_sphere',
                         radius=1e-3,
                         brine_inclusion_shape='spheres',
                         density=910,
                         salinity=8*PSU,
                         add_water_substrate=True)
-    
+
     medium = snow + ice
 
 Specify sensor
@@ -95,10 +95,10 @@ and plot altimeter waveform
 
     plt.close()
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10,6))
-    
+
     #time is in nano seconds, 1 bins = 3.125 ns for Cryosat. Check other sensor specs in altimeter_list
     ax.plot(result.t_gate*1e9, result.sigma(), 'k--')
-    
+
     ax.set_xlabel('Time (ns)', size = 15)
     ax.set_ylabel('Backscatter ($\sigma⁰$)', size = 15)
     plt.tight_layout()
@@ -131,12 +131,12 @@ Re-run the model and replot the graph showing individual contributions
 
     plt.close()
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10,6))
-    
+
     ax.plot(result_with_returns.t_gate*1e9, result_with_returns.sigma(contribution='total'), 'k-', linewidth=5, label='Total')
     ax.plot(result_with_returns.t_gate*1e9, result_with_returns.sigma(contribution='interfaces'), 'b+-', label='Interfaces')
     ax.plot(result_with_returns.t_gate*1e9, result_with_returns.sigma(contribution='surface'), 'c-', linewidth=3, label='Surface')
     ax.plot(result_with_returns.t_gate*1e9, result_with_returns.sigma(contribution='volume'), 'm--', linewidth=3, label='Volume')
-    
+
     ax.legend()
     ax.set_xlabel('Time (ns)', size = 15)
     ax.set_ylabel('Backscatter ($\sigma⁰$)', size = 15)
@@ -152,7 +152,7 @@ the surface and the underlying sea ice.
 
     # import image module
     from IPython.display import Image
-      
+
     # get the image
     Image(url="IMG_1682.JPG", width=500, height=300)
 
@@ -164,13 +164,13 @@ For now, this will be the Geometrical Optics model
 .. code:: ipython3
 
     rough_interface = make_interface("geometrical_optics_backscatter", mean_square_slope=0.03)
-    
+
     #surface parameter can be use in make_snowpack to define the surface interface
     rough_snow = make_snowpack(thickness=[0.1, 0.2], microstructure_model='exponential',
-                         ice_permittivity_model=ssp,density=[300, 350], 
+                         ice_permittivity_model=ssp,density=[300, 350],
                          corr_length=0.5e-4, temperature=260, salinity=[0.01, 0.06],
                          surface=rough_interface)
-    
+
     rough_surface_medium = rough_snow + ice
 
 Run the model and see what this does to the return contribution
@@ -184,12 +184,12 @@ Run the model and see what this does to the return contribution
 
     plt.close()
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10,6))
-    
+
     ax.plot(rough_surf_result_with_returns.t_gate*1e9, rough_surf_result_with_returns.sigma(contribution='total'), 'k-', linewidth=5, label='Total')
     ax.plot(rough_surf_result_with_returns.t_gate*1e9, rough_surf_result_with_returns.sigma(contribution='interfaces'), 'b+-', label='Interfaces')
     ax.plot(rough_surf_result_with_returns.t_gate*1e9, rough_surf_result_with_returns.sigma(contribution='surface'), 'c-', linewidth=3, label='Surface')
     ax.plot(rough_surf_result_with_returns.t_gate*1e9, rough_surf_result_with_returns.sigma(contribution='volume'), 'm--', linewidth=3, label='Volume')
-    
+
     ax.legend()
     ax.set_xlabel('Time (ns)', size = 15)
     ax.set_ylabel('Backscatter ($\sigma⁰$)', size = 15)
@@ -239,12 +239,12 @@ index refer to the top interface of the layer index
 
     plt.close()
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(10,6))
-    
+
     ax.plot(rough_base_result_with_returns.t_gate*1e9, rough_base_result_with_returns.sigma(contribution='total'), 'k-', linewidth=5, label='Total')
     ax.plot(rough_base_result_with_returns.t_gate*1e9, rough_base_result_with_returns.sigma(contribution='interfaces'), 'b+-', label='Interfaces')
     ax.plot(rough_base_result_with_returns.t_gate*1e9, rough_base_result_with_returns.sigma(contribution='surface'), 'c-', linewidth=3, label='Surface')
     ax.plot(rough_base_result_with_returns.t_gate*1e9, rough_base_result_with_returns.sigma(contribution='volume'), 'm--', linewidth=3, label='Volume')
-    
+
     ax.legend()
     ax.set_xlabel('Time (ns)', size = 15)
     ax.set_ylabel('Backscatter ($\sigma⁰$)', size = 15)
@@ -266,5 +266,3 @@ Further investigations
    the Geometrical Optics model (tip: frequency)
 
 4. How does the waveform change with snow salinity?
-
-

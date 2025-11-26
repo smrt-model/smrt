@@ -55,9 +55,9 @@ class NadirLRMAltimetry(object):
             the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
     # e.g. here, frequency, time, ... are not managed
-    _broadcast_capability = {}  # "theta_inc", "polarization_inc", "theta", "phi", "polarization"}
+    _broadcast_capability = {}
 
     def __init__(
         self,
@@ -120,11 +120,13 @@ class NadirLRMAltimetry(object):
             mu_i = 1.0
             t_inc_sample = [0]
 
+        local_mu_i = local_incidence_cosine(sensor, mu_i)
+
         # compute the vertical backscatter
         self.z_gate, _ = self.gate_depth()
 
         backscatter = self.vertical_scattering_distribution(
-            mu_i=mu_i, return_contributions=self.return_contributions or (self.theta_inc_sampling > 1)
+            mu_i=local_mu_i, return_contributions=self.return_contributions or (self.theta_inc_sampling > 1)
         )
 
         # compute the t_gate, taking into account the oversampling but not the shift
@@ -194,12 +196,12 @@ class NadirLRMAltimetry(object):
     def convolve_with_PFS_PTR_PDF(self, t_gate, backscatter, t_inc_sample):
         # take into account the PFS (flat surface) and PTR (point target response=pulse width effect)
         sigma_surface = getattr(self.snowpack, "sigma_surface", 0)
-        surface_slope = getattr(self.snowpack, "surface_slope", 0)
+        surface_slope_rad = np.deg2rad(getattr(self.snowpack, "surface_slope", 0))
 
         if hasattr(self.waveform_model, "PFS_PTR_PDF") and self.theta_inc_sampling == 1:
             # good, we have PFS and PTR already convoluted, fast pathway
             pfs_ptr_pdf = self.waveform_model.PFS_PTR_PDF(
-                t_gate, sigma_surface=sigma_surface, surface_slope=surface_slope
+                t_gate, sigma_surface=sigma_surface, surface_slope=surface_slope_rad
             )
 
             def do_convolve_by_PFS_PTR_PDF(backscatter):
@@ -233,7 +235,7 @@ class NadirLRMAltimetry(object):
             # first compute the PFS
             if hasattr(self.waveform_model, "PFS"):
                 # at least we have an analytical PFS
-                pfs = self.waveform_model.PFS(extended_t_gate, surface_slope=surface_slope)
+                pfs = self.waveform_model.PFS(extended_t_gate, surface_slope=surface_slope_rad)
             else:
                 # we've no PFS, we need numerical integration
                 pfs = self.PFS_numerical(extended_t_gate)
@@ -561,3 +563,12 @@ def coherent_reflection_factor(sensor, roughness_rms, mu):
     beta12 = coherent_reflection_square_decay(sensor)
 
     return np.exp(-4 * (sensor.wavenumber * roughness_rms) ** 2 - theta2 / beta12) / beta12 / (4 * np.pi)
+
+
+def local_incidence_cosine(sensor, mu):
+    """compute the cosine of the local incidence angle considering a small pitch and roll.
+
+    This function assumes pitch and roll are small, otherwise yaw would be involved in the equation
+    """
+
+    return mu * np.cos(sensor.pitch_angle) * np.cos(sensor.roll_angle)

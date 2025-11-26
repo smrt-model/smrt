@@ -291,7 +291,6 @@ def compute_A2_nonlocal(Q, microstructure):
 
     # start with the imaginary part - Eq (70)
     y = 2 * q * microstructure.ft_autocorrelation_function(2 * q)
-
     # integrate from 0 to 2Q (for Q in 0 to qmax)
     # take the real part to avoid warnings... but this remains to be explored
     primitive = scipy.integrate.cumulative_trapezoid(y.real, 2 * q.real, initial=0)
@@ -314,7 +313,7 @@ def compute_A2_nonlocal(Q, microstructure):
 
     asymptotic_integral = (ImF[nQ] - Q / maxq * ImF[-1]) * np.log(np.abs((maxq + Q) / (maxq - Q)))
 
-    ReF = -2 / np.pi * Q * scipy.integrate.romb(y.real, maxq / n) - 1 / np.pi * asymptotic_integral
+    ReF = -2 / np.pi * Q * scipy.integrate.romb(y.real, maxq.real / n) - 1 / np.pi * asymptotic_integral
 
     gamma_3_2 = 0.5 * np.sqrt(np.pi)
     A2 = -(2 * np.pi) / (2**1.5 * gamma_3_2) * (ReF + 1j * ImF[nQ])  # the factor is from eq 67

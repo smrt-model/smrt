@@ -22,6 +22,10 @@ class SMRTWarning(Warning):
 
 
 def smrt_warn(message, **kwargs):
+    """
+    Issue a SMRT warning with a standard message about disabling warnings.
+    """
+
     disable_warning_message = """To disable all smrt warnings, use: import warnings;
 warnings.filterwarnings("ignore", smrt.error.SMRTWarning). See the warnings Python documentation for finer
 controls.

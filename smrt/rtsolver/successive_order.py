@@ -3,7 +3,8 @@ Provide the Successive Order Solver as a multi-stream solver of the radiative tr
 2007 and Greenwald et al. 2005, with some adaptation using SMRT DORT code.
 
 The main interests of this solver are:
-    - to provide the succesive orders of interaction separately, allowing the investigation of the interaction mechanisms.
+    - to provide the succesive orders of interaction separately, allowing the investigation of the interaction
+      mechanisms.
     - faster computations in some conditions: The favorable conditions for fast computation: 1) shallow snowpack, 2)
       small grains / weak scattering (i.e. small optical depth), 3) truncation of the computation at low orders.
       Benchmarking is necessary as DORT can also be orders of magnitude faster for thick snowpacks with big grains.
@@ -77,7 +78,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             to investigate ice lenses, it is recommended to read MEMLS documentation on this topic.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "phi", "polarization"}
 

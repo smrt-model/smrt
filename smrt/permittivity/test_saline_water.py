@@ -8,17 +8,16 @@ from smrt.permittivity.saline_water import (
 )
 
 
-def test_permittivity_boutin23_2function():
+@pytest.mark.parametrize(
+    "permittivity_function, exp_epsi_r, exp_epsi_i",
+    [
+        (seawwater_permittivity_boutin23_2function, 76.4080, -50.0570),
+        (seawwater_permittivity_boutin23_3function, 76.4710, -50.0611),
+    ],
+)
+def test_permittivity_boutin23_2function(permittivity_function, exp_epsi_r, exp_epsi_i):
     pytest.importorskip("gsw")
 
-    epsi = seawwater_permittivity_boutin23_2function(1.4 * GHz, 5 + FREEZING_POINT, 33 * PSU)
-    assert abs(epsi.real - 76.4080) < 1e-4
-    assert abs(epsi.imag - (-50.0570)) < 1e-4
-
-
-def test_permittivity_boutin23_3function():
-    pytest.importorskip("gsw")
-
-    epsi = seawwater_permittivity_boutin23_3function(1.4 * GHz, 5 + FREEZING_POINT, 33 * PSU)
-    assert abs(epsi.real - 76.4710) < 1e-4
-    assert abs(epsi.imag - (-50.0611)) < 1e-4
+    epsi = permittivity_function(1.4 * GHz, 5 + FREEZING_POINT, 33 * PSU)
+    assert abs(epsi.real - exp_epsi_r) < 1e-4
+    assert abs(epsi.imag - exp_epsi_i) < 1e-4

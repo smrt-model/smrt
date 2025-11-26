@@ -32,10 +32,10 @@ reflectivity. This example is for a near perfect absorber (emissivity =
     import numpy as np
     import matplotlib.pyplot as plt
     %matplotlib inline
-    
+
     from smrt import make_snowpack, make_model
     from smrt.inputs.sensor_list import passive
-    
+
     # This is the passive reflector
     from smrt.substrate.reflector import make_reflector
 
@@ -95,7 +95,7 @@ constant model is required. Here we use the Dobson et al., (1985) model.
 .. code:: ipython3
 
     from smrt import make_soil
-    soil = make_soil('soil_wegmuller', 'dobson85', temperature=265, roughness_rms=0.25, 
+    soil = make_soil('soil_wegmuller', 'dobson85', temperature=265, roughness_rms=0.25,
                      moisture=0.25, sand=0.01, clay=0.7, drymatter=1300)
 
 Challenges:
@@ -106,4 +106,3 @@ Challenges:
 3. What is the impact of roughness (or other soil parameters)?
 4. Try using the soil_qnh model instead
 5. What other soil permittivity models could you use?
-

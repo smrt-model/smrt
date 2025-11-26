@@ -93,8 +93,8 @@ class Brown1977(WaveformModel):
             return (
                 coef
                 * negexp(-4 / self.gamma * (np.sin(theta) ** 2 + e * np.cos(2 * theta)))
-                * scipy.special.i0(4 / self.gamma * np.sqrt(e) * np.sin(2 * theta))
-            )
+                * scipy.special.i0(4 / self.gamma * np.sqrt(np.maximum(e, 0)) * np.sin(2 * theta))
+            ) * (e >= 0)
 
     def PFS_PTR_PDF(self, tau, sigma_surface=0, surface_slope=0):
         # """Computes the convolution of the PFS and PTR.

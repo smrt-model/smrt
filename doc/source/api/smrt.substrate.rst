@@ -105,4 +105,3 @@ smrt.substrate.transparent module
    :members:
    :undoc-members:
    :show-inheritance:
-
