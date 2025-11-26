@@ -2,1020 +2,147 @@
 Getting started with SMRT
 #########################
 
-Let’s import the modules we need to run SMRT
---------------------------------------------
+This tutorial is aimed at a complete beginner with no experience of running SMRT. By following the code, you will run SMRT
+in passive mode for a simple, dry, 2-layer snowpack by learning how to:
 
-We’ll need to make the snowpack, set up the model configuration and some
-form of sensor.
+#. Generate inputs for the model
+#. Configure the model
+#. Run the model
+#. Look at the output
 
-For now, we’ll use a module that replicates the AMSR-E radiometers
-(6.925, 10.65, 18.7, 23.8, 36.5, 89.9 GHz, 55 degree incidence angle).
 
-.. code:: ipython3
+Model inputs
+------------
+In SMRT, the *medium* consists of a stack of horizontal layers representing snow or ice, with rough or smooth *interfaces* between layers.
+The *substrate* and *atmosphere* provide the lower and upper boundary conditions of the radiative transfer and describe the half-space
+semi-infinite media under and above the snowpack. It means they have uniform properties and especially temperature, which is common
+practice when the focus is on the snowpack. We'll assume no atmospheric effects for now and will consider a semi-infinite snowpack i.e.
+one that it so deep the radiation does not penetrate to the bottom of the snowpack. This means we do not have to specify a substrate just yet.
 
-    from smrt import make_snowpack, make_model
-    from smrt import sensor_list
+First we will define the properties of each layer: thickness, temperature, density and microstructure. The easiest way to
+do this is to specify each property in the form of a list. The length of the list should equal the number of layers in
+the snowpack. Here, for a 2-layer snowpack the lists are of length 2.
 
-.. code:: ipython3
 
-    # in case of ModuleNotFoundError, add this before importing smrt
-    # import sys
-    # sys.path.append('C:/your_path_to_smrt_directory')
+.. important:: Note that in SMRT:
 
-Time to make a snowpack!
-------------------------
-
-A single layer, deep snowpack….
-
-We need to know the layer thickness, temperature, sticky hard sphere
-radius, stickiness and density
-
-All units are SI
-~~~~~~~~~~~~~~~~
+    * Layers are numbered from the top i.e. the first number in the list is the top layer of the snowpack.
+    * All units are S.I. If you have unexpected results, check the input units first!
+    * Thickness must always be specified as a list: SMRT determines the number of layers from the length of this list. Other inputs can be scalar to apply to all layers.
 
 .. code:: ipython3
 
-    # Define parameters for a one-layer snowpack
-    thickness = [10]  # m
-    temperature = [265]  # K
-    rad = [1e-4]  # m
-    rho = [280]  # kg/m3
-    stickiness = [0.2]  # no unit
+    thickness_list = [0.1, 1000]
+    density_list = [200, 350]
+    temperature_list = [265, 250]
+    corr_length_list = [0.1e-3, 0.3e-3]
 
-    # Make snowpack
-    snowpack = make_snowpack(thickness=thickness,
-                             microstructure_model='sticky_hard_spheres',
-                             temperature=temperature, radius=rad, density=rho,
-                             stickiness=stickiness)
+The top 10cm layer of the snowpack has a density of 200 kg m\ :sup:`-3`, temperature 265K and correlation length 0.1mm.
+The bottom 1km of the snowpack has a density of 350 kg m\ :sup:`-3`, temperature of 250K and correlation length 0.3mm.
+This isn't a physically realistic snowpack but just illustrates how to use SMRT. To add a layer to the snowpack, simply
+extend the length of the lists. Here we have used correlation length to describe the snow microstructure, and we will
+assume an exponential microstructure model (more on that later). Other microstructure models require alternative parameters
+e.g. sticky hard spheres will need radius rather than correlation length. These inputs are the bare minimum needed to run SMRT.
+See the API for other inputs e.g. liquid water, salinity that can also be added into the make_snowpack function.
 
-
-.. code:: ipython3
-
-    snowpack
-
-See inside an object…..
-^^^^^^^^^^^^^^^^^^^^^^^
+SMRT requires a snowpack object to run the model. There is a helper function to make it easy to transform parameters into the snowpack object,
+but this needs to be imported. There are other helper functions for e.g. ice, substrate and atmosphere depending on your needs.
+Import the ```make_snowpack``` function with
 
 .. code:: ipython3
 
-    dir(snowpack)
+    from smrt import make_snowpack
+
+then make the snowpack with
 
 .. code:: ipython3
 
-    # A snowpack has a list of layers objects....
-    dir(snowpack.layers[0])
+    my_snowpack = make_snowpack(thickness=thickness_list,
+                            density=density_list,
+                            temperature=temperature_list,
+                            microstructure_model='exponential',
+                            corr_length=corr_length_list)
+
+For a quick check to visualise the layer properties of the snowpack, you can do
 
 .. code:: ipython3
 
-    print(snowpack.layers[0].temperature)
+    from smrt.utils.mpl_plots import plot_snowpack
+    plot_snowpack(my_snowpack, show_vars=['density'])
 
-Decide the type of model you want
----------------------------------
+Note that in this case, the top layer is so thin compared with the bottom layer that you will not be able to see it.
+Try changing the thickness of the layers to be similar: they will be much clearer with the
+```plot_snowpack``` function. Remember to reset the lower layer to be very deep.
 
-For now we will use DMRT-QCA electromagnetic model with the discrete
-ordinates solver (DORT)
-
-.. code:: ipython3
-
-    m = make_model('dmrt_qca_shortrange','dort')
-    # m = make_model('iba','dort')   # alternative to use iba
-
-One last thing to do before we run the model: specify a sensor
---------------------------------------------------------------
-
-This could be active or passive (see sensor practical) but for now we
-use the prebuilt AMSR-E that we have already imported, and we’ll use
-just the 37V channel
+The other *input* needed to run the model is the sensor, containing information related to the observation technique i.e.
+instrument characteristics. There are many pre-built sensors (e.g. AMSR-E) that can simply be imported from smrt.inputs.sensor_list, but here
+we will specify our own simple passive sensor covering two frequencies (19 and 37 GHz) operating at a single incidence
+angle of 50\ :sup:`o`.
 
 .. code:: ipython3
 
-    radiometer = sensor_list.amsre('37V')
+    from smrt.inputs import sensor_list
+    frequency = [19e9, 37e9]
+    incidence_angle = 50
+    radiometer = sensor_list.passive(frequency, incidence_angle)
+
+.. tip::
+    Simulations can be performed for multiple frequencies and/or incidence angles by specifying these as lists.
+
+
+Model Configuration
+-------------------
+In order to run SMRT, you need to specify which electromagnetic model and radiative transfer solver to use. The electromagnetic
+model uses the physical properties of the snowpack to calculate electromagnetic properties i.e. phase function
+(angular distribution of scattered radiation) and scattering and absorption coefficients. Different electromagnetic models have
+different underlying assumptions and simplifications, so it is important to understand these limitations when making a choice.
+One example of this is the connection to microstructure model e.g. DMRT-QCA is fundamentally derived from a sticky hard sphere
+microstructure model, so cannot be used with any other. For these simulations we will use the Improved Born Approximation (IBA),
+which has no constraints on the microstructure model.
+
+Numerous options to solve the radiative transfer equations are available in SMRT. The most generic and applicable is the Discrete
+Ordinates Radiative Transfer (DORT), which we will use here, is suitable for both passive and active simulations. There is no need to
+specify which: SMRT will determine this from the *sensor* characteristics. For simulation of radar echo waveforms, different radiative
+transfer solvers are needed as these solve the time-dependent radiative transfer equation. Alternative radiative transfer solvers
+may be used to reduced computation time, or determine the proportion of radiation that has undergone singular versus multiple
+scattering, but here we will simply use DORT: it simulates scattering in multiple streams that are connected between layers via
+Snell's Law. Again, we use a helper function  ```make_model``` to build the model
 
 .. code:: ipython3
 
-    result = m.run(radiometer, snowpack)
+    from smrt import make_model
+    model = make_model('iba', 'dort')
+
+SMRT is now ready to use!
+
+
+Run the model
+--------------
+
+Once the inputs and model configuration are specified, running SMRT is very simple:
 
 .. code:: ipython3
 
-    print(result.TbV(), result.TbH())
+    result = model.run(radiometer, my_snowpack)
 
-.. code:: ipython3
+.. note::
 
-    # Use all amsre channels
-    rads = sensor_list.amsre()
-    res = m.run(rads, snowpack)
+    Order of inputs matters: sensor first, then snowpack unless you specify the arguments explicitly e.g. ```model.run(snowpack=my_snowpack, sensor=radiometer)```
 
-    res.TbV()
 
-Sensors in SMRT
-===============
-
-**Goal**: - plot the diagram of thermal emission + backscattering
-coefficient from a simple snowpack at 13 GHz - plot the diagram of
-thermal emission from a simple snowpack at multiple frequencies (e.g. 19
-and 37 GHz)
-
-**Learning**: Sensor and Result object
-
-For the snowpack, you can take the following properties: - thickness =
-1000 (means semi-infinite) - sticky_hard_spheres microstructure model -
-radius = 100e-6 - density = 300 - temperature = 260 - stickiness = 0.15
-
-The following imports are valid for both excercices:
-
-.. code:: ipython3
-
-    import numpy as np
-
-    import matplotlib.pyplot as plt
-    %matplotlib notebook
-    # use %matplotlib widget if using jupyterlab instead of jupyter notebook
-
-    from smrt import make_model, make_snowpack, sensor_list
-    from smrt.utils import dB
-
-Emission / backscatter diagram
-------------------------------
-
-.. code:: ipython3
-
-    # prepare the snowpack
-    radius = 100e-6
-    density=300
-    temperature = 260
-    sp = make_snowpack(thickness=[1000], microstructure_model='sticky_hard_spheres',
-                      density=density, radius=radius, temperature=temperature,
-                      stickiness=0.15)
-
-.. code:: ipython3
-
-    # prepare a list for theta from 5 to 65 by step of 5
-    theta = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65]
-    # prepare two sensors (one active, on passive) at 13 GHz
-    radiometer = sensor_list.passive(13e9, theta)
-    radar  = sensor_list.active(13e9, theta)
-
-.. code:: ipython3
-
-    # prepare the model and run it successively for each sensor
-    m = make_model("iba", "dort")
-    res_a = m.run(radar, sp)
-    res_p = m.run(radiometer, sp)
-
-.. code:: ipython3
-
-    # for plotting two side by side graphs, the best solution is:
-    f, axs = plt.subplots(1, 2, figsize=(8, 3.5))
-
-    # plot on left graph
-    axs[0].plot(theta, res_a.sigmaVV()) # adapt x and y to your need
-    # plot on right graph
-    #axs[1].plot(x, y)  # adapt x and y to your need
-
-    # to set axis labels:
-    axs[0].set_xlabel("Viewing angle")
-    # ...
-
-multi-frequency emission diagram
---------------------------------
-
-.. code:: ipython3
-
-    # prepare 1 sensor object with two frequencies
-
-.. code:: ipython3
-
-    # prepare the model and run it
-
-.. code:: ipython3
-
-    # plot the results on a single graph
-    # see results documentation for selecting by frequency
-    # http://smrt.readthedocs.io/en/latest/smrt.core.result.html
-
-nowpack inputs
-===============
-
-**Goal**: - run SMRT with multi-layer snowpack, adjusting various
-parameters (like wet snow) - using real data to drive SMRT
-
-**Learning**: make_snowpack
-
-The following imports are valid for both excercices:
-
-.. code:: ipython3
-
-    import numpy as np
-
-    import matplotlib.pyplot as plt
-    %matplotlib notebook
-
-    from smrt import make_model, make_snowpack, sensor_list
-    from smrt.utils import dB
-
-Multi-layer snowpack
+Look at the results
 --------------------
 
-Prepare a snowpack with a few layers. Variable density (e.g. 300, 350,
-330, 400 kg m\ :math:`^{-3}`), variable temperature (e.g. -15°C, -10°C,
--5°C, 0°C) same radius (100\ :math:`\mu`\ m) and same stickiness (0.15).
-Choose layer thickness (e.g. 10 cm, 30 cm, …). The last layer must be
-very thick (we we’ll work with soil later). N.B. if one argument is
-given as a scalar while the thickness is an arratyat least another is
-given as a list (or array) the scalar value is automatically applied to
-all layers.
+The output of the model is a *Result* object. Brightness temperature values can be output with a call to the TbV() and TbH()
+functions e.g.
 
 .. code:: ipython3
 
-    # prepare the multi-layer snowpack
-    sp =
+    result.TbV()
 
-.. code:: ipython3
+This displays the brightness temperature at vertical polarisation in xarray form (or scalar if a single frequency and incidence angle is specified). If you
+want just a single value you can specify how to slice the data along a particular dimension by passing an argument into the TbV function e.g.
 
-    # prepare the sensor. Prepare the model and run it. Print or plot the results
+. code:: ipython3
 
-.. code:: ipython3
-
-    # Tips: we can draw the snowpack (a recently added function, maybe buggy) as follow:
-    from smrt.utils.mpl_plots import plot_snowpack
-
-    plt.figure()
-    plot_snowpack(sp, show_vars=['density', 'radius'])
-
-Wet snow
---------
-
-The ``make_snowpack`` function can take several optional arguments for
-non-default behavior. One of them is “ice_permittivity_model”.
-Currently, the defaut formulation is that from Mätzler 1987 for wet
-snow, so you can simply add a ‘volumetric_liquid_water’ argument.
-
-.. code:: ipython3
-
-    from smrt import make_snowpack
-    # prepare the multi-layer snowpack
-    radius = 100e-6
-    density=300
-    temperature = 260
-    sp = make_snowpack(thickness=[0.1, 10],
-                       microstructure_model='sticky_hard_spheres',
-                       density=density,
-                       radius=radius,
-                       stickiness=0.15,
-                       temperature=temperature,
-                       volumetric_liquid_water=[0.01, 0])
-
-.. code:: ipython3
-
-    sp.layers[0].permittivity(1, 10e9)
-
-To make explicit the permittivity formulation (which is needed for non
-default permittivity). For this: 1) import the function
-wetsnow_permittivity defined in the file permittivity/wetsnow.py and 2)
-make a snowpack similar to the previous one except set
-ice_permittivity_model. This can be list or scalar (yes, Python does
-accept list of functions!).
-
-.. code:: ipython3
-
-
-    from smrt.permittivity.wetsnow import wetsnow_permittivity
-    from smrt import make_snowpack
-    # prepare the multi-layer snowpack
-    radius = 100e-6
-    density=300
-    temperature = 260
-    sp = make_snowpack(thickness=[0.1, 10],
-                       microstructure_model='sticky_hard_spheres',
-                       density=density,
-                       radius=radius,
-                       stickiness=0.15,
-                       temperature=temperature,
-                       ice_permittivity_model=wetsnow_permittivity,
-                       volumetric_liquid_water=[0.01, 0])
-
-    sp.layers[0].permittivity(1, 10e9)
-
-.. code:: ipython3
-
-    # prepare the sensor. Prepare the model and run it. Print or plot the results
-
-Read snowpack data
-------------------
-
-The manual method
-~~~~~~~~~~~~~~~~~
-
-Most of the time, the snowpack is defined in a file or several files.
-This does not change the way to run SMRT, only reading the data is
-different. A file called “data-domec-sp1-picard-2014.dat” is provided.
-Data has been acquired in Snowpit 1 at Dome C in 2012/13 (G. Picard, A.
-Royer, L. Arnaud, M. Fily. Influence of meter-scale wind-formed features
-on the variability of the microwave brightness temperature around Dome C
-in Antarctica, The Cryosphere, 8, 1105-1119, 2014,
-doi:10.5194/tc-8-1105-2014). You can open the file with your favorite
-editor to see how it looks or (under linux) use the magics of jupyter
-notebooks: put in a cell “!cat data-domec-sp1-picard-2014.dat”.
-
-.. code:: ipython3
-
-    thickness, density, radius, temperature = np.loadtxt("data-domec-sp1-picard-2014.dat", skiprows=2, unpack=True, delimiter=" ")
-    # check units in the file and you're ready to go.
-    # But wait! To check variable from within jupyter notebooks, just enter the variable name
-    # at the end of this cell (or another one) and SHIFT+ENTER to see the values.
-
-.. code:: ipython3
-
-    # make snowpack (without stickiness) and so on
-
-.. code:: ipython3
-
-    # (depending on time) you can also try to plot the simulate the impact of a +/-10% on density, either on all layers or just the first one.
-
-Using pandas dataframe
-~~~~~~~~~~~~~~~~~~~~~~
-
-If you have time, you can explore the generic function ‘make_medium’ in
-inputs/make_medium.py to create a snowpack from a dataframe. This
-dataframe must contain a column ‘medium’ which values is ‘snow’ or ‘ice’
-(currently) and call directly make_snowpack and make_ice_column. The
-other columns contains the attribute normally used by these make\_\*
-functions. This feature is useful in many circonstances when the
-snowpack parameters is stored on disk or in a database, but makes the
-code more obscure than using make_snowpack and siblings, and can be
-dangeurous do to collision in column names and attributes.
-
-Practical: Snow microstructure
-==============================
-
-The goal of this exercise is to go through the key steps that lie
-between a microstructure image and microwave signatures computed from
-SMRT
-
-Imports
--------
-
-.. code:: ipython3
-
-    %matplotlib notebook
-
-    from IPython.display import HTML, display
-
-    import pandas as pd
-    import numpy as np
-    import matplotlib.pyplot as plt
-    import matplotlib.image as img
-
-    from scipy import fftpack
-    import scipy.optimize as opt
-
-    from smrt import make_snowpack, make_model, sensor_list
-
-
-Background
-----------
-
-We consider the Passive Active Microwave and Infrared Radiometer (PAMIR)
-that was deployed at WFJ, Davos in the 1980s. In May 1984, PAMIR
-measured the emission from a snowpack during two melt-refreeze cycles of
-the surface during two consecutive nights. Christian Mätzler
-characterized the microstructure of the snowpack by thin sections:
-
-For further details cf (Reber et al., “Microwave signatures of snow
-crusts: Modelling and measurements”, Int. J. Remote Sen. 8, 1649, 1987)
-
-Visual inspection of an example microstructure
-----------------------------------------------
-
-Execute the following cell and look at the image.
-
-.. code:: ipython3
-
-    fig1 = plt.figure()
-    fig1.add_subplot()
-    filename = 'images/1984May9section1_SEG.png'
-    png_image=img.imread(filename)
-    plt.imshow(png_image)
-
-
-
-
-.. parsed-literal::
-
-    <IPython.core.display.Javascript object>
-
-
-
-
-
-.. parsed-literal::
-
-    <matplotlib.image.AxesImage at 0x7f4596d85f28>
-
-
-
-Auxiliary functions
--------------------
-
-For convenience several evaluation steps required below are provided as
-functions in the following cell. In a first step don’t care about it, we
-will later come back to this cell and modify it where necessary. Execute
-the following cell.
-
-.. code:: ipython3
-
-    def ice_indicator_function(image_filename):
-        """
-            read image and convert it to 1,0 indicator function
-        """
-        image=img.imread(image_filename)
-        ice_indicator_function = np.asarray(image)
-        return ice_indicator_function
-
-
-    def ice_volume_fraction(indicator_function):
-        """
-            compute ice volume fraction from an image indicator function
-        """
-        return np.mean(indicator_function)
-
-
-    def image_size(indicator_function):
-        """
-            get the size of the image
-        """
-        return indicator_function.shape
-
-
-
-
-    def ACF1D(acf2d, axis):
-        """
-            extract the 1D correlation function along a given axis (0 or 1)
-        """
-        #slc = [slice(None)] * len(acf2d.shape)
-        #slc[axis] = slice(0, acf2d.shape[axis])
-        #return acf2d[slc]
-        nz, nx = acf2d.shape
-        if axis == 1:
-            return acf2d[0,0:int((nx+1)/2)]
-        elif axis == 0:
-            return acf2d[0:int((nz+1)/2),0]
-        else:
-            return "stuss"
-
-    def acf1d_fit_exp(r, acf1d, r_max):
-        """
-            fit the correlation data acf1d for given lags r in the range [0,r_max]
-            to an exponential
-            returns:
-        """
-
-        # set fitrange
-        fitrange = (r < r_max)
-        # define residual function for least squares fit
-        def residual( p, r, acf ):
-            C0 = p[0]
-            correlation_length = p[1]
-            return ( C0*np.exp( -r/correlation_length) - acf )
-
-        # initial values for the optimization
-        p0 = np.array([0.2,1e-3])
-
-        # least square fit in the required range
-        p_opt, info = opt.leastsq(residual, p0, args=(r[fitrange],acf1d[fitrange]))
-        C0 = p_opt[0]
-        correlation_length = p_opt[1]
-        acf1d_exp = residual( p_opt, r, 0 )
-
-        return acf1d_exp, [C0, correlation_length]
-
-
-    def acf1d_fit_ts(r, acf1d, r_max):
-        """
-            fit the correlation data acf1d for given lags r in the range [0,r_max]
-            to an exponential
-        """
-
-        # set fitrange
-        fitrange = (r < r_max)
-        # define residual function for least squares fit
-        def residual( p, r, acf ):
-            C0 = p[0]
-            correlation_length = p[1]
-            repeat_distance = p[2]
-            return ( C0*np.exp( -r/correlation_length) * np.sinc(2*r/repeat_distance) - acf )
-
-        # initial values for the optimization
-        p0 = np.array([0.2,1e-3,1e-3])
-
-        # least square fit in the required range
-        p_opt, info = opt.leastsq(residual, p0, args=(r[fitrange],acf1d[fitrange]))
-        C0 = p_opt[0]
-        correlation_length = p_opt[1]
-        repeat_distance = p_opt[2]
-        acf1d_ts = residual( p_opt, r, 0 )
-        return acf1d_ts, [C0, correlation_length, repeat_distance]
-
-
-    def ACF2D(indicator_function):
-        """
-            compute the 2D correlation function for the indicator_function of an image
-        """
-
-        ##################################################
-        # replace the following by the correct code
-        ##################################################
-        f_2 = ice_volume_fraction(indicator_function)
-        aux = fftpack.fftn(indicator_function - f_2)
-        power_spectrum = np.abs(aux)**2
-        acf2d = fftpack.ifftn(power_spectrum)
-        nx, nz = indicator_function.shape
-        return acf2d.real / (nx*nz)
-
-        #return np.zeros_like(indicator_function)
-
-
-    def ssa_from_acf_slope(volume_fraction, acf_slope_at_origin):
-        """
-            compute the ssa from given slope of an autocorrelation function
-            C(r) at the origin and the volume fraction.
-            This relation is often called Debye relation
-        """
-        ##################################################
-        # replace the following by the correct code
-        ##################################################
-        rho_ice = 917
-        return 4 * acf_slope_at_origin / volume_fraction / rho_ice
-
-
-Task 1: Compute the correlation functions for the image
-=======================================================
-
-Execute the following cell. You will see a plot which gives nonsense. Go
-back to the previous cell and implement the function ``ACF2D`` to
-compute the 2D autocorrelation function of the image (5 lines of code
-required). When finished, zoom into the image close to the origin and
-try to understand.
-
-.. code:: ipython3
-
-    # get the ice indicator function for an example image
-    #
-    filename = 'images/1984May9section1_SEG.png'
-    pixel_size = 0.021e-3 # in mm
-
-    indicator_function = ice_indicator_function(filename)
-    # get the volume fraction
-    volume_fraction = ice_volume_fraction(indicator_function)
-    # ACTION REQUIRED HERE
-    # get the 2d correlation function
-    acf2d = ACF2D(indicator_function)
-
-
-    # get the 1d correlation function along an axis
-    acf1d_x = ACF1D(acf2d, 1)
-    acf1d_z = ACF1D(acf2d, 0)
-
-    # get the corresponding lags
-    r_x = pixel_size * np.arange(len(acf1d_x))
-    r_z = pixel_size * np.arange(len(acf1d_z))
-
-
-    # get the fit versions
-    r_max = 100 * pixel_size
-    acf1d_fit_exp_x, opt_param_exp_x = acf1d_fit_exp(r_x, acf1d_x, r_max)
-    print(opt_param_exp_x)
-    acf1d_fit_exp_z, opt_param_exp_z = acf1d_fit_exp(r_z, acf1d_z, r_max)
-    print(opt_param_exp_z)
-    acf1d_fit_ts_x, opt_param_ts_x = acf1d_fit_ts(r_x, acf1d_x, r_max)
-    print(opt_param_ts_x)
-    acf1d_fit_ts_z, opt_param_ts_z = acf1d_fit_ts(r_z, acf1d_z, r_max)
-    print(opt_param_ts_z)
-
-
-
-    # plot
-    fig2 = plt.figure()
-    ax2 = fig2.add_subplot(111)
-
-    ax2.plot(r_x, acf1d_x, 's', color='b', label='x: meas')
-    ax2.plot(r_x, acf1d_fit_exp_x, '-', color='b', label='x: fit EXP')
-    ax2.plot(r_x, acf1d_fit_ts_x, ':', color='b', label='x: fit TS')
-
-    ax2.plot(r_z, acf1d_z, 'o', color='r', label='z: meas')
-    ax2.plot(r_z, acf1d_fit_exp_z, '-', color='r', label='z: fit EXP')
-    ax2.plot(r_z, acf1d_fit_ts_z, ':', color='r', label='z: fit TS')
-
-    ax2.set_xlim([0, 80*pixel_size])
-    ax2.set_xlabel("Lag (mm)")
-    ax2.set_ylabel("Correlation functions")
-
-    ax2.legend()
-
-
-
-.. parsed-literal::
-
-    [0.25272279286023297, 0.00017889630806690145]
-    [0.24372885900645125, 0.00022074313938046856]
-    [0.23429310202318848, 0.00026560771249732487, 0.0012000836215736443]
-    [0.24095589973746762, 0.00023359171888147185, 0.0033000303730074385]
-
-
-
-.. parsed-literal::
-
-    <IPython.core.display.Javascript object>
-
-
-
-.. parsed-literal::
-
-    <matplotlib.legend.Legend at 0x7f45965ccda0>
-
-
-
-Task 2: SSA comparison
-======================
-
-Now we have the correlation functions from a fit of the measured data to
-an exponential model and to the Teubner-Strey model. The SSA of a
-microstructure is related to the slope of the correlation function at
-the origin (cf lecture) and we can infer the SSA from the fit parameters
-and compare these. Task: Implement the function ``ssa_from_acf_slope``
-in the Auxiliary functions cell (one line of code required) and execute
-the following cell. Try to understand the differences.
-
-.. code:: ipython3
-
-    ### Check SSA
-
-
-
-    SSA_exp_x = ssa_from_acf_slope(volume_fraction, volume_fraction*(1-volume_fraction)/opt_param_exp_x[1])
-    SSA_exp_z = ssa_from_acf_slope(volume_fraction, volume_fraction*(1-volume_fraction)/opt_param_exp_z[1])
-    SSA_ts_x = ssa_from_acf_slope(volume_fraction, volume_fraction*(1-volume_fraction)/opt_param_ts_x[1])
-    SSA_ts_z = ssa_from_acf_slope(volume_fraction, volume_fraction*(1-volume_fraction)/opt_param_ts_z[1])
-
-
-    print("SSA from exponential fit in x direction: ", SSA_exp_x, "m^2/kg")
-    print("SSA from exponential fit in z direction: ", SSA_exp_z, "m^2/kg")
-    print("SSA from Teubner-Strey fit in x direction: ", SSA_ts_x, "m^2/kg")
-    print("SSA from Teubner-Strey fit in z direction: ", SSA_ts_z, "m^2/kg")
-
-
-
-
-.. parsed-literal::
-
-    SSA from exponential fit in x direction:  15.0902363525 m^2/kg
-    SSA from exponential fit in z direction:  12.2295423491 m^2/kg
-    SSA from Teubner-Strey fit in x direction:  10.1638146948 m^2/kg
-    SSA from Teubner-Strey fit in z direction:  11.5568633351 m^2/kg
-
-
-Task 3: Brighness temperature comparison
-========================================
-
-| Now we analyze how the different correlation functions influence the
-  brightness temperature. To this end we adapt the example from
-  https://www.smrt-model.science/getstarted.html
-| and use the derived parameters to compute the brightness temperature
-  for a homogeneous snowpack characterized by the respective correlation
-  functions. This is a lazy task, nothing to implement. Try to
-  understand the results.
-
-.. code:: ipython3
-
-    # prepare inputs
-    thickness = [100]
-    temperature = [270]
-    density = volume_fraction * 917
-
-    # create an "exponential snowpack"
-    corr_length = opt_param_exp_x[1]
-    snowpack_exp = make_snowpack(thickness=thickness,
-                                 microstructure_model="exponential",
-                                 density=density,
-                                 temperature=temperature,
-                                 corr_length=corr_length)
-
-
-    # create a "Teubner-Strey snowpack"
-    corr_length = opt_param_ts_x[1]
-    repeat_distance = opt_param_ts_x[2]
-    snowpack_ts = make_snowpack(thickness=thickness,
-                                     microstructure_model="teubner_strey",
-                                     density=density,
-                                     temperature=temperature,
-                                     corr_length=corr_length,
-                                     repeat_distance=repeat_distance)
-
-    # create the sensor
-    radiometer = sensor_list.amsre('37V')
-
-    # create the model
-    m = make_model("iba", "dort")
-
-    # run the model
-    result_exp = m.run(radiometer, snowpack_exp)
-    result_ts = m.run(radiometer, snowpack_ts)
-
-    # outputs
-    print("Brightness temperature (Exponential): ", result_exp.TbV(), "K")
-    print("Brightness temperature (Teubner Strey): ", result_ts.TbV(), "K")
-
-
-
-.. parsed-literal::
-
-    Brightness temperature (Exponential):  229.16680394762955 K
-    Brightness temperature (Teubner Strey):  246.78928315675998 K
-
-
-Task 4: Play around
--------------------
-
-Here are some interesting suggestions what you may have a look at: \*
-Compare the value of the ``repeat_distance`` parameter with that of the
-``corr_length`` paramters in the Teubner-Strey model \* Change the
-parameter ``r_max`` in the Task1 cell to ``5*pixel_size`` and check the
-impact on the SSA computation and the brightness temperature.
-
-Conclusion
-----------
-
-Keep in mind: Microstructure details matter.
-
-Ice in SMRT
-===========
-
-**Goal**: - run SMRT with multi-layer snowpack + multi-layer ice column
-- understand the difference between first-year and multi-year ice in
-SMRT, which has a profound impact on how the electromagnetic medium is
-modeled. This is not necessarily as expected from a sea-ice scientist
-point of view.
-
-**Learning**: make_ice_column
-
-**Thanks**: to Ludovic Brucker, Nina Mass, and Mai Winstrup for
-implementing the sea-ice and salty snow in SMRT.
-
-.. code:: ipython3
-
-    import numpy as np
-
-    import matplotlib.pyplot as plt
-    %matplotlib notebook
-
-    from smrt import make_model, make_snowpack, make_ice_column, sensor_list, PSU
-    from smrt.utils import dB
-
-
-Ice column
-----------
-
-The function make_ice_column works as make_snowpack, but with optional
-parameters adapted to sea-ice. The only main difference is a first
-argument that specifies the type of ice: firstyear, multiyear, or fresh.
-We had to make a clear difference between first-year and multi-year
-because of a current limitation of IBA and DMRT. They can only compute
-scattering for a two-phase medium, so brines and bubbles can not be
-(yet) modeled both as scatterers at the same time.
-
-So in SMRT: - first-year ice = brine pockets in a fresh ice background.
-It means that brines absorb and scatter the waves. The background is
-weakly absorbant. - multi-year ice = air bubbles in a salty ice
-background. It means only air bubbles scatter the waves. The brines in
-multi-year ice contribute to absorption as in first year ice, but they
-do not scatter. - fresh ice = air bubbles in a fresh ice background.
-This is the same as multi-year ice but salinity is not considered.
-
-For other details, please read the doc:
-https://smrt.readthedocs.io/en/latest/smrt.inputs.make_medium.html#smrt.inputs.make_medium.make_ice_column
-
-NB: salinity is in kg/kg not PSU. But PSU variable can be imported to
-make the conversion.
-
-.. code:: ipython3
-
-    # the simplest example
-    temperature = 273 - 5
-    salinity = 8 * PSU  # ice salinity
-    radius = 0.2e-3  # radius of the brines
-
-    ic = make_ice_column('firstyear', thickness=[1.0], microstructure_model='sticky_hard_spheres',
-                         temperature=temperature, salinity=salinity, radius=radius)
-
-.. code:: ipython3
-
-    # prepare the sensor. Prepare the model (with IBA) and run it. Print or plot the results
-
-
-In the previous example, brine fractional volume was estimated from
-temperature (see smrt/permittivity/brine.py for details):
-
-.. code:: ipython3
-
-    ic.layers[0].brine_volume_fraction
-
-
-
-
-.. parsed-literal::
-
-    0.25
-
-
-
-But it can also be set: change the previous code to set the
-brine_volume_fraction to 0.25. Re-run the model and compare the results.
-
-
-Are the results the same as before or different? Is this expected?
-
-Note that make_ice_column automatically assumes an infinite layer of
-water is under the ice. This can be disabled (set
-add_water_substrate=False), in which case it is possible to add another
-substrate (e.g. soil).
-
-The water parameters can be changed: water_temperature, water_salinity,
-water_permittivity_model
-
-To test this, you can make a shallow ice column, use low frequency and
-play with water_temperature or water_salinity to see what happens.
-
-
-Adapt the previous code to make a multi-year ice column. In this case,
-porosity (the fractional volume of air bubble) is a required argument,
-and brine_volume_fraction is not needed.
-
-read the doc:
-https://smrt.readthedocs.io/en/latest/smrt.inputs.make_medium.html#smrt.inputs.make_medium.make_ice_column
-
-Compare the different results between multiyear and first year ice.
-
-
-If interested, you can also test the ‘fresh’ type to make lake ice.
-
-
-Snow on ice
------------
-
-It is likely you’d like to add snow on ice. This can’t be easier:
-prepare the two media and use the + operation to stack them: - ic =
-make_ice_column(…) - sp = make_snowpack(…) - seaice = sp + ic Then use
-seaice as you would use sp.
-
-Prepare a snowpack with a few layers, say with 3 10-cm thick layers,
-same density 350 kg m\ :math:`^{-3}`), temperature (e.g. -10°C, -6°C,
--2°C) same correlation length (100\ :math:`\mu`\ m) and same stickiness
-(0.15).
-
-.. code:: ipython3
-
-    # prepare the multi-layer snowpack
-
-.. code:: ipython3
-
-    thickness = [10e-2, 10e-2, 10e-2]
-    #sp = make_snowpack(thickness, ....)
-
-
-.. code:: ipython3
-
-    # Prepare the model and run it. Print or plot the results
-
-(time dependent) You can make a sensitivity analysis to snow depth
-
-Ice permittivity in SMRT
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-**Goal**:
-
-::
-
-   - run SMRT with different permittivity functions
-   - look inside permittivity functions to consider which might be most appropriate
-   - compare impact of different permittivity representations
-
-**Learning**: appreciate how fundamental the permittivity choice is
-
-.. code:: ipython3
-
-    # Standard imports
-    import numpy as np
-
-    import matplotlib.pyplot as plt
-    %matplotlib notebook
-
-    from smrt import make_model, make_snowpack, make_ice_column, sensor_list, PSU
-
-.. code:: ipython3
-
-    # Again, use the simplest example
-    temperature = 273 - 5
-    salinity = 8 * PSU  # ice salinity
-    radius = 0.2e-3  # radius of the brines
-
-    ic = make_ice_column('firstyear', thickness=[1.0], microstructure_model='sticky_hard_spheres',
-                         temperature=temperature, salinity=salinity, radius=radius)
-
-Have a look at the permittivity model used.
-
-.. code:: ipython3
-
-    ic.layers[0].permittivity_model
-
-Why are there two permittivities specified? Neither have a dependence on
-salinity - why is this?
-
-Make a plot of permittivity vs temperature
-
-
-Change the default permittivity model of brine to
-seawater_permittivity_klein76. Note you will need to remake the ice
-column (cf. 01_seaice_lakeice tutorial). To find the optional argument
-required type ‘make_ice_column’ or see the SMRT documentation. You will
-need to import the non-default function
-
-.. code:: ipython3
-
-    from smrt.permittivity.saline_water import seawater_permittivity_klein76
-
-
-
-Calculate the permittivity temperature dependence of this model and
-compare with the brine_permittivity_stogryn85 model
-
-
-Create a sensor, model and look at the impact of permittivity model(s)
-on the results. How important is the choice? Note that the way in which
-SMRT calculates the effective permittivity of the medium may also matter
-- this is part of the electromagnetic model (see Henning’s Lecture).
-Saline snow in SMRT
-~~~~~~~~~~~~~~~~~~~
-
-Brine is expelled upwards into the snowpack as sea ice is formed,
-leading to highly saline layers at the base of the snowpack. This has an
-impact on the microwave behaviour on the snowpack e.g. Nandan et
-al. (2017) https://doi.org/10.1002/2017GL074506.
-
-Here is a plot of measured snow salinity from four different sites
-during the AKROSS project. Note the high salinity near and at the base
-of the snowpack. |Measured salinity profiles from AKROSS project|
-
-**Goal**: - add salinity to snowpack - determine sensitivity of results
-to snow salinity
-
-**Learning**: understand impact of snow salinity on microwave scattering
-
-.. |Measured salinity profiles from AKROSS project| image:: Salinity_profile.png
-
-.. code:: ipython3
-
-    # Standard imports
-    import numpy as np
-
-    import matplotlib.pyplot as plt
-    %matplotlib notebook
-
-    from smrt import make_model, make_snowpack, make_ice_column, sensor_list, PSU
-
-Make a standard snowpack and ice column
-
-.. code:: ipython3
-
-    # sp_pure = ...
-    # ic = ...
-
-Make a saline snowpack. Data from the AK2 site in the above graph are:
-
-========= ============ ==============
-Depth top Depth bottom Salinity (PSU)
-========= ============ ==============
-13        10           1.93
-10        7            2.27
-7         4            1.14
-4         1            1.23
-0         0            12.72
-0         -5           7.39
-========= ============ ==============
-
-Add in the salinity to the snowpack with the argument salinity=[…]
-
-.. code:: ipython3
-
-    # sp_saline = ...
-
-Add salty and non-salty snowpacks to the ice column, construct sensor
-and model. Run model on the two profiles and compare non-salty and salty
-results.
-
-
-What has happened? Is this expected? How could you fix it?
-
-Hint:
-
-and optional argument ice_permittivity_model
+    result.TbV(frequency=19e9)
