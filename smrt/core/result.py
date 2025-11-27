@@ -139,7 +139,7 @@ class Result(object):
         if attr != "data" and attr in self.data.coords:
             return self.data.coords[attr]
         else:
-            raise AttributeError("AttributeError: '%s' object has no attribute '%s'" % (type(self), attr))
+            raise AttributeError(f"AttributeError: '{type(self)}' object has no attribute '{attr}'")
 
     def save(self, filename, netcdf_engine=None):
         """

@@ -381,9 +381,9 @@ class SensorList(SensorBase):
             }
 
         if None in a:
-            raise SMRTError("It is required to set '%s' value for each sensor" % axis)
+            raise SMRTError(f"It is required to set '{axis}' value for each sensor")
         if len(set(a)) != len(a):
-            raise SMRTError("It is required to set different '%s' values for each sensor" % axis)
+            raise SMRTError(f"It is required to set different '{axis}' values for each sensor")
 
     @property
     def channel(self):

@@ -65,7 +65,7 @@ def import_class(scope: str, modulename: str, classname: Optional[str] = None) -
     res = do_import_class("smrt." + modulename, classname)
     if res is None:
         if classname is None:
-            msg = "Unable to find the module '%s'." % modulename
+            msg = f"Unable to find the module '{modulename}'."
         else:
             msg = "Unable to find the module '%s' to import the class '%s'." % (
                 modulename,
@@ -109,7 +109,7 @@ def do_import_class(modulename, classname):
                 break
 
     if classname is None:
-        raise SMRTError("Unable to find a class in the module '%s'" % modulename)
+        raise SMRTError(f"Unable to find a class in the module '{modulename}'")
 
     # get the class
     return getattr(module, classname)

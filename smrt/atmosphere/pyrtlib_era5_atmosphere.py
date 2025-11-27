@@ -49,7 +49,7 @@ class PyRTlibERA5Atmosphere(PyRTlibAtmosphereBase):
 
             extension = "grib" if use_grib else "nc"
 
-            datafile_name = "era5_reanalysis-{}.".format(date.isoformat()) + extension  # from pyrtlib
+            datafile_name = f"era5_reanalysis-{date.isoformat()}." + extension  # from pyrtlib
             datafile = os.path.join(era5_directory, datafile_name)
             # rename with lat, lon included to avoid errors
             new_datafile = datafile[: -len(extension)] + f"-{longitude:.1f}-{latitude:.1f}.{extension}"
@@ -219,7 +219,7 @@ class _ERA5Reanalysis_with_grib(ERA5Reanalysis):
             lonlat[1] - offset,
             lonlat[0] + offset,
         ]
-        grib_file_name = "era5_reanalysis-{}.grib".format(time.isoformat())
+        grib_file_name = f"era5_reanalysis-{time.isoformat()}.grib"
         grib_file = os.path.join(path, grib_file_name)
 
         variables = [
@@ -280,7 +280,7 @@ class _ERA5Reanalysis_with_grib(ERA5Reanalysis):
                 "year": time.year,
                 "month": time.month,
                 "day": time.day,
-                "time": "{}:00".format(time.hour),
+                "time": f"{time.hour}:00",
                 "area": extent,
                 "grid": [resolution, resolution],
                 "format": "grib",

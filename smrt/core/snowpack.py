@@ -158,7 +158,7 @@ class Snowpack(object):
             raise ValueError("invalid value for 'where' argument")
 
         if raise_attributeerror and all((p is None for p in prof)):
-            raise AttributeError("The attribute %s can not be found" % property_name)
+            raise AttributeError(f"The attribute {property_name} can not be found")
 
         return np.array(prof)
 
