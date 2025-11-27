@@ -429,8 +429,7 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
                 snowpack = snowpack[snowpack_column]
             except KeyError:
                 raise SMRTError(
-                    "the snowpack DataFrame has no column named '%s'. Check the snowpack_column argument."
-                    % snowpack_column
+                    f"the snowpack DataFrame has no column named '{snowpack_column}'. Check the snowpack_column argument."
                 )
             assert isinstance(snowpack, pd.Series)
 

@@ -30,8 +30,7 @@ def register_package(pkg):
         importlib.import_module(pkg)
     except ImportError as e:
         raise SMRTError(
-            "The package must be in the the sys.path list and must contain a __init__.py file (even empty). The import error is %s"
-            % str(e)
+            f"The package must be in the the sys.path list and must contain a __init__.py file (even empty). The import error is {str(e)}"
         )
 
     user_plugin_package.insert(0, pkg)
@@ -67,10 +66,7 @@ def import_class(scope: str, modulename: str, classname: Optional[str] = None) -
         if classname is None:
             msg = f"Unable to find the module '{modulename}'."
         else:
-            msg = "Unable to find the module '%s' to import the class '%s'." % (
-                modulename,
-                classname,
-            )
+            msg = f"Unable to find the module '{modulename}' to import the class '{classname}'."
         raise SMRTError(msg)
 
     return res
