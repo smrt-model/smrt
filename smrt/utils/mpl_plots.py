@@ -72,7 +72,7 @@ def plot_streams(sp, emmodel, sensor, ilayer=None, ax=None):
 
     xs = np.ma.masked_array(xs, mask)
 
-    ax.plot(xs, zs, label="%g°" % np.degrees(sensor.theta))
+    ax.plot(xs, zs, label=f"{np.degrees(sensor.theta):g}°")
 
 
 def format_vars(lay, show_vars, delimiter=" "):
@@ -94,7 +94,7 @@ def format_vars(lay, show_vars, delimiter=" "):
         if v in format_map:
             txt.append(format_map[v][0] % (x * format_map[v][1]))
         else:
-            txt.append("%g" % v)
+            txt.append(f"{v:g}")
     return delimiter.join(txt)
 
 
@@ -126,7 +126,7 @@ class ReciprocalScale(mscale.LinearScale):
 
         class StickinessFormatter(Formatter):
             def __call__(self, x, pos=None):
-                return "%g" % x
+                return f"{x:g}"
 
         axis.set_major_formatter(StickinessFormatter())
         axis.set_minor_formatter(StickinessFormatter())

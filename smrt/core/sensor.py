@@ -91,7 +91,7 @@ def channel_map_for_radar(frequency=None, polarization="HV", order="fp"):
     if frequency is None:
         frequency_str = ""
     else:
-        frequency_str = ["%02i" % np.round(f / 1e9) for f in frequency]
+        frequency_str = [f"{int(np.round(f / 1e9)):02d}" for f in frequency]
 
     if order == "fp":
 
@@ -381,9 +381,9 @@ class SensorList(SensorBase):
             }
 
         if None in a:
-            raise SMRTError("It is required to set '%s' value for each sensor" % axis)
+            raise SMRTError(f"It is required to set '{axis}' value for each sensor")
         if len(set(a)) != len(a):
-            raise SMRTError("It is required to set different '%s' values for each sensor" % axis)
+            raise SMRTError(f"It is required to set different '{axis}' values for each sensor")
 
     @property
     def channel(self):

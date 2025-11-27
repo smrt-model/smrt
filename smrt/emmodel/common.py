@@ -301,10 +301,7 @@ def derived_EMModel(base_class, effective_permittivity_model):
 
     :returns a new class inheriting from IBA but with patched methods
     """
-    new_class_name = "%s_%s" % (
-        base_class.__name__,
-        effective_permittivity_model.__name__,
-    )  # , absorption_calculation)
+    new_class_name = f"{base_class.__name__}_{effective_permittivity_model.__name__}"
 
     return type(
         new_class_name,

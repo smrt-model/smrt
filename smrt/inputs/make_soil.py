@@ -84,7 +84,7 @@ def make_soil(
             case "montpetit2008":
                 permittivity_model = soil_dielectric_constant_monpetit2008
             case _:
-                raise SMRTError("The permittivity model '%s' is not recongized" % permittivity_model)
+                raise SMRTError(f"The permittivity model '{permittivity_model}' is not recongized")
     else:
         # check that other parameters are defined
         if moisture is not None or sand is not None or clay is not None or drymatter is not None:

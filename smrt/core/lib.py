@@ -460,7 +460,7 @@ class smrt_matrix(object):
 
     def __repr__(self):
         shape = getattr(self.values, "shape", "")
-        return str("smrt_matrix %s %s" % (self.mtype, shape)) + "\n" + str(self.values)
+        return str(f"smrt_matrix {self.mtype} {shape}") + "\n" + str(self.values)
 
 
 def is_zero_scalar(m):

@@ -162,11 +162,11 @@ class Layer(object):
 
         if hasattr(self, "temperature"):
             if self.temperature < 100:
-                raise SMRTError("Temperature should be in Kelvin, got %g" % self.temperature)
+                raise SMRTError(f"Temperature should be in Kelvin, got {self.temperature:g}")
 
             if self.temperature > FREEZING_POINT:
                 # This warning should not be applied to substrates i.e. soil and open water
-                raise SMRTError("Temperature is above freezing, got %g" % self.temperature)
+                raise SMRTError(f"Temperature is above freezing, got {self.temperature:g}")
 
         if self.frac_volume < 0 or self.frac_volume > 1:
             raise SMRTError("Check density units are kg per m3")
@@ -289,9 +289,7 @@ def layer_properties(*required_arguments, optional_arguments=None, **kwargs):
                             layer_to_inject, ra
                         )  # add the layer's attributes as named arguments (avoid problems)
                     else:
-                        raise Exception(
-                            "The layer must have the '%s' attribute to call the function %s " % (ra, str(f))
-                        )
+                        raise Exception(f"The layer must have the '{ra}' attribute to call the function {f!s} ")
                 if optional_arguments:
                     for ra in optional_arguments:
                         if hasattr(layer_to_inject, ra):

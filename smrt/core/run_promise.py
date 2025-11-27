@@ -58,7 +58,7 @@ def honour_all_promises(directory_or_filename, save_result_to=None, show_progres
             result_list.append(result)
 
     if show_progress:
-        print("Executed %i promise(s). Done!" % len(result_list))
+        print(f"Executed {len(result_list)} promise(s). Done!")
     return result_list
 
 
@@ -157,8 +157,8 @@ class RunPromise(object):
 
         if filename is None:
             uid = uuid4()
-            filename = os.path.join(directory, "smrt-promise-%s.P" % uid)
-            self.result_filename = "smrt-result-%s.nc" % uid
+            filename = os.path.join(directory, f"smrt-promise-{uid}.P")
+            self.result_filename = f"smrt-result-{uid}.nc"
         else:
             basename = os.path.basename(filename)
             if basename.startswith("smrt-promise-"):

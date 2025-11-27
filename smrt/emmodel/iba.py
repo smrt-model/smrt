@@ -127,8 +127,7 @@ become a default in the future.""")
 
         if not (self._ks >= 0):
             print(
-                "ks, the scattering coefficient has an invalid value '%g' in layer nb '%i'"
-                % (self._ks, getattr(layer, "number", 0))
+                f"ks, the scattering coefficient has an invalid value '{self._ks:g}' in layer nb '{getattr(layer, 'number', 0)}'"
             )
 
     def compute_iba_coeff(self):
