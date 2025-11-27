@@ -255,7 +255,7 @@ class GeometricalOptics(Interface):
 
         if abs(eta1_eta - 1) < 1e-6:
             raise NotImplementedError(
-                "the case of successive layers with identical index (%g) is not implemented" % n_2
+                f"the case of successive layers with identical index ({n_2:g}) is not implemented"
             )
             return 1 / (4 * np.pi)  # return the identity matrix. The coef is to be checked.
 

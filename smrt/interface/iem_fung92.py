@@ -72,7 +72,7 @@ class IEM_Fung92(
         # check validity
         if ks > 3:
             raise SMRTError(
-                "Warning, roughness_rms is too high for the given wavelength. Limit is ks < 3. Here ks=%g" % ks
+                f"Warning, roughness_rms is too high for the given wavelength. Limit is ks < 3. Here ks={ks:g}"
             )
 
         if ks * kl > np.sqrt(eps_r):

@@ -113,7 +113,7 @@ def polder_van_santen(
             )
         )
 
-    assert np.all(frac_volume <= 1), "the fractional volume is larger than 1: %g" % frac_volume
+    assert np.all(frac_volume <= 1), f"the fractional volume is larger than 1: {frac_volume:g}"
 
     # Polder Van Santen / de Loor / Böttcher / Bruggeman formula
     # Solution of quadratic equation arising from eqn 9.2. in Sihvola: Electromagnetic Mixing Formulas and Applications

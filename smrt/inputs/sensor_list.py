@@ -197,7 +197,7 @@ def common_conical_pmw(
             channel_map = filter_channel_map(channel_map, new_channel)
         except KeyError:
             raise SMRTError(
-                "%s channel not recognized. Expected one of: %s" % (sensor_name, ", ".join(frequency_dict.keys()))
+                f"{sensor_name} channel not recognized. Expected one of: {', '.join(frequency_dict.keys())}"
             )
 
     sensor = passive(channel_map=channel_map, **extract_configuration(channel_map), name=name)

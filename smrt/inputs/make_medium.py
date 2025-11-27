@@ -135,7 +135,7 @@ def make_medium(data, surface=None, interface=None, substrate=None, **kwargs):
             ]
             func = make_ice_column
         else:
-            raise SMRTError("Unknown medium '%s' in data" % medium)
+            raise SMRTError(f"Unknown medium '{medium}' in data")
 
         # compute required and optional arguments
         args = [group_data[a] for a in required_args]
