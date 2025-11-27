@@ -162,7 +162,7 @@ def common_conical_pmw(
         frequency = sorted(set(frequency_dict.values()))
     else:
         # recreate the frequency dict
-        frequency_dict = {"%02i" % (freq * 1e9): freq for freq in np.atleast_1d(frequency)}
+        frequency_dict = {f"{int(freq * 1e9):02d}": freq for freq in np.atleast_1d(frequency)}
 
     if polarization is None:
         polarization = ["H", "V"]
@@ -273,7 +273,7 @@ def ascat(theta=None):
         theta = np.arange(25, 70, 5)
 
     channel_map = {
-        ("VV%i" % t): dict(polarization_inc="V", polarization="V", theta=t, theta_inc=t) for t in np.atleast_1d(theta)
+        (f"VV{t}"): dict(polarization_inc="V", polarization="V", theta=t, theta_inc=t) for t in np.atleast_1d(theta)
     }
 
     return active(

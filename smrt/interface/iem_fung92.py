@@ -77,8 +77,7 @@ class IEM_Fung92(
 
         if ks * kl > np.sqrt(eps_r):
             raise SMRTError(
-                "Warning, roughness_rms or correlation_length are too high for the given wavelength."
-                " Limit is ks * kl < sqrt(eps_r). Here ks*kl=%g and sqrt(eps_r)=%g" % (ks * kl, np.sqrt(eps_r))
+                f"Warning, roughness_rms or correlation_length are too high for the given wavelength. Limit is ks * kl < sqrt(eps_r). Here ks*kl={ks * kl:g} and sqrt(eps_r)={np.sqrt(eps_r):g}"
             )
 
     def fresnel_coefficients(self, eps_1, eps_2, mu_i, ks, kl):

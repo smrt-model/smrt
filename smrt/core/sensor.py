@@ -91,7 +91,7 @@ def channel_map_for_radar(frequency=None, polarization="HV", order="fp"):
     if frequency is None:
         frequency_str = ""
     else:
-        frequency_str = ["%02i" % np.round(f / 1e9) for f in frequency]
+        frequency_str = [f"{int(np.round(f / 1e9)):02d}" for f in frequency]
 
     if order == "fp":
 
