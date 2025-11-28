@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 
 from smrt.permittivity.ice import (
     _ice_permittivity_DMRTML,
@@ -8,6 +9,7 @@ from smrt.permittivity.ice import (
     ice_permittivity_maetzler06,
     ice_permittivity_maetzler87,
     ice_permittivity_tiuri84,
+    ice_permittivity_maetzler06_dt
 )
 
 # Input temperature array functionality removed. If ever needed, use numpy instead of math in ice.py, but slower.
@@ -175,3 +177,11 @@ def test_real_ice_permittivity_output_hufford():
     eps = ice_permittivity_hufford91_maetzler87(10e9, 270)
     np.testing.assert_allclose(eps.real, 3.18567)
     np.testing.assert_allclose(eps.imag, 0.0009650945, atol=1e-8)
+
+@pytest.mark.parametrize(["temperature", "frequency"],[(200, 1.4e9), (220,1.4e9),
+                                                       (240, 0.4e9), (260, 17e9)])
+def test_ice_permittivity_maetzler06_dt(temperature, frequency):
+    eps = ice_permittivity_maetzler06(temperature=temperature, frequency=frequency)
+    epspp = ice_permittivity_maetzler06(temperature=(temperature + 1e-3), frequency=frequency)
+    deps = ice_permittivity_maetzler06_dt(temperature=temperature, frequency=frequency)
+    np.testing.assert_allclose(deps, 1e3 * epspp - 1e3 * eps, rtol=1e-6) #subjective tolerance

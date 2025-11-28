@@ -75,6 +75,55 @@ def ice_permittivity_maetzler06(frequency, temperature):
 
     return Ereal + 1j * Eimag
 
+@layer_properties("temperature")
+def ice_permittivity_maetzler06_dt(frequency, temperature):
+    """
+    Calculate the derivative with respect to the temperature of the complex ice dielectric constant depending on the frequency and temperature
+    based on Mätzler (2006).
+
+    This is the default model used in :py:func:`smrt.inputs.make_medium.make_snow_layer()`.
+
+    Args:
+        frequency: frequency in Hz.
+        temperature: temperature in K.
+
+    Returns:
+        derivative w.r.t. teperature of complex permittivity of pure ice.
+
+    References:
+        Mätzler, C. (2006). Thermal Microwave Radiation: Applications for Remote Sensing p456-461,
+        https://doi.org/10.1049/PBEW052E
+    """
+
+    if np.any(temperature > FREEZING_POINT):
+        raise SMRTError(f"The ice temperature must be lower or equal to {FREEZING_POINT}K")
+    
+    dEreal = 9.1e-4
+
+    Tsup = 300.0
+    theta = Tsup / temperature - 1.0
+    dtheta = - Tsup / temperature ** 2
+    A = 0.00504
+    B = 0.0062
+    C = 22.1
+    thetaexp = np.exp(-C * theta)
+    alpha = (A + B * theta) * thetaexp
+    dalpha = B * dtheta * thetaexp - alpha * C * dtheta
+    B1 = 0.0207
+    b = 335.0
+    D = 9.963
+    E = 0.0372
+    deltabeta = np.exp(-D + E * (temperature - FREEZING_POINT))
+    ddeltabeta = E * deltabeta
+    u = np.exp(b / temperature)
+    dbetam = -(B1 / temperature ** 2) * (np.exp(b / temperature) / ((np.exp(b / temperature) - 1) ** 2)) + (B1 * b / temperature**3) * u * (u + 1) / (u - 1)**3
+    dbeta = dbetam + ddeltabeta
+
+    freqGHz = frequency / 1e9
+    dEimag = dalpha / freqGHz + dbeta * freqGHz
+
+    return dEreal + 1j * dEimag
+
 
 @layer_properties("temperature")
 def ice_permittivity_maetzler98(frequency, temperature):
