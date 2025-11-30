@@ -1,13 +1,16 @@
 """
-Compute waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the given snowpack and sensor (or complex terrain soon).
+Compute waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the given snowpack and sensor (or complex
+terrain soon).
 
-The implementation is based on Adams and Brown 1998 and Lacroix et al. 2008. Both models differ in the specific choices for the
-scattering and backscatter of the interface, but are similar in the way the waveform is calculated, which concerns the solver here.
+The implementation is based on Adams and Brown 1998 and Lacroix et al. 2008. Both models differ in the specific choices
+for the scattering and backscatter of the interface, but are similar in the way the waveform is calculated, which
+concerns the solver here.
 
 Approximations:
-    - Backscatter is computed assuming only first order scattering. The propagation is then simply governed by extinction.
-    - Near nadir / small angle approximation: to compute delay, the paths in the snow are along the z-axis. Off-nadir delay is neglected.
-      This error is likely to be small (except for very deep penetration).
+    - Backscatter is computed assuming only first order scattering. The propagation is then simply governed by
+      extinction.
+    - Near nadir / small angle approximation: to compute delay, the paths in the snow are along the z-axis. Off-nadir
+      delay is neglected. This error is likely to be small (except for very deep penetration).
     - Do not account for specular refelction (to be implemented).
 
 Note:
@@ -21,6 +24,11 @@ Usage:
 
     Return individual contributions:
         >>> altimodel = make_model('iba', "nadir_lrm_altimetry", rtsolver_options={return_contributions=True})
+
+References:
+    - F. Larue, G. Picard, J. Aublanc, L. Arnaud, A. Robledano-Perez, E. Le Meur, V. Favier, B. Jourdain, J. Savarino, P.
+       Thibaut, Radar altimeter waveform simulations in Antarctica with the Snow Microwave Radiative Transfer Model
+       (SMRT) , Remote Sensing of Environment, 263, 112534 doi:10.1016/j.rse.2021.112534, 2021
 """
 
 import numpy as np

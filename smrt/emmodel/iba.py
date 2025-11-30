@@ -1,10 +1,17 @@
 # coding: utf-8
 
-"""Compute scattering from Improved Born Approximation theory as described in Mätzler 1998 and Mätzler and Wiesman 1999, except the
-absorption coefficient which is computed with Polden von Staten formulation instead of the Eq 24 in Mätzler 1998. See iba_original.py for
-a fully conforming IBA version.
-This model allows for different microstructural models provided that the Fourier transform of the correlation function
-may be performed. All properties relate to a single layer.
+"""
+Compute scattering from Improved Born Approximation theory as described in Mätzler 1998 and Mätzler and Wiesman 1999,
+except the absorption coefficient which is computed with Polden von Staten formulation instead of the Eq 24 in Mätzler
+1998. See iba_original.py for a fully conforming IBA version. This model allows for different microstructural models
+provided that the Fourier transform of the correlation function may be performed. All properties relate to a single
+layer.
+
+References:
+    - Mätzler, C. (1998). Improved Born approximation for scattering of radiation in a granular medium. Journal of
+      Applied Physics, 83(11), 6111–6117. https://doi.org/10.1063/1.367496
+    - Mätzler, C., & Wiesmann, A. (1999). Extension of the Microwave Emission Model of Layered Snowpacks to
+      Coarse-Grained Snow. Remote Sensing of Environment, 70(3), 317–325. https://doi.org/10.1016/s0034-4257(99)00047-4
 
 """
 

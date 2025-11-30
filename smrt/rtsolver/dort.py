@@ -46,17 +46,17 @@ Usage:
         >>> m = make_model("iba", "dort", rtsolver_options = {'error_handling':'nan'})
 
 References:
-    Picard, G., Le Toan, T., Quegan, S., Caraglio, Y., and Castel, T. (2004). Radiative Transfer Modeling of
-    Cross-Polarized  Backscatter From a Pine Forest Using the Discrete  Ordinate and Eigenvalue Method. IEEE
-    TRANSACTIONS ON GEOSCIENCE AND REMOTE SENSING, VOL. 42, NO. 8, https://doi.org/10.1109/TGRS.2004.831229
+    - Picard, G., Le Toan, T., Quegan, S., Caraglio, Y., and Castel, T. (2004). Radiative Transfer Modeling of
+      Cross-Polarized  Backscatter From a Pine Forest Using the Discrete  Ordinate and Eigenvalue Method. IEEE
+      TRANSACTIONS ON GEOSCIENCE AND REMOTE SENSING, VOL. 42, NO. 8, https://doi.org/10.1109/TGRS.2004.831229
 
-    Picard, G., Brucker, L., Roy, A., Dupont, F., Fily, M., Royer, A., and Harlow, C. (2013) Simulation of the microwave
-    emission of multi-layered snowpacks using the Dense Media Radiative transfer theory: the DMRT-ML model, Geosci.
-    Model Dev., 6, 1061-1078, https://doi.org/10.5194/gmd-6-1061-2013
+    - Picard, G., Brucker, L., Roy, A., Dupont, F., Fily, M., Royer, A., and Harlow, C. (2013) Simulation of the
+      microwave emission of multi-layered snowpacks using the Dense Media Radiative transfer theory: the DMRT-ML model,
+      Geosci. Model Dev., 6, 1061-1078, https://doi.org/10.5194/gmd-6-1061-2013
 
-    Stamnes, K., Tsay, S-C., Wiscombe, W., and Jayaweera, K. (1988). Numerically stable algorithm for
-    discrete-ordinate-method radiative transfer in multiple scattering and emitting layered media. Applied Optics,
-    27-12, pp.2502-2509. https://doi.org/10.1364/AO.27.002502
+    - Stamnes, K., Tsay, S-C., Wiscombe, W., and Jayaweera, K. (1988). Numerically stable algorithm for
+      discrete-ordinate-method radiative transfer in multiple scattering and emitting layered media. Applied Optics,
+      27-12, pp.2502-2509. https://doi.org/10.1364/AO.27.002502
 """
 
 from functools import partial

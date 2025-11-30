@@ -4,6 +4,10 @@
 Computes scattering with the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021.
 This SCE is the "non-local approximation" in Torquato, also called "long range" in Tsang's books.
 It applies to scatterer size up to 1 wavelength.
+
+References:
+    - Torquato, S., & Kim, J. (2021). Nonlocal Effective Electromagnetic Wave Characteristics of
+         Composite Media: Beyond the Quasistatic Regime. Physical Review X, 11(2). doi:10.1103/physrevx.11.021002
 """
 
 # Stdlib import
