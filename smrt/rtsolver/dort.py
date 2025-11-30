@@ -143,7 +143,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
         error_handling="exception",
         process_coherent_layers=False,
         prune_deep_snowpack=None,
-        diagonalization_method="eig",
+        diagonalization_method="shur_forcedtriu",
     ):
         DiscreteOrdinatesMixin.init(self, n_max_stream=n_max_stream, stream_mode=stream_mode, m_max=m_max)
         CoherentLayerMixin.init(self, process_coherent_layers=process_coherent_layers)
