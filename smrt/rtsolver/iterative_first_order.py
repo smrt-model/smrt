@@ -1,5 +1,3 @@
-# coding: utf-8
-
 """
 Provide the iterative first-order radiative transfer solver.
 
@@ -9,9 +7,10 @@ backscatter contributions and is computationally more efficient than the DORT so
 but should be used with caution.
 
 Key Features:
-        - Separate different backscatter mechanisms for analysis.
-        - More computationally efficient than full DORT solver.
-        - Provide diagnostic information about scattering contributions.
+    - Separate different backscatter mechanisms for analysis.
+    - More computationally efficient than full DORT solver.
+    - Provide diagnostic information about scattering contributions.
+
 
 Backscatter Components:
     Zeroth Order:
@@ -43,16 +42,17 @@ Note:
     - For higher scattering albedos, a second-order solution is required.
 
 References:
-    Ulaby, F. T., et al. (2014). Microwave radar and radiometric remote sensing. Chapter 11.
+    - Ulaby, F. T., et al. (2014). Microwave radar and radiometric remote sensing. Chapter 11.
 
-    Tsang, L., Pan, J., Liang, D., Li, Z., Cline, D. W., & Tan, Y. (2007). Modeling Active Microwave Remote Sensing of Snow
-    Using Dense Media Radiative Transfer (DMRT) Theory With Multiple-Scattering Effects. IEEE Transactions on Geoscience and
-    Remote Sensing, 45(4), 990–1004. https://doi.org/10.1109/tgrs.2006.888854
+    - Tsang, L., Pan, J., Liang, D., Li, Z., Cline, D. W., & Tan, Y. (2007). Modeling Active Microwave Remote Sensing of Snow
+      Using Dense Media Radiative Transfer (DMRT) Theory With Multiple-Scattering Effects. IEEE Transactions on Geoscience and
+      Remote Sensing, 45(4), 990–1004. https://doi.org/10.1109/tgrs.2006.888854
 
-    Tan, S., Chang, W., Tsang, L., Lemmetyinen, J., & Proksch, M. (2015). Modeling Both Active and Passive Microwave Remote
-    Sensing of Snow Using Dense Media Radiative Transfer (DMRT) Theory With Multiple Scattering and Backscattering
-    Enhancement. IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, 8(9), 4418–4430.
-    https://doi.org/10.1109/jstars.2015.2469290
+    - Tan, S., Chang, W., Tsang, L., Lemmetyinen, J., & Proksch, M. (2015). Modeling Both Active and Passive Microwave Remote
+      Sensing of Snow Using Dense Media Radiative Transfer (DMRT) Theory With Multiple Scattering and Backscattering
+      Enhancement. IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, 8(9), 4418–4430.
+      https://doi.org/10.1109/jstars.2015.2469290
+
 """
 
 
@@ -73,22 +73,25 @@ class IterativeFirstOrder(RTSolverBase):
     """
     Implement the iterative radiative transfer solver using first-order approximation.
 
-    This solver computes the zeroth and first-order terms of the iterative solution
-    for the radiative transfer equation. It provides efficient backscatter calculations
-    but is limited to scenarios with relatively low scattering albedos.
+    This solver computes the zeroth- and first-order terms of the iterative solution for the radiative
+    transfer equation and provides efficient backscatter calculations for scenarios with relatively
+    low scattering albedos.
 
     Args:
         error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
             If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
-            the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
+            the error message is not accessible. This is only recommended for long simulations that sometimes produce an
+            error.
+        return_contributions: If False (default), returns only total backscatter. If True, returns individual contributions:
+            - 'total': Sum of all contributions.
+            - 'order0_backscatter': Backscatter from the surface, interfaces, and substrate after attenuation
+                through the snowpack.
+            - 'order1_direct_backscatter': Single volume backscatter upwards by the layer.
+            - 'order1_double_bounce': Single volume scattering and single reflection by the interfaces and the
+                substrate.
+            - 'order1_reflected_backscatter': Single volume backscatter and double specular reflection by the
+                interfaces and the substrate.
 
-        return_contributions: If False (default), returns only total backscatter.
-            If True, returns individual contributions:
-                - 'total': Sum of all contributions.
-                - 'order0_backscatter': Backscatter from the surface, interfaces, and substrate after attenuation through the snowpack.
-                - 'order1_direct_backscatter': Single volume backscatter upwards by the layer.
-                - 'order1_double_bounce': Single volume scattering and single reflection by the interfaces and the substrate.
-                - 'order1_reflected_backscatter': Single volume backscatter and double specular reflection by the interfaces and the substrate.
     """
 
     # Dimensions that this solver can handle directly:

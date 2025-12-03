@@ -42,6 +42,10 @@ Here are some recommendations to choose an appropriate solver:
      - Specialized solver for altimeter in Low Rate Mode. Solve the first order interaction.
      - Altimetry in Low Rate Mode (LRM).
      -
+   * - ``nadir_sar_altimetry``
+     - Specialized solver for altimeter in SAR Mode. Solve the first order interaction.
+     - Altimetry in Synthetic Aperture Radar (SAR).
+     -
 
 .. admonition:: **For Developers**
 
