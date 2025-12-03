@@ -3,11 +3,12 @@ Provide Waveform models use in py:mod:`smrt.rtsolver.nadir_lrm_altimetry`.
 
 Brown1977:
     - Brown, G. (1977).The average impulse response of a rough surface and its applications. IEEE Transactions on Antennas and
-    Propagation. 25-1. pp.67-74. https://doi.org/10.1109/TAP.1977.1141536
+      Propagation. 25-1. pp.67-74. https://doi.org/10.1109/TAP.1977.1141536
 
 Newkirk1992:
     - Newkirk, M.H., Brown, G.S., 1992. Issues related to waveform computations for radar altimeter applications. IEEE Trans.
-    Antennas Propag. 40, 1478–1488. https://doi.org/10.1109/8.204738.
+      Antennas Propag. 40, 1478–1488. https://doi.org/10.1109/8.204738.
+
 """
 
 import numpy as np
@@ -16,11 +17,11 @@ import scipy.special
 from smrt.core.globalconstants import C_SPEED, EARTH_RADIUS
 
 
-class WaveformModel(object):
+class LRMWaveformModel(object):
     pass
 
 
-class Brown1977(WaveformModel):
+class Brown1977(LRMWaveformModel):
     """
     Implement the Antenna Gain formulation used by Brown 1977.
 
@@ -30,17 +31,22 @@ class Brown1977(WaveformModel):
     Args:
         sensor: Sensor object.
         numerical_convolution: Whether to use numerical convolution.
+        pulse_sigma: Standard deviation of the radar pulse in seconds. If None, it is set to 0.513 / pulse_bandwidth.
     """
 
     __name__ = "brown_1977"
 
-    def __init__(self, sensor, numerical_convolution=False):
+    def __init__(self, sensor, pulse_sigma=None, numerical_convolution=False):
         super().__init__()
 
         self.sensor = sensor
+        self.pulse_sigma = pulse_sigma if pulse_sigma is not None else 0.513 / sensor.pulse_bandwidth
 
         log2 = 0.6931471805599453
-        self.gamma = 2 / log2 * np.sin(np.deg2rad(self.sensor.beamwidth) / 2) ** 2
+        beamwidth = (
+            self.sensor.beamwidth_alongtrack + self.sensor.beamwidth_acrosstrack
+        ) / 2  # get a 'circular' antenna pattern
+        self.gamma = 2 / log2 * np.sin(np.deg2rad(beamwidth) / 2) ** 2
 
         self.numerical_convolution = numerical_convolution
 
@@ -109,7 +115,7 @@ class Brown1977(WaveformModel):
         # """
 
         sqrt2 = 1.4142135623731
-        sigma_c = np.sqrt(self.sensor.pulse_sigma**2 + (2 * sigma_surface / C_SPEED) ** 2)
+        sigma_c = np.sqrt(self.pulse_sigma**2 + (2 * sigma_surface / C_SPEED) ** 2)
 
         pfs = self.PFS(tau, surface_slope=surface_slope, shift_nominal_gate=False)
 
@@ -134,7 +140,7 @@ class Brown1977(WaveformModel):
             return pfs / self.sensor.pulse_bandwidth
 
 
-class Newkrik1992(WaveformModel):
+class Newkrik1992(LRMWaveformModel):
     """
     Implement the Antenna Gain formulation proposed by Newkrik and Brown, 1992.
 
@@ -152,7 +158,13 @@ class Newkrik1992(WaveformModel):
         self.G0 = 1
 
         log2 = 0.6931471805599453
-        self.gamma = 2 / log2 * np.sin(np.deg2rad(self.sensor.beamwidth) / 2) ** 2
+        self.gamma = (
+            2 / log2 * np.sin(np.deg2rad(self.sensor.beamwidth_alongtrack) / 2) ** 2
+        )  # eq 5 in Newkrik and Brown 1992
+        self.beam_asymmetry = (
+            np.sin(np.deg2rad(self.sensor.beamwidth_alongtrack) / 2)
+            / np.sin(np.deg2rad(self.sensor.beamwidth_acrosstrack) / 2)
+        ) ** 2 - 1  # from eq 6 in Newkrik and Brown 1992
 
     def G(self, theta, phi):
         rho_h = np.tan(theta)
@@ -160,7 +172,7 @@ class Newkrik1992(WaveformModel):
 
         sin_omega2 = rho_h**2 * np.sin(phi) ** 2 / (rho_h**2 - 2 * rho_h * rho0_h * np.cos(phi) + rho0_h)
 
-        return self.G0 * np.exp(-2 / self.gamma * (1 + self.sensor.beam_asymmetry * sin_omega2**2) * np.sin(theta) ** 2)
+        return self.G0 * np.exp(-2 / self.gamma * (1 + self.beam_asymmetry * sin_omega2**2) * np.sin(theta) ** 2)
 
     def PFS(self, sensor, tau):
         # include Earth curvature as in Newkrik and Brown, 1992

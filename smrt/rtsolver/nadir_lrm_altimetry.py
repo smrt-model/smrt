@@ -11,7 +11,7 @@ Approximations:
       extinction.
     - Near nadir / small angle approximation: to compute delay, the paths in the snow are along the z-axis. Off-nadir
       delay is neglected. This error is likely to be small (except for very deep penetration).
-    - Do not account for specular refelction (to be implemented).
+    - Do not account for specular reflection (to be implemented).
 
 Note:
     With this RT solver, if using Geometrical Optics for rough surface/interface modeling, it is strongly advised to use
@@ -27,8 +27,9 @@ Usage:
 
 References:
     - F. Larue, G. Picard, J. Aublanc, L. Arnaud, A. Robledano-Perez, E. Le Meur, V. Favier, B. Jourdain, J. Savarino, P.
-       Thibaut, Radar altimeter waveform simulations in Antarctica with the Snow Microwave Radiative Transfer Model
-       (SMRT) , Remote Sensing of Environment, 263, 112534 doi:10.1016/j.rse.2021.112534, 2021
+      Thibaut, Radar altimeter waveform simulations in Antarctica with the Snow Microwave Radiative Transfer Model
+      (SMRT) , Remote Sensing of Environment, 263, 112534 doi:10.1016/j.rse.2021.112534, 2021
+
 """
 
 import numpy as np
@@ -39,7 +40,7 @@ from smrt.core.error import SMRTError
 from smrt.core.globalconstants import C_SPEED
 from smrt.core.result import AltimetryResult
 from smrt.interface.flat import Flat
-from smrt.rtsolver.waveform_model import Brown1977
+from smrt.rtsolver.lrm_waveform_model import Brown1977
 
 
 class NadirLRMAltimetry(object):
@@ -226,7 +227,7 @@ class NadirLRMAltimetry(object):
             # then the (PTR and PDF)
 
             # start with building the PTR
-            if (self.sensor.pulse_sigma > 0) or (sigma_surface > 0):
+            if sigma_surface > 0:
                 sigma_c = np.sqrt(self.sensor.pulse_sigma**2 + (2 * sigma_surface / C_SPEED) ** 2)
 
                 # restrict t_gate to 5 sigma and compute the positive and negative values
@@ -287,7 +288,7 @@ class NadirLRMAltimetry(object):
                     )
 
             # now take into account the PTR + PDF assuming both are gaussian
-            if (self.sensor.pulse_sigma > 0) or (sigma_surface > 0):
+            if sigma_surface > 0:
                 # perform the last convolution
                 def do_convolve_by_PTR_PDF(backscatter):
                     # perform the convolution and cut the first part due to t_gate symmetrization (ensure the nominal

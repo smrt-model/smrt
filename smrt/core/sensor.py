@@ -15,7 +15,7 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from ..core.globalconstants import C_SPEED
+from ..core.globalconstants import C_SPEED, EARTH_RADIUS
 
 # local import
 from .error import SMRTError, smrt_warn
@@ -200,18 +200,31 @@ def active(
     return sensor
 
 
-def altimeter(channel, **kwargs):
+def lrm_altimeter(channel, **kwargs):
+    """
+    Return a generic configuration for a LRM altimeter.
+
+    """
+
+    return Altimeter(channel=channel, ndoppler=0, **kwargs)
+
+
+def sar_altimeter(channel, **kwargs):
+    """
+    Return a generic configuration for a SAR altimeter.
+
+    """
     return Altimeter(channel=channel, **kwargs)
 
 
 def make_multi_channel_altimeter(config, channel):
-    # helper function to make a single or multi channel altimter sensor object from a config in dict format
+    # helper function to make a single or multi channel altimeter sensor object from a config in dict format
     if isinstance(channel, str):
-        return altimeter(channel, **config[channel])
+        return Altimeter(channel=channel, **config[channel])
     else:
         if channel is None:
             channel = config.keys()
-        return SensorList([altimeter(c, **config[c]) for c in channel])
+        return SensorList([Altimeter(channel=c, **config[c]) for c in channel])
 
 
 class SensorBase(object):
@@ -406,31 +419,57 @@ class SensorList(SensorBase):
 
 
 class Altimeter(Sensor):
-    """
-    This class contains a configuration for altimeter.
+    """Configuration for LRM and SAR altimeters.
+    Use of the functions :py:func:`sar_altimeter`, or the sensor specific functions
+    e.g. :py:func:`sentinel3_sarm` are recommended to access this class.
 
-    Use of the functions :py:func:`altimeter`, or the sensor specific functions
-    e.g. :py:func:`envisat_ra2` are recommended to access this class.
     """
 
     def __init__(
         self,
         frequency,
         altitude,
-        beamwidth,
         pulse_bandwidth,
-        sigma_p=None,
+        beamwidth_alongtrack,
+        beamwidth_acrosstrack,
+        pulse_repetition_frequency=0,  # can be zero for LRM, but not for SAR
+        velocity=0,  # can be zero for LRM, but not for SAR
         antenna_gain=1,
-        pitch_angle_deg=0,
-        roll_angle_deg=0,
-        beam_asymmetry=0,
-        ngate=1024,
+        ngate=128,
+        ndoppler=0,  # 0 = LRM
         nominal_gate=40,
+        doppler_window="rect",
+        pitch_angle_deg=0.0,
+        roll_angle_deg=0.0,
         theta_inc_deg=0.0,
         polarization_inc=None,
         polarization=None,
         channel=None,
     ):
+        """Build a SAR altimeter sensor configuration.
+
+
+        Args:
+            frequency: frequency in Hz.
+            altitude: altitude of the sensor in m.
+            pulse_bandwidth: pulse bandwidth in Hz.
+            beamwidth_alongtrack: beamwidth along track in degrees.
+            beamwidth_acrosstrack: beamwidth across track in degrees.
+            pulse_repetition_frequency: pulse repetition frequency in Hz (SAR mode). Can be zero for LRM mode.
+            velocity: velocity of the sensor in m/s (SAR mode). Can be unset or zero for LRM mode.
+            antenna_gain: one-way antenna gain at the center of the antenna (unitless).
+            ngate: number of range gates.
+            ndoppler: number of Doppler bins (SAR mode). Must be 0 for LRM mode.
+            nominal_gate: nominal gate number (used for georeferencing).
+            doppler_window: Doppler window type ('rect' or 'hamming').
+            pitch_angle_deg: pitch angle in degrees.
+            roll_angle_deg: roll angle in degrees.
+            theta_inc_deg: incidence angle in degrees from nadir.
+            polarization_inc: list of single character (H or V) for the incident wave.
+            polarization: list of single character (H or V) for the received wave.
+            channel: name of the channel.
+        """
+
         channel_map = {channel: dict()} if channel is not None else dict()
 
         super().__init__(
@@ -442,16 +481,29 @@ class Altimeter(Sensor):
             channel_map=channel_map,
             phi_deg=180,  # this is important to get backscatter with DORT
         )
+
         self.altitude = altitude
-        self.beamwidth = beamwidth
+        self.beamwidth_alongtrack = beamwidth_alongtrack
+        self.beamwidth_acrosstrack = beamwidth_acrosstrack
+        self.antenna_gain = antenna_gain
+        self.pulse_repetition_frequency = pulse_repetition_frequency
+        self.velocity = velocity
         self.ngate = ngate
+        self.ndoppler = ndoppler
         self.pulse_bandwidth = pulse_bandwidth
-        self.pulse_sigma = sigma_p if sigma_p is not None else 0.513 / pulse_bandwidth
         self.nominal_gate = nominal_gate
         self.pitch_angle = np.deg2rad(pitch_angle_deg)
         self.roll_angle = np.deg2rad(roll_angle_deg)
-        self.beam_asymmetry = beam_asymmetry
-        self.antenna_gain = antenna_gain
+
+        self.doppler_window = doppler_window
+
+        # Earth sphericity compensation # see Chelton 1989
+        self.alpha = 1 + altitude / EARTH_RADIUS  # earth sphericity compensation # see Chelton 1989
+
+    @property
+    def burst_duration(self):
+        # used by some delay_doppler_map models:
+        return self.ndoppler / self.pulse_repetition_frequency
 
     @property
     def off_nadir_angle(self):
