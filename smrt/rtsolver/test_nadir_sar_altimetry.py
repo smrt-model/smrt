@@ -76,6 +76,7 @@ def test_wingham18(reduced_cryosat2_sarm, onelayer_snowpack):
 
 
 def test_landy19(reduced_cryosat2_sarm, onelayer_snowpack):
+    pytest.importorskip("finufft")
     m = make_altim_model(
         Landy19, oversampling_time=1, oversampling_doppler=1, delay_doppler_model_options=dict(grid_space=500)
     )
