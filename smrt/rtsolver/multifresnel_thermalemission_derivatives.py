@@ -35,16 +35,18 @@ temperatures: application to melt detection on the Antarctic and Greenland ice s
 """
 
 import numpy as np
+import xarray as xr
 
 # local import
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.result import make_result
 from smrt.rtsolver.rtsolver_utils import prepare_kskaeps_profile_information
 
-from .multifresnel.multifresnel import compute_emerging_radiation, compute_matrix_slab
+from .multifresnel.multifresnel import compute_emerging_radiation
+from .multifresnel import multifresnel_derivatives
 
 
-class MultiFresnelThermalEmission(object):
+class MultiFresnelThermalEmissionDerivatives(object):
     """
     Implement the Multi-Fresnel Thermal Emission (MFTE) solver for SMRT.
 
@@ -111,7 +113,8 @@ class MultiFresnelThermalEmission(object):
             temperature = np.append(temperature, snowpack.substrate.temperature)
 
         mu = np.cos(sensor.theta)
-        M, tau_snowpack = compute_matrix_slab(
+        # dM is not implemented yet
+        M, dM, tau_snowpack = multifresnel_derivatives.compute_matrix_slab_derivatives(
             frequency=sensor.frequency,
             outmu=mu,
             permittivity=effective_permittivity,
@@ -137,5 +140,14 @@ class MultiFresnelThermalEmission(object):
         other_data = prepare_kskaeps_profile_information(
             snowpack, emmodels, effective_permittivity[0 : snowpack.nlayer], mu=mu
         )
+        # This could be added to prepare_kskaeps_profile_information
+        # compute_emerging_radiation is not implemented yet for derivatives
+        dtbsdti = [compute_emerging_radiation(dm) for dm in dM]
+        derivative_array_v = [rad[0] for rad in dtbsdti]
+        derivative_array_h = [rad[1] for rad in dtbsdti]
+        layer_index = "layer", range(len(effective_permittivity))
+        polarization_index = "polarization", range(2)
+        other_data["dTBvsdTi"] = xr.DataArray(derivative_array_v, coords=[layer_index, polarization_index])
+        other_data["dTBhsdTi"] = xr.DataArray(derivative_array_h, coords=[layer_index, polarization_index])
 
         return make_result(sensor, np.transpose((Tbv, Tbh)), coords, other_data=other_data)
