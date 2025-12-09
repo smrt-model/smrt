@@ -6,7 +6,7 @@ from . import multifresnel
 def compute_matrix_slab_derivatives(
     frequency: float,
     outmu: npt.NDArray[np.floating],
-    permittivity: npt.NDArray[complex],
+    permittivity: npt.NDArray[np.complexfloating],
     temperature: npt.NDArray[np.floating],
     thickness: npt.NDArray[np.floating],
     prune_deep_snowpack: int = 10,
