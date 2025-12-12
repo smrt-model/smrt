@@ -185,6 +185,17 @@ def test_empty_snowpack():
     assert sp.layers[0].microstructure_model.__name__ == "Homogeneous"
 
 
+def test_make_snowpack_emmodel():
+    sp = make_snowpack(
+        thickness=[1],
+        microstructure_model="exponential",
+        density=300,
+        corr_length=200e-6,
+        emmodel="iba",
+    )
+    assert sp.layers[0].emmodel == "iba"
+
+
 def test_make_transparent_volume():
     sp = make_transparent_volume()
 
