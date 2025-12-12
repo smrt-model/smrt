@@ -3,14 +3,6 @@ import pytest
 from smrt import make_interface, make_model, make_snowpack
 from smrt.core.terrain import TerrainInfo
 from smrt.inputs import sar_altimeter_list
-from smrt.rtsolver.delay_doppler_model.boy17 import Boy17
-from smrt.rtsolver.delay_doppler_model.buchhaupt18 import Buchhaupt18
-from smrt.rtsolver.delay_doppler_model.dinardo18 import Dinardo18
-from smrt.rtsolver.delay_doppler_model.halimi14 import Halimi14
-from smrt.rtsolver.delay_doppler_model.landy19 import Landy19
-from smrt.rtsolver.delay_doppler_model.ray15 import Ray15
-from smrt.rtsolver.delay_doppler_model.wingham04 import Wingham04
-from smrt.rtsolver.delay_doppler_model.wingham18 import Wingham18
 
 
 @pytest.fixture
@@ -40,37 +32,37 @@ def make_altim_model(delay_doppler_model, **kwargs):
 
 
 def test_dinardo18(reduced_cryosat2_sarm, onelayer_snowpack):
-    m = make_altim_model(Dinardo18)
+    m = make_altim_model("dinardo18")
 
     m.run(reduced_cryosat2_sarm, onelayer_snowpack)
 
 
 def test_ray15(reduced_cryosat2_sarm, onelayer_snowpack):
-    m = make_altim_model(Ray15, oversampling_time=1, oversampling_doppler=1)
+    m = make_altim_model("ray15", oversampling_time=1, oversampling_doppler=1)
 
     m.run(reduced_cryosat2_sarm, onelayer_snowpack)
 
 
 def test_buchhaupt18(reduced_cryosat2_sarm, onelayer_snowpack):
-    m = make_altim_model(Buchhaupt18, oversampling_time=1, oversampling_doppler=4)  # oversampling_doppler must be >=4
+    m = make_altim_model("buchhaupt18", oversampling_time=1, oversampling_doppler=4)  # oversampling_doppler must be >=4
 
     m.run(reduced_cryosat2_sarm, onelayer_snowpack)
 
 
 def test_halimi14(reduced_cryosat2_sarm, onelayer_snowpack):
-    m = make_altim_model(Halimi14, oversampling_time=1, oversampling_doppler=1)
+    m = make_altim_model("halimi14", oversampling_time=1, oversampling_doppler=1)
 
     m.run(reduced_cryosat2_sarm, onelayer_snowpack)
 
 
 def test_wingham04(reduced_cryosat2_sarm, onelayer_snowpack):
-    m = make_altim_model(Wingham04, oversampling_time=1, oversampling_doppler=1)
+    m = make_altim_model("wingham04", oversampling_time=1, oversampling_doppler=1)
 
     m.run(reduced_cryosat2_sarm, onelayer_snowpack)
 
 
 def test_wingham18(reduced_cryosat2_sarm, onelayer_snowpack):
-    m = make_altim_model(Wingham18, oversampling_time=1, oversampling_doppler=1)
+    m = make_altim_model("wingham18", oversampling_time=1, oversampling_doppler=1)
 
     m.run(reduced_cryosat2_sarm, onelayer_snowpack)
 
@@ -78,7 +70,7 @@ def test_wingham18(reduced_cryosat2_sarm, onelayer_snowpack):
 def test_landy19(reduced_cryosat2_sarm, onelayer_snowpack):
     pytest.importorskip("finufft")
     m = make_altim_model(
-        Landy19, oversampling_time=1, oversampling_doppler=1, delay_doppler_model_options=dict(grid_space=500)
+        "landy19", oversampling_time=1, oversampling_doppler=1, delay_doppler_model_options=dict(grid_space=500)
     )
 
     m.run(reduced_cryosat2_sarm, onelayer_snowpack)
@@ -86,7 +78,7 @@ def test_landy19(reduced_cryosat2_sarm, onelayer_snowpack):
 
 def test_boy17(reduced_cryosat2_sarm, onelayer_snowpack):
     m = make_altim_model(
-        Boy17, oversampling_time=1, oversampling_doppler=1, delay_doppler_model_options=dict(grid_space=300)
+        "boy17", oversampling_time=1, oversampling_doppler=1, delay_doppler_model_options=dict(grid_space=300)
     )
 
     m.run(reduced_cryosat2_sarm, onelayer_snowpack)
