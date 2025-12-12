@@ -1038,6 +1038,7 @@ def add_transparent_layer(snowpack):
         frac_volume=0,
         temperature=0,
         permittivity_model=(1, 1),
+        emmodel="nonscattering",
     )
 
     snowpack.append(layer, interface=make_interface("transparent"))

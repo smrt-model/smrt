@@ -13,6 +13,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 	- a make_bedrock function to create rock layers.
 	- add precommit configuration and documentation for developers
 	- add Turner2016 water permittivity for supercoold water
+	- allow to define the emmodel and emmodel in the Layer object. This override the default emmodel used in make_model.
 
 ### Changed
 	- change Python support to >=3.10. Old versions are not supported anymore.
@@ -21,6 +22,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 	- the documentation is refactored.
 	- in nadir_lrm_altimetry oversampling argument becomes oversampling_time.
 	- Snowpack.copy is depreciated, it is replaced by shallow_copy.
+
+### Bug
+	- Solve a bug when no snowpack and DMRT_QCA_ShortRange is used due to incompatible microstructure
 
 
 ## [v1.5]

@@ -41,20 +41,27 @@ class Layer(object):
         temperature=FREEZING_POINT,
         permittivity_model=None,
         inclusion_shape=None,
+        emmodel=None,
+        emmodel_options=None,
         **kwargs,
     ):
         """
         Builds a snow layer.
 
         Args:
-            thickness (float): Thickness of the snow layer in meters.
-            microstructure_model (module, optional): Module name of the microstructure model to be used.
-            temperature (float, optional): Temperature of the layer in Kelvin. Defaults to FREEZING_POINT.
-            permittivity_model (list or tuple, optional): Permittivity value or model for the background and materials
+            thickness (float): Thickness of the snow layer in meters. microstructure_model (module, optional): Module
+            name of the microstructure model to be used. temperature (float, optional): Temperature of the layer in
+            Kelvin. Defaults to FREEZING_POINT. permittivity_model (list or tuple, optional): Permittivity value or
+            model for the background and materials
                 (e.g., air and ice). The permittivity can be given as a complex (or real) value or a function that
                 returns a value.
             inclusion_shape (str, optional): Assumption for the shape of air/brine inclusions. Options are "spheres",
                 "random_needles" (elongated ellipsoidal inclusions), and "mix_spheres_needles".
+            emmodel: Name of the electromagnetic model to be used for this layer.
+                Override the default emmodel in make_model. This is useful when a microstructure model is tied
+                to a specific emmodel, but can be used in any case.
+            emmodel_options: Options for the electromagnetic model to be used for this layer.
+                Override the default emmodel_options in make_model.
             **kwargs: Additional parameters for the layer or microstructure model.
         """
         super().__init__()
@@ -69,6 +76,9 @@ class Layer(object):
         self.inclusion_shape = inclusion_shape
 
         self.microstructure_model = microstructure_model
+
+        self.emmodel = emmodel
+        self.emmodel_options = emmodel_options
 
         # manage the microstructure parameters
         if microstructure_model is not None:

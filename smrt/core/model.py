@@ -99,6 +99,7 @@ Both are equivalent. There is no plan to depreciate the original approach that h
 
 import inspect
 import itertools
+import warnings
 from collections.abc import Mapping, Sequence
 from typing import Type, Union
 
@@ -114,7 +115,7 @@ from .sensor import SensorBase
 
 
 def make_model(
-    emmodel,
+    emmodel=None,
     rtsolver=None,
     emmodel_options=None,
     rtsolver_options=None,
@@ -131,9 +132,14 @@ def make_model(
         emmodel (string or class; or list of strings or classes; or dict of strings or classes.): type of emmodel to
             use. Can be given by the name of a file/module in the emmodel directory (as a string) or a class. List (and
             dict, respectively) can be provided when a different emmodel is needed for every layer (or every kind of
-            layer medium). If a list of emmodels is given, the size must be the same as the number of layers in the
-            snowpack. If a dict is given, the keys are the kinds of medium and the values are the associated emmodels to
-            each sort of medium. The layer attribute 'medium' is used to determine the emmodel to use for each layer.
+            layer medium). The rules are:
+                - If a single emmodel is given, the same model is used for all layers, except if layer defines an
+                  emmodel attribute. If emmodel is None, all layers must define an emmodel attribute.
+                - If a list of emmodels is given, the size must be the same as the number of layers in the snowpack. If
+                  a layer define an emmodel attribute, this will cause a warning.
+                - If a dict is given, the keys are the kinds of medium and the values are the associated emmodels to
+                  each sort of medium. The layer attribute 'medium' is used to determine the emmodel to use for each
+                  layer. If a layer define an emmodel attribute, this will cause a warning.
 
         rtsolver (string or class., optional): type of RT solver to use. Can be given by the name of a file/module in
             the rtsolver directeory (as a string) or a class. This argument is optional when only the computation of the
@@ -143,7 +149,8 @@ def make_model(
             the selected emmodel (refer to the documentation of the selected emmodel). The function :py:func:`emmodel`
             provides an alternative to setting `emmodel_options`.
 
-        rtsolver_options (dict, optional): arguments applied to create the rtsolver instance (refer to the documentation of
+        rtsolver_options (dict, optional): arguments applied to create the rtsolver instance (refer to the documentation
+        of
             the rtsolvers). The function :py:func:`rtsolver` provides an alternative to setting `rtsolver_options`.
             (Default value = None)
 
@@ -527,11 +534,21 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
             assert len(self.emmodel) == snowpack.nlayer  # check we have the same number as layer in the snowpack
             # one different model per layer
             emmodel_list = self.emmodel
+            # check that layers do not define an emmodel attribute
+            if not all(layer.emmodel is None for layer in snowpack.layers):
+                warnings.warn(
+                    "Some layers have an emmodel attribute that will be ignored since a list of emmodels is provided to the Model."
+                )
         elif isinstance(self.emmodel, Mapping):
             emmodel_list = (self.emmodel[layer.medium] for layer in snowpack.layers)
+            # check that layers do not define an emmodel attribute
+            if not all(layer.emmodel is None for layer in snowpack.layers):
+                warnings.warn(
+                    "Some layers have an emmodel attribute that will be ignored since a dict of emmodels is provided to the Model."
+                )
         else:
-            # the same model for all layers
-            emmodel_list = itertools.cycle([self.emmodel])
+            # the same model for all layers except if layer defines an emmodel attribute
+            emmodel_list = (layer.emmodel or self.emmodel for layer in snowpack.layers)
 
         if isinstance(self.emmodel_options, Sequence):
             assert (
@@ -545,9 +562,10 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
         ):
             emmodel_options_list = (self.emmodel_options[layer.medium] for layer in snowpack.layers)
         else:
-            emmodel_options_list = itertools.cycle([self.emmodel_options])
+            emmodel_options_list = (layer.emmodel_options or self.emmodel_options for layer in snowpack.layers)
 
         # create a list of emmodel instances (ready to run)
+        # take from the arguments unless it is defined in the layer
         emmodel_instances = [
             make_emmodel_instance(emmodel, sensor, layer, **emmodel_options)
             for emmodel, emmodel_options, layer in zip(emmodel_list, emmodel_options_list, snowpack.layers)

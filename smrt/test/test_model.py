@@ -33,6 +33,18 @@ def onelayer_snowpack_sequence():
     ]
 
 
+def test_empty_snowpack_sequence():
+    empty_snowpack = make_snowpack([], microstructure_model=None, density=[])
+    print(empty_snowpack)
+
+    m = Model("dmrt_qcacp_shortrange", DORT)
+    sensor = amsre("37V")
+
+    res = m.run(sensor, empty_snowpack)
+
+    assert res.TbV() == 0
+
+
 def test_multifrequency(onelayer_snowpack):
     m = Model("dmrt_qcacp_shortrange", DORT)
 
