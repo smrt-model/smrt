@@ -448,7 +448,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
                     # run in a try to catch the exception
                     beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
                 except SMRTError:
-                    return np.full_like(intensity_down_m, np.nan).squeeze()
+                    return reshape_output(np.full_like(intensity_down_m, np.nan).squeeze(), npol)
             else:
                 beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
             assert Eu.shape[0] == npol * nsl
@@ -599,19 +599,20 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
 
         I0up_m = np.array(I0up_m).squeeze()
 
-        # reshape the dimension in two dimensions (theta, pola) and then transpose to (pola, theta)
-        if np.ndim(I0up_m) == 1:
-            # split the outgoing polarization:
-            I0up_m = I0up_m.reshape((I0up_m.shape[0] // npol, npol)).transpose()
-        elif np.ndim(I0up_m) == 2:
-            # split the incoming and outgoing polarization:
-            I0up_m = I0up_m.reshape((I0up_m.shape[0] // npol, npol, I0up_m.shape[1] // npol, npol)).transpose(
-                1, 0, 3, 2
-            )
-        else:
-            raise RuntimeError("Should not be here. Not implemented np.ndim(I0up_m) > 2.")
+        return reshape_output(I0up_m, npol)
 
-        return I0up_m
+
+def reshape_output(I0up_m, npol: int):
+    # reshape the dimension in two dimensions (theta, pola) and then transpose to (pola, theta)
+    if np.ndim(I0up_m) == 1:
+        # split the outgoing polarization:
+        I0up_m = I0up_m.reshape((I0up_m.shape[0] // npol, npol)).transpose()
+    elif np.ndim(I0up_m) == 2:
+        # split the incoming and outgoing polarization:
+        I0up_m = I0up_m.reshape((I0up_m.shape[0] // npol, npol, I0up_m.shape[1] // npol, npol)).transpose(1, 0, 3, 2)
+    else:
+        raise RuntimeError("Should not be here. Not implemented np.ndim(I0up_m) > 2.")
+    return I0up_m
 
 
 def muleye(x):
