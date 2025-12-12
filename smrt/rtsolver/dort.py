@@ -61,6 +61,8 @@ References:
 
 from functools import partial
 
+import joblib
+
 # Stdlib import
 # other import
 import numpy as np
@@ -121,6 +123,12 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
             to be upper triangular. The "half_rank_eig" is the fastest method but requires symmetry and energy
             conservation which may fail with some EMModels and for some parameters. The "stamnes88" is another half rank
             fast method.
+        diagonalization_cache: If "simple", cache the results of the diagonalization to avoid redundant computation.
+            This can speed up significantly the computation when many layers have exactly the same scattering properties
+            in a snowpack or across snowpacks of a sensitivity analysis where only one or few layers are changed at a
+            time. The drawback is that it uses more memory as the simple cache is never emptied. LRU cache could be
+            implemented in the future to limit memory usage while style keeping some efficiency. This feature is
+            experimental, please report success and failure.
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the
@@ -144,6 +152,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
         process_coherent_layers=False,
         prune_deep_snowpack=None,
         diagonalization_method="eig",
+        diagonalization_cache=False,
     ):
         DiscreteOrdinatesMixin.init(self, n_max_stream=n_max_stream, stream_mode=stream_mode, m_max=m_max)
         CoherentLayerMixin.init(self, process_coherent_layers=process_coherent_layers)
@@ -152,6 +161,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
         self.phase_symmetrization = phase_symmetrization
         self.error_handling = error_handling
         self.diagonalization_method = diagonalization_method
+        self.diagonalization_cache = diagonalization_cache
 
         if self.phase_symmetrization:
             smrt_warn("symmetrization is under development and it is not sure it is working yet.")
@@ -201,14 +211,21 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
         return self.make_result(outmu, intensity)
 
     def dort(self, m_max=0, special_return=False):
-        # """Solve the radiative transfer equation using the DORT method
-        # not to be called by the user
-        #     """
-        #     :param incident_intensity: give either the intensity (array of size 2) at incident_angle (radar) or isotropic or a function
-        #             returning the intensity as a function of the cosine of the angle.
-        #     :param incident_angle: if None, the spectrum is considered isotropic, otherise the angle (in radian) given the direction of
-        #             the incident beam
-        #     :param viewing_phi: viewing azimuth angle, the incident beam is at 0, so pi is the backscatter
+        """Solve the radiative transfer equation using the DORT method.
+
+        This is a low-level implementation of the discrete-ordinate and eigenvalue solver.
+        It is not intended to be called directly by end users; use :meth:`solve` instead.
+
+        Args:
+            m_max (int): Maximum azimuthal mode to compute (0 for passive mode).
+            special_return (bool or str): If set to a truthy value or to specific debug flags
+                (for example ``'bBC'``), the method may return internal debug structures
+                instead of the usual output.
+
+        Returns:
+            tuple: ``(outmu, intensity_up)`` where ``outmu`` is the array of outgoing cosines
+            and ``intensity_up`` contains the upwelling intensities (shape depends on sensor mode).
+        """
         # """
 
         npol = 3 if self.sensor.mode == "A" else 2
@@ -261,6 +278,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
                 if self.phase_normalization != "auto"
                 else getattr(self.emmodels[l], "_respect_reciprocity_principle", True),
                 symmetrization=self.phase_symmetrization,
+                cache=self.diagonalization_cache,
             )
             for l in range(len(self.emmodels))
         ]
@@ -448,7 +466,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
                     # run in a try to catch the exception
                     beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
                 except SMRTError:
-                    return reshape_output(np.full_like(intensity_down_m, np.nan).squeeze(), npol)
+                    return _reshape_output(np.full_like(intensity_down_m, np.nan).squeeze(), npol)
             else:
                 beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
             assert Eu.shape[0] == npol * nsl
@@ -480,7 +498,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
             Rtop_l = interfaces.reflection_top(l, m, compute_coherent_only)
 
             # fill the matrix
-            todiag(bBC, il_topl, j, matmul(Ed - matmul(Rtop_l, Eu), transt))
+            _todiag(bBC, il_topl, j, _matmul(Ed - _matmul(Rtop_l, Eu), transt))
 
             if l < nlayer - 1:
                 Tbottom_lp1 = interfaces.transmission_bottom(l, m, compute_coherent_only)
@@ -488,28 +506,28 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
                 # and some streams are subject to total reflection.
                 if not is_equal_zero(Tbottom_lp1):
                     ns_npol_common_bottom = min(Tbottom_lp1.shape[0], nslp1_npol)
-                    todiag(bBC, il_top[l + 1], j, -matmul(Tbottom_lp1, Ed, transb)[:ns_npol_common_bottom, :])
+                    _todiag(bBC, il_top[l + 1], j, -_matmul(Tbottom_lp1, Ed, transb)[:ns_npol_common_bottom, :])
 
             # fill the vector
             if m == 0 and self.temperature is not None and self.temperature[l] > 0:
                 if is_equal_zero(Rtop_l):
                     b[il_topl : il_topl + nsl_npol, :] -= self.temperature[l]  # to be put at layer (l)
                 else:
-                    b[il_topl : il_topl + nsl_npol, :] -= ((1.0 - muleye(Rtop_l)) * self.temperature[l])[
+                    b[il_topl : il_topl + nsl_npol, :] -= ((1.0 - _muleye(Rtop_l)) * self.temperature[l])[
                         :, np.newaxis
                     ]  # a mettre en (l)
                 # the muleye comes from the isotropic emission of the black body
 
                 if l < nlayer - 1 and self.temperature[l] > 0 and not is_equal_zero(Tbottom_lp1):
                     b[il_top[l + 1] : il_top[l + 1] + ns_npol_common_bottom, :] += (
-                        muleye(Tbottom_lp1) * self.temperature[l]
+                        _muleye(Tbottom_lp1) * self.temperature[l]
                     )[:ns_npol_common_bottom, np.newaxis]  # to be put at layer (l + 1)
 
             if l == 0:  # Air-snow interface
                 Tbottom_air_down = interfaces.transmission_bottom(-1, m, compute_coherent_only)
                 if not is_equal_zero(Tbottom_air_down):
                     ns_npol_common_bottom = min(Tbottom_air_down.shape[0], nsl_npol)  # see the comment on Tbottom_lp1
-                    b[il_topl : il_topl + ns_npol_common_bottom, :] += matmul(Tbottom_air_down, intensity_down_m)
+                    b[il_topl : il_topl + ns_npol_common_bottom, :] += _matmul(Tbottom_air_down, intensity_down_m)
 
             # -------------------------------------------------------------------------------
             # Eq 18 & 22 BOTTOM of layer l
@@ -518,14 +536,14 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
             Rbottom_l = interfaces.reflection_bottom(l, m, compute_coherent_only)
 
             # fill the matrix
-            todiag(bBC, il_bottoml, j, matmul(Eu - matmul(Rbottom_l, Ed), transb))
+            _todiag(bBC, il_bottoml, j, _matmul(Eu - _matmul(Rbottom_l, Ed), transb))
 
             if l > 0:
                 Ttop_lm1 = interfaces.transmission_top(l, m, compute_coherent_only)
                 if not is_equal_zero(Ttop_lm1):
                     ns_npol_common_top = min(Ttop_lm1.shape[0], nslm1_npol)  # see the comment on Tbottom_lp1
-                    todiag(
-                        bBC, il_bottom[l - 1], j, -matmul(Ttop_lm1, Eu, transt)[:ns_npol_common_top, :]
+                    _todiag(
+                        bBC, il_bottom[l - 1], j, -_matmul(Ttop_lm1, Eu, transt)[:ns_npol_common_top, :]
                     )  # to be put at layer (l - 1)
 
             # fill the vector
@@ -533,12 +551,12 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
                 if is_equal_zero(Rbottom_l):
                     b[il_bottoml : il_bottoml + nsl_npol, :] -= self.temperature[l]  # to be put at layer (l)
                 else:
-                    b[il_bottoml : il_bottoml + nsl_npol, :] -= ((1.0 - muleye(Rbottom_l)) * self.temperature[l])[
+                    b[il_bottoml : il_bottoml + nsl_npol, :] -= ((1.0 - _muleye(Rbottom_l)) * self.temperature[l])[
                         :, np.newaxis
                     ]  # to be put at layer (l)
                 if l > 0 and not is_equal_zero(Ttop_lm1):
                     b[il_bottom[l - 1] : il_bottom[l - 1] + ns_npol_common_top, :] += (
-                        muleye(Ttop_lm1) * self.temperature[l]
+                        _muleye(Ttop_lm1) * self.temperature[l]
                     )[:ns_npol_common_top, np.newaxis]  # to be put at layer (l - 1)
 
             if (
@@ -552,7 +570,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
                 ns_npol_common_bottom = min(Tbottom_sub.shape[0], nsl_npol)  # see the comment on Tbottom_lp1
                 if not is_equal_zero(Tbottom_sub):
                     b[il_bottoml : il_bottoml + ns_npol_common_bottom, :] += (
-                        muleye(Tbottom_sub) * self.snowpack.substrate.temperature
+                        _muleye(Tbottom_sub) * self.snowpack.substrate.temperature
                     )[:ns_npol_common_bottom, np.newaxis]  # to be put at layer  (l)
 
             # Finalize
@@ -595,15 +613,25 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
         Rbottom_air_down = interfaces.reflection_bottom(-1, m, compute_coherent_only)
         Ttop_0 = interfaces.transmission_top(0, m, compute_coherent_only)  # snow-air
 
-        I0up_m = matmul(Rbottom_air_down, intensity_down_m) + matmul(Ttop_0, I1up_m)[0 : streams.n_air * npol, :]
+        I0up_m = _matmul(Rbottom_air_down, intensity_down_m) + _matmul(Ttop_0, I1up_m)[0 : streams.n_air * npol, :]
 
         I0up_m = np.array(I0up_m).squeeze()
 
-        return reshape_output(I0up_m, npol)
+        return _reshape_output(I0up_m, npol)
 
 
-def reshape_output(I0up_m, npol: int):
-    # reshape the dimension in two dimensions (theta, pola) and then transpose to (pola, theta)
+def _reshape_output(I0up_m, npol: int):
+    """Reshape the intensity output into the expected polarization/angle layout.
+
+    Args:
+        I0up_m (ndarray): Input intensity array. Can be 1D or 2D depending on context.
+        npol (int): Number of polarization components (typically 2 or 3).
+
+    Returns:
+        ndarray: Reshaped intensity array. If input is 1D, returns an array shaped
+            `(pola, theta)`. If input is 2D, returns an array shaped
+            `(pola, theta, pola_in, theta_in)` and transposed to `(pola, theta, pola_in, theta_in)`.
+    """
     if np.ndim(I0up_m) == 1:
         # split the outgoing polarization:
         I0up_m = I0up_m.reshape((I0up_m.shape[0] // npol, npol)).transpose()
@@ -615,8 +643,16 @@ def reshape_output(I0up_m, npol: int):
     return I0up_m
 
 
-def muleye(x):
-    #  """multiply x * 1v """
+def _muleye(x):
+    """Return the sum/diagonal appropriate to different matrix types.
+
+    Args:
+        x: Can be an instance of ``smrt_diag``, a scalar, or a 2D array.
+
+    Returns:
+        ndarray: If ``x`` is ``smrt_diag``, returns its diagonal as 1D array. If ``x`` is a scalar,
+        returns at least a 1D array with that value. If ``x`` is a 2D array, returns the row-wise sum.
+    """
 
     if isinstance(x, smrt_diag):
         return x.diagonal()
@@ -627,18 +663,43 @@ def muleye(x):
         return np.sum(x, axis=1)
 
 
-def matmul(a, b, *args):
-    # """just because numpy matrix operator does not support scalar multiplication..."""
+def _matmul(a, b, *args):
+    """Multiply arrays or scalars, supporting chaining and scalar*array semantics.
+
+    This wrapper multiplies ``a`` and ``b``; if additional arrays are provided in ``*args``,
+    they are multiplied in sequence (left-associative). If either operand is scalar, scalar
+    multiplication is used.
+
+    Args:
+        a: Scalar or array-like left operand.
+        b: Scalar or array-like right operand.
+        *args: Optional additional operands to multiply in sequence.
+
+    Returns:
+        The result of the chained multiplication.
+    """
+
     if args:
-        b = matmul(b, *args)
+        b = _matmul(b, *args)
     if np.isscalar(a) or np.isscalar(b):
         return a * b
     else:
         return a @ b
 
 
-def todiag(bmat, oi, oj, dmat):
-    # """insert the small dense dmat matrix in the diagonal bmat matrix"""
+def _todiag(bmat, oi, oj, dmat):
+    """Insert a dense block ``dmat`` into a banded matrix representation ``bmat``.
+
+    The function assumes ``bmat`` uses the (upper, lower) banded storage with center row
+    at index ``u = (bmat.shape[0] - 1) // 2`` and inserts the values of ``dmat`` at the
+    appropriate diagonals given offsets ``oi`` and ``oj``.
+
+    Args:
+        bmat (ndarray): Banded matrix storage array of shape ``(2*nband+1, nboundary)``.
+        oi (int): Row offset where the block should be placed.
+        oj (int): Column offset where the block should be placed.
+        dmat (ndarray): Dense matrix block to insert.
+    """
 
     u = (bmat.shape[0] - 1) // 2
 
@@ -655,9 +716,9 @@ def todiag(bmat, oi, oj, dmat):
 
 
 if numba is not None:
-    compiled_todiag = numba.jit(nopython=True, cache=True)(todiag)
+    compiled_todiag = numba.jit(nopython=True, cache=True)(_todiag)
 
-    def todiag(bmat, oi, oj, dmat):
+    def _todiag(bmat, oi, oj, dmat):
         compiled_todiag(bmat, int(oi), int(oj), dmat)
 
 
@@ -685,8 +746,29 @@ if numba is not None:
 #     return y
 
 
+_eigenvaluesolver_diagnalization_simple_cache = {}
+
+
 class EigenValueSolver(object):
-    def __init__(self, ke, ks, ft_even_phase_function, mu, weight, m_max, normalization, symmetrization, method):
+    def __init__(self, ke, ks, ft_even_phase_function, mu, weight, m_max, normalization, symmetrization, method, cache):
+        """Initialize the EigenValueSolver.
+
+        Args:
+            ke (callable): Extinction coefficient of the layer for mode `m`.
+            ks (callable or float): Scattering coefficient of the layer for mode `m`.
+            ft_even_phase_function (callable or None): Function that returns the even part of the
+                phase function. Should accept `(mu_s, mu_i, m_max)` and return a matrix-like object.
+            mu (array-like): Cosines of the stream angles (positive values for outgoing).
+            weight (array-like): Quadrature weights for the streams.
+            m_max (int): Maximum azimuthal mode to consider.
+            normalization (str or bool): Phase-function normalization option (e.g. ``'auto'``, ``'forced'``,
+                or ``False``).
+            symmetrization (bool): If True, enforce phase-function symmetry.
+            method (str): Diagonalization method. Supported values: ``'eig'``, ``'shur'``,
+                ``'shur_forcedtriu'``, ``'half_rank_eig'``, ``'stamnes88'``.
+            cache (bool): If True, cache diagonalization results to avoid recomputation.
+
+        """
         # :param Ke: extinction coefficient of the layer for mode m
         # :param ft_even_phase: ft_even_phase function of the layer for mode m
         # :param mu: cosines
@@ -706,20 +788,24 @@ class EigenValueSolver(object):
         self.solve = self.solve_generic
         self.compute_half_rank_phase = False
 
-        if method == "eig":
-            self.diagonalize_function = self.diagonalize_eig
-        elif method == "shur":
-            self.diagonalize_function = partial(self.diagonalize_shur, force_triu=False)
-        elif method == "shur_forcedtriu":
-            self.diagonalize_function = partial(self.diagonalize_shur, force_triu=True)
-        elif method == "half_rank_eig":
-            self.compute_half_rank_phase = True
-            self.diagonalize_function = self.diagonalize_half_rank_eig
-        elif method == "stamnes88":
-            self.compute_half_rank_phase = True
-            self.solve = self.solve_stamnes88
-        else:
-            raise SMRTError(f"Unknown method '{method}' to diagonalize the matrix")
+        self.method = method
+        self.cache = cache
+
+        match self.method:
+            case "eig":
+                self.diagonalize_function = self.diagonalize_eig
+            case "shur":
+                self.diagonalize_function = partial(self.diagonalize_shur, force_triu=False)
+            case "shur_forcedtriu":
+                self.diagonalize_function = partial(self.diagonalize_shur, force_triu=True)
+            case "half_rank_eig":
+                self.compute_half_rank_phase = True
+                self.diagonalize_function = self.diagonalize_half_rank_eig
+            case "stamnes88":
+                self.compute_half_rank_phase = True
+                self.solve = self.solve_stamnes88
+            case _:
+                raise SMRTError(f"Unknown method '{method}' to diagonalize the matrix")
 
         self.norm_0 = None
         self.norm_m = None
@@ -800,7 +886,15 @@ class EigenValueSolver(object):
         if debug_A:  # this is not elegant but can be useful. A dedicated function to compute_A is not better
             return A
 
-        return self.diagonalize_function(m, A)
+        # simple caching mechanism to avoid recomputing the diagonalization of identical matrices
+        if self.cache:
+            key = joblib.hash(A) + self.method
+            if key not in _eigenvaluesolver_diagnalization_simple_cache:
+                _eigenvaluesolver_diagnalization_simple_cache[key] = self.diagonalize_function(m, A)
+            return _eigenvaluesolver_diagnalization_simple_cache[key]
+        else:
+            # not cached version
+            return self.diagonalize_function(m, A)
         # !-----------------------------------------------------------------------------!
 
     def return_no_scattering(self, m: int):
@@ -857,7 +951,6 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
 
     def diagonalize_eig(self, m, A):
         # diagonalise the matrix. Eq (13)
-
         try:
             beta, E = scipy.linalg.eig(A, overwrite_a=True)
         except scipy.linalg.LinAlgError:

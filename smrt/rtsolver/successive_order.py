@@ -40,7 +40,7 @@ import numpy as np
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.rtsolver.dort import (
     InterfaceProperties,
-    matmul,
+    _matmul,
     symmetrize_phase_matrix,
 )  # TODO: move these objects in a generic place
 from smrt.rtsolver.rtsolver_utils import (
@@ -528,7 +528,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
         new_intensity = np.zeros_like(intensity)
 
         if (order == 0) and (incident_intensity is not None):
-            transmitted_intensity = matmul(transmission_bottom[-1], incident_intensity)
+            transmitted_intensity = _matmul(transmission_bottom[-1], incident_intensity)
         else:
             transmitted_intensity = None
 
@@ -554,7 +554,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             i_top = i_subinterface[l]
             i_bottom = i_subinterface[l + 1] - 1
 
-            new_intensity[i_top, p_dn] = matmul(
+            new_intensity[i_top, p_dn] = _matmul(
                 reflection_top[l], intensity[i_top, p_up]
             )  # reflect intensity coming up
 
@@ -583,7 +583,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             #     # eq 66 (adapted for downward)
             # assert k + 1 == i_bottom
 
-            transmitted_intensity = matmul(transmission_bottom[l], new_intensity[i_bottom, p_dn])
+            transmitted_intensity = _matmul(transmission_bottom[l], new_intensity[i_bottom, p_dn])
 
         assert i_bottom + 1 == len(new_intensity)
 
@@ -602,7 +602,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             i_top = i_subinterface[l]
             i_bottom = i_subinterface[l + 1] - 1
 
-            new_intensity[i_bottom, p_up] = matmul(reflection_bottom[l], intensity[i_bottom, p_dn])
+            new_intensity[i_bottom, p_up] = _matmul(reflection_bottom[l], intensity[i_bottom, p_dn])
             # reflect intensity coming down at the bottom of the layer
 
             if transmitted_intensity is not None:
@@ -629,16 +629,16 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             series_upwelling(new_intensity[i_top : i_bottom + 1, p_up], extinction[l], s)
             # eq 66 in Lenoble
 
-            transmitted_intensity = matmul(transmission_top[l], new_intensity[i_top, p_up])
+            transmitted_intensity = _matmul(transmission_top[l], new_intensity[i_top, p_up])
 
         assert i_top == 0
         # compute the final transmission
-        emerging_intensity = matmul(transmission_top[0], new_intensity[i_top, p_up])
+        emerging_intensity = _matmul(transmission_top[0], new_intensity[i_top, p_up])
 
         # print(f"{np.all(emerging_intensity==0)=} {np.max(emerging_intensity)=} {np.min(emerging_intensity)=}")
         if (incident_intensity is not None) and (order == 0):
             n = len(incident_intensity)
-            emerging_intensity[:n] += matmul(reflection_bottom[-1], incident_intensity)
+            emerging_intensity[:n] += _matmul(reflection_bottom[-1], incident_intensity)
 
         return new_intensity, emerging_intensity
 
