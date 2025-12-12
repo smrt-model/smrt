@@ -69,7 +69,7 @@ def test_depth_hoar_stream_numbers():
 def test_2layer_pack():
     # Will throw error if doesn't run
     sp = setup_2layer_snowpack()
-    sensor = active(13e9, 45)
+    sensor = active(13e9, [30, 45])
     m = Model(NonScattering, IterativeSecondOrder)
     m.run(sensor, sp).sigmaVV()
 

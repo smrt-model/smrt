@@ -382,7 +382,7 @@ class IterativeSecondOrder(RTSolverBase):
                         )
 
             # intensity transmitted down to next layer
-            gamma2_ln = compute_gamma(mus[ln], layer_optical_depth_ln) ** 2
+            gamma2_ln = compute_gamma(mus[ln], layer_optical_depth_ln)[:, np.newaxis, np.newaxis] ** 2
             # transmitted intensity
             if ln < nlayer - 1:
                 refraction_factor_ln = compute_refraction_factor(
