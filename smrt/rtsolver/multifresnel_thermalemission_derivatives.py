@@ -104,6 +104,7 @@ class MultiFresnelThermalEmissionDerivatives(object):
         thickness = snowpack.layer_thicknesses
         temperature = snowpack.profile("temperature")
         effective_permittivity = [emmodel.effective_permittivity() for emmodel in emmodels]
+        frac_volume = [emmodel.frac_volume for emmodel in emmodels]
 
         if snowpack.substrate is not None:
             effective_permittivity.append(snowpack.substrate.permittivity(sensor.frequency))
@@ -119,6 +120,7 @@ class MultiFresnelThermalEmissionDerivatives(object):
             outmu=mu,
             permittivity=effective_permittivity,
             temperature=temperature,
+            frac_volume=frac_volume,
             thickness=thickness,
             prune_deep_snowpack=self.prune_deep_snowpack,
         )

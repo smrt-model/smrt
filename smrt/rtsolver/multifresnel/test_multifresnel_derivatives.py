@@ -18,14 +18,17 @@ def test_complex_polarized_id23():
     ["temperature", "frequency", "theta"], [(200, 1.4e9, 30), (220, 1.4e9, 30), (240, 0.4e9, 40), (260, 17e9, 40)]
 )
 def test_forward_matrix_derivative(temperature, frequency, theta):
+    dt = 1e-6
     eps1: complex = 1
     eps2: complex = ice.ice_permittivity_maetzler06(temperature=temperature, frequency=frequency)
+    eps3: complex = ice.ice_permittivity_maetzler06(temperature=temperature + dt, frequency=frequency)
     mu: float = np.atleast_1d(np.cos(theta))
     kd: float = 2 * np.pi * frequency / C_SPEED * 10
-    dt = 1e-6
-    dM = forward_matrix_derivative(eps1=eps1, eps2=eps2, mu=mu, kd=kd, temperature=temperature, frequency=frequency)
-    Mp, _ = multifresnel.forward_matrix_fulloutput(eps1=eps1, eps2=eps2, mu=mu, kd=kd, temperature=(temperature + dt))
+    
+    dM = forward_matrix_derivative(eps1=eps1, eps2=eps2, mu=mu, kd=kd, temperature=temperature, frequency=frequency, frac_volume=1)
+    Mp, _ = multifresnel.forward_matrix_fulloutput(eps1=eps1, eps2=eps3, mu=mu, kd=kd, temperature=(temperature + dt))
     M, _ = multifresnel.forward_matrix_fulloutput(eps1, eps2, mu, kd, temperature=temperature)
-    print(f"M = {M}\nMp-M = {Mp - M}")
+    #print(f"M = {M}\nMp-M = {Mp - M}")
     dMincr = (Mp - M) / dt
+    print(f"dM = {dM}\ndMincr = {dMincr}")
     np.testing.assert_allclose(dM, dMincr)

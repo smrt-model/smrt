@@ -10,6 +10,7 @@ def compute_matrix_slab_derivatives(
     frequency: float,
     outmu: npt.NDArray[np.floating],
     permittivity: npt.NDArray[np.complexfloating],
+    frac_volume: npt.NDArray[np.floating],
     temperature: npt.NDArray[np.floating],
     thickness: npt.NDArray[np.floating],
     prune_deep_snowpack: int = 10,
@@ -50,7 +51,7 @@ def compute_matrix_slab_derivatives(
     Right_accu[0] = complex_polarized_id23(len(mu))
     # Indices need to be proofread.
     layer_index = 0
-    for eps_2, temperature_, kd_ in zip(permittivity, temperature, kd):
+    for eps_2, temperature_, kd_, frac_volume_ in zip(permittivity, temperature, kd, frac_volume):
         L, (mu2, tau_layer) = multifresnel.forward_matrix_fulloutput(
             eps_1,
             eps_2,
@@ -64,7 +65,14 @@ def compute_matrix_slab_derivatives(
 
         # forward_matrix_derivative is just a proxy for now
         dL = forward_matrix_derivative(
-            eps_1, eps_2, mu, kd=kd_, temperature=temperature_, frequency=frequency, limit_optical_depth=tau_max
+            eps_1,
+            eps_2,
+            mu,
+            kd=kd_,
+            frac_volume=frac_volume_,
+            temperature=temperature_,
+            frequency=frequency,
+            limit_optical_depth=tau_max,
         )
         derivative_matrix_by_layer[layer_index] = dL
 
@@ -111,6 +119,7 @@ def forward_matrix_derivative(
     eps2: complex,
     mu: float,
     kd: float,
+    frac_volume: float,
     temperature: float,
     frequency: float,
     limit_optical_depth: Optional[float] = None,
@@ -141,7 +150,10 @@ def forward_matrix_derivative(
     optical_depth = 2 * np.sqrt(eps2).imag * kd / mu2
     optical_depth_derivative = (
         kd
-        * (ice.ice_permittivity_maetzler06_dt(frequency=frequency, temperature=temperature) / np.sqrt(eps2)).imag
+        * (
+            mockup_permittivity_derivative(frac_volume=frac_volume, temperature=temperature, frequency=frequency, dt=1)
+            / np.sqrt(eps2)
+        ).imag
         / mu2
     )
     if limit_optical_depth is not None:
@@ -170,3 +182,28 @@ def forward_matrix_derivative(
 
     M /= 1 - r
     return M
+
+
+def permittivity_derivative(frac_volume: float, temperature: float, frequency: float, dt: float = 1):
+    """
+    Compute the derivative of the permittivity w.r.t. the temperature
+
+    Args:
+        frac_volume: Volume fraction of ice in the snow layer
+        temperature: Ice temperature in Kelvin
+        frequency: sensor frequency in Hz
+        dt: increment in temperature for finite difference (default is 1 K)
+    Returns:
+        derivative of the permittivity
+    """
+    base_ice_perm = ice.ice_permittivity_maetzler06(temperature=temperature, frequency=frequency)
+    polder_base = ice.polder_van_santen(frac_volume, 1, base_ice_perm)
+    inc_ice_perm = ice.ice_permittivity_maetzler06(temperature=temperature + dt, frequency=frequency)
+    polder_inc = ice.polder_van_santen(frac_volume, 1, inc_ice_perm)
+    return (polder_inc - polder_base) / dt
+
+def mockup_permittivity_derivative(frac_volume: float, temperature: float, frequency: float, dt: float = 1):
+    """
+    Mockup function for testing
+    """
+    return ice.ice_permittivity_maetzler06_dt(frequency=frequency, temperature=temperature)
