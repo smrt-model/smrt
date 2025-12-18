@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 from smrt.core.globalconstants import C_SPEED
+from smrt.permittivity import ice
 from . import multifresnel
 from typing import Optional
 
@@ -63,11 +64,10 @@ def compute_matrix_slab_derivatives(
 
         # forward_matrix_derivative is just a proxy for now
         dL = forward_matrix_derivative(
-            eps_1, eps_2, mu, kd=kd_, temperature=temperature_, limit_optical_depth=tau_max
+            eps_1, eps_2, mu, kd=kd_, temperature=temperature_, frequency=frequency, limit_optical_depth=tau_max
         )
         derivative_matrix_by_layer[layer_index] = dL
-        
-        
+
         tau_max -= tau_layer  # decrease the optical depth
         tau_snowpack += tau_layer[imumax]
         layer_index += 1
@@ -76,14 +76,15 @@ def compute_matrix_slab_derivatives(
 
         mu = mu2
         eps_1 = eps_2
-        
-    
-    for i in range(layer_index -1):
+
+    for i in range(layer_index - 1):
         Left_accu[i + 1] = multifresnel.matmul3(Left_accu[i], forward_matrix_by_layer[i])
         Right_accu[i + 1] = multifresnel.matmul3(forward_matrix_by_layer[layer_index - 1 - i], Right_accu[i])
-    
-    for k in range(layer_index -1):
-        dMdT[k] = multifresnel.matmul3(Left_accu[k], multifresnel.matmul3(derivative_matrix_by_layer[k], Right_accu[layer_index - 1 - k])) 
+
+    for k in range(layer_index - 1):
+        dMdT[k] = multifresnel.matmul3(
+            Left_accu[k], multifresnel.matmul3(derivative_matrix_by_layer[k], Right_accu[layer_index - 1 - k])
+        )
     return M, dMdT, tau_snowpack
 
 
@@ -106,9 +107,16 @@ def complex_polarized_id23(last_dimension: int) -> npt.NDArray[np.floating]:
 
 
 def forward_matrix_derivative(
-    eps1: complex, eps2: complex, mu: float, kd: float, temperature: float, limit_optical_depth: Optional[float] = None
+    eps1: complex,
+    eps2: complex,
+    mu: float,
+    kd: float,
+    temperature: float,
+    frequency: float,
+    limit_optical_depth: Optional[float] = None,
 ):
-    """compute the operator to go from layer 1 to 2. Is just a copy of multifresnel.fmfo for now
+    """
+    Compute the derivative of the operator to go from layer 1 to 2.
 
     Args:
         eps1: permittivity of the upper layer
@@ -118,8 +126,8 @@ def forward_matrix_derivative(
         temperature: layer temperature
         limit_optical_depth: optional alue that limit the optical depth of a layer
 
-    Results:
-        return the matrix along with the cosine angle in the lower layer and the optical depth
+    Returns:
+        M: the matrix derivative (without the last row considered as unitary vector)
     """
     mu = np.atleast_1d(mu)
     # mu is above the current layer
@@ -128,34 +136,37 @@ def forward_matrix_derivative(
 
     # r = np.array([abs2(rv), abs2(rh)])
     r = np.stack((rv.real**2 + rv.imag**2, rh.real**2 + rh.imag**2))
+    omtr = 1 - 2 * r
 
     optical_depth = 2 * np.sqrt(eps2).imag * kd / mu2
+    optical_depth_derivative = (
+        kd
+        * (ice.ice_permittivity_maetzler06_dt(frequency=frequency, temperature=temperature) / np.sqrt(eps2)).imag
+        / mu2
+    )
     if limit_optical_depth is not None:
         optical_depth = np.clip(optical_depth, 0, limit_optical_depth)
-    trans_v = np.exp(-optical_depth)  # power attenuation
-    trans_v = trans_v[None, :]  # same as P = np.stack((P, P))
-
-    # matrix layer:
-    l13 = -(1 / trans_v - 1) * temperature
-    l23 = (1 - trans_v) * temperature
+    A = np.exp(-optical_depth)  # power attenuation
+    A = A[None, :]  # same as P = np.stack((P, P))
+    invA = 1 / A
+    D = -A * optical_depth_derivative / mu2
+    E = -optical_depth_derivative / (mu2 * A)
 
     # product of the interface matrix and layer matrix
     # see the equation in overlead projet "multi-fresnel"
     M = np.empty((2, 3, 2, len(mu)))
 
-    M[0, 0] = 1 / trans_v
-    M[0, 1] = -r * trans_v
-    M[0, 2] = l13 - r * l23
+    M[0, 0] = E
+    M[0, 1] = -r * D
+    M[0, 2] = 1 - invA - r * (1 - A) + (r * D - E) * temperature
 
-    M[1, 0] = r / trans_v
-    M[1, 1] = (1 - 2 * r) * trans_v
-    M[1, 2] = r * l13 + (1 - 2 * r) * l23
+    M[1, 0] = r * E  # / trans_v
+    M[1, 1] = omtr * D  # trans_v
+    M[1, 2] = r * (1 - invA) + omtr * (1 - A) - (r * E + omtr * D) * temperature
 
     # M[2, 0] = 0
     # M[2, 1] = 0
     # M[2, 2] = 1
 
     M /= 1 - r
-
-    # return M and layer optical depth
     return M
