@@ -24,8 +24,8 @@ def compute_matrix_slab_derivatives(
         thickness: thickness of the layers
         prune_deep_snowpack: this value is the optical depth from which the layers are discarded in the calculation.
             It is to be used to accelerate the calculations for deep snowpacks or at high frequencies when the
-            contribution of the lowest layers is neglegible. Set to 0 to avoid pruning (not implemented yet).
-        air_permittivity: permittivity inthe middle above the slab
+            contribution of the lowest layers is neglegible.
+        air_permittivity: permittivity in the middle above the slab
     """
 
     kd = 2 * np.pi * frequency / C_SPEED * np.array(thickness)
@@ -36,14 +36,19 @@ def compute_matrix_slab_derivatives(
 
     eps_1 = air_permittivity
 
-    derivatives = np.zeros([len(thickness), 2, 3, 2, len(mu)])
+    derivative_matrix_by_layer = np.zeros([len(thickness), 2, 3, 2, len(mu)])
     M = None
 
-    index = 0
     tau_snowpack = 0.0
 
-    N = np.empty((len(thickness),2, 3, 2, len(mu)))
-    #Algorithm to be implemented.
+    dMdT = np.empty((len(thickness), 2, 3, 2, len(mu)))
+    forward_matrix_by_layer = np.empty((len(thickness), 2, 3, 2, len(mu)))
+    Left_accu = np.empty((len(thickness), 2, 3, 2, len(mu)))
+    Left_accu[0] = complex_polarized_id23(len(mu))
+    Right_accu = np.empty((len(thickness), 2, 3, 2, len(mu)))
+    Right_accu[0] = complex_polarized_id23(len(mu))
+    # Indices need to be proofread.
+    layer_index = 0
     for eps_2, temperature_, kd_ in zip(permittivity, temperature, kd):
         L, (mu2, tau_layer) = multifresnel.forward_matrix_fulloutput(
             eps_1,
@@ -53,28 +58,51 @@ def compute_matrix_slab_derivatives(
             temperature=temperature_,
             limit_optical_depth=tau_max,
         )
-        #print(f"L.shape = {L.shape}")
-        # forward_matrix_derivative is jsut a proxy for now
-        # not sure we need dmu2 or dtaulayer
-        dL, (dmu2, dtau_layer) = forward_matrix_derivative(
+        M = multifresnel.matmul3(M, L) if M is not None else L
+        forward_matrix_by_layer[layer_index] = L
+
+        # forward_matrix_derivative is just a proxy for now
+        dL = forward_matrix_derivative(
             eps_1, eps_2, mu, kd=kd_, temperature=temperature_, limit_optical_depth=tau_max
         )
-        #print(f"dL.shape = {dL.shape}")
-        M = multifresnel.matmul3(M, L) if M is not None else L
+        derivative_matrix_by_layer[layer_index] = dL
+        
+        
         tau_max -= tau_layer  # decrease the optical depth
         tau_snowpack += tau_layer[imumax]
-
+        layer_index += 1
         if tau_max[imumax] < 0:
             break
 
         mu = mu2
         eps_1 = eps_2
-        #proxy
-        derivatives[index] = dL
-        N[index] = dL + M
-        index +=1
-    dM = N
-    return M, dM, tau_snowpack
+        
+    
+    for i in range(layer_index -1):
+        Left_accu[i + 1] = multifresnel.matmul3(Left_accu[i], forward_matrix_by_layer[i])
+        Right_accu[i + 1] = multifresnel.matmul3(forward_matrix_by_layer[layer_index - 1 - i], Right_accu[i])
+    
+    for k in range(layer_index -1):
+        dMdT[k] = multifresnel.matmul3(Left_accu[k], multifresnel.matmul3(derivative_matrix_by_layer[k], Right_accu[layer_index - 1 - k])) 
+    return M, dMdT, tau_snowpack
+
+
+def complex_polarized_id23(last_dimension: int) -> npt.NDArray[np.floating]:
+    """
+    Creates a complex polarized identity matrix.
+
+    Args:
+        last_dimension: 2 for V,H, 3 for V,H,U
+
+    Returns:
+        Identity matrix of shape (2,3) copied 2*last_dimension.
+    """
+    M = np.zeros((2, 3, 2, last_dimension))
+    for k in range(2):
+        for l in range(last_dimension):
+            for i in range(2):
+                M[i, i, k, l] = 1
+    return M
 
 
 def forward_matrix_derivative(
@@ -130,4 +158,4 @@ def forward_matrix_derivative(
     M /= 1 - r
 
     # return M and layer optical depth
-    return M, (mu2, optical_depth)
+    return M
