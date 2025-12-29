@@ -114,7 +114,7 @@ def forward_matrix_fulloutput(
         mu: cosine angle
         kd: layer thickness multipled by the wavenumber
         temperature: layer temperature
-        limit_optical_depth: optional alue that limit the optical depth of a layer
+        limit_optical_depth: optional value that limit the optical depth of a layer
 
     Results:
         return the matrix along with the cosine angle in the lower layer and the optical depth

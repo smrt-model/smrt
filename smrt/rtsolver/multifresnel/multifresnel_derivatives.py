@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.typing as npt
 from smrt.core.globalconstants import C_SPEED
-from smrt.permittivity import ice
+from smrt.permittivity import ice, generic_mixing_formula
 from . import multifresnel
 from typing import Optional
 
@@ -148,21 +148,14 @@ def forward_matrix_derivative(
     omtr = 1 - 2 * r
 
     optical_depth = 2 * np.sqrt(eps2).imag * kd / mu2
-    optical_depth_derivative = (
-        kd
-        * (
-            mockup_permittivity_derivative(frac_volume=frac_volume, temperature=temperature, frequency=frequency, dt=1)
-            / np.sqrt(eps2)
-        ).imag
-        / mu2
-    )
+    optical_depth_derivative = get_optical_depth_derivative(kd, frac_volume, temperature, frequency, eps2, mu2)
     if limit_optical_depth is not None:
         optical_depth = np.clip(optical_depth, 0, limit_optical_depth)
     A = np.exp(-optical_depth)  # power attenuation
     A = A[None, :]  # same as P = np.stack((P, P))
     invA = 1 / A
-    D = -A * optical_depth_derivative / mu2
-    E = -optical_depth_derivative / (mu2 * A)
+    D = dAdTk(mu2, kd, frac_volume, temperature, frequency, eps2)
+    E = optical_depth_derivative / A
 
     # product of the interface matrix and layer matrix
     # see the equation in overlead projet "multi-fresnel"
@@ -184,6 +177,24 @@ def forward_matrix_derivative(
     return M
 
 
+def dAdTk(mu2, kd, frac_volume, temperature, frequency, eps2):
+    optical_depth = 2 * np.sqrt(eps2).imag * kd / mu2
+    A = np.exp(-optical_depth)[None, :]
+    optical_depth_derivative = get_optical_depth_derivative(kd, frac_volume, temperature, frequency, eps2, mu2)
+    return -A * optical_depth_derivative
+
+
+def get_optical_depth_derivative(kd, frac_volume, temperature, frequency, eps2, mu2):
+    return (
+        kd
+        * (
+            mockup_permittivity_derivative(frac_volume=frac_volume, temperature=temperature, frequency=frequency, dt=1)
+            / np.sqrt(eps2)
+        ).imag
+        / mu2
+    )
+
+
 def permittivity_derivative(frac_volume: float, temperature: float, frequency: float, dt: float = 1):
     """
     Compute the derivative of the permittivity w.r.t. the temperature
@@ -197,10 +208,11 @@ def permittivity_derivative(frac_volume: float, temperature: float, frequency: f
         derivative of the permittivity
     """
     base_ice_perm = ice.ice_permittivity_maetzler06(temperature=temperature, frequency=frequency)
-    polder_base = ice.polder_van_santen(frac_volume, 1, base_ice_perm)
+    polder_base = generic_mixing_formula.polder_van_santen(frac_volume, 1, base_ice_perm)
     inc_ice_perm = ice.ice_permittivity_maetzler06(temperature=temperature + dt, frequency=frequency)
-    polder_inc = ice.polder_van_santen(frac_volume, 1, inc_ice_perm)
+    polder_inc = generic_mixing_formula.polder_van_santen(frac_volume, 1, inc_ice_perm)
     return (polder_inc - polder_base) / dt
+
 
 def mockup_permittivity_derivative(frac_volume: float, temperature: float, frequency: float, dt: float = 1):
     """
