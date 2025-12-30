@@ -148,14 +148,13 @@ def forward_matrix_derivative(
     omtr = 1 - 2 * r
 
     optical_depth = 2 * np.sqrt(eps2).imag * kd / mu2
-    optical_depth_derivative = get_optical_depth_derivative(kd, frac_volume, temperature, frequency, eps2, mu2)
     if limit_optical_depth is not None:
         optical_depth = np.clip(optical_depth, 0, limit_optical_depth)
     A = np.exp(-optical_depth)  # power attenuation
     A = A[None, :]  # same as P = np.stack((P, P))
-    invA = 1 / A
+    invA = np.exp(optical_depth)[None, :]
     D = dAdTk(mu2, kd, frac_volume, temperature, frequency, eps2)
-    E = optical_depth_derivative / A
+    E = dinvAdTk(mu2, kd, frac_volume, temperature, frequency, eps2)
 
     # product of the interface matrix and layer matrix
     # see the equation in overlead projet "multi-fresnel"
@@ -177,15 +176,75 @@ def forward_matrix_derivative(
     return M
 
 
+def forward_matrix_coefficient_with_r_derivative(
+    eps2: complex,
+    mu: float,
+    kd: float,
+    frac_volume: float,
+    temperature: float,
+    frequency: float = 1.4e9,
+    eps1: complex = 1,
+    limit_optical_depth: Optional[float] = None,
+):
+    mu = np.atleast_1d(mu)
+    rv, rh, mu2 = multifresnel.fresnel_coefficients_maezawa09_rigorous(eps1, eps2, mu)
+    E = dinvAdTk(mu2, kd, frac_volume, temperature, frequency, eps2)
+    r = np.stack((rv.real**2 + rv.imag**2, rh.real**2 + rh.imag**2))
+    optical_depth = 2 * np.sqrt(eps2).imag * kd / mu2
+    if limit_optical_depth is not None:
+        optical_depth = np.clip(optical_depth, 0, limit_optical_depth)
+    A = np.exp(-optical_depth)  # power attenuation
+    A = A[None, :]  # same as P = np.stack((P, P))
+    Moo = E / (1 - r) - get_r_derivative(temperature=temperature, mu=mu, frequency=frequency) / (A * (1 - r))
+    return Moo
+
+
+def get_r_derivative(temperature: float, mu: float, frequency: float = 1.4e9, dt: float = 1e-7):
+    """
+    Compute the derivative of the refraction coefficient r
+
+    Uses the permittivity of Maetzler06
+
+    Args:
+        temperature (K): layer temperature
+        mu: cosine angle
+        frequency (Hz): sensor frequency
+        dt (K): increment in temperature for finite difference
+
+    Returns:
+        dr: derivative of the refraction coefficient
+    """
+    eps1: complex = 1
+    eps2: complex = ice.ice_permittivity_maetzler06(temperature=temperature, frequency=frequency)
+    eps3: complex = ice.ice_permittivity_maetzler06(temperature=temperature + dt, frequency=frequency)
+    mu = np.atleast_1d(mu)
+    rv, rh, mu2 = multifresnel.fresnel_coefficients_maezawa09_rigorous(eps1, eps2, mu)
+    rvp, rhp, mu3 = multifresnel.fresnel_coefficients_maezawa09_rigorous(eps1, eps3, mu)
+    r = np.stack((rv.real**2 + rv.imag**2, rh.real**2 + rh.imag**2))
+    rp = np.stack((rvp.real**2 + rvp.imag**2, rhp.real**2 + rhp.imag**2))
+    dr = rp / dt - r / dt
+    print(f"dr/r = {dr / r}")
+    return dr
+
+
 def dAdTk(mu2, kd, frac_volume, temperature, frequency, eps2):
     optical_depth = 2 * np.sqrt(eps2).imag * kd / mu2
     A = np.exp(-optical_depth)[None, :]
     optical_depth_derivative = get_optical_depth_derivative(kd, frac_volume, temperature, frequency, eps2, mu2)
-    return -A * optical_depth_derivative
+    D = -A * optical_depth_derivative
+    return D
+
+
+def dinvAdTk(mu2, kd, frac_volume, temperature, frequency, eps2):
+    optical_depth = 2 * np.sqrt(eps2).imag * kd / mu2
+    A = np.exp(-optical_depth)[None, :]
+    optical_depth_derivative = get_optical_depth_derivative(kd, frac_volume, temperature, frequency, eps2, mu2)
+    E = optical_depth_derivative / A
+    return E
 
 
 def get_optical_depth_derivative(kd, frac_volume, temperature, frequency, eps2, mu2):
-    return (
+    dtau = (
         kd
         * (
             mockup_permittivity_derivative(frac_volume=frac_volume, temperature=temperature, frequency=frequency, dt=1)
@@ -193,6 +252,7 @@ def get_optical_depth_derivative(kd, frac_volume, temperature, frequency, eps2, 
         ).imag
         / mu2
     )
+    return dtau
 
 
 def permittivity_derivative(frac_volume: float, temperature: float, frequency: float, dt: float = 1):
