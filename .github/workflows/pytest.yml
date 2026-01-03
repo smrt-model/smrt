@@ -4,11 +4,13 @@ on: [push, pull_request]
 
 jobs:
   build:
+    if: ${{ (matrix.os == 'ubuntu-latest') || (matrix.python-version == '3.13') }} // Limit combinations to reduce total runs
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+      fail-fast: true
 
     steps:
       - name: 🔽 Checkout code
