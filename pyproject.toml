@@ -30,7 +30,7 @@ pyrtlib = ["scikit-learn", "bs4", "netCDF4", "requests", "cdsapi", "cfgrib", "py
 gsw = ["gsw"]
 
 [dependency-groups]
-dev = ["pytest", "ruff", "sphinx_rtd_theme", "Sphinx>=1.6", "pre-commit"]
+dev = ["pytest", "ruff", "sphinx_rtd_theme", "Sphinx>=1.6", "pre-commit", "pip-audit"]
 benchmark = ["asv"]
 
 
@@ -63,6 +63,7 @@ extend-exclude = ["attic"]
 [tool.pixi.workspace]
 channels = ["conda-forge"]
 platforms = ["linux-64"]
+exclude-newer = "1 month"  # avoid installation of too new package (security, bugs...)
 
 [tool.pixi.pypi-dependencies]
 smrt = { path = ".", editable = true }
