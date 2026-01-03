@@ -806,9 +806,10 @@ def concat_results(result_list, coord):
         # all the channel maps are the same
         channel_map = result_list[0].channel_map
 
-    data = xr.concat([result.data for result in result_list], index)
+    data = xr.concat([result.data for result in result_list], index, join="outer")
     other_data = {
-        v: xr.concat([result.other_data[v] for result in result_list], index) for v in result_list[0].other_data
+        v: xr.concat([result.other_data[v] for result in result_list], index, join="outer")
+        for v in result_list[0].other_data
     }
 
     return ResultClass(data, channel_map=channel_map, other_data=other_data)
