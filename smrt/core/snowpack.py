@@ -452,8 +452,7 @@ class Snowpack(object):
             df = df[list(columns.keys()) + list(substrate.keys())]
 
         # convert class in class name
-        df = df.applymap(lambda x: x.__name__ if isinstance(x, type) else x)
-        # df = df.map(lambda x: x.__name__ if isinstance(x, type) else x)  # for pandas >2.1.0
+        df = df.map(lambda x: x.__name__ if isinstance(x, type) else x)  # for pandas >2.1.0
 
         # use multi index
         df.columns = pd.MultiIndex.from_tuples(df.columns)
