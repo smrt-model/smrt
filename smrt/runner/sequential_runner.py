@@ -1,5 +1,17 @@
 """This module implements a sequential runner for smrt simulations. It is used by default if parallel_computation=False
-in py:func:`~smrt.core.model.make_model` function."""
+in py:func:`~smrt.core.model.make_model` function.
+
+
+Examples::
+
+    # Basic usage:
+    m = make_model("iba", "dort", parallel_computation=False)
+    m.run(sensor, snowpack)
+
+    # Explicit usage to set runner's parameters:
+    runner = SequentialRunner(progressbar=True)
+    res = m.run(sensor, snowpack, runner=runner)
+"""
 
 
 class SequentialRunner(object):

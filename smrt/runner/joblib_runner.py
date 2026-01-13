@@ -1,5 +1,14 @@
 """This module implements a joblib runner tp execute smrt simulations in parallel. It is used by default if parallel_computation=True
 in py:func:`~smrt.core.model.make_model` function.
+
+Example::
+    # Basic usage:
+    m = make_model("iba", "dort", parallel_computation=True)
+    m.run(sensor, snowpack)
+
+    # Advance usage to set runner's parameters:
+    runner = JoblibParallelRunner(progressbar=True, n_jobs=-1)
+    res = m.run(sensor, snowpack, runner=runner)
 """
 
 
