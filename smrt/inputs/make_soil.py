@@ -8,7 +8,7 @@ automatically load a specific soil model and provides some soil permittivity for
 Example::
 
     from smrt import make_soil
-    soil = make_soil("soil_wegmuller", "dobson85", moisture=0.2, sand=0.4, clay=0.3, drymatter=1100, roughness_rms=1e-2)
+    soil = make_soil("soil_wegmuller", "dobson85", moisture=0.2, sand=0.4, clay=0.3, dry_matter=1100, roughness_rms=1e-2)
 
 It is recommended to first read the documentation of `make_soil` and then explore the different types of soil
 models.
@@ -16,27 +16,43 @@ models.
 
 from functools import partial
 
-import numpy as np
-import scipy
+from smrt.core import lib
 
 # local import
 from smrt.core.error import SMRTError
-from smrt.core.globalconstants import PERMITTIVITY_OF_FREE_SPACE
-from smrt.core.interface import get_substrate_model
+from smrt.core.interface import Substrate, get_substrate_model, make_interface
+from smrt.core.layer import Layer, get_microstructure_model
+from smrt.core.snowpack import Snowpack
+from smrt.inputs.make_medium import add_transparent_layer
+from smrt.permittivity.soil import soil_permittivity_dobson85, soil_permittivity_hut, soil_permittivity_montpetit08
 
 
 def make_soil(
+    *args,
+    **kwargs,
+) -> Substrate:
+    DeprecationWarning(
+        "make_soil is deprecated and will be removed in future versions. Please use make_soil_substrate instead."
+    )
+    return make_soil_substrate(*args, **kwargs)
+
+
+def make_soil_substrate(
     substrate_model,
     permittivity_model,
     temperature,
     moisture=None,
     sand=None,
     clay=None,
-    drymatter=None,
+    dry_matter=None,
     **kwargs,
-):
+) -> Substrate:
     """
-    Constructs a soil instance based on a given surface electromagnetic model, a permittivity model and parameters.
+    Construct a soil substrate instance based on a given surface electromagnetic model, a permittivity model and parameters.
+
+    This function returns a substrate and can only be used as a bottom boundary condition in a snowpack or soil-snowpack model.
+    See :py:func:`~smrt.inputs.make_soil.make_soil_layer` and :py:func:`~smrt.inputs.make_soil.make_soil_column` functions
+    if you want a soil layer or several soil layers.
 
     Args:
         substrate_model: Name of substrate model, can be a class or a string. e.g. fresnel, wegmuller...
@@ -46,7 +62,7 @@ def make_soil(
         moisture: Soil moisture in m^3 m^-3 to compute the permittivity. This parameter is used depending on the permittivity_model.
         sand: Soil relative sand content. This parameter is used or not depending on the permittivity_model.
         clay: Soil relative clay content. This parameter is used or not depending on the permittivity_model.
-        drymatter: Soil content in dry matter in kg m^-3. This parameter is used or not depending on the permittivity_model.
+        dry_matter: Soil content in dry matter in kg m^-3. This parameter is used or not depending on the permittivity_model.
         **kwargs: Geometrical parameters depending on the substrate_model. Refer to the document of each model to see the
             list of required and optional parameters. Usually, it is roughness_rms, corr_length, ...
 
@@ -63,33 +79,33 @@ def make_soil(
     if isinstance(permittivity_model, str):
         match permittivity_model:
             case "hut_epss":
-                # return soil_dielectric_constant_hut after setting the parameters
-                if moisture is None or sand is None or clay is None or drymatter is None:
-                    raise SMRTError("The parameters moisture, sand, clay and drymatter must be set")
+                # return soil_permittivity_hut after setting the parameters
+                if moisture is None or sand is None or clay is None or dry_matter is None:
+                    raise SMRTError("The parameters moisture, sand, clay and dry_matter must be set")
 
                 permittivity_model = partial(
-                    soil_dielectric_constant_hut,
-                    SM=moisture,
+                    soil_permittivity_hut,
+                    moisture=moisture,
                     sand=sand,
                     clay=clay,
-                    dm_rho=drymatter,
+                    dry_matter=dry_matter,
                 )
 
             case "dobson85":
-                # return soil_dielectric_constant_dobson after setting the parameters
+                # return soil_permittivity_dobson after setting the parameters
                 if moisture is None or sand is None or clay is None:
                     raise SMRTError("The parameters moisture, sand, clay must be set")
-                permittivity_model = partial(soil_dielectric_constant_dobson, SM=moisture, S=sand, C=clay)
+                permittivity_model = partial(soil_permittivity_dobson85, moisture=moisture, sand=sand, clay=clay)
 
             case "montpetit2008":
-                permittivity_model = soil_dielectric_constant_monpetit2008
+                permittivity_model = soil_permittivity_montpetit08
             case _:
                 raise SMRTError(f"The permittivity model '{permittivity_model}' is not recongized")
     else:
         # check that other parameters are defined
-        if moisture is not None or sand is not None or clay is not None or drymatter is not None:
+        if moisture is not None or sand is not None or clay is not None or dry_matter is not None:
             raise Warning(
-                "Setting moisture, clay, sand or drymatter when permittivity_model is a number or function is useless"
+                "Setting moisture, clay, sand or dry_matter when permittivity_model is a number or function is useless"
             )
 
     # process the substrate_model argument
@@ -100,104 +116,138 @@ def make_soil(
     return substrate_model(temperature, permittivity_model, **kwargs)
 
 
-# !Dobson et al.,(1985) dielectric constant calculation
-# !(extracted from HUTnlayer code [Lemmetyinen et al.,(2010)])
-# !(extracted from DMRTML)
-
-
-def soil_dielectric_constant_dobson(frequency, temperature, SM, S, C):
-    e_0 = PERMITTIVITY_OF_FREE_SPACE
-    e_w_inf = 4.9
-    e_s = 4.7
-    rho_b = 1.3
-    rho_s = 2.664
-
-    temp = temperature - 273.15
-
-    beta1 = 1.2748 - 0.519 * S - 0.152 * C
-    beta2 = 1.33797 - 0.603 * S - 0.166 * C
-
-    sigma_eff = 0.0467 + 0.2204 * rho_b - 0.4111 * S + 0.6614 * C
-
-    e_w0 = 87.134 - 1.949e-1 * temp - 1.276e-2 * temp**2 + 2.491e-4 * temp**3
-    rt_w = (1.1109e-10 - 3.824e-12 * temp + 6.938e-14 * temp**2 - 5.096e-16 * temp**3) / (2 * np.pi)
-
-    e_fw1 = e_w_inf + (e_w0 - e_w_inf) / (1 + (2 * np.pi * frequency * rt_w) ** 2)
-    e_fw2 = 2 * np.pi * frequency * rt_w * (e_w0 - e_w_inf) / (1 + (2 * np.pi * frequency * rt_w) ** 2) + sigma_eff * (
-        rho_s - rho_b
-    ) / (2 * np.pi * frequency * e_0 * rho_s * SM)
-
-    return complex(
-        (1 + (rho_b / rho_s) * (e_s**0.65 - 1) + SM**beta1 * e_fw1**0.65 - SM) ** (1 / 0.65),
-        (SM**beta2 * e_fw2**0.65) ** (1 / 0.65),
-    )
-
-
-#! (after Pulliainen et al.1999)
-#! extracted from DMRTML
-
-
-def soil_dielectric_constant_hut(frequency, temperature, SM, sand, clay, dm_rho):
-    # Parameters for soil dielectric constant calculation with water
-    ew_inf = 4.9
-
-    tempC = temperature - 273.15
-
-    if tempC >= 0:  # liquid water
-        # calculates real and imag. part of water dielectricity (code HUT 20.12.95 [epsw.m]; K.Tigerstedt)
-        ew0 = 87.74 - 0.40008 * tempC + 9.398e-4 * tempC**2 + 1.410e-6 * tempC**3
-        # d = 25 - tempC # unused
-        # alfa = 2.033e-2 + 1.266e-4 * d + 2.464e-6 * d**2 # unused
-        tw = 1 / (2 * np.pi) * (1.1109e-10 - 3.824e-12 * tempC + 6.938e-14 * tempC**2 - 5.096e-16 * tempC**3)
-
-        ew_r = ew_inf + (ew0 - ew_inf) / (1 + (2 * np.pi * frequency * tw) ** 2)
-        ew_i = (ew0 - ew_inf) * 2 * np.pi * frequency * tw / (1 + (2 * np.pi * frequency * tw) ** 2)
-    else:
-        raise SMRTError("soil_dielectric_constant_hut requires above freezing point temperatures")
-    #      !option for salt consideration (Mätzler 1987)
-    #      !iei_S =A/M+B*M**C                 !impure ice
-    #      !iei_P=Ap/M+Bp*M**Cp                 !pure ice
-    #      !delta_iei = iei_S - iei_P
-    #      !ew_i=ew_i+delta_iei*SS/13
-
-    beta = 1.09 - 0.11 * sand + 0.18 * clay
-    # dm_rho is now in SI // Ulaby et al. (1986, p. 2099)
-    epsalf = 1 + 0.65 * dm_rho / 1000.0 + SM**beta * (complex(ew_r, ew_i) ** 0.65 - 1)
-
-    return (epsalf) ** (1 / 0.65)
-
-
-def soil_dielectric_constant_monpetit2008(frequency, temperature):
+def make_soil_column(
+    thickness,
+    temperature,
+    soil_permittivity_model,
+    moisture=None,
+    sand=None,
+    clay=None,
+    dry_matter=None,
+    surface=None,
+    interface=None,
+    substrate=None,
+    atmosphere=None,
+    **kwargs,
+) -> Snowpack:
     """
-    Computes the soil dielectric constant using the Montpetit et al. (2018) formulation.
+    Build a multi-layered soil column. Each parameter can be an array, list or a constant value.
 
-    The formulation is only valid for below-freezing point temperature.
+    :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf"
+        for a semi-infinite layer. Any layer with zero thickness is removed.
+    :param temperature: temperature of soil in K.
+    :param soil_permittivity_model: Permittivity model to use. Can be a name ("hut_epss", "dobson85", "montpetit2008"), a function of
+            frequency and temperature or a complex value.
+    :param moisture: Soil moisture in m^3 m^-3 to compute the permittivity. This parameter is used depending on the permittivity_model.
+    :param sand: Soil relative sand content. This parameter is used or not depending on the permittivity_model.
+    :param clay: Soil relative clay content. This parameter is used or not depending on the permittivity_model.
+    :param dry_matter: Soil content in dry matter in kg m^-3. This parameter is used or not depending on the permittivity_model.
+    :param surface: type of surface interface, flat/fresnel is the default.  If surface and interface are both set, the interface must be
+        a constant refering to all the "internal" interfaces.
+    :param interface: type of interface, flat/fresnel is the default. It is usually a string for the interfaces without parameters
+        (e.g. Flat or Transparent) or is created with :py:func:`~smrt.core.interface.make_interface` in more complex cases.
+        Interface can be a constant or a list. In the latter case, its length must be the same as the number of layers,
+        and interface[0] refers to the surface interface.
+    :param substrate: if add_water_substrate is False, the substrate can be prescribed with this argument.
 
-    Reference:
-        Montpetit, B., Royer, A., Roy, A., & Langlois, A. (2018). In-situ passive microwave emission model
-        parameterization of sub-arctic frozen organic soils. Remote Sensing of Environment, 205, 112–118.
-        https://doi.org/10.1016/j.rse.2017.10.033
+    All the other optional arguments are passed for each layer to the function :py:func:`~smrt.inputs.make_medium.make_ice_layer`.
+    The documentation of this function describes in detail the parameters used/required depending on ice_type.
+
+    """
+
+    sp = Snowpack(
+        substrate=substrate, atmosphere=atmosphere
+    )  # ??????????????????????????????????????????????????????????????????????????
+
+    n = len(thickness)
+    for name in [
+        "temperature",
+        "moisture",
+        "sand",
+        "clay",
+        "dry_matter",
+        "interface",
+        "kwargs",
+    ]:
+        lib.check_argument_size(locals()[name], n)
+
+    if surface is not None and lib.is_sequence(interface):
+        raise SMRTError(
+            "Setting both 'surface' and 'interface' arguments is ambiguous when inteface is a list or any sequence."
+        )
+
+    for i, dz in enumerate(thickness):
+        if dz <= 0:
+            continue
+        layer = make_soil_layer(
+            soil_permittivity_model,
+            dz,
+            temperature=lib.get(temperature, i),
+            moisture=lib.get(moisture, i),
+            sand=lib.get(sand, i),
+            clay=lib.get(clay, i),
+            dry_matter=lib.get(dry_matter, i),
+            **lib.get(kwargs, i),
+        )
+
+        # add the interface or surface for the first non-zero layer
+        linterface = lib.get(interface, i, "interface") if surface is None else surface
+        surface = None
+        sp.append(layer, interface=make_interface(linterface))
+
+    # snowpack without layer is accepted as input of this function, but SMRT prefers to have one internally.
+    # we make a transparent volume
+    if sp.nlayer == 0:
+        sp = add_transparent_layer(sp)
+
+    return sp
+
+
+def make_soil_layer(
+    soil_permittivity_model,
+    layer_thickness,
+    temperature,
+    sand=None,
+    clay=None,
+    dry_matter=None,
+    **kwargs,
+) -> Layer:
+    """
+    Make a soil layer with given geophysical parameters
 
     Args:
-        frequency: Frequency in Hz.
-        temperature: Temperature in Kelvin.
+        layer_thickness: Thickness of ice layer in m.
+        temperature: Temperature of layer in K.
+        moisture: Soil moisture in m^3 m^-3 to compute the permittivity. This parameter is used depending on the permittivity_model.
+        sand: Soil relative sand content. This parameter is used or not depending on the permittivity_model.
+        clay: Soil relative clay content. This parameter is used or not depending on the permittivity_model.
+        dry_matter: Soil content in dry matter in kg m^-3. This parameter is used or not depending on the permittivity_model.
 
     Returns:
-        complex: Soil dielectric constant.
+        Layer: Instance of Layer.
     """
-    # from functools import partial
-    # from smrt.inputs.make_soil import soil_dielectric_constant_dobson
-    if temperature > 273.15:
-        raise SMRTError("soil_dielectric_constant_monpetit is not implemented for above freezing temperatures.")
-        # moisture=0.2
-        # sand=0.4
-        # clay=0.3
-        # return partial(soil_dielectric_constant_dobson, SM=moisture, S=sand, C=clay)
-    # else:
 
-    p = scipy.interpolate.interp1d(
-        [10.65e9, 19e9, 37e9],
-        [complex(3.18, 0.0061), complex(3.42, 0.0051), complex(4.47, 0.33)],
-        fill_value="extrapolate",
+    # background permittivity (default = soil_permittivity_dobson85)
+    eps_1 = soil_permittivity_model or soil_permittivity_dobson85
+
+    lay = Layer(
+        float(layer_thickness),
+        # SMRT needs a microstructure. Here you can use the homogeneous microstructure if you don't want scattering.
+        microstructure_model=get_microstructure_model(
+            "homogeneous"
+        ),  # SMRT needs a microstructure. Here you can use the homogeneous microstructure if you don't want scattering.
+        temperature=float(temperature),
+        frac_volume=0,  # Almost all microstructure need a frac_volume. frac_volume=0 means that the layer is empty of scatteres, it only contains the background
+        permittivity_model=(
+            eps_1,
+            1,
+        ),
+        sand=sand,
+        clay=clay,
+        dry_matter=dry_matter,
+        **kwargs,
     )
-    return p(frequency)
+
+    # lay.read_only_attributes = {"ice_type", "density", "porosity"}   # <---- GHI: remove this
+
+    return lay

@@ -2,6 +2,7 @@
 
 # local import
 from smrt import make_model, make_snowpack, make_soil, sensor
+from smrt.inputs.make_soil import make_soil_column
 
 #
 # Ghi: rapid hack, should be splitted in different functions
@@ -85,5 +86,35 @@ def test_soil_wegmuller_montpetit2008():
     print(res.TbV(), res.TbH())
     assert abs(res.TbV() - 262.4543081568107) < 1e-4
     assert abs(res.TbH() - 255.71089039573724) < 1e-4
+    # note value from DMRTML Fortran running in the same conditions:
+    # H=255.88187817295605 V=262.60345275739024
+
+
+def test_soil_column():
+    # prepare inputs
+
+    soiltemperature = 270
+
+    soil_column = make_soil_column(
+        thickness=[1],
+        temperature=soiltemperature,
+        soil_permittivity_model=None,  # use the default
+        moisture=0.2,
+        sand=0.4,
+        clay=0.3,
+        dry_matter=1100,
+    )
+
+    m = make_model("nonscattering", "dort")
+
+    # create the sensor
+    radiometer = sensor.passive(1.4e9, 40)
+
+    # run the model
+    res = m.run(radiometer, soil_column)
+
+    print(res.TbV(), res.TbH())
+    assert abs(res.TbV() - 210.7701625227927) < 1e-4
+    assert abs(res.TbH() - 159.43017901734964) < 1e-4
     # note value from DMRTML Fortran running in the same conditions:
     # H=255.88187817295605 V=262.60345275739024
