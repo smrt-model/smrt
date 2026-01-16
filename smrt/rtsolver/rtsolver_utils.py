@@ -8,7 +8,6 @@ import numpy as np
 import scipy.interpolate
 import xarray as xr
 
-from smrt.core.error import SMRTError
 from smrt.core.result import make_result
 from smrt.core.sensor import Sensor
 from smrt.core.snowpack import Snowpack
@@ -163,11 +162,12 @@ class DiscreteOrdinatesMixin(metaclass=ABCMeta):
                 )
                 outmu = np.insert(outmu, 0, 1.0)
 
-        if np.min(user_mu) < np.min(outmu):
-            raise SMRTError(
-                "Viewing zenith angle is higher than the stream angles computed by DORT."
-                + " Either increase the number of streams or reduce the highest viewing zenith angle."
-            )
+        # safegyard for lowest angle
+        # if np.min(user_mu) < np.min(outmu):
+        #     raise SMRTError(
+        #         "Viewing zenith angle is higher than the stream angles computed by DORT."
+        #         + " Either increase the number of streams or reduce the highest viewing zenith angle."
+        #     )
 
         # # reverse is necessary for "old" scipy version
         # intfct = scipy.interpolate.interp1d(
