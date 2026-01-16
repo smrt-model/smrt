@@ -137,7 +137,6 @@ class DiscreteOrdinatesMixin(metaclass=ABCMeta):
 
         mu_axis = 1 if sensor.mode == "P" else 2
 
-        fill_value = np.nan
         if np.max(user_mu) > np.max(outmu):
             imumax = np.argmax(outmu)
             # need extrapolation to 0°
@@ -180,7 +179,9 @@ class DiscreteOrdinatesMixin(metaclass=ABCMeta):
         # i = np.argsort(user_mu)
         # intensity = intfct(user_mu[i])[np.argsort(i)]  # mu[i] sort mu, and [np.argsort(i)] put in back
 
-        intfct = scipy.interpolate.interp1d(outmu, intensity, axis=mu_axis, fill_value=fill_value, assume_sorted=False)
+        intfct = scipy.interpolate.interp1d(
+            outmu, intensity, axis=mu_axis, fill_value="extrapolate", bounds_error=False, assume_sorted=False
+        )
         intensity = intfct(user_mu)
 
         return intensity
