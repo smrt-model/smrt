@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 import numpy as np
+import xarray as xr
 
 from .error import SMRTError
 from .snowpack import Snowpack
@@ -49,3 +50,14 @@ class AtmosphereResult:
     tb_down: np.ndarray
     tb_up: np.ndarray
     transmittance: np.ndarray
+    coords: dict = None
+
+    def save(self, filename, netcdf_engine=None):
+        ds = xr.Dataset(
+            {
+                "tb_down": (self.coords, self.tb_down),
+                "tb_up": (self.coords, self.tb_up),
+                "transmittance": (self.coords, self.transmittance),
+            },
+        )
+        ds.to_netcdf(filename, engine=netcdf_engine)
