@@ -62,7 +62,7 @@ def compute_stream_gaussian(n_max_stream, permittivity, mode="most_refringent"):
     nlayer = len(permittivity)
 
     if nlayer == 0:
-        outmu, outweight = gauss_legendre_quadratude(n_max_stream)
+        outmu, outweight = gauss_legendre_quadrature(n_max_stream)
         return Streams(n_air=n_max_stream, outmu=outmu, outweight=outweight)
 
     # there are some layers
@@ -75,18 +75,18 @@ def compute_stream_gaussian(n_max_stream, permittivity, mode="most_refringent"):
 
     if mode is None or mode == "most_refringent":
         # calculate the gaussian weights and nodes for the most refringent layer
-        mu_most_refringent, weight_most_refringent = gauss_legendre_quadratude(n_max_stream)
+        mu_most_refringent, weight_most_refringent = gauss_legendre_quadrature(n_max_stream)
 
     elif mode == "air":
         smrt_warn("This code has not been tested yet. Use with caution.")
 
         def number_stream_in_air(n_stream_densest_layer):
-            mu_most_refringent, weight_most_refringent = gauss_legendre_quadratude(int(n_stream_densest_layer))
+            mu_most_refringent, weight_most_refringent = gauss_legendre_quadrature(int(n_stream_densest_layer))
             relsin = real_index_air * np.sqrt(1 - mu_most_refringent**2)
             return np.sum(relsin < 1) - n_max_stream
 
-        streams.n = scipy.optimize.brentq(number_stream_in_air, n_max_stream, 2 * n_max_stream)
-        mu_most_refringent, weight_most_refringent = gauss_legendre_quadratude(streams.n)
+        streams.n = scipy.optimize.brentq(number_stream_in_air, n_max_stream / 4, n_max_stream * 4)
+        mu_most_refringent, weight_most_refringent = gauss_legendre_quadrature(streams.n)
 
     else:
         raise RuntimeError("Unknow mode to compute the number of stream")
@@ -212,7 +212,7 @@ def compute_stream_uniform(n_max_stream, permittivity):
     return streams
 
 
-def gauss_legendre_quadratude(n):
+def gauss_legendre_quadrature(n):
     """
     Return the gauss-legendre roots and weight, only the positive roots are return in descending order.
 
