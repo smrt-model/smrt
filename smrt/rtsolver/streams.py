@@ -6,7 +6,7 @@ from typing import List
 import numpy as np
 import scipy.optimize
 
-from smrt.core.error import SMRTError
+from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.lib import cached_roots_legendre
 
 #
@@ -78,7 +78,7 @@ def compute_stream_gaussian(n_max_stream, permittivity, mode="most_refringent"):
         mu_most_refringent, weight_most_refringent = gauss_legendre_quadratude(n_max_stream)
 
     elif mode == "air":
-        raise Warning("This code has not been tested yet. Use with caution.")
+        smrt_warn("This code has not been tested yet. Use with caution.")
 
         def number_stream_in_air(n_stream_densest_layer):
             mu_most_refringent, weight_most_refringent = gauss_legendre_quadratude(int(n_stream_densest_layer))
