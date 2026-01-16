@@ -59,5 +59,6 @@ class AtmosphereResult:
                 "tb_up": (self.coords, self.tb_up),
                 "transmittance": (self.coords, self.transmittance),
             },
+            coords=self.coords,
         )
         ds.to_netcdf(filename, engine=netcdf_engine)
