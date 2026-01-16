@@ -85,7 +85,7 @@ def compute_stream_gaussian(n_max_stream, permittivity, mode="most_refringent"):
             relsin = real_index_air * np.sqrt(1 - mu_most_refringent**2)
             return np.sum(relsin < 1) - n_max_stream
 
-        streams.n = scipy.optimize.brentq(n_max_stream, 2 * n_max_stream)
+        streams.n = scipy.optimize.brentq(number_stream_in_air, n_max_stream, 2 * n_max_stream)
         mu_most_refringent, weight_most_refringent = gauss_legendre_quadratude(streams.n)
 
     else:
