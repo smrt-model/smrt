@@ -151,7 +151,7 @@ class Result(object):
             filename: The name of the file to save the result to.
             netcdf_engine: The netCDF engine to use (optional).
         """
-        self.data.to_netcdf(filename, netcdf_engine=netcdf_engine)
+        self.data.to_netcdf(filename, engine=netcdf_engine)
 
     def sel_data(self, channel=None, **kwargs):
         raise NotImplementedError("must be implemented in a subclass")
