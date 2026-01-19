@@ -400,6 +400,30 @@ class PassiveResult(Result):
             / self.data.sel(polarization=ratio[-1], **kwargs).rename("polarization_ratio")
         )
 
+    def Tb_quasiV(self, **kwargs):
+        """
+        Return quasi vertical polarization as provided by microwave sounders (e.g. AMSU-B, MSH, some channels on AMSU-A...).
+
+        Tb_quasiV = TbV * cos^2(theta) + TbH * sin^2(theta)
+
+        Args:
+            \\**kwargs: any parameter to slice the results.
+        """
+        theta = np.deg2rad(self.data.theta)
+        return self.TbV(**kwargs) * np.cos ** 2(theta) + self.TbH(**kwargs) * np.sin ** 2(theta)
+
+    def Tb_quasiH(self, **kwargs):
+        """
+        Return quasi horizontal polarization as provided by microwave sounders (e.g. ATMS, some channels on AMSU-A).
+
+        Tb_quasiH = TbH * cos^2(theta) + TbV * sin^2(theta)
+
+        Args:
+            \\**kwargs: any parameter to slice the results.
+        """
+        theta = np.deg2rad(self.data.theta)
+        return self.TbH(**kwargs) * np.cos ** 2(theta) + self.TbV(**kwargs) * np.sin ** 2(theta)
+
 
 class ActiveResult(Result):
     mode = "A"
