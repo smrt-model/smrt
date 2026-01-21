@@ -4,8 +4,6 @@
 import pytest
 
 from smrt import make_model, make_snowpack, make_soil, sensor
-from smrt.core.globalconstants import PERMITTIVITY_OF_FREE_SPACE
-from smrt.core.layer import layer_properties
 from smrt.inputs.make_soil import make_soil_column
 
 #
