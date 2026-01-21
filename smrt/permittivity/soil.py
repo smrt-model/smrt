@@ -34,8 +34,26 @@ from smrt.core.layer import layer_properties
 
 
 @layer_properties("temperature", "moisture", "sand", "clay")
-def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
-    """Compute the soil dielectric constant using the Dobson et al., (1985) formulation."""
+def soil_permittivity_dobson85_peplinski95(frequency, temperature, moisture, sand, clay):
+    """Compute the soil dielectric constant using the Dobson et al. (1985) formulation adapted by Peplinski et al., (1995).
+
+    History:
+        - equation implemented by M. Sandells (~2016)
+        - coefficients check by Marion Leduc-Leballeur and M. Brogioni (2026)
+        - added references and equation number by M. Leduc-Leballeur and G. Picard (2026)
+
+    References:
+
+    - Dobson, M. C., Ulaby, F. T., Hallikainen, M. T., & El-Rayes, M. A. (1985).
+        Microwave dielectric behavior of wet soil—Part II: Dielectric mixing models.
+        IEEE Transactions on Geoscience and Remote Sensing, GE-23(1), 35–46.
+
+    - N. R. Peplinski, F. T. Ulaby and M. C. Dobson, "Dielectric properties of soils in the 0.3-1.3-GHz range," in IEEE
+        Transactions on Geoscience and Remote Sensing, vol. 33, no. 3, pp. 803-807, May 1995, doi: 10.1109/36.387598.
+
+    - A. Stogryn, "Equations for calculating the dielectric constant of saline water," IEEE Trans. Microwave Theory
+        Tech., vol. MTT-19, pp. 733-736, 1971.
+    """
 
     e_0 = PERMITTIVITY_OF_FREE_SPACE
     e_w_inf = 4.9
@@ -45,22 +63,81 @@ def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
 
     temp = temperature - 273.15
 
-    beta1 = 1.2748 - 0.519 * sand - 0.152 * clay
-    beta2 = 1.33797 - 0.603 * sand - 0.166 * clay
+    beta_prime = 1.2748 - 0.519 * sand - 0.152 * clay  # DB85 eq 30
+    beta_second = 1.33797 - 0.603 * sand - 0.166 * clay  # DB85 eq 31
 
-    sigma_eff = 0.0467 + 0.2204 * rho_b - 0.4111 * sand + 0.6614 * clay
+    sigma_eff = 0.0467 + 0.2204 * rho_b - 0.4111 * sand + 0.6614 * clay  # # eq 10 P95 (refitted based on eq 32 DB85)
 
+    # static water permittivity referenced to Stogryn 1971 in DB95
     e_w0 = 87.134 - 1.949e-1 * temp - 1.276e-2 * temp**2 + 2.491e-4 * temp**3
+    # relaxation time of water referenced to Stogryn 1971 in DB95
     rt_w = (1.1109e-10 - 3.824e-12 * temp + 6.938e-14 * temp**2 - 5.096e-16 * temp**3) / (2 * np.pi)
 
-    e_fw1 = e_w_inf + (e_w0 - e_w_inf) / (1 + (2 * np.pi * frequency * rt_w) ** 2)
-    e_fw2 = 2 * np.pi * frequency * rt_w * (e_w0 - e_w_inf) / (1 + (2 * np.pi * frequency * rt_w) ** 2) + sigma_eff * (
-        rho_s - rho_b
-    ) / (2 * np.pi * frequency * e_0 * rho_s * moisture)
+    e_fw_prime = e_w_inf + (e_w0 - e_w_inf) / (1 + (2 * np.pi * frequency * rt_w) ** 2)  # eq 6 P95  or eq 23 DB85
+    e_fw_second = 2 * np.pi * frequency * rt_w * (e_w0 - e_w_inf) / (
+        1 + (2 * np.pi * frequency * rt_w) ** 2
+    ) + sigma_eff * (rho_s - rho_b) / (2 * np.pi * frequency * e_0 * rho_s * moisture)  # eq 7 P95 and eq 24 DB85
 
     return complex(
-        (1 + (rho_b / rho_s) * (e_s**0.65 - 1) + moisture**beta1 * e_fw1**0.65 - moisture) ** (1 / 0.65),
-        (moisture**beta2 * e_fw2**0.65) ** (1 / 0.65),
+        (1 + (rho_b / rho_s) * (e_s**0.65 - 1) + moisture**beta_prime * e_fw_prime**0.65 - moisture)
+        ** (1 / 0.65),  # eq 2 in P95 corrected with the missin -1 or Real(eq 28 in DB85)
+        (moisture**beta_second * e_fw_second**0.65) ** (1 / 0.65),  # eq 3 in P95 or Imag(eq 28 in DB85)
+    )
+
+
+@layer_properties("temperature", "moisture", "sand", "clay")
+def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
+    """Compute the soil dielectric constant using the Dobson et al., (1985) formulation (original).
+
+    It is not recommended to use this function, please use soil_permittivity_dobson85_peplinski95 instead.
+
+    History:
+        - added by M. Leduc-Leballeur and G. Picard (2026)
+
+    References:
+
+    - Dobson, M. C., Ulaby, F. T., Hallikainen, M. T., & El-Rayes, M. A. (1985).
+        Microwave dielectric behavior of wet soil—Part II: Dielectric mixing models.
+        IEEE Transactions on Geoscience and Remote Sensing, GE-23(1), 35–46.
+
+    - N. R. Peplinski, F. T. Ulaby and M. C. Dobson, "Dielectric properties of soils in the 0.3-1.3-GHz range," in IEEE
+        Transactions on Geoscience and Remote Sensing, vol. 33, no. 3, pp. 803-807, May 1995, doi: 10.1109/36.387598.
+
+    - A. Stogryn, "Equations for calculating the dielectric constant of saline water," IEEE Trans. Microwave Theory
+        Tech., vol. MTT-19, pp. 733-736, 1971.
+    """
+
+    e_0 = PERMITTIVITY_OF_FREE_SPACE
+    e_w_inf = 4.9
+    e_s = 4.7
+    rho_b = 1.3
+    rho_s = 2.664
+
+    temp = temperature - 273.15
+
+    beta_prime = 1.2748 - 0.519 * sand - 0.152 * clay  # DB85 eq 30
+    beta_second = 1.33797 - 0.603 * sand - 0.166 * clay  # DB85 eq 31
+
+    # original eq 32 DB85. Not used here because S has a different unit (permil->fraction) and interpretation (?) in DB85
+    # sigma_eff = -1.645 + 1.939 * rho_b - 0.02013 * sand + 0.01594 * clay  #
+    # equation eq 8 given in Peplinski et al., 1995
+    # See also Ulaby 2014, section 4.8.1, page 252
+    sigma_eff = -1.645 + 1.939 * rho_b - 2.25622 * sand + 1.594 * clay  # eq 8 P95
+
+    # static water permittivity referenced to Stogryn 1971 in DB95
+    e_w0 = 87.134 - 1.949e-1 * temp - 1.276e-2 * temp**2 + 2.491e-4 * temp**3
+    # relaxation time of water referenced to Stogryn 1971 in DB95
+    rt_w = (1.1109e-10 - 3.824e-12 * temp + 6.938e-14 * temp**2 - 5.096e-16 * temp**3) / (2 * np.pi)
+
+    e_fw_prime = e_w_inf + (e_w0 - e_w_inf) / (1 + (2 * np.pi * frequency * rt_w) ** 2)  # eq 6 P95  or eq 23 DB85
+    e_fw_second = 2 * np.pi * frequency * rt_w * (e_w0 - e_w_inf) / (
+        1 + (2 * np.pi * frequency * rt_w) ** 2
+    ) + sigma_eff * (rho_s - rho_b) / (2 * np.pi * frequency * e_0 * rho_s * moisture)  # eq 7 P95 and eq 24 DB85
+
+    return complex(
+        (1 + (rho_b / rho_s) * (e_s**0.65 - 1) + moisture**beta_prime * e_fw_prime**0.65 - moisture)
+        ** (1 / 0.65),  # eq 2 in P95 corrected with the missin -1 or Real(eq 28 in DB85)
+        (moisture**beta_second * e_fw_second**0.65) ** (1 / 0.65),  # eq 3 in P95 or Imag(eq 28 in DB85)
     )
 
 

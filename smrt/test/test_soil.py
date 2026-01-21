@@ -1,7 +1,11 @@
 # coding: utf-8
 
 # local import
+import pytest
+
 from smrt import make_model, make_snowpack, make_soil, sensor
+from smrt.core.globalconstants import PERMITTIVITY_OF_FREE_SPACE
+from smrt.core.layer import layer_properties
 from smrt.inputs.make_soil import make_soil_column
 
 #
@@ -40,7 +44,8 @@ def run_model(snowpack):
     return res
 
 
-def test_soil_wegmuller_dobson85():
+@pytest.mark.parametrize("soil_permittivity_model", ["dobson85_peplinski95", "dobson85_original"])
+def test_soil_wegmuller_dobson85(soil_permittivity_model):
     # prepare inputs
 
     soiltemperature = 270
@@ -53,7 +58,7 @@ def test_soil_wegmuller_dobson85():
 
     substrate = make_soil(
         "soil_wegmuller",
-        "dobson85",
+        soil_permittivity_model,
         soiltemperature,
         moisture=moisture,
         roughness_rms=roughness_rms,
@@ -66,10 +71,16 @@ def test_soil_wegmuller_dobson85():
     res = run_model(snowpack)
 
     print(res.TbV(), res.TbH())
-    assert abs(res.TbV() - 262.55457107119486) < 1e-4
-    assert abs(res.TbH() - 255.81725907587176) < 1e-4
-    # note value from DMRTML Fortran running in the same conditions:
-    # H=255.88187817295605 V=262.60345275739024
+    if soil_permittivity_model == "dobson85_peplinski95":
+        assert abs(res.TbV() - 262.55457107119486) < 1e-4
+        assert abs(res.TbH() - 255.81725907587176) < 1e-4
+        # note value from DMRTML Fortran running in the same conditions:
+        # H=255.88187817295605 V=262.60345275739024
+    elif soil_permittivity_model == "dobson85_original":
+        assert abs(res.TbV() - 262.5491286321801) < 1e-4
+        assert abs(res.TbH() - 255.81148533015073) < 1e-4
+    else:
+        raise ValueError("Unexpected soil_permittivity_model")
 
 
 def test_soil_wegmuller_montpetit2008():

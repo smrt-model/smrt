@@ -17,7 +17,7 @@ Notes:
 **Usage**::
 
     # rms height and corr_length values work at 10 GHz
-    substrate = make_soil("iem_fung92", "dobson85", temperature=260,
+    substrate = make_soil("iem_fung92", "dobson85_peplinski95", temperature=260,
                                             roughness_rms=1e-3,
                                             corr_length=5e-2,
                                             autocorrelation_function="exponential",

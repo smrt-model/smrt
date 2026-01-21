@@ -14,7 +14,7 @@ Args:
 
 Examples:
     ```python
-    soil = make_soil("soil_qnh", "dobson85", moisture=0.2, sand=0.4, clay=0.3, drymatter=1100,
+    soil = make_soil("soil_qnh", "dobson85_peplinski95", moisture=0.2, sand=0.4, clay=0.3, drymatter=1100,
                      Q=0, N=0, H=1e-2)
     ```
 """

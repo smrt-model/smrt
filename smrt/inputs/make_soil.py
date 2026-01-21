@@ -24,7 +24,12 @@ from smrt.core.interface import Substrate, get_substrate_model, make_interface
 from smrt.core.layer import Layer, get_microstructure_model
 from smrt.core.snowpack import Snowpack
 from smrt.inputs.make_medium import add_transparent_layer
-from smrt.permittivity.soil import soil_permittivity_dobson85, soil_permittivity_hut, soil_permittivity_montpetit08
+from smrt.permittivity.soil import (
+    soil_permittivity_dobson85,
+    soil_permittivity_dobson85_peplinski95,
+    soil_permittivity_hut,
+    soil_permittivity_montpetit08,
+)
 
 
 def make_soil(
@@ -56,8 +61,8 @@ def make_soil_substrate(
 
     Args:
         substrate_model: Name of substrate model, can be a class or a string. e.g. fresnel, wegmuller...
-        permittivity_model: Permittivity model to use. Can be a name ("hut_epss", "dobson85", "montpetit2008"), a function of
-            frequency and temperature or a complex value.
+        permittivity_model: Permittivity model to use. Can be a name ("hut_epss", "dobson85_peplinski95", "montpetit2008"), 
+            a function of frequency and temperature or a complex value.
         temperature: Temperature of the soil.
         moisture: Soil moisture in m^3 m^-3 to compute the permittivity. This parameter is used depending on the permittivity_model.
         sand: Soil relative sand content. This parameter is used or not depending on the permittivity_model.
@@ -90,12 +95,26 @@ def make_soil_substrate(
                     clay=clay,
                     dry_matter=dry_matter,
                 )
-
             case "dobson85":
+                raise SMRTError(
+                    "The model labelled 'dobson85' in SMRT was using dobson85 modified peplinski95. "
+                    "To avoid this misleading name, the new recommended name is 'dobson85_peplinski95'. "
+                    "In addition, the original dobson85 model is now available under the name 'dobson85_original'."
+                )
+            
+            case "dobson85_original":
                 # return soil_permittivity_dobson after setting the parameters
                 if moisture is None or sand is None or clay is None:
                     raise SMRTError("The parameters moisture, sand, clay must be set")
                 permittivity_model = partial(soil_permittivity_dobson85, moisture=moisture, sand=sand, clay=clay)
+
+            case "dobson85_peplinski95":
+                # return soil_permittivity_dobson after setting the parameters
+                if moisture is None or sand is None or clay is None:
+                    raise SMRTError("The parameters moisture, sand, clay must be set")
+                permittivity_model = partial(
+                    soil_permittivity_dobson85_peplinski95, moisture=moisture, sand=sand, clay=clay
+                )
 
             case "montpetit2008":
                 permittivity_model = soil_permittivity_montpetit08
@@ -216,6 +235,8 @@ def make_soil_layer(
     Make a soil layer with given geophysical parameters
 
     Args:
+        soil_permittivity_model: Permittivity model to use (see :py:mod:`~smrt.permittivity.soil`).  If None, the default is
+            :py:func:`~smrt.permittivity.soil.soil_permittivity_dobson85_peplinski95`.
         layer_thickness: Thickness of ice layer in m.
         temperature: Temperature of layer in K.
         moisture: Soil moisture in m^3 m^-3 to compute the permittivity. This parameter is used depending on the permittivity_model.
@@ -227,8 +248,8 @@ def make_soil_layer(
         Layer: Instance of Layer.
     """
 
-    # background permittivity (default = soil_permittivity_dobson85)
-    eps_1 = soil_permittivity_model or soil_permittivity_dobson85
+    # background permittivity (default = soil_permittivity_dobson85_peplinski95)
+    eps_1 = soil_permittivity_model or soil_permittivity_dobson85_peplinski95
 
     lay = Layer(
         float(layer_thickness),

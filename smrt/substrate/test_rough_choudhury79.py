@@ -8,13 +8,27 @@ from smrt.permittivity.water import water_permittivity
 
 def test_make_rough_choudhury():
     make_soil(
-        "rough_choudhury79", "dobson85", 275, moisture=0.9, sand=0.2, clay=0.3, drymatter=1100, roughness_rms=1e-2
+        "rough_choudhury79",
+        "dobson85_peplinski95",
+        275,
+        moisture=0.9,
+        sand=0.2,
+        clay=0.3,
+        drymatter=1100,
+        roughness_rms=1e-2,
     )
 
 
 def test_rough_choudhury_reflection():
     s = make_soil(
-        "rough_choudhury79", "dobson85", 275, moisture=0.9, sand=0.2, clay=0.3, drymatter=1100, roughness_rms=1e-3
+        "rough_choudhury79",
+        "dobson85_peplinski95",
+        275,
+        moisture=0.9,
+        sand=0.2,
+        clay=0.3,
+        drymatter=1100,
+        roughness_rms=1e-3,
     )
 
     frequency = 1e9
@@ -28,7 +42,14 @@ def test_rough_choudhury_reflection():
 def test_raises_ksigma_warning():
     with pytest.raises(Warning):
         s = make_soil(
-            "rough_choudhury79", "dobson85", 275, moisture=0.9, sand=0.2, clay=0.3, drymatter=1100, roughness_rms=0.1
+            "rough_choudhury79",
+            "dobson85_peplinski95",
+            275,
+            moisture=0.9,
+            sand=0.2,
+            clay=0.3,
+            drymatter=1100,
+            roughness_rms=0.1,
         )
         frequency = 1e9
         mu1 = np.cos(np.radians(np.arange(10, 80)))
