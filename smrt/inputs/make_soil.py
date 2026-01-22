@@ -61,7 +61,7 @@ def make_soil_substrate(
 
     Args:
         substrate_model: Name of substrate model, can be a class or a string. e.g. fresnel, wegmuller...
-        permittivity_model: Permittivity model to use. Can be a name ("hut_epss", "dobson85_peplinski95", "montpetit2008"), 
+        permittivity_model: Permittivity model to use. Can be a name ("hut_epss", "dobson85_peplinski95", "montpetit2008"),
             a function of frequency and temperature or a complex value.
         temperature: Temperature of the soil.
         moisture: Soil moisture in m^3 m^-3 to compute the permittivity. This parameter is used depending on the permittivity_model.
@@ -101,7 +101,7 @@ def make_soil_substrate(
                     "To avoid this misleading name, the new recommended name is 'dobson85_peplinski95'. "
                     "In addition, the original dobson85 model is now available under the name 'dobson85_original'."
                 )
-            
+
             case "dobson85_original":
                 # return soil_permittivity_dobson after setting the parameters
                 if moisture is None or sand is None or clay is None:
