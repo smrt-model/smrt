@@ -25,6 +25,14 @@ smrt.permittivity.water module
    :undoc-members:
    :show-inheritance:
 
+smrt.permittivity.wetsnow module
+--------------------------------
+
+.. automodule:: smrt.permittivity.wetsnow
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 smrt.permittivity.wetice module
 -------------------------------
 
@@ -57,6 +65,22 @@ smrt.permittivity.saline\_water module
    :undoc-members:
    :show-inheritance:
 
+smrt.permittivity.saline\_snow module
+-------------------------------------
+
+.. automodule:: smrt.permittivity.saline_snow
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+smrt.permittivity.soil module
+--------------------------------
+
+.. automodule:: smrt.permittivity.soil
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 smrt.permittivity.generic\_mixing\_formula module
 -------------------------------------------------
 
@@ -73,26 +97,10 @@ smrt.permittivity.depolarization_factors module
    :undoc-members:
    :show-inheritance:
 
-smrt.permittivity.saline\_snow module
--------------------------------------
-
-.. automodule:: smrt.permittivity.saline_snow
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 smrt.permittivity.snow\_mixing\_formula module
 ----------------------------------------------
 
 .. automodule:: smrt.permittivity.snow_mixing_formula
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-smrt.permittivity.wetsnow module
---------------------------------
-
-.. automodule:: smrt.permittivity.wetsnow
    :members:
    :undoc-members:
    :show-inheritance:
