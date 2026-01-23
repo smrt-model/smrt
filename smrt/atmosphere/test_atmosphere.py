@@ -4,6 +4,7 @@ import pytest
 from smrt import make_model, make_snowpack, sensor_list
 from smrt.atmosphere.simple_atmosphere import SimpleAtmosphere
 from smrt.atmosphere.simple_isotropic_atmosphere import SimpleIsotropicAtmosphere
+from smrt.core.atmosphere import AtmosphereStack
 
 
 @pytest.fixture()
@@ -95,3 +96,34 @@ def test_dict_param_atmosphere():
     assert np.all(atmos.run(frequency=10e9, costheta=mu, npol=2).tb_up == 0)
     assert np.all(atmos.run(frequency=21e9, costheta=mu, npol=2).transmittance == 1)
     assert np.all(atmos.run(frequency=10e9, costheta=mu, npol=2).transmittance == 1)
+
+
+def test_adding_atmospheres():
+    atmos1 = SimpleIsotropicAtmosphere(tb_down=20.0, tb_up=6.0, transmittance=0.90)
+    atmos2 = SimpleIsotropicAtmosphere(tb_down=10.0, tb_up=4.0, transmittance=0.80)
+
+    stacked_atmos = atmos1 + atmos2
+
+    assert isinstance(stacked_atmos, AtmosphereStack)
+
+    res = stacked_atmos.run(frequency=10e9, costheta=np.array([1.0]), npol=1)
+
+    assert abs(res.tb_down - (20.0 * 0.80 + 10.0)) < 1e-6
+    assert abs(res.tb_up - (6.0 + 0.90 * 4.0)) < 1e-6
+    assert abs(res.transmittance - (0.90 * 0.80)) < 1e-6
+
+
+def test_inplace_adding_atmospheres():
+    atmos1 = SimpleIsotropicAtmosphere(tb_down=20.0, tb_up=6.0, transmittance=0.90)
+    atmos2 = SimpleIsotropicAtmosphere(tb_down=10.0, tb_up=4.0, transmittance=0.80)
+    atmos3 = SimpleIsotropicAtmosphere(tb_down=5.0, tb_up=2.0, transmittance=0.70)
+
+    stacked_atmos = atmos1 + atmos2
+
+    stacked_atmos += atmos3
+
+    res = stacked_atmos.run(frequency=10e9, costheta=np.array([1.0]), npol=1)
+
+    assert abs(res.tb_down - ((20.0 * 0.80 + 10.0) * 0.70 + 5.0)) < 1e-6
+    assert abs(res.tb_up - (6.0 + 0.90 * 4.0 + 0.80 * 0.90 * 2.0)) < 1e-6
+    assert abs(res.transmittance - (0.90 * 0.80 * 0.70)) < 1e-6

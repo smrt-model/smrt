@@ -3,24 +3,24 @@
 References:
 
     - Dobson, M. C., Ulaby, F. T., Hallikainen, M. T., & El-Rayes, M. A. (1985).
-        Microwave dielectric behavior of wet soil—Part II: Dielectric mixing models.
-        IEEE Transactions on Geoscience and Remote Sensing, GE-23(1), 35–46.
+      Microwave dielectric behavior of wet soil—Part II: Dielectric mixing models.
+      IEEE Transactions on Geoscience and Remote Sensing, GE-23(1), 35–46.
 
     - Ulaby, F. T., Moore, R. K., & Fung, A. K. (1986).
-        Microwave Remote Sensing: Active and Passive (Vol. III: From Theory to Applications).
-        Artech House.
+      Microwave Remote Sensing: Active and Passive (Vol. III: From Theory to Applications).
+      Artech House.
 
     - Pulliainen, J. T., Grandell, J., & Hallikainen, M. T. (1999). HUT snow emission model and its applicability
-        to snow water equivalent retrieval. Geoscience and Remote Sensing, IEEE Transactions On, 37, 1378–1390.
-        https://doi.org/10.1109/36.763302
+      to snow water equivalent retrieval. Geoscience and Remote Sensing, IEEE Transactions On, 37, 1378–1390.
+      https://doi.org/10.1109/36.763302
 
     - Lemmetyinen, J., Pulliainen, J., Rees, A., Kontu, A., Qiu, Y., & Derksen, C. (2010). Multiple-Layer Adaptation
-        of HUT Snow Emission Model: Comparison With Experimental Data. IEEE Transactions on Geoscience and Remote
-        Sensing, 48, 2781–2794. https://doi.org/10.1109/TGRS.2010.2041357
+      of HUT Snow Emission Model: Comparison With Experimental Data. IEEE Transactions on Geoscience and Remote
+      Sensing, 48, 2781–2794. https://doi.org/10.1109/TGRS.2010.2041357
 
     - Montpetit, B., Royer, A., Roy, A., & Langlois, A. (2018).
-        In-situ passive microwave emission model parameterization of sub-arctic frozen organic soils.
-        Remote Sensing of Environment, 205, 112–118. https://doi.org/10.1016/j.rse.2017.10.033
+      In-situ passive microwave emission model parameterization of sub-arctic frozen organic soils.
+      Remote Sensing of Environment, 205, 112–118. https://doi.org/10.1016/j.rse.2017.10.033
 
 
 """
@@ -45,14 +45,14 @@ def soil_permittivity_dobson85_peplinski95(frequency, temperature, moisture, san
     References:
 
     - Dobson, M. C., Ulaby, F. T., Hallikainen, M. T., & El-Rayes, M. A. (1985).
-        Microwave dielectric behavior of wet soil—Part II: Dielectric mixing models.
-        IEEE Transactions on Geoscience and Remote Sensing, GE-23(1), 35–46.
+      Microwave dielectric behavior of wet soil—Part II: Dielectric mixing models.
+      IEEE Transactions on Geoscience and Remote Sensing, GE-23(1), 35–46.
 
     - N. R. Peplinski, F. T. Ulaby and M. C. Dobson, "Dielectric properties of soils in the 0.3-1.3-GHz range," in IEEE
-        Transactions on Geoscience and Remote Sensing, vol. 33, no. 3, pp. 803-807, May 1995, doi: 10.1109/36.387598.
+      Transactions on Geoscience and Remote Sensing, vol. 33, no. 3, pp. 803-807, May 1995, doi: 10.1109/36.387598.
 
     - A. Stogryn, "Equations for calculating the dielectric constant of saline water," IEEE Trans. Microwave Theory
-        Tech., vol. MTT-19, pp. 733-736, 1971.
+      Tech., vol. MTT-19, pp. 733-736, 1971.
     """
 
     e_0 = PERMITTIVITY_OF_FREE_SPACE
@@ -97,14 +97,14 @@ def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
     References:
 
     - Dobson, M. C., Ulaby, F. T., Hallikainen, M. T., & El-Rayes, M. A. (1985).
-        Microwave dielectric behavior of wet soil—Part II: Dielectric mixing models.
-        IEEE Transactions on Geoscience and Remote Sensing, GE-23(1), 35–46.
+      Microwave dielectric behavior of wet soil—Part II: Dielectric mixing models.
+      IEEE Transactions on Geoscience and Remote Sensing, GE-23(1), 35–46.
 
     - N. R. Peplinski, F. T. Ulaby and M. C. Dobson, "Dielectric properties of soils in the 0.3-1.3-GHz range," in IEEE
-        Transactions on Geoscience and Remote Sensing, vol. 33, no. 3, pp. 803-807, May 1995, doi: 10.1109/36.387598.
+      Transactions on Geoscience and Remote Sensing, vol. 33, no. 3, pp. 803-807, May 1995, doi: 10.1109/36.387598.
 
     - A. Stogryn, "Equations for calculating the dielectric constant of saline water," IEEE Trans. Microwave Theory
-        Tech., vol. MTT-19, pp. 733-736, 1971.
+      Tech., vol. MTT-19, pp. 733-736, 1971.
     """
 
     e_0 = PERMITTIVITY_OF_FREE_SPACE
@@ -181,9 +181,9 @@ def soil_permittivity_montpetit08(frequency, temperature):
     The formulation is only valid for below-freezing point temperature.
 
     Reference:
-        Montpetit, B., Royer, A., Roy, A., & Langlois, A. (2018). In-situ passive microwave emission model
-        parameterization of sub-arctic frozen organic soils. Remote Sensing of Environment, 205, 112–118.
-        https://doi.org/10.1016/j.rse.2017.10.033
+        - Montpetit, B., Royer, A., Roy, A., & Langlois, A. (2018). In-situ passive microwave emission model
+          parameterization of sub-arctic frozen organic soils. Remote Sensing of Environment, 205, 112–118.
+          https://doi.org/10.1016/j.rse.2017.10.033
 
     Args:
         frequency: Frequency in Hz.

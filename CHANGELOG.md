@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 	- allow to define the emmodel and emmodel in the Layer object. This override the default emmodel used in make_model.
 	- add optional cache for the diagonalization in DORT, allowing strong acceleration in case of identical layers
 		within a snowpacks or across snowpacks. Experimental.
+	- adding atmosphere objects together now results in an atmosphere stack
 
 ### Changed
 	- change Python support to >=3.10. Old versions are not supported anymore.

@@ -61,38 +61,9 @@ class SimpleAtmosphere(AtmosphereBase):
 
         self.theta = np.array(theta)[i]
         self.costheta = np.array(costheta)[i]
-        if isinstance(tb_down, dict):
-            try:
-                self.tbdown = {key: np.array(value)[i] for key, value in zip(tb_down.keys(), tb_down.values())}
-            except IndexError:
-                raise SMRTError(
-                    "The length of the tb_down values must match the length of the theta array. "
-                    f"Got {len(tb_down)} values for {len(theta)} angles."
-                )
-        else:
-            self.tbdown = np.array(tb_down)[i]
-        if isinstance(tb_up, dict):
-            try:
-                self.tbup = {key: np.array(value)[i] for key, value in zip(tb_up.keys(), tb_up.values())}
-            except IndexError:
-                raise SMRTError(
-                    "The length of the tb_up values must match the length of the theta array. "
-                    f"Got {len(tb_up)} values for {len(theta)} angles."
-                )
-        else:
-            self.tbup = np.array(tb_up)[i]
-        if isinstance(transmittance, dict):
-            try:
-                self.trans = {
-                    key: np.array(value)[i] for key, value in zip(transmittance.keys(), transmittance.values())
-                }
-            except IndexError:
-                raise SMRTError(
-                    "The length of the transmittance values must match the length of the theta array. "
-                    f"Got {len(transmittance)} values for {len(theta)} angles."
-                )
-        else:
-            self.trans = np.array(transmittance)[i]
+        self.tb_down = _sort_variable(tb_down, i, "tb_down", len(self.theta))
+        self.tb_up = _sort_variable(tb_up, i, "tb_up", len(self.theta))
+        self.transmittance = _sort_variable(transmittance, i, "transmittance", len(self.theta))
 
     def run(self, frequency, costheta, npol):
         def interpolate(x):
@@ -105,7 +76,21 @@ class SimpleAtmosphere(AtmosphereBase):
             return np.stack([x] * npol)
 
         return AtmosphereResult(
-            tb_down=interpolate(self.tbdown),
-            tb_up=interpolate(self.tbup),
-            transmittance=interpolate(self.trans),
+            tb_down=interpolate(self.tb_down),
+            tb_up=interpolate(self.tb_up),
+            transmittance=interpolate(self.transmittance),
         )
+
+
+def _sort_variable(x, sorted_index, name, length):
+    if isinstance(x, dict):
+        try:
+            x = {key: np.array(x[key])[sorted_index] for key in x}
+        except IndexError:
+            raise SMRTError(
+                "The length of the tb_down values must match the length of the theta array. "
+                f"Got {len(name)} values for {length} angles."
+            )
+    else:
+        x = np.array(x)[sorted_index]
+    return x
