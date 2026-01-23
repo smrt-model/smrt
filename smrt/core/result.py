@@ -410,7 +410,7 @@ class PassiveResult(Result):
             \\**kwargs: any parameter to slice the results.
         """
         theta = np.deg2rad(self.data.theta)
-        return self.TbV(**kwargs) * np.cos ** 2(theta) + self.TbH(**kwargs) * np.sin ** 2(theta)
+        return self.TbV(**kwargs) * np.cos(theta) ** 2 + self.TbH(**kwargs) * np.sin(theta) ** 2
 
     def Tb_quasiH(self, **kwargs):
         """
@@ -422,7 +422,7 @@ class PassiveResult(Result):
             \\**kwargs: any parameter to slice the results.
         """
         theta = np.deg2rad(self.data.theta)
-        return self.TbH(**kwargs) * np.cos ** 2(theta) + self.TbV(**kwargs) * np.sin ** 2(theta)
+        return self.TbH(**kwargs) * np.cos(theta) ** 2 + self.TbV(**kwargs) * np.sin(theta) ** 2
 
 
 class ActiveResult(Result):
