@@ -46,13 +46,14 @@ from smrt.rtsolver.dort import (
 from smrt.rtsolver.rtsolver_utils import (
     CoherentLayerMixin,
     DiscreteOrdinatesMixin,
+    PlanckMixin,
     RTSolverBase,
 )
 
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers
 
 
-class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
+class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, RTSolverBase):
     """
     Implement the Successive Order solver.
 
@@ -76,6 +77,9 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             to replace the thin layer by an equivalent reflective interface. This neglects scattering in the thin layer,
             which is acceptable in most case, because the layer is thin. To use this option and more generally
             to investigate ice lenses, it is recommended to read MEMLS documentation on this topic.
+        rayleigh_jeans_approximation: In passive mode, if True, use the Rayleigh-Jeans approximation for the Planck function.
+            This mode was used by default up to SMRT 1.5.1, but is not as precise as the full Planck function at higher
+            frequencies and low temperatures.
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
@@ -95,11 +99,13 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
         process_coherent_layers=False,
         incident_polarizations="VH",
         # prune_deep_snowpack=None,
+        rayleigh_jeans_approximation=False,
     ):
         super().__init__()  # the parent class and mixin must not declare __init__ with parameters
 
         DiscreteOrdinatesMixin.init(self, n_max_stream=n_max_stream, stream_mode=stream_mode, m_max=m_max)
         CoherentLayerMixin.init(self, process_coherent_layers=process_coherent_layers)
+        PlanckMixin.init(self, rayleigh_jeans_approximation=rayleigh_jeans_approximation)
 
         # self.phase_normalization = phase_normalization
         self.phase_symmetrization = phase_symmetrization
@@ -358,7 +364,13 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
 
         if self.sensor.mode == "P":
             if self.atmosphere_result is not None:
-                intensity_up = self.atmosphere_result.tb_up + self.atmosphere_result.transmittance * intensity_up
+                intensity_up = (
+                    self.planck_function(self.atmosphere_result.tb_up)
+                    + self.atmosphere_result.transmittance * intensity_up
+                )
+            total_intensity_up = np.sum(intensity_up, axis=-1)
+            total_intensity_up = self.inverse_planck_function(total_intensity_up)
+            intensity_up = self.inverse_planck_function(intensity_up)
             outmu = self.streams.outmu
         elif self.sensor.mode == "A":
             # compress to get only the backscatter
@@ -370,12 +382,11 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
 
             outmu = self.streams.outmu[incident_streams]
             intensity_up = backscatter_intensity_up
+            total_intensity_up = np.sum(intensity_up, axis=-1)
         else:
             raise RuntimeError("unknown sensor mode")
 
         # reshape the first dimension in two dimensions (theta, pola)
-
-        total_intensity_up = np.sum(intensity_up, axis=-1)
 
         intensity_up = np.append(intensity_up, np.expand_dims(total_intensity_up, -1), axis=-1)
 
@@ -499,7 +510,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             # for passive microwave
             # compute the source
             single_scattering_albedo = emmodel.ks(mu, npol=npol).compress().diagonal() * invke
-            source = (1 - single_scattering_albedo) * layer.temperature
+            source = (1 - single_scattering_albedo) * self.planck_function(layer.temperature)
         else:
             # for radar microwave
             extinction = extinction[:, np.newaxis]

@@ -28,8 +28,8 @@ def setup_seaice():
 @pytest.mark.parametrize(
     "ice_type,porosity,p_ex_value,results",
     [
-        ("firstyear", 0, 500e-6, [256.0170296269674, 228.4566040823167]),
-        ("multiyear", 0.08, 1000e-6, [257.57209000420636, 232.01555447145563]),
+        ("firstyear", 0, 500e-6, [256.0184487450634, 228.46148449852473]),
+        ("multiyear", 0.08, 1000e-6, [257.5733413408494, 232.02001231655734]),
     ],
 )
 def test_oneconfig_for_sea_ice(setup_seaice, ice_type, porosity, p_ex_value, results):

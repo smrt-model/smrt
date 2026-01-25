@@ -73,7 +73,7 @@ def test_dmrt_twoconfig(setup_snowpack):
     assert (res.Tb(channel="37H") - 187.45835882462404) < 1e-4
 
     assert (res.Tb(channel="19V") - 242.550043) < 1e-4
-    assert (res.Tb(channel="19H") - 230.118448) < 1e-4
+    assert (res.Tb(channel="19H") - 230.13167636301958) < 1e-4
 
 
 def test_less_refringent_bottom_layer():
@@ -114,7 +114,7 @@ def test_transparent_volume():
     substrate = make_reflector(temperature=temperature, specular_reflection=r)
     snowpack = make_transparent_volume(substrate=substrate)
 
-    m = make_model("iba", "dort")
+    m = make_model("iba", "dort", rtsolver_options=dict(rayleigh_jeans_approximation=True))
     radiometer = passive(37e9, 45)
     res = m.run(radiometer, snowpack)
     print(res.TbV(), res.TbH())

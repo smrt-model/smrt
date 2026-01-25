@@ -96,18 +96,18 @@ class Result(object):
     Contain the results of a/many computations and provides convenience functions to access these results.
     """
 
-    def __init__(self, intensity, coords=None, channel_map=None, other_data={}, mother_df=None):
+    def __init__(self, radiance, coords=None, channel_map=None, other_data={}, mother_df=None):
         """
-        Build results array with the given intensity array (numpy array or xarray) and dimensions if numpy array is
+        Build results array with the given radiance array (numpy array or xarray) and dimensions if numpy array is
         given.
         """
 
         super().__init__()
 
-        if isinstance(intensity, xr.DataArray):
-            self.data = intensity
+        if isinstance(radiance, xr.DataArray):
+            self.data = radiance
         else:
-            self.data = xr.DataArray(intensity, coords)
+            self.data = xr.DataArray(radiance, coords)
 
         for d in other_data.values():
             assert isinstance(d, xr.DataArray)  # this is emitter responsability to precise the coordinates
@@ -262,7 +262,7 @@ class Result(object):
         For instance the direct incoming radiation (in active mode) or the radiation emanating directly (in passive
         mode) can be estimated as::
 
-            intensity = np.exp(-result.optical_depth().cumsum('layer'))
+            radiance = np.exp(-result.optical_depth().cumsum('layer'))
         """
         if "ka" not in self.other_data or "ks" not in self.other_data:
             raise SMRTError("optical_depth requires that the RT solver provides ka, ks and thickness.")

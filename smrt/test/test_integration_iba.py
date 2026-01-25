@@ -45,10 +45,8 @@ def test_iba_dort_oneconfig_passive(setup_snowpack_2, method, atol):
     res = m.run(radiometer, snowpack)
     print(res.TbV(), res.TbH())
     # absorption with effective permittivity
-    # abs(res.TbV() - 248.08794944809972) < 1e-4
-    # abs(res.TbH() - 237.3056263719142) < 1e-4
-    npt.assert_allclose(res.TbV(), 248.08374547409588, atol=atol)
-    npt.assert_allclose(res.TbH(), 237.30435496083572, atol=atol)
+    npt.assert_allclose(res.TbV(), 248.09044325849692, atol=atol)
+    npt.assert_allclose(res.TbH(), 237.3487270223389, atol=atol)
 
 
 @pytest.mark.parametrize(
@@ -85,11 +83,11 @@ def test_iba_successive_order_oneconfig_passive(setup_snowpack_2):
     print(res.TbV(order="total"), res.TbH(order="total"))
 
     # values for DORT:
-    npt.assert_allclose(res.TbV(order="total"), 248.08374547409588, atol=2e-2)
-    npt.assert_allclose(res.TbH(order="total"), 237.30435496083572, atol=2e-2)
+    npt.assert_allclose(res.TbV(order="total"), 248.07151103835696, atol=2e-2)
+    npt.assert_allclose(res.TbH(order="total"), 237.33664517652647, atol=2e-2)
     # values for successive order
-    npt.assert_allclose(res.TbV(order="total"), 248.06474685001407, atol=1e-3)
-    npt.assert_allclose(res.TbH(order="total"), 237.2922307432923, atol=1e-3)
+    npt.assert_allclose(res.TbV(order="total"), 248.07151103835696, atol=1e-3)
+    npt.assert_allclose(res.TbH(order="total"), 237.33664517652647, atol=1e-3)
 
 
 def test_iba_successive_order_oneconfig_active(setup_snowpack_2):

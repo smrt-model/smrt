@@ -8,6 +8,7 @@ import numpy as np
 import scipy.interpolate
 import xarray as xr
 
+from smrt.core.globalconstants import BOLTZMANN_CONSTANT, C_SPEED, PLANCK_CONSTANT
 from smrt.core.result import make_result
 from smrt.core.sensor import Sensor
 from smrt.core.snowpack import Snowpack
@@ -266,3 +267,51 @@ def prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivi
     }
 
     return other_data
+
+
+class PlanckMixin(metaclass=ABCMeta):
+    """
+    This mixin provides features to deal with Planck function.
+
+    .. note::
+
+        This mixin defines variables to be used by the declaring class and it assumes some variables exist in the parent
+        class (e.g. sensor). This is valid for a mixin:
+        https://stackoverflow.com/questions/36690588/should-mixins-use-parent-attributes
+    """
+
+    def init(self, rayleigh_jeans_approximation):
+        self.rayleigh_jeans_approximation = rayleigh_jeans_approximation
+
+        if rayleigh_jeans_approximation:
+            self.planck_function = lambda tb: tb
+            self.inverse_planck_function = lambda radiance: radiance
+        else:
+            self.planck_function = lambda T: planck_function(self.sensor.frequency, T)
+            self.inverse_planck_function = lambda radiance: inverse_planck_function(self.sensor.frequency, radiance)
+
+
+def planck_function(frequency, temperature):
+    temperature = np.asarray(temperature)
+    high_temperature = temperature > 1e-10
+
+    b = np.divide((PLANCK_CONSTANT / BOLTZMANN_CONSTANT) * frequency, temperature, where=high_temperature)
+
+    radiance = np.zeros_like(temperature, dtype=float)
+    np.divide(
+        (2.0 * PLANCK_CONSTANT / C_SPEED**2) * frequency**3, np.exp(b) - 1.0, out=radiance, where=high_temperature
+    )
+    return radiance
+
+
+def inverse_planck_function(frequency, radiance):
+    radiance = np.asarray(radiance)
+    positive_radiance = radiance > 1e-40
+
+    x = np.divide((2.0 * PLANCK_CONSTANT / C_SPEED**2) * frequency**3, radiance, where=positive_radiance)
+
+    temperature = np.zeros_like(radiance, dtype=float)
+    np.divide(
+        (PLANCK_CONSTANT / BOLTZMANN_CONSTANT) * frequency, np.log(1 + x), out=temperature, where=positive_radiance
+    )
+    return temperature

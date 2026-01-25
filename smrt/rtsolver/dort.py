@@ -75,11 +75,12 @@ from smrt.core.optional_numba import numba
 from smrt.rtsolver.rtsolver_utils import (
     CoherentLayerMixin,
     DiscreteOrdinatesMixin,
+    PlanckMixin,
     RTSolverBase,
 )
 
 
-class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
+class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin):
     """
     Implement the Discrete Ordinate and Eigenvalue Solver.
 
@@ -129,6 +130,9 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
             time. The drawback is that it uses more memory as the simple cache is never emptied. LRU cache could be
             implemented in the future to limit memory usage while style keeping some efficiency. This feature is
             experimental, please report success and failure.
+        rayleigh_jeans_approximation: In passive mode, if True, use the Rayleigh-Jeans approximation for the Planck function.
+            This mode was used by default up to SMRT 1.5.1, but is not as precise as the full Planck function at higher
+            frequencies and low temperatures.
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the
@@ -153,15 +157,18 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
         prune_deep_snowpack=None,
         diagonalization_method="eig",
         diagonalization_cache=False,
+        rayleigh_jeans_approximation=False,
     ):
         DiscreteOrdinatesMixin.init(self, n_max_stream=n_max_stream, stream_mode=stream_mode, m_max=m_max)
         CoherentLayerMixin.init(self, process_coherent_layers=process_coherent_layers)
+        PlanckMixin.init(self, rayleigh_jeans_approximation=rayleigh_jeans_approximation)
 
         self.phase_normalization = phase_normalization
         self.phase_symmetrization = phase_symmetrization
         self.error_handling = error_handling
         self.diagonalization_method = diagonalization_method
         self.diagonalization_cache = diagonalization_cache
+        self.rayleigh_jeans_approximation = rayleigh_jeans_approximation
 
         if self.phase_symmetrization:
             smrt_warn("symmetrization is under development and it is not sure it is working yet.")
@@ -329,7 +336,11 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
 
         if self.sensor.mode == "P":
             if self.atmosphere_result is not None:
-                intensity_up = self.atmosphere_result.tb_up + self.atmosphere_result.transmittance * intensity_up
+                intensity_up = (
+                    self.planck_function(self.atmosphere_result.tb_up)
+                    + self.atmosphere_result.transmittance * intensity_up
+                )
+            intensity_up = self.inverse_planck_function(intensity_up)  # convert back to brightness temperature
             outmu = self.streams.outmu
         elif self.sensor.mode == "A":
             # compress to get only the backscatter
@@ -381,7 +392,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
             if self.atmosphere_result is not None:
                 # incident radiation is a function of frequency and incidence angle
                 # assume azimuthally symmetric
-                intensity_0 = self.atmosphere_result.tb_down
+                intensity_0 = self.planck_function(self.atmosphere_result.tb_down)
                 assert intensity_0.shape == (npol, self.streams.n_air)
                 # convert pola, theta to (theta, pola) and add batch dimension
                 intensity_0 = np.swapaxes(intensity_0, 0, 1).flatten()[:, np.newaxis]
@@ -511,16 +522,18 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
             # fill the vector
             if m == 0 and self.temperature is not None and self.temperature[l] > 0:
                 if is_equal_zero(Rtop_l):
-                    b[il_topl : il_topl + nsl_npol, :] -= self.temperature[l]  # to be put at layer (l)
+                    b[il_topl : il_topl + nsl_npol, :] -= self.planck_function(
+                        self.temperature[l]
+                    )  # to be put at layer (l)
                 else:
-                    b[il_topl : il_topl + nsl_npol, :] -= ((1.0 - _muleye(Rtop_l)) * self.temperature[l])[
-                        :, np.newaxis
-                    ]  # a mettre en (l)
+                    b[il_topl : il_topl + nsl_npol, :] -= (
+                        (1.0 - _muleye(Rtop_l)) * self.planck_function(self.temperature[l])
+                    )[:, np.newaxis]  # a mettre en (l)
                 # the muleye comes from the isotropic emission of the black body
 
                 if l < nlayer - 1 and self.temperature[l] > 0 and not is_equal_zero(Tbottom_lp1):
                     b[il_top[l + 1] : il_top[l + 1] + ns_npol_common_bottom, :] += (
-                        _muleye(Tbottom_lp1) * self.temperature[l]
+                        _muleye(Tbottom_lp1) * self.planck_function(self.temperature[l])
                     )[:ns_npol_common_bottom, np.newaxis]  # to be put at layer (l + 1)
 
             if l == 0:  # Air-snow interface
@@ -549,14 +562,16 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
             # fill the vector
             if m == 0 and self.temperature is not None and self.temperature[l] > 0:
                 if is_equal_zero(Rbottom_l):
-                    b[il_bottoml : il_bottoml + nsl_npol, :] -= self.temperature[l]  # to be put at layer (l)
+                    b[il_bottoml : il_bottoml + nsl_npol, :] -= self.planck_function(
+                        self.temperature[l]
+                    )  # to be put at layer (l)
                 else:
-                    b[il_bottoml : il_bottoml + nsl_npol, :] -= ((1.0 - _muleye(Rbottom_l)) * self.temperature[l])[
-                        :, np.newaxis
-                    ]  # to be put at layer (l)
+                    b[il_bottoml : il_bottoml + nsl_npol, :] -= (
+                        (1.0 - _muleye(Rbottom_l)) * self.planck_function(self.temperature[l])
+                    )[:, np.newaxis]  # to be put at layer (l)
                 if l > 0 and not is_equal_zero(Ttop_lm1):
                     b[il_bottom[l - 1] : il_bottom[l - 1] + ns_npol_common_top, :] += (
-                        _muleye(Ttop_lm1) * self.temperature[l]
+                        _muleye(Ttop_lm1) * self.planck_function(self.temperature[l])
                     )[:ns_npol_common_top, np.newaxis]  # to be put at layer (l - 1)
 
             if (
@@ -570,7 +585,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
                 ns_npol_common_bottom = min(Tbottom_sub.shape[0], nsl_npol)  # see the comment on Tbottom_lp1
                 if not is_equal_zero(Tbottom_sub):
                     b[il_bottoml : il_bottoml + ns_npol_common_bottom, :] += (
-                        _muleye(Tbottom_sub) * self.snowpack.substrate.temperature
+                        _muleye(Tbottom_sub) * self.planck_function(self.snowpack.substrate.temperature)
                     )[:ns_npol_common_bottom, np.newaxis]  # to be put at layer  (l)
 
             # Finalize
@@ -608,7 +623,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin):
         I1up_m = Eu_0 @ transt_0 @ x[j : j + nsl2_npol, :]
 
         if m == 0 and self.temperature is not None and self.temperature[0] > 0:
-            I1up_m += self.temperature[0]  # just under the interface
+            I1up_m += self.planck_function(self.temperature[0])  # just under the interface
 
         Rbottom_air_down = interfaces.reflection_bottom(-1, m, compute_coherent_only)
         Ttop_0 = interfaces.transmission_top(0, m, compute_coherent_only)  # snow-air

@@ -42,8 +42,8 @@ def test_simple_isotropic_atmosphere(default_snowpack):
     print("TB 1: ", res1.TbV(), "TB2: ", res2.TbV())
 
     # absorption with effective permittivity
-    assert abs(res1.TbV() - 227.61318467710458) < 1e-2
-    assert abs(res2.TbV() - 214.66092232541834) < 1e-2
+    assert abs(res1.TbV() - 227.73331276273777) < 1e-2
+    assert abs(res2.TbV() - 213.9133292330192) < 1e-2
 
 
 def test_simple_atmosphere(default_snowpack):
@@ -67,8 +67,8 @@ def test_simple_atmosphere(default_snowpack):
     print("TB 1: ", res1.TbV(), "TB2: ", res2.TbV())
 
     # absorption with effective permittivity
-    assert abs(res1.TbV() - 227.61318467710458) < 1e-2
-    assert abs(res2.TbV() - 224.9027432887187) < 1e-2
+    assert abs(res1.TbV() - 227.73331276273777) < 1e-2
+    assert abs(res2.TbV() - 224.16055686943304) < 1e-2
 
 
 def test_frequency_dependent_atmosphere():

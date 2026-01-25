@@ -34,5 +34,5 @@ def test_snowpack_with_coherent_layer():
     # assert abs(res.TbH() - 196.83495992559307) < 1e-4
 
     # the new values come form the correction of 917->916.7
-    assert abs(res.TbV() - 261.0633483757312) < 1e-4
-    assert abs(res.TbH() - 196.8659636937278) < 1e-4
+    assert abs(res.TbV() - 261.06731839819327) < 1e-4
+    assert abs(res.TbH() - 196.8984511676495) < 1e-4

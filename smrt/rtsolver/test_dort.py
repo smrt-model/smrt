@@ -172,3 +172,20 @@ def test_symmetrization():
     npt.assert_allclose(P[0:6, 6:], symP[0:6, 6:])
 
     npt.assert_allclose(P, symP)
+
+
+def test_rayleigh_jeans_approximation(setup_snowpack):
+    sp = setup_snowpack
+
+    theta = [30, 40]
+    sensor = passive(300e9, theta)
+
+    m = Model(NonScattering, DORT, rtsolver_options=dict(rayleigh_jeans_approximation=True))
+    res_rj = m.run(sensor, sp)
+
+    m = Model(NonScattering, DORT, rtsolver_options=dict(rayleigh_jeans_approximation=False))
+    res_full = m.run(sensor, sp)
+
+    # at 300GHz and 250K, the RJ approximation is not very accurate
+    print(res_rj.TbV(), res_full.TbV())
+    npt.assert_allclose(res_rj.data, res_full.data, rtol=0.01)

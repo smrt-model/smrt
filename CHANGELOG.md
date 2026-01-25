@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
-	- add two faster diagonalization methods in dort: half_rank_eig and stamnes88. "eig" is still the default, but this 	may change in the future.
+	- add two faster diagonalization methods in DORT: half_rank_eig and stamnes88. "eig" is still the default, but this 	may change in the future.
 	- add second order iterative rtsolver
 	- add successive_order rtsolver.
 	- add local incidence angles in altimetry calculation from satellite pitch and roll angles.
@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 	- adding atmosphere objects together now results in an atmosphere stack
 
 ### Changed
+	- the full planck function is now used in DORT and other solvers for passive mode calculations. This should slightly improve the brightness temperature at high frequencies and low temperatures. Rayleigh Jeans approximations can be enable to recover the previous behavior.
 	- change Python support to >=3.10. Old versions are not supported anymore.
 	- parallel_computation=True is now the default to run simulation. It is even faster on single simulation (thanks to joblib magic)
 	- SMRT code is now formatted with ruff.

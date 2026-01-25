@@ -70,13 +70,13 @@ def test_soil_wegmuller_dobson85(soil_permittivity_model):
 
     print(res.TbV(), res.TbH())
     if soil_permittivity_model == "dobson85_peplinski95":
-        assert abs(res.TbV() - 262.55457107119486) < 1e-4
-        assert abs(res.TbH() - 255.81725907587176) < 1e-4
+        assert abs(res.TbV() - 262.5735899023818) < 1e-4
+        assert abs(res.TbH() - 255.85856778263752) < 1e-4
         # note value from DMRTML Fortran running in the same conditions:
         # H=255.88187817295605 V=262.60345275739024
     elif soil_permittivity_model == "dobson85_original":
-        assert abs(res.TbV() - 262.5491286321801) < 1e-4
-        assert abs(res.TbH() - 255.81148533015073) < 1e-4
+        assert abs(res.TbV() - 262.56816517455616) < 1e-4
+        assert abs(res.TbH() - 255.8528128244208) < 1e-4
     else:
         raise ValueError("Unexpected soil_permittivity_model")
 
@@ -93,8 +93,8 @@ def test_soil_wegmuller_montpetit2008():
     res = run_model(snowpack)
 
     print(res.TbV(), res.TbH())
-    assert abs(res.TbV() - 262.4543081568107) < 1e-4
-    assert abs(res.TbH() - 255.71089039573724) < 1e-4
+    assert abs(res.TbV() - 262.47365350048574) < 1e-4
+    assert abs(res.TbH() - 255.75254543866822) < 1e-4
     # note value from DMRTML Fortran running in the same conditions:
     # H=255.88187817295605 V=262.60345275739024
 
@@ -123,7 +123,7 @@ def test_soil_column():
     res = m.run(radiometer, soil_column)
 
     print(res.TbV(), res.TbH())
-    assert abs(res.TbV() - 210.7701625227927) < 1e-4
-    assert abs(res.TbH() - 159.43017901734964) < 1e-4
+    assert abs(res.TbV() - 210.77753148744148) < 1e-4
+    assert abs(res.TbH() - 159.44393511008025) < 1e-4
     # note value from DMRTML Fortran running in the same conditions:
     # H=255.88187817295605 V=262.60345275739024

@@ -67,7 +67,7 @@ def test_kirchoff_law(test, pc, thickness):
     radiometer = sensor_list.passive(37e9, theta)
 
     # create the EM Model
-    m = make_model("iba", "dort")
+    m = make_model("iba", "dort", rtsolver_options=dict(rayleigh_jeans_approximation=True))
 
     # run the model
     sresult_0 = m.run(radiometer, snowpack)
