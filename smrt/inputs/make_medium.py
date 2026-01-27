@@ -290,10 +290,10 @@ def make_snow_layer(
         layer_thickness,
         medium=medium,
         microstructure_model=microstructure_model,
-        density=float(density),
-        temperature=float(temperature),
+        density=density,
+        temperature=temperature,
         permittivity_model=(eps_1, eps_2),
-        salinity=float(salinity),
+        salinity=salinity,
         volumetric_liquid_water=volumetric_liquid_water,
         liquid_water=liquid_water,
         **kwargs,
@@ -404,21 +404,24 @@ class SnowLayer(Layer):
         else:
             if liquid_water is None:
                 liquid_water = 0
-            frac_volume = float(density) / (DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water)
+            frac_volume = density / (DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water)
             # volumetric_liquid_water = liquid_water * frac_volume
 
         # assert frac_volume == density / (DENSITY_OF_ICE * (1 - liquid_water) + DENSITY_OF_WATER * liquid_water)
 
-        if 1 < frac_volume < 1.01:  # consider we have a small rounding error
-            frac_volume = 1
-
-        assert 0 <= frac_volume <= 1, (
+        # consider we have a small rounding error
+        frac_volume_acceptable_error = 1.01
+        assert np.all(0 <= frac_volume) and np.all(frac_volume <= frac_volume_acceptable_error), (
             f"the frac_volume of ice+water in snow is {frac_volume} but must be between 0 and 1."
         )
         " Check that volumetric_liquid_water is between 0 and 1,"
         " and that density is between 0 and DENSITY_OF_ICE + (DENSITY_OF_WATER - DENSITY_OF_ICE) * volumetric_liquid_water. "
 
-        assert 0 <= liquid_water <= 1, f"liquid_water is {liquid_water} but must be between 0 and 1."
+        frac_volume = np.minimum(frac_volume, 1.0)
+
+        assert np.all(0 <= liquid_water) and np.all(liquid_water <= 1), (
+            f"liquid_water is {liquid_water} but must be between 0 and 1."
+        )
         " Check the volumetric_liquid_water and density arguments"
 
         return frac_volume, liquid_water

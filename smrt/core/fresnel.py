@@ -2,6 +2,7 @@
 Fresnel coefficients formulae used in the packages :py:mod:`smrt.interface` and :py:mod:`smrt.substrate`.
 """
 
+import numba
 import numpy as np
 
 from smrt.core.lib import abs2, smrt_matrix
@@ -62,7 +63,7 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=Fals
     kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
 
     ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-    kyt = -np.sqrt(complex(eps_2) - ktz2)  # Eq 8 for t
+    kyt = -np.sqrt(eps_2 - ktz2, dtype=np.complex128)  # Eq 8 for t
 
     rh = (kyi - kyt) / (kyi + kyt)  # Eq 30
 
@@ -118,10 +119,52 @@ def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1) -> tuple[complex,
     # incident wavenumber
     n1 = np.sqrt(eps_1)
     kiz2 = n1.real**2 * (1 - mu1**2)  # this the square of kiz = n1 * sin(theta)
+    kyi = -np.sqrt(eps_1 - kiz2, dtype=np.complex128)  # Eq 8 for i
+
+    ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
+    kyt = -np.sqrt(eps_2 - ktz2, dtype=np.complex128)  # Eq 8 for t
+
+    rh = (kyi - kyt) / (kyi.conjugate() + kyt)  # Eq 59
+
+    rv = (
+        n1.conjugate() * (eps_2 * kyi - eps_1 * kyt) / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))
+    )  # Eq 61
+
+    mu2 = -kyt.real / np.sqrt(eps_2).real  # by definition of kyt
+
+    return rv, rh, mu2
+
+
+@numba.jit(nopython=True, cache=True)
+def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1):
+    """
+    Compute the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
+    on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
+    Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
+
+    The 'rigorous' derivation respects the energy conservation even for strongly loosly media.
+    The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
+    reflection coefficient.
+
+    This function only returns the FIELD reflection coefficients and the cosine angle in the medium 2
+
+    Args:
+        eps_1: permittivity of medium 1.
+        eps_2: permittivity of medium 2.
+        mu1: cosine zenith angle in medium 1.
+
+    Returns:
+        : rv, rh, mu2 the cosine of the angle in medium 2
+    """
+    # y is the axis normal to the interface (usually z, but here it is y!)
+
+    # incident wavenumber
+    n1 = np.sqrt(eps_1)
+    kiz2 = n1.real**2 * (1 - mu1**2)  # this the square of kiz = n1 * sin(theta)
     kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
 
     ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-    kyt = -np.sqrt(complex(eps_2) - ktz2)  # Eq 8 for t
+    kyt = -np.sqrt(eps_2 - ktz2)  # Eq 8 for t
 
     rh = (kyi - kyt) / (kyi.conjugate() + kyt)  # Eq 59
 
@@ -153,7 +196,7 @@ def fresnel_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu1):
         full_output: return full output (Default value = False).
 
     Returns:
-        : rv, rh, mu2 the cosine of the angle in medium 2
+            : rv, rh, mu2 the cosine of the angle in medium 2
     """
     # y is the axis normal to the interface (usually z, but here it is y!)
 
@@ -167,7 +210,7 @@ def fresnel_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu1):
     kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
 
     ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-    kyt = -np.sqrt(complex(eps_2) - ktz2)  # Eq 8 for t
+    kyt = -np.sqrt(eps_2 - ktz2, dtype=np.complex128)  # Eq 8 for t
 
     rh = (kyi - kyt) / (kyi.conjugate() + kyt)  # Eq 59
 
@@ -225,7 +268,7 @@ def snell_angle(eps_1, eps_2, mu1):
     kiz2 = n1.real**2 * (1 - mu1**2)  # this the square of kiz = n1 * sin(theta)
 
     ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-    kyt = -np.sqrt(complex(eps_2) - ktz2)  # Eq 8 for t
+    kyt = -np.sqrt(eps_2 - ktz2, dtype=np.complex128)  # Eq 8 for t
 
     mu2 = -kyt.real / np.sqrt(eps_2).real  # by definition of kyt
 
