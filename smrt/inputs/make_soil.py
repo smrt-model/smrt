@@ -24,6 +24,7 @@ from smrt.core.interface import Substrate, get_substrate_model, make_interface
 from smrt.core.layer import Layer, get_microstructure_model
 from smrt.core.snowpack import Snowpack
 from smrt.inputs.make_medium import add_transparent_layer
+from smrt.permittivity import permittivity_function
 from smrt.permittivity.soil import (
     soil_permittivity_dobson85,
     soil_permittivity_dobson85_peplinski95,
@@ -119,7 +120,10 @@ def make_soil_substrate(
             case "montpetit2008":
                 permittivity_model = soil_permittivity_montpetit08
             case _:
-                raise SMRTError(f"The permittivity model '{permittivity_model}' is not recongized")
+                if "_permittivity_" in permittivity_model:
+                    permittivity_model = permittivity_function(permittivity_model)
+                else:
+                    raise SMRTError(f"The permittivity model '{permittivity_model}' is not recongized")
     else:
         # check that other parameters are defined
         if moisture is not None or sand is not None or clay is not None or dry_matter is not None:
@@ -155,7 +159,7 @@ def make_soil_column(
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf"
         for a semi-infinite layer. Any layer with zero thickness is removed.
     :param temperature: temperature of soil in K.
-    :param soil_permittivity_model: Permittivity model to use. Can be a name ("hut_epss", "dobson85", "montpetit2008"), a function of
+    :param soil_permittivity_model: Permittivity model to use. Can be a name, a function of
             frequency and temperature or a complex value.
     :param moisture: Soil moisture in m^3 m^-3 to compute the permittivity. This parameter is used depending on the permittivity_model.
     :param sand: Soil relative sand content. This parameter is used or not depending on the permittivity_model.
@@ -249,7 +253,7 @@ def make_soil_layer(
     """
 
     # background permittivity (default = soil_permittivity_dobson85_peplinski95)
-    eps_1 = soil_permittivity_model or soil_permittivity_dobson85_peplinski95
+    eps_1 = permittivity_function(soil_permittivity_model) or soil_permittivity_dobson85_peplinski95
 
     lay = Layer(
         float(layer_thickness),

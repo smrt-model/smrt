@@ -6,6 +6,18 @@ to prescribe the scatterers and background permittivity, while the latter are to
 reformulate how the effective permittivity is calculated. This latter usage is very specific and should not concern most
 users. See :py:mod:`smrt.emmodel.symsce_torquato21.derived_SymSCETK21` and :py:mod:`smrt.emmodel.iba.derived_IBA`.
 
+To import a material permittivity function by name instead of using the classical import statement, use the helper
+function :py:func:`permittivity_function` as follows:
+
+    from smrt.permittivity import permittivity_function
+    ice_perm_func = permittivity_function("ice_permittivity_maetzler06")
+
+It is also possible to pass directly the permittivity name to :py:func:`~smrt.inputs.make_snowpack` or
+:py:func:`~smrt.inputs.make_snow_layer` functions in :py:mod:`smrt.inputs.make_medium` as follows:
+
+    from smrt.inputs import make_snowpack
+    layer = make_snowpack(..., ice_permittivity_model="ice_permittivity_maetzler06")
+
 .. admonition:: **For developers**
 
     To add a new permittivity function proceed as follows:
@@ -34,3 +46,32 @@ users. See :py:mod:`smrt.emmodel.symsce_torquato21.derived_SymSCETK21` and :py:m
     3. To use the new function, import the module (e.g. from smrt.permittivity.ice import permittivity_something) and
     pass this function to :py:mod:`smrt.core.snowpack.make_snowpack` or :py:mod:`smrt.core.layer:make_snow_layer`.
 """
+
+from typing import Callable
+
+from smrt.core.plugin import import_function
+
+
+def permittivity_function(permittivity_model: str | Callable) -> callable:
+    """Return a permittivity function based on its name.
+
+    Args:
+        permittivity_model: name of the model
+
+    Example to get the Maetzler (2006) ice permittivity function, do:
+        perm_func = permittivity_model("ice_permittivity_maetzler06")
+
+    """
+    if isinstance(permittivity_model, str):
+        # get the function by model name
+        try:
+            modulename, _ = permittivity_model.split("_permittivity_")
+        except ValueError:  # unpack problem
+            raise ValueError(
+                f"The permittivity model {permittivity_model} has not a valid name. It must match the pattern <modulename>_permittivity_<something>."
+            )
+
+        return import_function("permittivity", modulename, permittivity_model)
+    else:
+        # callable or scalar or others are returned as is
+        return permittivity_model

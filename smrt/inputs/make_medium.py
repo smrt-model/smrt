@@ -48,6 +48,7 @@ from smrt.core.interface import make_interface
 from smrt.core.layer import Layer, get_microstructure_model
 from smrt.core.plugin import import_class
 from smrt.core.snowpack import Snowpack
+from smrt.permittivity import permittivity_function
 from smrt.permittivity.brine import brine_volume_cox83_lepparanta88
 from smrt.permittivity.ice import (
     ice_permittivity_maetzler06,
@@ -248,7 +249,9 @@ def make_snow_layer(
         density: Density of snow layer in kg m :sup:`-3`. Includes the ice and water phases.
         temperature: Temperature of layer in K.
         ice_permittivity_model: Permittivity formulation of the scatterers (default is ice_permittivity_matzler87).
+            It can be a function, a value or the name of a permittivity function.
         background_permittivity_model: Permittivity formulation for the background (default is air).
+            It can be a function, a value or the name of a permittivity function.
         volumetric_liquid_water: Volume of liquid water with respect to the volume of snow (default=0).
         liquid_water: May be deprecated in the future (use instead volumetric_liquid_water): volume of liquid water
             with respect to ice+water volume (default=0). liquid_water = water_volume / (ice_volume + water_volume).
@@ -273,8 +276,8 @@ def make_snow_layer(
             + "See the module smrt.permittivity.saline_ice module."
         )
 
-    eps_1 = background_permittivity_model
-    eps_2 = ice_permittivity_model
+    eps_1 = permittivity_function(background_permittivity_model)
+    eps_2 = permittivity_function(ice_permittivity_model)
 
     _warn_mixing_formula(background_permittivity_model, "background_permittivity_model")
     _warn_mixing_formula(ice_permittivity_model, "ice_permittivity_model")
@@ -591,14 +594,16 @@ def make_ice_layer(
             This parameter is optional, if not given brine volume fraction is calculated from temperature and salinity in
             `brine_volume_cox83_lepparanta88`.
         brine_permittivity_model: (firstyear and multiyear) Brine permittivity formulation
-            (default is brine_permittivity_stogryn85).
+            (default is brine_permittivity_stogryn85). It can be a function, a value or the name of a permittivity function.
         density: (multiyear) Density of ice layer in kg m :sup:`-3`. If not given, density is calculated from temperature,
             salinity and ice porosity.
         porosity: (mutliyear and fresh) Air porosity of ice layer (0..1). Default is 0.
         ice_permittivity_model: (all) Pure ice permittivity formulation
             (default is ice_permittivity_matzler06 for firstyear and fresh, and saline_ice_permittivity_pvs_mixing for multiyear).
+            It can be a function, a value or the name of a permittivity function.
         saline_ice_permittivity_model: (multiyear) Model to mix ice and brine. The default uses polder van staten and
             ice_permittivity_model and brine_permittivity_model. It is highly recommended to use the default.
+            It can be a function, a value or the name of a permittivity function.
         **kwargs: Other microstructure parameters are given as optional arguments but may be required.
         medium: Indicates which medium the layer is made of ("ice" is a default).
             It is used when emmodel is a dictionary mapping from medium to emmodels in `make_model`.
@@ -642,7 +647,7 @@ def make_ice_layer(
     # specific setup
     if ice_type == "firstyear":
         # scatterers permittivity
-        eps_2 = brine_permittivity_model
+        eps_2 = permittivity_function(brine_permittivity_model)
 
         # background permittivity
         if ice_permittivity_model is None:
@@ -650,7 +655,7 @@ def make_ice_layer(
             # so I did the same...
             eps_1 = ice_permittivity_maetzler06
         else:
-            eps_1 = ice_permittivity_model
+            eps_1 = permittivity_function(ice_permittivity_model)
 
         # fractional volume of brine
         frac_volume = brine_volume_fraction
@@ -669,7 +674,7 @@ def make_ice_layer(
         if saline_ice_permittivity_model is None:
             eps_1 = saline_ice_permittivity_pvs_mixing
         else:
-            eps_1 = saline_ice_permittivity_model
+            eps_1 = permittivity_function(saline_ice_permittivity_model)
 
         # fractional volume of air
         frac_volume = porosity
@@ -687,7 +692,7 @@ def make_ice_layer(
             # so I did the same...
             eps_1 = ice_permittivity_maetzler06
         else:
-            eps_1 = ice_permittivity_model
+            eps_1 = permittivity_function(ice_permittivity_model)
 
         # fractional volume of air
         frac_volume = porosity
@@ -761,6 +766,7 @@ def make_water_body(
         temperature: Temperature of layer in K.
         salinity: Salinity in kg kg :sup:`-1` (see PSU constant in smrt module).
         water_permittivity_model: Water permittivity formulation (default is seawater_permittivity_klein76).
+            It can be a function, a value or the name of a permittivity function.
         foam_frac_volume: Fractional volume of air bubbles in the water. See for instance Hwang et al. 2019.
             https://doi.org/10.1175/JPO-D-19-0061.1 . Note that the permittivity mixing formula suggested in that paper is
             different from the Polder van Santen used in most emmodels in SMRT.
@@ -811,6 +817,7 @@ def make_water_layer(
         temperature: Temperature of layer in K.
         salinity: Salinity in kg kg :sup:`-1` (see PSU constant in smrt module).
         water_permittivity_model: Water permittivity formulation (default is :py:func:`~smrt.permittivity.saline_water.seawater_permittivity_klein76`)
+            It can be a function, a value or the name of a permittivity function.
         foam_frac_volume: Fractional volume of air bubbles in the water. See for instance Hwang et al. 2019.
             https://doi.org/10.1175/JPO-D-19-0061.1 . Note that the permittivity mixing formula suggested in that paper is
             different from the Polder van Santen used in most emmodels in SMRT.
@@ -822,6 +829,8 @@ def make_water_layer(
     """
     if water_permittivity_model is None:
         water_permittivity_model = seawater_permittivity_klein76
+    else:
+        water_permittivity_model = permittivity_function(water_permittivity_model)
 
     if foam_frac_volume == 0:
         microstructure_model = "homogeneous"

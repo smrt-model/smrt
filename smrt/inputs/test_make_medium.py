@@ -1,12 +1,15 @@
 import numpy as np
 import pytest
 
+from smrt.permittivity.ice import ice_permittivity_maetzler06
+
 from ..core.error import SMRTError, SMRTWarning
 from ..interface.flat import Flat
 from ..interface.transparent import Transparent
 from .make_medium import (
     make_ice_column,
     make_medium,
+    make_snow_layer,
     make_snowpack,
     make_transparent_volume,
     make_water_body,
@@ -270,3 +273,8 @@ def test_warning_mixing_formula(mixing_formula, default_snowpack_args):
 def test_warning_saline_snow(default_snowpack_args):
     with pytest.warns(SMRTWarning):
         make_snowpack(**default_snowpack_args, salinity=0.1)
+
+
+def test_permittivity_model_by_name():
+    lay = make_snow_layer(1, "homogeneous", 350.0, ice_permittivity_model="ice_permittivity_maetzler06")
+    lay.permittivity_model[1] == ice_permittivity_maetzler06
