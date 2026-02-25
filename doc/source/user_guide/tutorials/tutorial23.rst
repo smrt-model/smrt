@@ -1,7 +1,7 @@
 Sensitivity analysis
 ====================
 
-**Goal**: - run sensitivity analysis to show the impact of a given
+**Goal**: run sensitivity analysis to show the impact of a given
 parameter on the SMRT output
 
 **Learning**:
@@ -15,11 +15,11 @@ on a High Performance Cluster).
 SMRT is indeed able to iterate on several arguments when it is
 unambiguous. For instance, a sensor with multiple frequencies, angles or
 polarizations is automatically understood. The ``result`` contains all
-the values which can be easily accessed with the functions like TbV(),
-and can also be filter. E.g. TbV(frequency=37e9)
+the values which can be easily accessed with the functions like ``TbV()``,
+and can also be filter. E.g. ``TbV(frequency=37e9)``
 
 This is similar when a list of snowpacks is given to ``run``. The
-``result`` contains all the computations. The ‘snowpack’ dimension is
+``result`` contains all the computations. The  ``snowpack`` dimension is
 automatically added but we can also propose a custom name for this
 dimension.
 
@@ -31,9 +31,9 @@ powerful way to conduct sensitivity analysis.
 
 In the following, we show different approaches to conduct sensitivity
 studies that you can run and then apply to a study case of your choice:
-- take the Dome C snowpack and study the sensitivity of TbH 55° to
+- take the Dome C snowpack and study the sensitivity of ``TbH`` 55° to
 superficial density - take any snowpack previously defined and
-investigated the sensivitiy to liquid_water - etc
+investigated the sensivitiy to ``liquid_water`` - etc
 
 .. code:: ipython3
 
@@ -43,7 +43,6 @@ investigated the sensivitiy to liquid_water - etc
     import pandas as pd
 
     import matplotlib.pyplot as plt
-    %matplotlib notebook
 
     from smrt import make_model, make_snowpack, sensor_list
 
@@ -123,14 +122,6 @@ result with a new coordinate** which is much more convenient.
     results = model.run(sensor, snowpack, snowpack_dimension=('radius', radius))
     # look at what we get:
     results
-
-
-
-
-.. parsed-literal::
-
-    <smrt.core.result.PassiveResult at 0x7f31e6691eb0>
-
 
 
 .. code:: ipython3
@@ -475,10 +466,6 @@ smos, …) as defined in smrt.sensor.list. In this case the columns of the
 DataFrame are the channels of the sensor. It is a very convenient way to
 run multiple simulations and use the results for plotting or stats.
 
-.. code:: ipython3
-
-    # try this.
-
 Recap:
 ------
 
@@ -519,6 +506,6 @@ Recap:
 Do it yourself
 --------------
 
-Easy: plot Tb as a function liquid_water_content for a single-layer
-snowpack or More invovled: plot a map of Tb(radius, density) using a
-single run call (hint: use pd.DataFrame)
+Easy: plot Tb as a function of ``liquid_water_content`` for a single-layer
+snowpack or more involved: plot a map of Tb(radius, density) using a
+single run call (hint: use ``pd.DataFrame``)
