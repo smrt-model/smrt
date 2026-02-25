@@ -21,7 +21,7 @@ parameter:
   can be compared.
 
 Run SMRT for the different snowpacks and compare the electromagnetic
-theories. Plot the result as a function of radius (see sensitivity_study
+theories. Plot the result as a function of radius (see Sensitivity analysis
 tutorial).
 
 **Learning**:
@@ -36,7 +36,6 @@ tutorial).
     import numpy as np
 
     import matplotlib.pyplot as plt
-    %matplotlib notebook
 
     from smrt import make_model, make_snowpack, sensor_list
 
@@ -100,10 +99,6 @@ with the other snowpack made of spheres (explore)
     m_sce = make_model("sce_rechtsman08", "dort")
     m_sft = make_model("sft_rayleigh", "dort")
 
-
-.. code:: ipython3
-
-    # continue with running these models and plotting the results as before
 
 .. code:: ipython3
 
