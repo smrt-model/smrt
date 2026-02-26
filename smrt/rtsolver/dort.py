@@ -885,12 +885,7 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
                 # Zero out strictly lower triangular values
                 T[np.tril_indices(T.shape[0], k=-1)] = 0
                 # Zero out anti-diagonal values of npol*npol diagonal blocks
-                if npol == 2:
-                    T[([2 * i for i in range(T.shape[0] // 2)], [2 * i + 1 for i in range(T.shape[0] // 2)])] = 0
-                else:
-                    T[([3 * i for i in range(T.shape[0] // 3)], [3 * i + 1 for i in range(T.shape[0] // 3)])] = 0
-                    T[([3 * i for i in range(T.shape[0] // 3)], [3 * i + 2 for i in range(T.shape[0] // 3)])] = 0
-                    T[([3 * i + 1 for i in range(T.shape[0] // 3)], [3 * i + 2 for i in range(T.shape[0] // 3)])] = 0
+                T[([2 * i for i in range(T.shape[0] // 2)], [2 * i + 1 for i in range(T.shape[0] // 2)])] = 0
 
             beta, E = scipy.linalg.eig(T, overwrite_a=True)
         except scipy.linalg.LinAlgError:
