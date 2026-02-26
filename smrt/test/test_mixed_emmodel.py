@@ -35,13 +35,5 @@ def test_mixed_emmodel():
 
     print(res.TbV(), res.TbH())
 
-    # assert (res.TbV() - 203.84730126016882) < 1e-4
-    # assert (res.TbH() - 189.53130277932084) < 1e-4
-
-    # assert (res.TbV() - 203.8473395866384) < 1e-4
-    # assert (res.TbH() - 189.53346053779396) < 1e-4
-
-    # assert (res.TbV() - 204.6641326749464) < 1e-4
-    # assert (res.TbH() - 190.42438454209372) < 1e-4
-    assert (res.TbV() - 204.61156255625286) < 1e-4
-    assert (res.TbH() - 190.5085529486018) < 1e-4
+    assert (res.TbV() - 204.510189893163) < 1e-4
+    assert (res.TbH() - 190.53692754287889) < 1e-4

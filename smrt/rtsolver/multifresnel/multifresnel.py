@@ -19,9 +19,8 @@ from smrt.core import fresnel
 from smrt.core.globalconstants import C_SPEED
 
 # compile fresnel_coefficients
-fresnel_coefficients_maezawa09_rigorous = jit(nopython=True, cache=True)(
-    fresnel.fresnel_coefficients_maezawa09_rigorous
-)
+fresnel_coefficients_maezawa09_rigorous = fresnel.fresnel_coefficients_maezawa09_rigorous_compiled
+
 
 VPOL = 0
 HPOL = 1

@@ -64,7 +64,7 @@ class MultiFresnelThermalEmission(object):
             value should be decreased. Set to None to deactivate pruning, but this is not recommended.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta", "polarization"}
 
@@ -130,10 +130,7 @@ class MultiFresnelThermalEmission(object):
 
         if tau_snowpack < 5 and snowpack.substrate is None:
             smrt_warn(
-                "Multifresnel has detected that the snowpack is optically shallow (tau=%g) and no substrate has been set, meaning that the space "
-                "under the snowpack is 'empty' with snowpack shallow enough to affect the measured signal at the surface."
-                "This is usually not wanted and can produce wrong results. Either increase the thickness of the snowpack or set a substrate."
-                " If wanted, add a transparent substrate to supress this warning" % tau_snowpack
+                f"Multifresnel has detected that the snowpack is optically shallow (tau={tau_snowpack:g}) and no substrate has been set, meaning that the space under the snowpack is 'empty' with snowpack shallow enough to affect the measured signal at the surface. This is usually not wanted and can produce wrong results. Either increase the thickness of the snowpack or set a substrate. If wanted, add a transparent substrate to supress this warning"
             )
 
         Tbv, Tbh = compute_emerging_radiation(M)

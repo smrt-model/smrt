@@ -8,7 +8,7 @@ To create a substrate, use or implement a helper function such as smrt.inputs.ma
 Examples::
 
     from smrt import make_soil
-    soil = make_soil("soil_wegmuller", "dobson85", moisture=0.2, sand=0.4, clay=0.3, drymatter=1100, roughness_rms=1e-2)
+    soil = make_soil("soil_wegmuller", "dobson85_peplinski95", moisture=0.2, sand=0.4, clay=0.3, drymatter=1100, roughness_rms=1e-2)
 
 It is recommended to first read the documentation of smrt.inputs.make_soil.make_soil and then explore the different types of soil models.
 

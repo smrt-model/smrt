@@ -82,6 +82,8 @@ Other contributions
  - Carlo Marin:  debuging of the wet permittivities.
  - Fanny Larue: debuging (LRM altimetry)
  - Justin Murfitt: debuging (lake-ice, LRM altimetry)
- - Julien Meloche: debuging (snow). Help to user
+ - Julien Meloche: debuging (snow). Help to user. Iterative solver.
  - Janna Rücker: implementation of new sea-ice functions
  - Jacqueline Boutin: implementation of new sea-ice permittivity functions
+ - Hippolyte Signargout: code cleaning and modernization, documentation refactoring
+ - Ange Haddjeri: implementation of bedrock permittivity

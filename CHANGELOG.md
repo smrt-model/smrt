@@ -6,15 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
-	- add two faster diagonalization methods in dort: half_rank_eig and stamnes88. "eig" is still the default, but this 	may change in the future.
+	- add two faster diagonalization methods in DORT: half_rank_eig and stamnes88. "eig" is still the default, but this 	may change in the future.
+	- add second order iterative rtsolver
 	- add successive_order rtsolver.
+	- add local incidence angles in altimetry calculation from satellite pitch and roll angles.
+	- a make_bedrock function to create rock layers.
+	- add precommit configuration and documentation for developers
+	- add Turner2016 water permittivity for supercoold water
+	- allow to define the emmodel and emmodel in the Layer object. This override the default emmodel used in make_model.
+	- add optional cache for the diagonalization in DORT, allowing strong acceleration in case of identical layers
+		within a snowpacks or across snowpacks. Experimental.
+	- add atmosphere objects together now results in an atmosphere stack
+	- allow to use a string where permittivity_module function are expected. Import is automatic.
 
 ### Changed
+	- the full planck function is now used in DORT and other solvers for passive mode calculations. This should slightly improve the brightness temperature at high frequencies and low temperatures. Rayleigh Jeans approximations can be enable to recover the previous behavior.
 	- change Python support to >=3.10. Old versions are not supported anymore.
 	- parallel_computation=True is now the default to run simulation. It is even faster on single simulation (thanks to joblib magic)
-	- in nadir_lrm_altimetry oversampling argument becomes oversampling_time.
-	- Snowpack.copy is depreciated, it is replaced by shallow_copy
 	- SMRT code is now formatted with ruff.
+	- the documentation is refactored.
+	- in nadir_lrm_altimetry oversampling argument becomes oversampling_time.
+	- Snowpack.copy is depreciated, it is replaced by shallow_copy.
+
+### Bug
+	- Solve a bug when no snowpack and DMRT_QCA_ShortRange is used due to incompatible microstructure
 
 
 ## [v1.5]

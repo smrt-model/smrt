@@ -30,7 +30,7 @@ class AutocorrelationBase(object):
             if arg in params:
                 setattr(self, arg, params.get(arg))
             else:
-                raise SMRTError("Parameter %s must be specified" % arg)
+                raise SMRTError(f"Parameter {arg} must be specified")
 
         for arg in self.all_optional_arguments:
             setattr(self, arg, params.get(arg, self.all_optional_arguments[arg]))

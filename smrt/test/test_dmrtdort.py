@@ -3,6 +3,7 @@
 import warnings
 
 import numpy as np
+import pytest
 
 # local import
 from smrt import make_model, make_snowpack, make_soil
@@ -16,6 +17,7 @@ from smrt.substrate.reflector import make_reflector
 #
 
 
+@pytest.fixture
 def setup_snowpack():
     # prepare inputs
     l = 2
@@ -35,8 +37,8 @@ def setup_snowpack():
     return snowpack
 
 
-def test_dmrt_oneconfig():
-    snowpack = setup_snowpack()
+def test_dmrt_oneconfig(setup_snowpack):
+    snowpack = setup_snowpack
 
     # create the EM Model
     m = make_model("dmrt_qcacp_shortrange", "dort")
@@ -52,8 +54,8 @@ def test_dmrt_oneconfig():
     assert (res.TbH() - 187.45835882462404) < 1e-4
 
 
-def test_dmrt_twoconfig():
-    snowpack = setup_snowpack()
+def test_dmrt_twoconfig(setup_snowpack):
+    snowpack = setup_snowpack
 
     # create the EM Model
     m = make_model("dmrt_qcacp_shortrange", "dort")
@@ -71,7 +73,7 @@ def test_dmrt_twoconfig():
     assert (res.Tb(channel="37H") - 187.45835882462404) < 1e-4
 
     assert (res.Tb(channel="19V") - 242.550043) < 1e-4
-    assert (res.Tb(channel="19H") - 230.118448) < 1e-4
+    assert (res.Tb(channel="19H") - 230.13167636301958) < 1e-4
 
 
 def test_less_refringent_bottom_layer():
@@ -94,8 +96,7 @@ def test_less_refringent_bottom_layer():
     assert abs(res.sigmaHH_dB() - -50.52755576862734) < 1e-1
 
 
-# The following test fails
-def test_less_refringent_bottom_layer_VV():
+def test_less_refringent_bottom_layer_VH():
     # Regression test 19-03-2018: value may change if other bugs found
     snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density=[290.0, 250.0], radius=1e-4, stickiness=0.2)
     m = make_model("dmrt_qcacp_shortrange", "dort", rtsolver_options=dict(diagonalization_method="shur_forcedtriu"))
@@ -104,16 +105,6 @@ def test_less_refringent_bottom_layer_VV():
     res = m.run(scat, snowpack)
     print(res.sigmaVV())
     assert abs(res.sigmaVV() - 7.54253344e-05) < 1e-7
-
-
-def test_less_refringent_bottom_layer_HH():
-    # Regression test 19-03-2018: value may change if other bugs found
-    snowpack = make_snowpack([0.2, 0.3], "sticky_hard_spheres", density=[290.0, 250.0], radius=1e-4, stickiness=0.2)
-    m = make_model("dmrt_qcacp_shortrange", "dort", rtsolver_options=dict(diagonalization_method="shur_forcedtriu"))
-    scat = active(10e9, 45)
-    warnings.simplefilter("ignore", category=SMRTWarning)
-    res = m.run(scat, snowpack)
-    print(res.sigmaHH())
     assert abs(res.sigmaHH() - 7.09606407e-05) < 1e-7
 
 
@@ -123,7 +114,7 @@ def test_transparent_volume():
     substrate = make_reflector(temperature=temperature, specular_reflection=r)
     snowpack = make_transparent_volume(substrate=substrate)
 
-    m = make_model("iba", "dort")
+    m = make_model("iba", "dort", rtsolver_options=dict(rayleigh_jeans_approximation=True))
     radiometer = passive(37e9, 45)
     res = m.run(radiometer, snowpack)
     print(res.TbV(), res.TbH())

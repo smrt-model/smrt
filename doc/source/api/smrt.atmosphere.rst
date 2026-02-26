@@ -21,4 +21,3 @@ smrt.atmosphere.pyrtlib_atmosphere module
 .. automodule:: smrt.atmosphere.pyrtlib_atmosphere
    :members:
    :show-inheritance:
-

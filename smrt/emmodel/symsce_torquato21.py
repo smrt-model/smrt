@@ -1,7 +1,13 @@
 # coding: utf-8
 """
-Computes scattering with the symmetrized version of the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021
-under the non-local approximation, a.k.a long range in Tsang's books. The truncation of the series is at second order.
+Computes scattering with the symmetrized version of the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021 under
+the non-local approximation, a.k.a long range in Tsang's books. The truncation of the series is at second order.
+
+References:
+    - Torquato, S., & Kim, J. (2021). Nonlocal Effective Electromagnetic Wave Characteristics of
+         Composite Media: Beyond the Quasistatic Regime. Physical Review X, 11(2). doi:10.1103/physrevx.11.021002
+    - G. Picard, H. Löwe, C. Mätzler, A continuous formulation of microwave scattering from fresh snow to bubbly ice
+         from first principles, The Cryosphere, 16, 3861–3866,doi:10.5194/tc-16-3861-2022, 2022
 """
 
 # Stdlib import

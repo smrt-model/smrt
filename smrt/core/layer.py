@@ -29,7 +29,7 @@ from .plugin import import_class
 
 class Layer(object):
     """
-    Contains the properties for a single layer including the microstructure attribute which holds the microstructure properties.
+    This class contains the properties for a single layer including the microstructure attribute which holds the microstructure properties.
 
     To create a layer, it is recommended to use the functions `make_snow_layer` or similar.
     """
@@ -41,20 +41,27 @@ class Layer(object):
         temperature=FREEZING_POINT,
         permittivity_model=None,
         inclusion_shape=None,
+        emmodel=None,
+        emmodel_options=None,
         **kwargs,
     ):
         """
         Builds a snow layer.
 
         Args:
-            thickness (float): Thickness of the snow layer in meters.
-            microstructure_model (module, optional): Module name of the microstructure model to be used.
-            temperature (float, optional): Temperature of the layer in Kelvin. Defaults to FREEZING_POINT.
-            permittivity_model (list or tuple, optional): Permittivity value or model for the background and materials
+            thickness (float): Thickness of the snow layer in meters. microstructure_model (module, optional): Module
+            name of the microstructure model to be used. temperature (float, optional): Temperature of the layer in
+            Kelvin. Defaults to FREEZING_POINT. permittivity_model (list or tuple, optional): Permittivity value or
+            model for the background and materials
                 (e.g., air and ice). The permittivity can be given as a complex (or real) value or a function that
                 returns a value.
             inclusion_shape (str, optional): Assumption for the shape of air/brine inclusions. Options are "spheres",
                 "random_needles" (elongated ellipsoidal inclusions), and "mix_spheres_needles".
+            emmodel: Name of the electromagnetic model to be used for this layer.
+                Override the default emmodel in make_model. This is useful when a microstructure model is tied
+                to a specific emmodel, but can be used in any case.
+            emmodel_options: Options for the electromagnetic model to be used for this layer.
+                Override the default emmodel_options in make_model.
             **kwargs: Additional parameters for the layer or microstructure model.
         """
         super().__init__()
@@ -69,6 +76,9 @@ class Layer(object):
         self.inclusion_shape = inclusion_shape
 
         self.microstructure_model = microstructure_model
+
+        self.emmodel = emmodel
+        self.emmodel_options = emmodel_options
 
         # manage the microstructure parameters
         if microstructure_model is not None:
@@ -91,7 +101,7 @@ class Layer(object):
     @property
     def ssa(self):
         """
-        Returns the SSA, computing it if necessary.
+        Return the SSA, computing it if necessary.
         """
         if not hasattr(self, "_ssa") or self._ssa is None:
             self._ssa = self.microstructure.compute_ssa()
@@ -105,9 +115,9 @@ class Layer(object):
     def frac_volume(self, f):
         self.microstructure.frac_volume = f  # set the frac_volume in the microstructure
 
-    def permittivity(self, i, frequency):
+    def permittivity(self, i: int, frequency):
         """
-        Returns the permittivity of the i-th medium depending on the frequency and internal layer properties.
+        Return the permittivity of the i-th medium depending on the frequency and internal layer properties.
 
         Args:
             i (int): Number of the medium. 0 is reserved for the background.
@@ -139,18 +149,17 @@ class Layer(object):
             # be called with the layer argument, but the initial permittivity_model function never heard about layers
             return self.permittivity_model[i](frequency, layer_to_inject=self)
 
-        else:  # assume it is independent of the frequency.
+        else:  # assume it is a constant, independent of the frequency.
             return self.permittivity_model[i]
 
     def basic_checks(self):
         """
-        Performs basic input checks on the layer information.
+        Perform basic input checks on the layer information.
 
         Checks:
             - Temperature is between 100 and the freezing point (Kelvin units check).
             - Density is between 1 and DENSITY_OF_ICE (SI units check).
             - Layer thickness is above zero.
-
 
         Raises:
             SMRTError: If any of the checks fail.
@@ -163,18 +172,18 @@ class Layer(object):
 
         if hasattr(self, "temperature"):
             if self.temperature < 100:
-                raise SMRTError("Temperature should be in Kelvin, got %g" % self.temperature)
+                raise SMRTError(f"Temperature should be in Kelvin, got {self.temperature:g}")
 
             if self.temperature > FREEZING_POINT:
                 # This warning should not be applied to substrates i.e. soil and open water
-                raise SMRTError("Temperature is above freezing, got %g" % self.temperature)
+                raise SMRTError(f"Temperature is above freezing, got {self.temperature:g}")
 
         if self.frac_volume < 0 or self.frac_volume > 1:
             raise SMRTError("Check density units are kg per m3")
 
     def inverted_medium(self):
         """
-        Returns the layer with inverted autocorrelation and inverted permittivities.
+        Return the layer with inverted autocorrelation and inverted permittivities.
 
         Returns:
             Layer: A new layer object with inverted properties.
@@ -210,7 +219,7 @@ class Layer(object):
 
     def update(self, **kwargs):
         """
-        Updates the attributes. This method is to be used when recalculation of the state of the object
+        Update the attributes. This method is to be used when recalculation of the state of the object
         is necessary. See for instance :py:class:`~smrt.inputs.make_medium.SnowLayer`.
 
         Args:
@@ -222,9 +231,9 @@ class Layer(object):
 
 def get_microstructure_model(modulename, classname=None):
     """
-    Returns the class corresponding to the microstructure_model defined in modulename.
+    Return the class corresponding to the microstructure_model defined in modulename.
 
-    This function imports the correct module if possible and returns the class.
+    This function imports the correct module `modulename` if possible and returns the first class found in the module.
     It is used internally and should not be needed for normal usage.
 
     Args:
@@ -237,7 +246,7 @@ def get_microstructure_model(modulename, classname=None):
 
 def make_microstructure_model(modelname_or_class, **kwargs):
     """
-    Creates a microstructure instance.
+    Create a microstructure instance.
 
     Args:
         modelname_or_class (str or type): Name of the module or directly the class.
@@ -290,9 +299,7 @@ def layer_properties(*required_arguments, optional_arguments=None, **kwargs):
                             layer_to_inject, ra
                         )  # add the layer's attributes as named arguments (avoid problems)
                     else:
-                        raise Exception(
-                            "The layer must have the '%s' attribute to call the function %s " % (ra, str(f))
-                        )
+                        raise Exception(f"The layer must have the '{ra}' attribute to call the function {f!s} ")
                 if optional_arguments:
                     for ra in optional_arguments:
                         if hasattr(layer_to_inject, ra):

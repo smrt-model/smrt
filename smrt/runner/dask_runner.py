@@ -1,5 +1,5 @@
-"""Run the simulations using dask.distributed on a cluster. This requires  setup on the cluster
-(see the dask.distributed documentation).
+"""This module provides DaskParallelRunner to run the simulations using dask.distributed on a cluster.
+This requires setup on the cluster (see the dask.distributed documentation).
 
 Example::
 

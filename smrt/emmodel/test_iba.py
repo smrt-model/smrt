@@ -46,6 +46,7 @@ def setup_func_indep(radius=5e-4):
     return indep_lay
 
 
+@pytest.fixture
 def setup_func_shs():
     # ### Make a snow layer
     shs_lay = make_snow_layer(
@@ -87,6 +88,7 @@ def setup_func_active(testpack=None):
     return emmodel
 
 
+@pytest.fixture
 def setup_func_rayleigh():
     testpack = setup_func_indep(radius=1e-4)
     sensor = amsre("10V")
@@ -106,56 +108,21 @@ def setup_mu(stepsize, bypass_exception=None):
     return mu
 
 
-def test_ks_pc_is_0p3_mm():
-    testpack = setup_func_pc(0.3e-3)
+@pytest.mark.parametrize(
+    "pc,initial_ks",
+    [
+        (0.3e-3, 4.14237510549),
+        (0.25e-3, 2.58473097058),
+        (0.2e-3, 1.41504051e00),
+        (0.15e-3, 0.630947615752),
+        (0.1e-3, 0.194948835313),
+        (0.05e-3, 0.0250132475909),
+    ],
+)
+def test_ks_pc(pc, initial_ks):
+    testpack = setup_func_pc(pc)
     em = setup_func_em(testpack)
     # Allow 1% error
-    initial_ks = 4.14237510549
-    print(initial_ks, em.ks(0))
-    assert abs(em.ks(0).meantrace - initial_ks) < tolerance_pc * em.ks(0).meantrace
-
-
-def test_ks_pc_is_0p25_mm():
-    testpack = setup_func_pc(0.25e-3)
-    em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks = 2.58473097058
-    print(initial_ks, em.ks(0))
-    assert abs(em.ks(0).meantrace - initial_ks) < tolerance_pc * em.ks(0).meantrace
-
-
-def test_ks_pc_is_0p2_mm():
-    testpack = setup_func_pc(0.2e-3)
-    em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks = 1.41504051e00
-    print(initial_ks, em.ks(0))
-    assert abs(em.ks(0).meantrace - initial_ks) < tolerance_pc * em.ks(0).meantrace
-
-
-def test_ks_pc_is_0p15_mm():
-    testpack = setup_func_pc(0.15e-3)
-    em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks = 0.630947615752
-    print(initial_ks, em.ks(0))
-    assert abs(em.ks(0).meantrace - initial_ks) < tolerance_pc * em.ks(0).meantrace
-
-
-def test_ks_pc_is_0p1_mm():
-    testpack = setup_func_pc(0.1e-3)
-    em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks = 0.194948835313
-    print(initial_ks, em.ks(0))
-    assert abs(em.ks(0).meantrace - initial_ks) < tolerance_pc * em.ks(0).meantrace
-
-
-def test_ks_pc_is_0p05_mm():
-    testpack = setup_func_pc(0.05e-3)
-    em = setup_func_em(testpack)
-    # Allow 1% error
-    initial_ks = 0.0250132475909
     print(initial_ks, em.ks(0))
     assert abs(em.ks(0).meantrace - initial_ks) < tolerance_pc * em.ks(0).meantrace
 
@@ -171,8 +138,8 @@ def test_energy_conservation_indep():
     commontest.test_energy_conservation(em, tolerance_pc)
 
 
-def test_energy_conservation_shs():
-    shs_pack = setup_func_shs()
+def test_energy_conservation_shs(setup_func_shs):
+    shs_pack = setup_func_shs
     em = setup_func_em(testpack=shs_pack)
     commontest.test_energy_conservation(em, tolerance_pc)
 
@@ -198,8 +165,8 @@ def test_energy_conservation_indep_active():
     commontest.test_energy_conservation(em, tolerance_pc, npol=2)
 
 
-def test_energy_conservation_shs_active():
-    shs_pack = setup_func_shs()
+def test_energy_conservation_shs_active(setup_func_shs):
+    shs_pack = setup_func_shs
     em = setup_func_active(testpack=shs_pack)
     commontest.test_energy_conservation(em, tolerance_pc, npol=2)
 
@@ -210,9 +177,10 @@ def test_energy_conservation_shs_active():
 #     commontest.test_energy_conservation(em, tolerance_pc, npol=2)
 
 
-def test_iba_vs_rayleigh_passive_m0():
-    em_iba, em_ray = setup_func_rayleigh()
-    mu = setup_mu(1.0 / 64)
+@pytest.mark.parametrize("bypass_exception", [(None), (True)])
+def test_iba_vs_rayleigh(setup_func_rayleigh, bypass_exception):
+    em_iba, em_ray = setup_func_rayleigh
+    mu = setup_mu(1.0 / 64, bypass_exception=bypass_exception)
     assert (
         abs(
             em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks(mu).meantrace
@@ -222,21 +190,8 @@ def test_iba_vs_rayleigh_passive_m0():
     ).all()
 
 
-def test_iba_vs_rayleigh_active_m0():
-    # Have to set npol = 2 for m=0 mode in active otherwise rayleigh will produce 3x3 matrix
-    em_iba, em_ray = setup_func_rayleigh()
-    mu = setup_mu(1.0 / 64, bypass_exception=True)
-    assert (
-        abs(
-            em_iba.ft_even_phase(mu, mu, 0, npol=2) / em_iba.ks(mu).meantrace
-            - em_ray.ft_even_phase(mu, mu, 0, npol=2) / em_ray.ks(mu).meantrace
-        )
-        < tolerance_pc
-    ).all()
-
-
-def test_iba_vs_rayleigh_active_m1():
-    em_iba, em_ray = setup_func_rayleigh()
+def test_iba_vs_rayleigh_active_m1(setup_func_rayleigh):
+    em_iba, em_ray = setup_func_rayleigh
     mu = setup_mu(1.0 / 64, bypass_exception=True)
     # Clear cache
     em_iba.cached_mu = None
@@ -249,8 +204,8 @@ def test_iba_vs_rayleigh_active_m1():
     ).all()
 
 
-def test_iba_vs_rayleigh_active_m2():
-    em_iba, em_ray = setup_func_rayleigh()
+def test_iba_vs_rayleigh_active_m2(setup_func_rayleigh):
+    em_iba, em_ray = setup_func_rayleigh
     mu = setup_mu(1.0 / 64, bypass_exception=True)
 
     print("------------")
@@ -292,8 +247,8 @@ def test_permittivity_model():
     new_iba(sensor, layer)
 
 
-def test_iba_raise_exception_mu_is_1():
-    shs_pack = setup_func_shs()
+def test_iba_raise_exception_mu_is_1(setup_func_shs):
+    shs_pack = setup_func_shs
     em = setup_func_active(testpack=shs_pack)
     bad_mu = np.array([0.2, 1])
     with pytest.raises(SMRTError):

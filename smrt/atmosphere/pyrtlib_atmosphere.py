@@ -61,6 +61,7 @@ PyRTlib includes many absorption models and the list can be obtained using::
 # Stdlib import
 
 # other import
+
 import numpy as np
 from pyrtlib.absorption_model import AbsModel
 from pyrtlib.tb_spectrum import TbCloudRTE
@@ -83,41 +84,54 @@ class PyRTlibAtmosphereBase(AtmosphereBase):
         return AbsModel.implemented_models()
 
     def run(self, frequency, costheta, npol):
-        freqGHz = np.atleast_1d(frequency) / GHz
-        rte = TbCloudRTE(
-            z=self.z,
-            p=self.p,
-            t=self.t,
-            rh=self.rh,
-            frq=freqGHz,
-            angles=np.atleast_1d(90 - np.rad2deg(np.arccos(costheta))),
-        )
+        # scalar_frequency = np.isscalar(frequency)
 
-        rte.emissivity = np.array([0])  # The surface is taken into account in SMRT
+        upwelling = []
+        downwelling = []
+        tau = []
+        for freqGHz in np.atleast_1d(frequency) / GHz:
+            rte = TbCloudRTE(
+                z=self.z,
+                p=self.p,
+                t=self.t,
+                rh=self.rh,
+                frq=np.atleast_1d(freqGHz),
+                angles=np.atleast_1d(90 - np.rad2deg(np.arccos(costheta))),
+            )
 
-        if self.cloudy:
-            rte.cloudy = True
-            rte.init_cloudy(self.cldh, self.denice, self.denliq)
-        rte.init_absmdl(self.absorption_model)
+            rte.emissivity = np.array([0])  # The surface is taken into account in SMRT
 
-        rte.satellite = True
-        upwelling = rte.execute()
-        rte.satellite = False
-        downwelling = rte.execute()
+            if self.cloudy:
+                rte.cloudy = True
+                rte.init_cloudy(self.cldh, self.denice, self.denliq)
+            rte.init_absmdl(self.absorption_model)
 
-        tau = (
-            downwelling["taudry"].values
-            + downwelling["tauwet"].values
-            + downwelling["tauliq"].values
-            + downwelling["tauice"].values
-        )
+            rte.satellite = True
+            up_res = rte.execute()
+            upwelling.append(up_res["tbtotal"].values)
 
-        trans = np.exp(-tau)
+            rte.satellite = False
+            down_res = rte.execute()
+            downwelling.append(down_res["tbtotal"].values)
+
+            tau.append(
+                down_res["taudry"].values
+                + down_res["tauwet"].values
+                + down_res["tauliq"].values
+                + down_res["tauice"].values
+            )
+
+        trans = np.exp(-np.array(tau))
 
         return AtmosphereResult(
-            tb_down=np.stack([downwelling["tbtotal"].values] * npol),
-            tb_up=np.stack([upwelling["tbtotal"].values] * npol),
+            tb_down=np.stack([downwelling] * npol),
+            tb_up=np.stack([upwelling] * npol),
             transmittance=np.stack([trans] * npol),
+            coords={
+                "polarization": ["V", "H", "U"][:npol],
+                "frequency": frequency,
+                "mu": costheta,
+            },
         )
 
 

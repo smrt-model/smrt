@@ -34,10 +34,10 @@ tutorial).
 .. code:: ipython3
 
     import numpy as np
-    
+
     import matplotlib.pyplot as plt
     %matplotlib notebook
-    
+
     from smrt import make_model, make_snowpack, sensor_list
 
 Electromagnetic models compatible with spheres
@@ -49,13 +49,13 @@ hard sphere (shs) microstructure of different radii
 .. code:: ipython3
 
     # prepare the snowpack
-    
+
     thickness = [10]
     density = 350
     temperature = 270
     stickiness = 0.15
     radius_list = np.arange(50, 400, 10) * 1e-6
-    
+
     snowpack_list_shs = [make_snowpack(thickness=thickness, microstructure_model='sticky_hard_spheres',
                        radius=r, density=density, temperature=temperature, stickiness=stickiness) for r in radius_list]
 
@@ -65,10 +65,10 @@ sphere microstructures
 .. code:: ipython3
 
     # prepare several models
-    
+
     m_dmrt_qca = make_model("dmrt_qca_shortrange", "dort")
     m_dmrt_qcacp = make_model("dmrt_qcacp_shortrange", "dort")
-    
+
     # continue by adding more model, runing and ploting the results as in sensitivity_study
 
 Electromagnetic models compatible with exponential microstructure
@@ -80,13 +80,13 @@ Next we create an ensemble of snowpacks initialized with an exponential
 .. code:: ipython3
 
     # prepare the snowpack
-    
+
     thickness = [1000.0]
     density = 350
     temperature = 270
-    
+
     corr_length_list = np.arange(20, 200, 10) * 1e-6
-    
+
     snowpack_list_exp = [make_snowpack(thickness=thickness, microstructure_model='exponential',
                        corr_length=c, density=density, temperature=temperature) for c in corr_length_list]
 
@@ -126,7 +126,7 @@ model and run it on a layer (not on a snowpack)
 .. code:: ipython3
 
     firstlayer = snowpack_list_exp[0].layers[0]  # this is the first layer of the first snowpack
-    
+
     m_iba.emmodel(sensor, firstlayer).ks
 
 Second option is without the overhead of make_model. It is simpler when
@@ -165,7 +165,7 @@ Now we can compare the radius dependence:
     plt.plot(radius_list*1e6, ks_iba, label="IBA")
     plt.plot(radius_list*1e6, ks_qca, label="QCA")
     plt.plot(radius_list*1e6, ks_sce, label="SCE RT08")
-    
+
     plt.legend()
     plt.xlabel("Radius ($\\mu$m)")
     plt.ylabel("Scattering coefficient (m$^{-1}$)")
@@ -178,5 +178,3 @@ Continue exploring:
 - Explore the different behavior of the scattering coefficient as a
   function of density
 - Get rid of the albedo warning by using QCA-CP instead of QCA.
-
-

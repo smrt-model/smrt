@@ -40,19 +40,20 @@ import numpy as np
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.rtsolver.dort import (
     InterfaceProperties,
-    matmul,
+    _matmul,
     symmetrize_phase_matrix,
 )  # TODO: move these objects in a generic place
 from smrt.rtsolver.rtsolver_utils import (
     CoherentLayerMixin,
     DiscreteOrdinatesMixin,
+    PlanckMixin,
     RTSolverBase,
 )
 
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers
 
 
-class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
+class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, RTSolverBase):
     """
     Implement the Successive Order solver.
 
@@ -76,9 +77,12 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             to replace the thin layer by an equivalent reflective interface. This neglects scattering in the thin layer,
             which is acceptable in most case, because the layer is thin. To use this option and more generally
             to investigate ice lenses, it is recommended to read MEMLS documentation on this topic.
+        rayleigh_jeans_approximation: In passive mode, if True, use the Rayleigh-Jeans approximation for the Planck function.
+            This mode was used by default up to SMRT 1.5.1, but is not as precise as the full Planck function at higher
+            frequencies and low temperatures.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the called (Model object)
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "phi", "polarization"}
 
@@ -95,11 +99,13 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
         process_coherent_layers=False,
         incident_polarizations="VH",
         # prune_deep_snowpack=None,
+        rayleigh_jeans_approximation=False,
     ):
         super().__init__()  # the parent class and mixin must not declare __init__ with parameters
 
         DiscreteOrdinatesMixin.init(self, n_max_stream=n_max_stream, stream_mode=stream_mode, m_max=m_max)
         CoherentLayerMixin.init(self, process_coherent_layers=process_coherent_layers)
+        PlanckMixin.init(self, rayleigh_jeans_approximation=rayleigh_jeans_approximation)
 
         # self.phase_normalization = phase_normalization
         self.phase_symmetrization = phase_symmetrization
@@ -358,7 +364,13 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
 
         if self.sensor.mode == "P":
             if self.atmosphere_result is not None:
-                intensity_up = self.atmosphere_result.tb_up + self.atmosphere_result.transmittance * intensity_up
+                intensity_up = (
+                    self.planck_function(self.atmosphere_result.tb_up)
+                    + self.atmosphere_result.transmittance * intensity_up
+                )
+            total_intensity_up = np.sum(intensity_up, axis=-1)
+            total_intensity_up = self.inverse_planck_function(total_intensity_up)
+            intensity_up = self.inverse_planck_function(intensity_up)
             outmu = self.streams.outmu
         elif self.sensor.mode == "A":
             # compress to get only the backscatter
@@ -370,12 +382,11 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
 
             outmu = self.streams.outmu[incident_streams]
             intensity_up = backscatter_intensity_up
+            total_intensity_up = np.sum(intensity_up, axis=-1)
         else:
             raise RuntimeError("unknown sensor mode")
 
         # reshape the first dimension in two dimensions (theta, pola)
-
-        total_intensity_up = np.sum(intensity_up, axis=-1)
 
         intensity_up = np.append(intensity_up, np.expand_dims(total_intensity_up, -1), axis=-1)
 
@@ -499,7 +510,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             # for passive microwave
             # compute the source
             single_scattering_albedo = emmodel.ks(mu, npol=npol).compress().diagonal() * invke
-            source = (1 - single_scattering_albedo) * layer.temperature
+            source = (1 - single_scattering_albedo) * self.planck_function(layer.temperature)
         else:
             # for radar microwave
             extinction = extinction[:, np.newaxis]
@@ -528,7 +539,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
         new_intensity = np.zeros_like(intensity)
 
         if (order == 0) and (incident_intensity is not None):
-            transmitted_intensity = matmul(transmission_bottom[-1], incident_intensity)
+            transmitted_intensity = _matmul(transmission_bottom[-1], incident_intensity)
         else:
             transmitted_intensity = None
 
@@ -554,7 +565,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             i_top = i_subinterface[l]
             i_bottom = i_subinterface[l + 1] - 1
 
-            new_intensity[i_top, p_dn] = matmul(
+            new_intensity[i_top, p_dn] = _matmul(
                 reflection_top[l], intensity[i_top, p_up]
             )  # reflect intensity coming up
 
@@ -583,7 +594,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             #     # eq 66 (adapted for downward)
             # assert k + 1 == i_bottom
 
-            transmitted_intensity = matmul(transmission_bottom[l], new_intensity[i_bottom, p_dn])
+            transmitted_intensity = _matmul(transmission_bottom[l], new_intensity[i_bottom, p_dn])
 
         assert i_bottom + 1 == len(new_intensity)
 
@@ -602,7 +613,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             i_top = i_subinterface[l]
             i_bottom = i_subinterface[l + 1] - 1
 
-            new_intensity[i_bottom, p_up] = matmul(reflection_bottom[l], intensity[i_bottom, p_dn])
+            new_intensity[i_bottom, p_up] = _matmul(reflection_bottom[l], intensity[i_bottom, p_dn])
             # reflect intensity coming down at the bottom of the layer
 
             if transmitted_intensity is not None:
@@ -629,16 +640,16 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, RTSolverBase):
             series_upwelling(new_intensity[i_top : i_bottom + 1, p_up], extinction[l], s)
             # eq 66 in Lenoble
 
-            transmitted_intensity = matmul(transmission_top[l], new_intensity[i_top, p_up])
+            transmitted_intensity = _matmul(transmission_top[l], new_intensity[i_top, p_up])
 
         assert i_top == 0
         # compute the final transmission
-        emerging_intensity = matmul(transmission_top[0], new_intensity[i_top, p_up])
+        emerging_intensity = _matmul(transmission_top[0], new_intensity[i_top, p_up])
 
         # print(f"{np.all(emerging_intensity==0)=} {np.max(emerging_intensity)=} {np.min(emerging_intensity)=}")
         if (incident_intensity is not None) and (order == 0):
             n = len(incident_intensity)
-            emerging_intensity[:n] += matmul(reflection_bottom[-1], incident_intensity)
+            emerging_intensity[:n] += _matmul(reflection_bottom[-1], incident_intensity)
 
         return new_intensity, emerging_intensity
 

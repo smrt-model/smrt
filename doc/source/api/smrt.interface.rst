@@ -57,4 +57,3 @@ smrt.interface.transparent module
 .. automodule:: smrt.interface.transparent
    :members:
    :show-inheritance:
-

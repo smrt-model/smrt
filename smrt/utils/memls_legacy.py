@@ -128,16 +128,7 @@ def run(
 
         for ilay, lay in enumerate(reversed(snowpack.layers)):
             f.write(
-                "%i, %g, %g, %g, %g, %g, %g\n"
-                % (
-                    ilay + 1,
-                    lay.temperature,
-                    lay.liquid_water,
-                    lay.frac_volume * DENSITY_OF_ICE,
-                    lay.thickness * 100.0,
-                    lay.salinity,
-                    lay.microstructure.corr_length * 1000.0,
-                )
+                f"{ilay + 1}, {lay.temperature:g}, {lay.liquid_water:g}, {lay.frac_volume * DENSITY_OF_ICE:g}, {lay.thickness * 100.0:g}, {lay.salinity:g}, {lay.microstructure.corr_length * 1000.0:g}\n"
             )
 
     # uncomment these lines if you need to check the input file content.

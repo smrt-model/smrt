@@ -8,12 +8,17 @@ The reflection is set to a value or a function of theta. Azimuthal symmetry is a
 The `specular_reflection` parameter can be a scalar, a function or a dictionary.
 
     - scalar: same reflection is use for all angles
-    - function: the function must take a unique argument theta array (in radians) and return the reflection as an array of the same size as theta
-    - dictionary: in this case, the keys must be 'H' and 'V' and the values are a scalar or a function and are interpreted as for the non-polarized case.
+    - function: the function must take a unique argument theta array (in radians) and return the reflection as an array
+      of the same size as theta
+    - dictionary: in this case, the keys must be 'H' and 'V' and the values are a scalar or a function and are interpreted
+      as for the non-polarized case.
 
 The `backscattering_coefficient` is a dictionary with VV nad HH keys. It is not possible to set HV and VH.
-Note also that modeling substrate with prescribed backscatter value with the DORT solver is an approximate trick, and
-the result is only approximatly the prescribed value even for a transparent snowpack.
+
+Note::
+    Note also that modeling substrate with prescribed backscatter value (e.g. -10dB) with the DORT solver is an
+    approximate trick, and the result is only approximatly the prescribed value (can be 3d away from the prescribed value).
+    This is likely something wrong related to the "dirac" distribution and needs to be investigated further.
 
 To make a reflector, it is recommended to use the helper function :py:func:`~smrt.substrate.reflector.make_reflector`.
 

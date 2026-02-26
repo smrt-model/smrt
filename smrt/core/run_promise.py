@@ -10,17 +10,23 @@ from .filelock import FileLock, Timeout
 
 def honour_all_promises(directory_or_filename, save_result_to=None, show_progress=True, force_compute=True):
     """
-    Honours many promises and save the results
+    Honour many promises and save the results
 
     Args:
-    directory_or_filename: can be a directory, a filename or a list of them
-    save_result_to: directory where to save the results. If None, the results are not saved. The results are always returned as a list by this function.
-    show_progress: print progress of the calculation.
-    force_computate: If False and if a result or lock file is present, the computation is skipped. The order of promise processing is randomized
-     to allow more efficient parallel computation using many calls of this function on the same directory. A lock file is used between the start of a computation and
-     writting the result in order to prevent from running several times the same computation. If the process is interupted (e.g. walltime on clusters), the lock file may persist and prevent any future computation. In this case,
-     lock files must be manually deleted.
-     IF False, the `save_result_to` argument must be set to a valid directory where the results.
+        directory_or_filename: can be a directory, a filename or a list of them.
+
+        save_result_to: directory where to save the results. If None, the results are not saved. The results are
+            always returned as a list by this function.
+
+        show_progress: print progress of the calculation.
+
+        force_compute: If False and if a result or lock file is
+            present, the computation is skipped. The order of promise processing is randomized to allow more efficient
+            parallel computation using many calls of this function on the same directory. A lock file is used between
+            the start of a computation and writting the result in order to prevent from running several times the same
+            computation. If the process is interupted (e.g. walltime on clusters), the lock file may persist and prevent
+            any future computation. In this case, lock files must be manually deleted. If False, the `save_result_to`
+            argument must be set to a valid directory where the results.
     """
 
     if isinstance(directory_or_filename, str):
@@ -52,18 +58,18 @@ def honour_all_promises(directory_or_filename, save_result_to=None, show_progres
             result_list.append(result)
 
     if show_progress:
-        print("Executed %i promise(s). Done!" % len(result_list))
+        print(f"Executed {len(result_list)} promise(s). Done!")
     return result_list
 
 
 def honour_promise(filename, save_result_to=None, force_compute=True):
     """
-    Honours a promise and optionally save the result.
+    Honour a promise and optionally save the result.
 
     Args:
-    filename: file name of the promise
-    save_result_to: directory where to save the result.
-    force_compute: see `honour_all_promise`.
+        filename: file name of the promise.
+        save_result_to: directory where to save the result.
+        force_compute: see `honour_all_promise`.
     """
 
     promise = load_promise(filename)
@@ -108,6 +114,13 @@ def honour_promise(filename, save_result_to=None, force_compute=True):
 
 
 def load_promise(filename):
+    """
+    Load a promise from a file.
+
+    Args:
+        filename: name of the file where the promise is stored.
+    """
+
     with open(filename, "rb") as f:
         obj = pickle.load(f)
     if not isinstance(obj, RunPromise):
@@ -118,6 +131,9 @@ def load_promise(filename):
 
 class RunPromise(object):
     def __init__(self, model, sensor, snowpack, kwargs):
+        """
+        Build a promise to run a model with given sensor and snowpack later.
+        """
         super().__init__()
 
         self.model = model
@@ -127,16 +143,22 @@ class RunPromise(object):
         self.result_filename = None
 
     def run(self):
+        """
+        Run the promise.
+        """
         return self.model.run(self.sensor, self.snowpack, **self.kwargs)
 
     def save(self, directory=None, filename=None):
+        """
+        Serialize and save the promise to a file.
+        """
         if (filename is None) == (directory is None):
             raise RuntimeError("Either directory or filename must be given")
 
         if filename is None:
             uid = uuid4()
-            filename = os.path.join(directory, "smrt-promise-%s.P" % uid)
-            self.result_filename = "smrt-result-%s.nc" % uid
+            filename = os.path.join(directory, f"smrt-promise-{uid}.P")
+            self.result_filename = f"smrt-result-{uid}.nc"
         else:
             basename = os.path.basename(filename)
             if basename.startswith("smrt-promise-"):

@@ -77,7 +77,9 @@ class vector3(object):
         return self * (1 / self.norm())
 
     def as_array(self):
-        """convert to an nd.array"""
+        """
+        Convert to an nd.array.
+        """
         return np.array([self.x, self.y, self.z])
 
     def __repr__(self):

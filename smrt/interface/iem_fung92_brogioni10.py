@@ -39,7 +39,7 @@ class IEM_Fung92_Briogoni10(IEM_Fung92):
         # check validity
         if ks > 3:
             raise SMRTError(
-                "Warning, roughness_rms is too high for the given wavelength. Limit is ks < 3. Here ks=%g" % ks
+                f"Warning, roughness_rms is too high for the given wavelength. Limit is ks < 3. Here ks={ks:g}"
             )
 
     def fresnel_coefficients(self, eps_1, eps_2, mu_i, ks, kl):

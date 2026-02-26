@@ -1,12 +1,15 @@
 import numpy as np
 import pytest
 
+from smrt.permittivity.ice import ice_permittivity_maetzler06
+
 from ..core.error import SMRTError, SMRTWarning
 from ..interface.flat import Flat
 from ..interface.transparent import Transparent
 from .make_medium import (
     make_ice_column,
     make_medium,
+    make_snow_layer,
     make_snowpack,
     make_transparent_volume,
     make_water_body,
@@ -111,9 +114,9 @@ def test_make_medium():
 
     sp = make_medium(sp_dict)
 
-    assert np.allclose(sp.layer_thicknesses, sp_dict["thickness"])
-    assert np.allclose([lay.temperature for lay in sp.layers], sp_dict["temperature"])
-    assert np.allclose([lay.microstructure.radius for lay in sp.layers], sp_dict["radius"])
+    np.testing.assert_allclose(sp.layer_thicknesses, sp_dict["thickness"])
+    np.testing.assert_allclose([lay.temperature for lay in sp.layers], sp_dict["temperature"])
+    np.testing.assert_allclose([lay.microstructure.radius for lay in sp.layers], sp_dict["radius"])
 
 
 def test_make_snowpack_volumetric_liquid_water():
@@ -124,7 +127,7 @@ def test_make_snowpack_volumetric_liquid_water():
         corr_length=200e-6,
     )
 
-    assert np.allclose(sp.layers[0].frac_volume, 300 / 916.7)
+    np.testing.assert_allclose(sp.layers[0].frac_volume, 300 / 916.7)
     assert sp.layers[0].liquid_water == 0
 
     sp = make_snowpack(
@@ -135,8 +138,8 @@ def test_make_snowpack_volumetric_liquid_water():
         corr_length=200e-6,
     )
 
-    assert np.allclose(sp.layers[0].frac_volume, 0.31817388458601503)
-    assert np.allclose(sp.layers[0].liquid_water, 0.31429355093084654)
+    np.testing.assert_allclose(sp.layers[0].frac_volume, 0.31817388458601503)
+    np.testing.assert_allclose(sp.layers[0].liquid_water, 0.31429355093084654)
 
 
 def test_update_volumetric_liquid_water():
@@ -151,8 +154,8 @@ def test_update_volumetric_liquid_water():
 
     sp.layers[0].update(volumetric_liquid_water=0.1)  # 10 % volume
 
-    assert np.allclose(sp.layers[0].frac_volume, 0.31817388458601503)
-    assert np.allclose(sp.layers[0].liquid_water, 0.31429355093084654)
+    np.testing.assert_allclose(sp.layers[0].frac_volume, 0.31817388458601503)
+    np.testing.assert_allclose(sp.layers[0].liquid_water, 0.31429355093084654)
 
 
 def test_snow_set_readonly():
@@ -183,6 +186,17 @@ def test_empty_snowpack():
     assert sp.layers[0].thickness == 0
     assert sp.layers[0].frac_volume == 0
     assert sp.layers[0].microstructure_model.__name__ == "Homogeneous"
+
+
+def test_make_snowpack_emmodel():
+    sp = make_snowpack(
+        thickness=[1],
+        microstructure_model="exponential",
+        density=300,
+        corr_length=200e-6,
+        emmodel="iba",
+    )
+    assert sp.layers[0].emmodel == "iba"
 
 
 def test_make_transparent_volume():
@@ -235,31 +249,19 @@ def default_snowpack_args():
     )
 
 
-def test_warning_mixing_formula_in_make_snowpack(mixing_formula, default_snowpack_args):
+def test_warning_mixing_formula(mixing_formula, default_snowpack_args):
     with pytest.warns(SMRTWarning):
         make_snowpack(**default_snowpack_args, ice_permittivity_model=mixing_formula)
-
-
-def test_warning_mixing_formula_in_make_snowpack2(mixing_formula, default_snowpack_args):
     with pytest.warns(SMRTWarning):
         make_snowpack(**default_snowpack_args, background_permittivity_model=mixing_formula)
-
-
-def test_warning_mixing_formula_in_make_ice_column(mixing_formula, default_snowpack_args):
     with pytest.warns(SMRTWarning):
         make_ice_column(
             "firstyear",
             **default_snowpack_args,
             brine_permittivity_model=mixing_formula,
         )
-
-
-def test_warning_mixing_formula_in_make_ice_column2(mixing_formula, default_snowpack_args):
     with pytest.warns(SMRTWarning):
         make_ice_column("firstyear", **default_snowpack_args, ice_permittivity_model=mixing_formula)
-
-
-def test_warning_mixing_formula_in_make_ice_column3(mixing_formula, default_snowpack_args):
     with pytest.warns(SMRTWarning):
         make_ice_column(
             "multiyear",
@@ -271,3 +273,8 @@ def test_warning_mixing_formula_in_make_ice_column3(mixing_formula, default_snow
 def test_warning_saline_snow(default_snowpack_args):
     with pytest.warns(SMRTWarning):
         make_snowpack(**default_snowpack_args, salinity=0.1)
+
+
+def test_permittivity_model_by_name():
+    lay = make_snow_layer(1, "homogeneous", 350.0, ice_permittivity_model="ice_permittivity_maetzler06")
+    lay.permittivity_model[1] == ice_permittivity_maetzler06

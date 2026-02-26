@@ -6,7 +6,7 @@ from smrt.core.sensor import altimeter, make_multi_channel_altimeter
 #
 
 
-def envisat_ra2(channel=None):
+def envisat_ra2(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
     """
     Returns an Altimeter instance for the ENVISAT RA2 altimeter.
 
@@ -22,6 +22,8 @@ def envisat_ra2(channel=None):
             ngate=128,
             nominal_gate=45,
             beamwidth=1.29,
+            pitch_angle_deg=pitch_angle_deg,
+            roll_angle_deg=roll_angle_deg,
         ),
         "S": dict(
             frequency=3.2e9,
@@ -30,13 +32,15 @@ def envisat_ra2(channel=None):
             ngate=128,
             nominal_gate=32,  # to correct, the value is rather close to 25
             beamwidth=5.5,  # Lacroix et al. and Fatras et al.,
+            pitch_angle_deg=pitch_angle_deg,
+            roll_angle_deg=roll_angle_deg,
         ),
     }
 
     return make_multi_channel_altimeter(config, channel)
 
 
-def sentinel3_sral(channel=None):
+def sentinel3_sral(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
     """return an Altimeter instance for the Sentinel 3 SRAL instrument.
 
     :param channel: can be 'Ku' only ('C' is to be implemented)
@@ -52,13 +56,15 @@ def sentinel3_sral(channel=None):
             ngate=128,
             beamwidth=1.35,
             antenna_gain=1,
+            pitch_angle_deg=pitch_angle_deg,
+            roll_angle_deg=roll_angle_deg,
         ),
     }
 
     return make_multi_channel_altimeter(config, channel)
 
 
-def saral_altika():
+def saral_altika(pitch_angle_deg=0, roll_angle_deg=0):
     """return an Altimeter instance for the Saral/AltiKa instrument."""
 
     params = dict(
@@ -69,11 +75,13 @@ def saral_altika():
         ngate=128,
         beamwidth=0.605,
         antenna_gain=1,
+        pitch_angle_deg=pitch_angle_deg,
+        roll_angle_deg=roll_angle_deg,
     )
     return altimeter(channel="Ka", **params)
 
 
-def cryosat2_lrm():
+def cryosat2_lrm(pitch_angle_deg=0, roll_angle_deg=0):
     """Return an altimeter instance for CryoSat-2
 
     Parameters from https://earth.esa.int/web/eoportal/satellite-missions/c-missions/cryosat-2
@@ -90,11 +98,13 @@ def cryosat2_lrm():
         ngate=128,
         beamwidth=1.2,
         antenna_gain=1,
+        pitch_angle_deg=pitch_angle_deg,
+        roll_angle_deg=roll_angle_deg,
     )
     return altimeter(channel="Ku", **params)
 
 
-def cryosat2_sin():
+def cryosat2_sin(pitch_angle_deg=0, roll_angle_deg=0):
     """Return an altimeter instance for CryoSat-2: SIN mode
 
     Parameters from https://earth.esa.int/web/eoportal/satellite-missions/c-missions/cryosat-2
@@ -112,11 +122,13 @@ def cryosat2_sin():
         ngate=512,
         beamwidth=1.2,
         antenna_gain=1,
+        pitch_angle_deg=pitch_angle_deg,
+        roll_angle_deg=roll_angle_deg,
     )
     return altimeter(channel="Ku", **params)
 
 
-def asiras_lam(altitude=None):
+def asiras_lam(altitude=None, pitch_angle_deg=0, roll_angle_deg=0):
     """Return an altimeter instance for ASIRAS in Low Altitude Mode
 
     Parameters from https://earth.esa.int/web/eoportal/airborne-sensors/asiras
@@ -135,6 +147,8 @@ def asiras_lam(altitude=None):
         ngate=256,
         beamwidth=2.2,
         antenna_gain=1,
+        pitch_angle_deg=pitch_angle_deg,
+        roll_angle_deg=roll_angle_deg,
     )
     return altimeter(channel="Ku", **params)
 

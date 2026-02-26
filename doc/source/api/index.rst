@@ -34,4 +34,3 @@ The documentation can be browsed using the following table of contents, the indi
     Radiative Transfer Solver <smrt.rtsolver.rst>
     Core <smrt.core.rst>
     Utilities and tools <smrt.utils.rst>
-

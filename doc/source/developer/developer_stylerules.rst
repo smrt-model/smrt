@@ -16,6 +16,13 @@ From 2025, SMRT is moving to Ruff formatting to conform with the Python communit
 
 Exceptions to Ruff formatting are only allowed for equations because their writing often carries physical meaning that is important to keep in the code. The developers are responsible for adding tags (fmt: off / fmt: on) to prevent Ruff from automatically formatting these sections. Any developper is allowed to apply ruff to all the code base and commit the changes, this is why protecting equations must be done at the first implementation.
 
+Using pre-commit is strongly recommended to automatically check the code before each commit. To install pre-commit, run the following commands in your development environment::
+
+    pip install pre-commit  # or conda install pre-commit or uvm install pre-commit
+    pre-commit install
+
+Automatic checks will be performed at each commit command, and when running ``pre-commit run --all-files``.
+
 Local Rules
 ^^^^^^^^^^^
 

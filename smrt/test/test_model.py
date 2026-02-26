@@ -33,6 +33,18 @@ def onelayer_snowpack_sequence():
     ]
 
 
+def test_empty_snowpack_sequence():
+    empty_snowpack = make_snowpack([], microstructure_model=None, density=[])
+    print(empty_snowpack)
+
+    m = Model("dmrt_qcacp_shortrange", DORT)
+    sensor = amsre("37V")
+
+    res = m.run(sensor, empty_snowpack)
+
+    assert res.TbV() == 0
+
+
 def test_multifrequency(onelayer_snowpack):
     m = Model("dmrt_qcacp_shortrange", DORT)
 
@@ -77,7 +89,7 @@ def test_snowpack_dimension(onelayer_snowpack_sequence):
     res = m.run(sensor, onelayer_snowpack_sequence, snowpack_dimension=("temperature", temperatures))
 
     assert hasattr(res, "temperature")
-    assert np.allclose(res.temperature, temperatures)
+    np.testing.assert_allclose(res.temperature, temperatures)
 
     with pytest.raises(SMRTError):
         m.run(sensor, onelayer_snowpack_sequence, snowpack_dimension=(temperatures, "temperature"))

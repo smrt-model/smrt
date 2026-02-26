@@ -92,4 +92,3 @@ smrt.emmodel.sce_rechtsman08 module
 .. automodule:: smrt.emmodel.sce_rechtsman08
    :members:
    :show-inheritance:
-

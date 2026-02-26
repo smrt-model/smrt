@@ -15,7 +15,7 @@ atmosphere parameters.
     # Import statements
     import numpy as np
     from smrt import make_snowpack, make_model  # Core model functionality
-    
+
     import matplotlib.pyplot as plt
     %matplotlib inline
 
@@ -34,7 +34,7 @@ default values are tbup, tbdown = 0 and transmittivity = 1.
 .. code:: ipython3
 
     from smrt.atmosphere.simple_isotropic_atmosphere import make_atmosphere
-    
+
     atmos = make_atmosphere(tbdown=30., tbup=6., trans=0.90)
 
 Challenges
@@ -43,4 +43,3 @@ Challenges
 1. Set up a snowpack / sensor and model configuration
 2. Include atmosphere in model run (medium = atmos + snow)
 3. Investigate how output changes with atmospheric transmissivity
-
