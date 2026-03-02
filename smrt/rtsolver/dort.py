@@ -983,7 +983,6 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
         # in addition it is possible to remove the 2x2 or 3x3 blocks that occurs when eigenvalues are close
         # forcing the lower triangular part of the shur matrix to zero solves this problem but is radical
         # a better algorithm would first check that the 2x2 nd 3x3 blocks are nearly diagional (values are very small)
-        npol = 2 if m == 0 else 3
         try:
             T, Z = scipy.linalg.schur(A)
         except scipy.linalg.LinAlgError:
@@ -992,8 +991,6 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
             if force_triu:
                 # Zero out strictly lower triangular values
                 T[np.tril_indices(T.shape[0], k=-1)] = 0
-                # Zero out anti-diagonal values of npol*npol diagonal blocks
-                T[([2 * i for i in range(T.shape[0] // 2)], [2 * i + 1 for i in range(T.shape[0] // 2)])] = 0
 
             beta, E = scipy.linalg.eig(T, overwrite_a=True)
         except scipy.linalg.LinAlgError:
