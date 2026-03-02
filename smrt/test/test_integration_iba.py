@@ -31,7 +31,7 @@ def setup_snowpack_2():
 
 
 @pytest.mark.parametrize(
-    "method,atol", [("eig", 0.0001), ("shur", 0.0001), ("half_rank_eig", 0.0001), ("stamnes88", 0.4)]
+    "method,atol", [("eig", 0.0001), ("schur", 0.0001), ("half_rank_eig", 0.0001), ("stamnes88", 0.4)]
 )
 def test_iba_dort_oneconfig_passive(setup_snowpack_2, method, atol):
     # prepare inputs
@@ -50,7 +50,7 @@ def test_iba_dort_oneconfig_passive(setup_snowpack_2, method, atol):
 
 
 @pytest.mark.parametrize(
-    "method,atol", [("eig", 0.001), ("shur", 0.0001), ("half_rank_eig", 0.001), ("stamnes88", 1.2)]
+    "method,atol", [("eig", 0.001), ("schur", 0.0001), ("half_rank_eig", 0.001), ("stamnes88", 1.2)]
 )
 def test_iba_dort_oneconfig_active(setup_snowpack_2, method, atol):
     # prepare inputs
