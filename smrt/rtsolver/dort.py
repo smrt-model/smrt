@@ -21,17 +21,17 @@ Note:
     The DORT solver is very robust in passive mode but may raise exception in active mode due to a matrix
     diagonalisation problem. The exception provides detailed information on how to address this issue. Two new
     diagonalisation approaches were added in January 2024. They are activated by setting the `diagonalization_method`
-    optional argument (see :py:mod:`smrt.core.make_model`). The first method (``diagonalization_method='shur'``)
-    replaces the scipy.linalg.eig function by a shur decomposition followed by a diagonalisation of the shur matrix.
-    While scipy.linalg.eig performs such a shur decomposition internally in any case, it seems that explicitly calling
-    the shur decomposition beforehand improves the stability. Nevertheless to really solve the problem, the second
-    method (``diagonalization_method='shur_forcedtriu'``) consists in removing the 2x2 and 3x3 blocks from the shur
-    matrix, i.e. forcing the shur matrix to be upper triangular (triu in numpy jargon = zeroing the lower part of this
+    optional argument (see :py:mod:`smrt.core.make_model`). The first method (``diagonalization_method='schur'``)
+    replaces the scipy.linalg.eig function by a schur decomposition followed by a diagonalisation of the schur matrix.
+    While scipy.linalg.eig performs such a schur decomposition internally in any case, it seems that explicitly calling
+    the schur decomposition beforehand improves the stability. Nevertheless to really solve the problem, the second
+    method (``diagonalization_method='schur_forcedtriu'``) consists in removing the 2x2 and 3x3 blocks from the schur
+    matrix, i.e. forcing the schur matrix to be upper triangular (triu in numpy jargon = zeroing the lower part of this
     matrix). This problem is due to the structure of the matrix to be diagonalized and the formulation of the DORT
     method in the polarimetric configuration. The eigenvalues come by triplets and can be very close to each other for
     the three H, V, U Stokes components when scattering is becoming small (or equiv. the azimuth mode 'm' is large). As
     a consequence of the Gershgorin theorem, this results in slightly complex eigenvalues (i.e. eigenvalues with very
-    small imaginary part) that comes from 2x2 or 3x3 blocks in the shur decomposition. This would not be a problem if
+    small imaginary part) that comes from 2x2 or 3x3 blocks in the schur decomposition. This would not be a problem if
     the eigenvectors were correctly estimated, but this is not the case. It is indeed difficult to find the correct
     orientation of eigenvectors associated to very close eigenvalues. To overcome the problem, the solution is to remove
     the 2x2 and 3x3 blocks. In principle, it would be safer to check that these blocks are nearly diagonal but this is
@@ -119,8 +119,8 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             contribution of the lowest layers is neglegible. The optical depth is a good criteria to determine this
             limit. A value of about 6 is recommended. Use with care, especially values lower than 6.
         diagonalization_method: This value set the method for the diagonalization in the eigenvalue solver. The defaut
-            is "eig", it uses the scipy.linalg.eig function. The "shur" replaces the scipy.linalg.eig function by a shur
-            decomposition followed by a diagonalisation of the shur matrix. The "shur_forcedtriu" forces the shur matrix
+            is "eig", it uses the scipy.linalg.eig function. The "schur" replaces the scipy.linalg.eig function by a schur
+            decomposition followed by a diagonalisation of the schur matrix. The "schur_forcedtriu" forces the schur matrix
             to be upper triangular. The "half_rank_eig" is the fastest method but requires symmetry and energy
             conservation which may fail with some EMModels and for some parameters. The "stamnes88" is another half rank
             fast method.
@@ -155,7 +155,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
         error_handling="exception",
         process_coherent_layers=False,
         prune_deep_snowpack=None,
-        diagonalization_method="shur_forcedtriu",
+        diagonalization_method="schur_forcedtriu",
         diagonalization_cache=False,
         rayleigh_jeans_approximation=False,
     ):
@@ -778,8 +778,8 @@ class EigenValueSolver(object):
             normalization (str or bool): Phase-function normalization option (e.g. ``'auto'``, ``'forced'``,
                 or ``False``).
             symmetrization (bool): If True, enforce phase-function symmetry.
-            method (str): Diagonalization method. Supported values: ``'eig'``, ``'shur'``,
-                ``'shur_forcedtriu'``, ``'half_rank_eig'``, ``'stamnes88'``.
+            method (str): Diagonalization method. Supported values: ``'eig'``, ``'schur'``,
+                ``'schur_forcedtriu'``, ``'half_rank_eig'``, ``'stamnes88'``.
             cache (bool): If True, cache diagonalization results to avoid recomputation.
 
         """
@@ -808,10 +808,10 @@ class EigenValueSolver(object):
         match self.method:
             case "eig":
                 self.diagonalize_function = self.diagonalize_eig
-            case "shur":
-                self.diagonalize_function = partial(self.diagonalize_shur, force_triu=False)
-            case "shur_forcedtriu":
-                self.diagonalize_function = partial(self.diagonalize_shur, force_triu=True)
+            case "schur":
+                self.diagonalize_function = partial(self.diagonalize_schur, force_triu=False)
+            case "schur_forcedtriu":
+                self.diagonalize_function = partial(self.diagonalize_schur, force_triu=True)
             case "half_rank_eig":
                 self.compute_half_rank_phase = True
                 self.diagonalize_function = self.diagonalize_half_rank_eig
@@ -977,11 +977,11 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
 
         return self.validate_eigen(beta, Eu, Ed, m)
 
-    def diagonalize_shur(self, m, A, force_triu=False):
-        # diagonalise the matrix. Eq (13) using Shur decomposition. This avoids some instabilities with the direct eig
+    def diagonalize_schur(self, m, A, force_triu=False):
+        # diagonalise the matrix. Eq (13) using schur decomposition. This avoids some instabilities with the direct eig
         # function
         # in addition it is possible to remove the 2x2 or 3x3 blocks that occurs when eigenvalues are close
-        # forcing the lower triangular part of the shur matrix to zero solves this problem but is radical
+        # forcing the lower triangular part of the schur matrix to zero solves this problem but is radical
         # a better algorithm would first check that the 2x2 nd 3x3 blocks are nearly diagional (values are very small)
         try:
             T, Z = scipy.linalg.schur(A)
@@ -1256,9 +1256,9 @@ reactivate it.
 
 - almost diagonal matrix. Such a matrix often arises in active mode when m_max is quite high. However it can
 also arises in passive mode or with low m_max. To solve this issue  you can try to activate the
-diagonalization_method="shur" option and if it does not work the more radical diagonalization_method="shur_forcedtriu".
+diagonalization_method="schur" option and if it does not work the more radical diagonalization_method="schur_forcedtriu".
 These options are experimental, please report your results (both success and failure).
-diagonalization_method="shur_forcedtriu" should become the default if success are reported. Alternatively you could
+diagonalization_method="schur_forcedtriu" should become the default if success are reported. Alternatively you could
 reduce the m_max option progressively but high values of m_max give more accurate results in active mode (but tends to
 produce almost diagonal matrix).
 
