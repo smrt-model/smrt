@@ -75,7 +75,7 @@ def ice_permittivity_maetzler06(frequency, temperature):
 
     return Ereal + 1j * Eimag
 
-
+@layer_properties("temperature")
 def ice_permittivity_Cuzzi_et_al_1980(frequency,temperature=100):
     '''
     From the theoritical curve at 100 K (Whalley and Labbe (1969)) for water ice 
