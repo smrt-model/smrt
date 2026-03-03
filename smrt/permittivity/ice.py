@@ -76,7 +76,7 @@ def ice_permittivity_maetzler06(frequency, temperature):
     return Ereal + 1j * Eimag
 
 
-def ice_permittivity_Cuzzi_et_al_1980(frequency):
+def ice_permittivity_Cuzzi_et_al_1980(frequency,temperature=100):
     '''
     From the theoritical curve at 100 K (Whalley and Labbe (1969)) for water ice 
     In Table 1 of DOI:  10.1016/0019-1035(80)90137-2
@@ -84,6 +84,9 @@ def ice_permittivity_Cuzzi_et_al_1980(frequency):
     Used in Cuzzi et al., 1980 for modeling the thermal emission from C-ring particles at 2.2-cm wavelength. Therefore relevant for Enceladus like temperature
     
     '''
+    if abs(temperature - 100) > 10:
+        raise SMRTError("ice_permittivity_Cuzzi_et_al_1980 valid only near 100 K")
+        
     wavelength_in_cm = (C_SPEED/frequency)*100 #cm 
     refractive_index = 1.78+1j*(7.5e-5/wavelength_in_cm)
     E_ice=refractive_index**2
