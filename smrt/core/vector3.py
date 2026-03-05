@@ -40,6 +40,9 @@ class vector3(object):
             self._norm = np.sqrt(self.norm2())
         return self._norm
 
+    def __abs__(self):
+        return self.norm()
+
     def norm2(self):
         if self._norm2 is None:
             self._norm2 = self.x**2 + self.y**2 + self.z**2
@@ -76,7 +79,7 @@ class vector3(object):
     def normalize(self):
         return self * (1 / self.norm())
 
-    def as_array(self):
+    def asarray(self):
         """
         Convert to an nd.array.
         """
@@ -85,9 +88,18 @@ class vector3(object):
     def __repr__(self):
         return "{self.__class__.__name__}(x={self.x}, y={self.y}, z={self.z})".format(self=self)
 
+    def __array_ufunc__(self, ufunc, method, *inputs, **kwargs):
+        if ufunc == np.isfinite:
+            # Return the result of np.isfinite on the underlying value
+            return np.isfinite(self.x) and np.isfinite(self.y) and np.isfinite(self.z)
+        else:
+            # Fallback for other ufuncs
+            return NotImplemented
+
     @staticmethod
     def matmul(matrix: np.ndarray, v):
         """
         Multiply a matrix (a 3x3 nd array)
         """
-        return vector3.from_array(np.matmul(matrix, v.as_array()))
+        v = v.asarray() if isinstance(v, vector3) else np.asarray(v)
+        return vector3.from_array(np.matmul(matrix, v))

@@ -235,7 +235,6 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
         """
         # """
 
-        npol = 3 if self.sensor.mode == "A" else 2
         if self.sensor.mode == "P":
             npol = 2
         elif self.sensor.mode == "A":

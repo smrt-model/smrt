@@ -19,7 +19,7 @@ from functools import partial
 from smrt.core import lib
 
 # local import
-from smrt.core.error import SMRTError
+from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.interface import Substrate, get_substrate_model, make_interface
 from smrt.core.layer import Layer, get_microstructure_model
 from smrt.core.snowpack import Snowpack
@@ -127,7 +127,7 @@ def make_soil_substrate(
     else:
         # check that other parameters are defined
         if moisture is not None or sand is not None or clay is not None or dry_matter is not None:
-            raise Warning(
+            smrt_warn(
                 "Setting moisture, clay, sand or dry_matter when permittivity_model is a number or function is useless"
             )
 

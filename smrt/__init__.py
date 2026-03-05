@@ -59,3 +59,4 @@ from .inputs.make_medium import (
     make_water_body as make_water_body,
 )
 from .inputs.make_soil import make_soil as make_soil
+from .inputs.make_soil import make_soil_substrate as make_soil_substrate
