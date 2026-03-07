@@ -5,11 +5,11 @@ from smrt.permittivity.ice import (
     _ice_permittivity_DMRTML,
     _ice_permittivity_HUT,
     _ice_permittivity_MEMLS,
+    ice_permittivity_cuzzi80,
     ice_permittivity_hufford91_maetzler87,
     ice_permittivity_maetzler06,
     ice_permittivity_maetzler87,
     ice_permittivity_tiuri84,
-    ice_permittivity_Cuzzi_et_al_1980
 )
 
 # Input temperature array functionality removed. If ever needed, use numpy instead of math in ice.py, but slower.
@@ -42,7 +42,7 @@ from smrt.permittivity.ice import (
         (_ice_permittivity_HUT, 10e9, 270, 3.18567, 8.86909246416410e-04, 1e-8, 1e-8),
         (_ice_permittivity_DMRTML, 10e9, 270, 3.18567, 9.0679820556720323e-04, 1e-8, 1e-8),
         (ice_permittivity_hufford91_maetzler87, 10e9, 270, 3.18567, 0.0009650945, 1e-8, 1e-8),
-        (ice_permittivity_Cuzzi_et_al_1980, 10e9, 100,3.1683999993, 8.906161341790659e-05, 1e-8, 1e-8),
+        (ice_permittivity_cuzzi80, 10e9, 100, 3.1683999993, 8.906161341790659e-05, 1e-8, 1e-8),
     ],
 )
 def test_ice_permittivity(permittivity_model, frequency, temperature, real, imag, ratol, iatol):

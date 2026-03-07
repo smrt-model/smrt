@@ -10,11 +10,11 @@ from __future__ import print_function
 # other import
 import numpy as np
 
-from ..core.error import SMRTError
+from ..core.error import SMRTError, smrt_warn
 
 # local import
 # from ..core.error import SMRTError
-from ..core.globalconstants import DENSITY_OF_ICE, FREEZING_POINT, C_SPEED
+from ..core.globalconstants import C_SPEED, DENSITY_OF_ICE, FREEZING_POINT
 from ..core.layer import layer_properties
 
 #
@@ -75,24 +75,25 @@ def ice_permittivity_maetzler06(frequency, temperature):
 
     return Ereal + 1j * Eimag
 
+
 @layer_properties("temperature")
-def ice_permittivity_Cuzzi_et_al_1980(frequency,temperature=100):
-    '''
-    From the theoritical curve at 100 K (Whalley and Labbe (1969)) for water ice 
-    In Table 1 of DOI:  10.1016/0019-1035(80)90137-2
-    
-    Used in Cuzzi et al., 1980 for modeling the thermal emission from C-ring particles at 2.2-cm wavelength. Therefore relevant for Enceladus like temperature
-    
-    '''
-    if abs(temperature - 100) > 10:
-        raise SMRTError("ice_permittivity_Cuzzi_et_al_1980 valid only near 100 K")
-        
-    wavelength_in_cm = (C_SPEED/frequency)*100 #cm 
-    refractive_index = 1.78+1j*(7.5e-5/wavelength_in_cm)
-    E_ice=refractive_index**2
+def ice_permittivity_cuzzi80(frequency, temperature=100):
+    """
+    Compute ice permittivity at 100 K using Whalley and Labbe (1969) as given in Cuzzi et al. (1980).
+
+    References:
+    - Johari, G. P., & Whalley, E. (1976). Dielectric properties of ice VI at low temperatures. The Journal of Chemical Physics, 64(11), 4484–4489. https://doi.org/10.1063/1.432074
+    - Used in Cuzzi et al., 1980 for modeling the thermal emission from C-ring particles at 2.2-cm wavelength. Therefore relevant for Enceladus like temperature
+
+    """
+    if np.any(np.abs(temperature - 100) > 10):
+        smrt_warn("ice_permittivity_cuzzi80 is only valid near 100 K")
+
+    wavelength_in_cm = (C_SPEED / frequency) * 100  # cm
+    refractive_index = 1.78 + 1j * (7.5e-5 / wavelength_in_cm)
+    E_ice = refractive_index**2
 
     return E_ice
-
 
 
 @layer_properties("temperature")
