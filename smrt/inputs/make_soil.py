@@ -1,16 +1,18 @@
 # coding: utf-8
 
-"""This module provides a function to build soil model and some soil permittivity formulae.
+"""This module provides a function to build soil or bedrock models and some soil/bedrock permittivity formulae.
 
 To create a substrate, use or implement a helper function such as `make_soil`. This function is able to
-automatically load a specific soil model and provides some soil permittivity formulae as well.
+automatically load a specific soil or bedrock model and provides many permittivity formulae.
 
 Example::
 
     from smrt import make_soil
     soil = make_soil("soil_wegmuller", "dobson85", moisture=0.2, sand=0.4, clay=0.3, dry_matter=1100, roughness_rms=1e-2)
+    # Bedrock example:
+    bedrock = make_soil("flat", "granite_hartlieb16", temperature=270)
 
-It is recommended to first read the documentation of `make_soil` and then explore the different types of soil
+It is recommended to first read the documentation of `make_soil` and then explore the different types of soil or bedrock
 models.
 """
 
@@ -54,7 +56,7 @@ def make_soil_substrate(
     **kwargs,
 ) -> Substrate:
     """
-    Construct a soil substrate instance based on a given surface electromagnetic model, a permittivity model and parameters.
+    Construct a soil or bedrock substrate instance based on a given surface electromagnetic model, a permittivity model and parameters.
 
     This function returns a substrate and can only be used as a bottom boundary condition in a snowpack or soil-snowpack model.
     See :py:func:`~smrt.inputs.make_soil.make_soil_layer` and :py:func:`~smrt.inputs.make_soil.make_soil_column` functions
@@ -62,9 +64,10 @@ def make_soil_substrate(
 
     Args:
         substrate_model: Name of substrate model, can be a class or a string. e.g. fresnel, wegmuller...
-        permittivity_model: Permittivity model to use. Can be a name ("hut_epss", "dobson85_peplinski95", "montpetit2008"),
+        permittivity_model: Permittivity model to use. Can be a name (soil: "hut_epss", "dobson85_peplinski95", "montpetit2008"; 
+            bedrock: "granite_hartlieb16", "frozen_bedrock_tulaczyk20", ...),
             a function of frequency and temperature or a complex value.
-        temperature: Temperature of the soil.
+        temperature: Temperature of the soil/bedrock.
         moisture: Soil moisture in m^3 m^-3 to compute the permittivity. This parameter is used depending on the permittivity_model.
         sand: Soil relative sand content. This parameter is used or not depending on the permittivity_model.
         clay: Soil relative clay content. This parameter is used or not depending on the permittivity_model.
@@ -82,54 +85,13 @@ def make_soil_substrate(
     """
 
     # process the permittivity_model argument
-    if isinstance(permittivity_model, str):
-        match permittivity_model:
-            case "hut_epss":
-                # return soil_permittivity_hut after setting the parameters
-                if moisture is None or sand is None or clay is None or dry_matter is None:
-                    raise SMRTError("The parameters moisture, sand, clay and dry_matter must be set")
-
-                permittivity_model = partial(
-                    soil_permittivity_hut,
-                    moisture=moisture,
-                    sand=sand,
-                    clay=clay,
-                    dry_matter=dry_matter,
-                )
-            case "dobson85":
-                raise SMRTError(
-                    "The model labelled 'dobson85' in SMRT was using dobson85 modified peplinski95. "
-                    "To avoid this misleading name, the new recommended name is 'dobson85_peplinski95'. "
-                    "In addition, the original dobson85 model is now available under the name 'dobson85_original'."
-                )
-
-            case "dobson85_original":
-                # return soil_permittivity_dobson after setting the parameters
-                if moisture is None or sand is None or clay is None:
-                    raise SMRTError("The parameters moisture, sand, clay must be set")
-                permittivity_model = partial(soil_permittivity_dobson85, moisture=moisture, sand=sand, clay=clay)
-
-            case "dobson85_peplinski95":
-                # return soil_permittivity_dobson after setting the parameters
-                if moisture is None or sand is None or clay is None:
-                    raise SMRTError("The parameters moisture, sand, clay must be set")
-                permittivity_model = partial(
-                    soil_permittivity_dobson85_peplinski95, moisture=moisture, sand=sand, clay=clay
-                )
-
-            case "montpetit2008":
-                permittivity_model = soil_permittivity_montpetit08
-            case _:
-                if "_permittivity_" in permittivity_model:
-                    permittivity_model = permittivity_function(permittivity_model)
-                else:
-                    raise SMRTError(f"The permittivity model '{permittivity_model}' is not recongized")
-    else:
-        # check that other parameters are defined
-        if moisture is not None or sand is not None or clay is not None or dry_matter is not None:
-            smrt_warn(
-                "Setting moisture, clay, sand or dry_matter when permittivity_model is a number or function is useless"
-            )
+    permittivity_model = resolve_make_soil_permittivity_model(
+        permittivity_model, 
+        moisture=moisture, 
+        sand=sand, 
+        clay=clay, 
+        dry_matter=dry_matter
+    )
 
     # process the substrate_model argument
     if not isinstance(substrate_model, type):
@@ -253,7 +215,7 @@ def make_soil_layer(
     """
 
     # background permittivity (default = soil_permittivity_dobson85_peplinski95)
-    eps_1 = permittivity_function(soil_permittivity_model) or soil_permittivity_dobson85_peplinski95
+    eps_1 = resolve_make_soil_permittivity_model(soil_permittivity_model) or soil_permittivity_dobson85_peplinski95
 
     lay = Layer(
         float(layer_thickness),
@@ -276,3 +238,52 @@ def make_soil_layer(
     # lay.read_only_attributes = {"ice_type", "density", "porosity"}   # <---- GHI: remove this
 
     return lay
+
+def resolve_make_soil_permittivity_model(permittivity_model, moisture=None, sand=None, clay=None, dry_matter=None):
+    """Helper function to find the correct permittivity model from a string, with parameters bound if necessary."""
+
+    if not isinstance(permittivity_model, str):
+        if moisture is not None or sand is not None or clay is not None or dry_matter is not None:
+            smrt_warn(
+                "Setting moisture, clay, sand or dry_matter when permittivity_model is a number or function is useless"
+            )
+        return permittivity_model
+
+    match permittivity_model:
+        case "hut_epss":
+            if moisture is None or sand is None or clay is None or dry_matter is None:
+                raise SMRTError("The parameters moisture, sand, clay and dry_matter must be set")
+            return partial(soil_permittivity_hut, moisture=moisture, sand=sand, clay=clay, dry_matter=dry_matter)
+            
+        case "dobson85":
+            raise SMRTError(
+                "The model labelled 'dobson85' in SMRT was using dobson85 modified peplinski95. "
+                "To avoid this misleading name, the new recommended name is 'dobson85_peplinski95'. "
+                "In addition, the original dobson85 model is now available under the name 'dobson85_original'."
+            )
+
+        case "dobson85_original":
+            if moisture is None or sand is None or clay is None:
+                raise SMRTError("The parameters moisture, sand, clay must be set")
+            return partial(soil_permittivity_dobson85, moisture=moisture, sand=sand, clay=clay)
+
+        case "dobson85_peplinski95":
+            if moisture is None or sand is None or clay is None:
+                raise SMRTError("The parameters moisture, sand, clay must be set")
+            return partial(soil_permittivity_dobson85_peplinski95, moisture=moisture, sand=sand, clay=clay)
+
+        case "montpetit2008":
+            return soil_permittivity_montpetit08
+
+        case _: # look for bedrock and soil permittivity models
+            if "_permittivity_" in permittivity_model:
+                return permittivity_function(permittivity_model)
+            else:
+                # try to prepend allowed prefixes
+                prefixes = ["soil", "bedrock"]
+                for prefix in prefixes:
+                    try:
+                        return permittivity_function(f"{prefix}_permittivity_{permittivity_model}")
+                    except (ValueError, SMRTError):
+                        continue
+                raise SMRTError(f"The permittivity model '{permittivity_model}' is not recognized. Tried prefixes: {prefixes}")
