@@ -91,7 +91,7 @@ class PyRTlibAtmosphereBase(AtmosphereBase):
         tau = []
         for freqGHz in np.atleast_1d(frequency) / GHz:
             rte = TbCloudRTE(
-                z=self.z,
+                z=self.z.copy(),
                 p=self.p,
                 t=self.t,
                 rh=self.rh,
