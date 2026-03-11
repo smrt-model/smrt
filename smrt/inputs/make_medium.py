@@ -31,6 +31,7 @@ Note:
 import collections
 import inspect
 import itertools
+import numbers
 
 import numpy as np
 import pandas as pd
@@ -290,13 +291,13 @@ def make_snow_layer(
     #                    " in the snow community. Use instead volumetric_liquid_water. Check the definition")
 
     lay = SnowLayer(
-        layer_thickness,
+        asfloat(layer_thickness),
         medium=medium,
         microstructure_model=microstructure_model,
-        density=density,
+        density=asfloat(density),
         temperature=temperature,
         permittivity_model=(eps_1, eps_2),
-        salinity=salinity,
+        salinity=asfloat(salinity),
         volumetric_liquid_water=volumetric_liquid_water,
         liquid_water=liquid_water,
         **kwargs,
@@ -715,22 +716,22 @@ def make_ice_layer(
         microstructure_model = get_microstructure_model(microstructure_model)
 
     lay = Layer(
-        float(layer_thickness),
+        asfloat(layer_thickness),
         medium="ice",
         microstructure_model=microstructure_model,
-        frac_volume=float(frac_volume),
-        temperature=float(temperature),
+        frac_volume=asfloat(frac_volume),
+        temperature=asfloat(temperature),
         permittivity_model=(eps_1, eps_2),
         inclusion_shape=inclusion_shape,
-        salinity=float(salinity),
+        salinity=asfloat(salinity),
         **kwargs,
     )
 
     if brine_volume_fraction is not None:
-        lay.brine_volume_fraction = float(brine_volume_fraction)
+        lay.brine_volume_fraction = asfloat(brine_volume_fraction)
         lay.brine_inclusion_shape = brine_inclusion_shape
-    lay.density = float(density)  # just for information, read-only
-    lay.porosity = float(porosity)  # just for information, read-only
+    lay.density = asfloat(density)  # just for information, read-only
+    lay.porosity = asfloat(porosity)  # just for information, read-only
     lay.inclusion_shape = inclusion_shape  # shape of inclusions (air or brine depending on ice_type)
     lay.ice_type = ice_type  # just for information, read-only
 
@@ -839,13 +840,13 @@ def make_water_layer(
         kwargs["radius"] = foam_bubble_radius
 
     lay = Layer(
-        float(layer_thickness),
+        asfloat(layer_thickness),
         medium="water",
         microstructure_model=get_microstructure_model(microstructure_model),
-        frac_volume=foam_frac_volume,
-        temperature=float(temperature),
+        frac_volume=asfloat(foam_frac_volume),
+        temperature=asfloat(temperature),
         permittivity_model=(water_permittivity_model, 1.0),
-        salinity=float(salinity),
+        salinity=asfloat(salinity),
         **kwargs,
     )
 
@@ -1026,8 +1027,8 @@ def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, te
 
     lay.temperature = float(temperature)
     lay.effective_permittivity = effective_permittivity
-    lay.ks = float(ks)
-    lay.ka = float(ka)
+    lay.ks = asfloat(ks)
+    lay.ka = asfloat(ka)
 
     return lay
 
@@ -1164,3 +1165,13 @@ def _warn_mixing_formula(permittivity_model, name):
         module documentation of the permittivity model.""",
             stacklevel=2,
         )
+
+
+def asfloat(x):
+    if isinstance(x, numbers.Number):
+        return float(x)
+    elif isinstance(x, np.ndarray):
+        return x.astype(np.float64)
+    else:
+        smrt_warn("Don't know how to convert this type to float, returning it as is.", stacklevel=2)
+        return x
