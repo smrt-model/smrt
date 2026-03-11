@@ -5,6 +5,7 @@ Fresnel coefficients formulae used in the packages :py:mod:`smrt.interface` and 
 import numba
 import numpy as np
 
+from smrt.core.error import SMRTError
 from smrt.core.lib import abs2, smrt_matrix
 
 
@@ -94,7 +95,7 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=Fals
         return rv, rh, mu2
 
 
-def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1) -> tuple[complex, complex, float]:
+def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu, mu_medium="1") -> tuple[complex, complex, float]:
     """
     Compute the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
@@ -109,7 +110,8 @@ def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1) -> tuple[complex,
     Args:
         eps_1: permittivity of medium 1.
         eps_2: permittivity of medium 2.
-        mu1: cosine zenith angle in medium 1.
+        mu: cosine zenith angle in medium 1 or in the void according to mu_medium.
+        mu_medium: string indicating which medium the angle is defined in ("1" or "void").
 
     Returns:
         : rv, rh, mu2 the cosine of the angle in medium 2
@@ -118,7 +120,12 @@ def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1) -> tuple[complex,
 
     # incident wavenumber
     n1 = np.sqrt(eps_1)
-    kiz2 = n1.real**2 * (1 - mu1**2)  # this the square of kiz = n1 * sin(theta)
+    if mu_medium == "1":
+        kiz2 = n1.real**2 * (1 - mu**2)  # this the square of kiz = n1 * sin(theta)
+    elif mu_medium == "void":
+        kiz2 = 1 - mu**2  # this the square of kiz = sin(theta0)
+    else:
+        raise SMRTError("mu_medium must be either '1' or 'void'")
     kyi = -np.sqrt(eps_1 - kiz2, dtype=np.complex128)  # Eq 8 for i
 
     ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
@@ -136,7 +143,7 @@ def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu1) -> tuple[complex,
 
 
 @numba.jit(nopython=True, cache=True)
-def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1):
+def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium="1"):
     """
     Compute the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
@@ -151,7 +158,8 @@ def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1):
     Args:
         eps_1: permittivity of medium 1.
         eps_2: permittivity of medium 2.
-        mu1: cosine zenith angle in medium 1.
+        mu: cosine zenith angle in medium 1 or in the void according to mu_medium.
+        mu_medium: string indicating which medium the angle is defined in ("1" or "void").
 
     Returns:
         : rv, rh, mu2 the cosine of the angle in medium 2
@@ -160,11 +168,31 @@ def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1):
 
     # incident wavenumber
     n1 = np.sqrt(eps_1)
-    kiz2 = n1.real**2 * (1 - mu1**2)  # this the square of kiz = n1 * sin(theta)
-    kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
 
-    ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-    kyt = -np.sqrt(eps_2 - ktz2)  # Eq 8 for t
+    # if mu_medium == "1":
+    #     kiz2 = n1.real**2 * (1 - mu**2)  # this the square of kiz = n1 * sin(theta)
+    # elif mu_medium == "void":
+    #     kiz2 = 1 - mu**2  # this the square of kiz = sin(theta0)
+    # else:
+    #     raise SMRTError("mu_medium must be either '1' or 'void'")
+
+    if mu_medium == "1":
+        kiz2 = n1.real**2 * (1 - mu**2)
+
+        kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
+
+        ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
+        kyt = -np.sqrt(eps_2 - ktz2)  # Eq 8 for t
+    elif mu_medium == "void":
+        kiz2 = 1 - mu**2
+
+        # repeating is necessary for the compilation typing pass
+        kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
+
+        ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
+        kyt = -np.sqrt(eps_2 - ktz2)  # Eq 8 for t
+    else:
+        raise SMRTError("mu_medium must be either '1' or 'void'")
 
     rh = (kyi - kyt) / (kyi.conjugate() + kyt)  # Eq 59
 
@@ -177,7 +205,7 @@ def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1):
     return rv, rh, mu2
 
 
-def fresnel_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu1):
+def fresnel_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu, mu_medium="1"):
     """
     Compute the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
@@ -192,7 +220,8 @@ def fresnel_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu1):
     Args:
         eps_1: permittivity of medium 1.
         eps_2: permittivity of medium 2.
-        mu1: cosine zenith angle in medium 1.
+        mu: cosine zenith angle in medium 1 or in the void according to mu_medium.
+        mu_medium: string indicating which medium the angle is defined in ("1" or "void").
         full_output: return full output (Default value = False).
 
     Returns:
@@ -206,7 +235,14 @@ def fresnel_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu1):
     # incident wavenumber
 
     n1 = np.sqrt(eps_1)
-    kiz2 = n1.real**2 * (1 - mu1**2)  # this the square of kiz = n1 * sin(theta)
+
+    if mu_medium == "1":
+        kiz2 = n1.real**2 * (1 - mu**2)  # this the square of kiz = n1 * sin(theta)
+    elif mu_medium == "void":
+        kiz2 = 1 - mu**2  # this the square of kiz = sin(theta0)
+    else:
+        raise SMRTError("mu_medium must be either '1' or 'void'")
+
     kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
 
     ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
