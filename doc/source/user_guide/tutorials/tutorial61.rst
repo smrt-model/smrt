@@ -5,9 +5,13 @@ Substrate
 Table of Contents
 -----------------
 
-**Goal**: - Passive Substrate: specify the reflectivity - Passive
-Substrate: use a soil model - Investigate the sensitivity to substrate
-parameters.
+**Goal**: 
+
+- Passive Substrate: specify the reflectivity 
+
+- Passive Substrate: use a soil model 
+
+- Investigate the sensitivity to substrate parameters.
 
 **Learning**: How to incorporate substrate into a snowpack for passive
 simulations.
@@ -62,9 +66,6 @@ This means you can keep the same snowpack but easily compare different
 representations of the substrate. Have a look at the properties of the
 medium - the substrate is listed below the layer properties.
 
-.. code:: ipython3
-
-    medium
 
 Make the model, specify a sensor then run the model (feel free to change
 values below!)
