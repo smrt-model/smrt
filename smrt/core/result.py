@@ -299,6 +299,28 @@ class Result(object):
 
         return self.other_data["ks"] / (self.other_data["ka"] + self.other_data["ks"])
 
+    def ks(self):
+        """
+        Return the scattering coefficient ks of each layer.
+
+        This is useful to assess the importance of scattering in the medium.
+        """
+        if "ks" not in self.other_data:
+            raise SMRTError("This method requires that the selected RTsolver provides ks.")
+
+        return self.other_data["ks"]
+
+    def ka(self):
+        """
+        Return the absorption coefficient ka of each layer.
+
+        This is useful to assess the importance of scattering in the medium.
+        """
+        if "ka" not in self.other_data:
+            raise SMRTError("This method requires that the select RTsolver provides ka.")
+
+        return self.other_data["ka"]
+
 
 class PassiveResult(Result):
     mode = "P"
