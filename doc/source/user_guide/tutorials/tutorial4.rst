@@ -1,52 +1,40 @@
-##################################
-Comparison of electromagnetic mode
-##################################
+####################################
+Comparison of electromagnetic models
+####################################
 
 **Goal**:
 
-Run and compare SMRT for different electromagnetic theories. Some of the
-theories can be used only with sphere microstructures (qca, qcacp,
-rayleigh), others only with exponential microstructures (sft_rayleigh)
-and others can be combined with any microstructure model (iba and
-different variants of sce)
-
-To this end we create two ensembles of snowpacks with varying size
-parameter:
-
-- One snowpack made of a sticky_hard_spheres microstructure with varyin
-  radius. Here it is possible to compare iba, dmrt_qca_shortrange,
-  dmrt_qcacp_shortrange, rayleigh and different variants of sce
-- Another snowpack made of an exponential microstructure with varying
-  correlation length. Here only iba, sft_rayleigh and variants of sce
-  can be compared.
-
-Run SMRT for the different snowpacks and compare the electromagnetic
-theories. Plot the result as a function of radius (see sensitivity_study
-tutorial).
+Run and compare SMRT for different electromagnetic theories.
 
 **Learning**:
 
-- Understand which electromagnetic models can be used with what kind of
-  microstructure
-- Learn how to compute scattering coefficient, without running the full
-  model
+- Understand which electromagnetic models can be used with what kind of microstructure.
+- Learn how to compute scattering coefficient, without running the full model.
 
-.. code:: ipython3
+Some of the theories can be used only with sphere microstructures (QCA, QCA-CP, Rayleigh), others only with exponential
+microstructures (SFT) and others can be combined with any microstructure model (IBA and different variants of SCE).
 
-    import numpy as np
+For this reason, we create two ensembles of snowpacks with varying size parameter:
 
-    import matplotlib.pyplot as plt
-    %matplotlib notebook
+- One snowpack made of a sticky_hard_spheres microstructure with varyin radius. Here it is possible to compare IBA,
+  DMRT_QCA_shortrange, DMRT_QCA_shortrange, Rayleigh and different variants of SCE
+- Another snowpack made of an exponential microstructure with varying correlation length. Here only IBA, SFT and
+  variants of sce
+  can be compared.
 
-    from smrt import make_model, make_snowpack, sensor_list
+Then, we run SMRT for the different snowpacks and compare the results of the different electromagnetic theories.
 
 Electromagnetic models compatible with spheres
 ----------------------------------------------
 
-First we create an ensemble of snowpacks initialized with the sticky
-hard sphere (shs) microstructure of different radii
+First we create an ensemble of snowpacks initialized with the sticky hard sphere (shs) microstructure of different radii
 
 .. code:: ipython3
+
+    import numpy as np
+    import matplotlib.pyplot as plt
+
+    from smrt import make_model, make_snowpack, sensor_list
 
     # prepare the snowpack
 
@@ -59,23 +47,42 @@ hard sphere (shs) microstructure of different radii
     snowpack_list_shs = [make_snowpack(thickness=thickness, microstructure_model='sticky_hard_spheres',
                        radius=r, density=density, temperature=temperature, stickiness=stickiness) for r in radius_list]
 
-Now we create electromagnetic models which are only compatible with
-sphere microstructures
+Then, we create electromagnetic models which are only compatible with sphere microstructures:
 
 .. code:: ipython3
 
     # prepare several models
 
-    m_dmrt_qca = make_model("dmrt_qca_shortrange", "dort")
-    m_dmrt_qcacp = make_model("dmrt_qcacp_shortrange", "dort")
+    models = dict(
+        m_dmrt_qca = make_model("dmrt_qca_shortrange", "dort"),
+        m_dmrt_qcacp = make_model("dmrt_qcacp_shortrange", "dort"),
+        m_dmrt_qcacp = make_model("dmrt_rayleigh", "dort"),
+    )
 
-    # continue by adding more model, runing and ploting the results as in sensitivity_study
+
+And we run the models as usual, and plots:
+
+.. code:: ipython3
+
+    radiometer = sensor_list.amsre("37")
+
+    # m is a dictionary of models, so we can loop over using dict comprehension
+    res = {m: models[m].run(radiometer, snowpack_list_shs) for m in models}
+
+    # plot the results
+
+    plt.figure()
+
+    for m in models:
+        plt.plot(radius, res[m].TbV(), label=m)
+
+    plt.show()
+
 
 Electromagnetic models compatible with exponential microstructure
 -----------------------------------------------------------------
 
-Next we create an ensemble of snowpacks initialized with an exponential
-(exp) microstructure of different correlation lengths
+The same approach can be used for the exponential microstructure, with different correlation lengths:
 
 .. code:: ipython3
 
@@ -90,47 +97,48 @@ Next we create an ensemble of snowpacks initialized with an exponential
     snowpack_list_exp = [make_snowpack(thickness=thickness, microstructure_model='exponential',
                        corr_length=c, density=density, temperature=temperature) for c in corr_length_list]
 
-and create electromagnetic models which are compatible with exponential
-microstructures. Some of them are more flexible and can be also used
-with the other snowpack made of spheres (explore)
+    # prepare several models
 
-.. code:: ipython3
+    models = dict(
+        m_iba = make_model("iba", "dort"),
+        m_sce = make_model("sce_rechtsman08", "dort"),
+        m_sft = make_model("sft_rayleigh", "dort"),
+    )
 
-    m_iba = make_model("iba", "dort")
-    m_sce = make_model("sce_rechtsman08", "dort")
-    m_sft = make_model("sft_rayleigh", "dort")
+    radiometer = sensor_list.amsre("37")
 
+    # m is a dictionary of models, so we can loop over using dict comprehension
+    res = {m: models[m].run(radiometer, snowpack_list_shs) for m in models}
 
-.. code:: ipython3
+    # plot the results
 
-    # continue with running these models and plotting the results as before
+    plt.figure()
 
-.. code:: ipython3
+    for m in models:
+        plt.plot(radius, res[m].TbV(), label=m)
 
-    # prepare the sensor
-    sensor = sensor_list.passive(37e9, 55)
+    plt.show()
 
-.. code:: ipython3
-
-    # run the model
-    m_sft.run(sensor, snowpack_list_exp)
 
 Computing scattering coefficient
 --------------------------------
 
-Running the full model is interesting but sometimes we only want the
-scattering coefficient (or absorption coefficient). There are two ways
-to get it. First option is the access the “emmodel” attribute of the
-model and run it on a layer (not on a snowpack)
+These models differ mainly by the scattering coefficient. It is often useful to investigate the
+scattering coefficient.
+
+There are three ways to get the scattering coefficient.
+
+First option is the access the “emmodel” attribute of the model and run it on a layer (not on a snowpack)
 
 .. code:: ipython3
 
     firstlayer = snowpack_list_exp[0].layers[0]  # this is the first layer of the first snowpack
 
+    m_iba = make_model("iba", "dort")
+
     m_iba.emmodel(sensor, firstlayer).ks
 
-Second option is without the overhead of make_model. It is simpler when
-the full model is not needed
+The second option is without the overhead of make_model. It is simpler when the full model is not needed:
 
 .. code:: ipython3
 
@@ -143,6 +151,19 @@ the full model is not needed
     em_iba = make_emmodel("iba")(sensor, firstlayer)
     # get ks
     em_iba.ks
+
+The last option is when the full model has run as usual. In this case, the `Result` object contains the scattering coefficient
+for each layer, as well as other information such as the optical_depth or the single_scattering_albedo.
+
+.. code:: ipython3
+
+
+    m_iba = make_model("iba", "dort")
+    res = m_iba.run(radiometer, snowpack_list_exp)
+
+    res.ks
+
+
 
 Comparing the scattering coefficient from different formulations
 ----------------------------------------------------------------
@@ -169,12 +190,3 @@ Now we can compare the radius dependence:
     plt.legend()
     plt.xlabel("Radius ($\\mu$m)")
     plt.ylabel("Scattering coefficient (m$^{-1}$)")
-
-Continue exploring:
--------------------
-
-- Make a similar comparison for the EXP snowpack as a function of
-  correlation length
-- Explore the different behavior of the scattering coefficient as a
-  function of density
-- Get rid of the albedo warning by using QCA-CP instead of QCA.

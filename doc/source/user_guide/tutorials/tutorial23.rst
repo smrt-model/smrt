@@ -7,33 +7,29 @@ parameter on the SMRT output
 **Learning**:
 
 Intuitively running many simulations can be done with a loop and many
-calls to the SMRT functions. But this is not the recommended way, SMRT
-makes it more easy (you get a unique ``result`` easier to work with) and
-more efficient (SMRT can automatically use parallel computing, possibly
-on a High Performance Cluster).
+calls to the SMRT functions. However this is not the recommended way. SMRT
+is able to iterate on several parameters of the sensor or the snowpack, and return a unique result with new coordinates.
+This is more convenient to work with and allows parallel computation.
 
-SMRT is indeed able to iterate on several arguments when it is
-unambiguous. For instance, a sensor with multiple frequencies, angles or
-polarizations is automatically understood. The ``result`` contains all
-the values which can be easily accessed with the functions like TbV(),
-and can also be filter. E.g. TbV(frequency=37e9)
+For instance, a sensor with several frequencies, angles or polarizations is automatically understood by SMRT and the
+``result`` object contains all simulation results as array (i.e. internally as xarray).
+The result methods (e.g. TbV()) can return all the values as an `xarray.Dataset` `result.TbV()` or can be filtered by
+frequency, angle or polarization. For instance, to get the brightness temperature at vertical polarisation for 37 GHz,
+simply call `result.TbV(frequency=37e9)``.
 
-This is similar when a list of snowpacks is given to ``run``. The
-``result`` contains all the computations. The ‘snowpack’ dimension is
-automatically added but we can also propose a custom name for this
-dimension.
+The same applies when a list of snowpacks is given to the ``run`` method. The
+``result`` contains all the computation results as an array with a dimension `snowpack`, or a customn name if provided.
 
-In the recent version, an even more convenient approach is proposed if
-you’re using pandas. A pandas DataFrame with a snowpack column can be
-given to ``run``. The result once converted to a dataframe contains all
-the column of the original DataFrame. This is the most advanced and
-powerful way to conduct sensitivity analysis.
+In the recent version, a even more convenient approach is proposed by using pandas. A pandas DataFrame with a snowpack
+column can be given to ``run`` and the result is a dataframe with the same column plus the simulation results. This is
+the most advanced and powerful way to conduct sensitivity analysis.
 
-In the following, we show different approaches to conduct sensitivity
-studies that you can run and then apply to a study case of your choice:
-- take the Dome C snowpack and study the sensitivity of TbH 55° to
-superficial density - take any snowpack previously defined and
-investigated the sensivitiy to liquid_water - etc
+In the following, we show these different approaches to conduct sensitivity studies.
+
+Sensitivity with a list of snowpack
+-----------------------------------
+
+First import the necessary libraries and prepare the sensor and model configuration:
 
 .. code:: ipython3
 
@@ -47,8 +43,6 @@ investigated the sensivitiy to liquid_water - etc
 
     from smrt import make_model, make_snowpack, sensor_list
 
-Build a list of snowpack
-------------------------
 
 The key idea is to build a list of snowpack or a DataFrame. E.g. we want
 to test the sensitivity of TB’s to the radius. We first build a list of
@@ -58,7 +52,7 @@ snowpack with different radius.
 
     # prepare the snowpack
     density = 300.0
-    radius = np.arange(0.05, 0.5, 0.01) * 1e-3  # from 0 to 0.5 mm
+    radius = np.arange(0.05, 0.5, 0.01) * 1e-3  # from 0.05 mm to 0.5 mm
 
     # the NAIVE APPROACH:
 
@@ -69,8 +63,7 @@ snowpack with different radius.
                            radius=x, stickiness=0.15)
         snowpack.append(sp)
 
-In simple cases (as this one), it is easier to use “list comprehension”,
-a nice python feature to create list.
+In simple cases, it is easier to use “list comprehension”, a nice python feature to create list.
 
 .. code:: ipython3
 
@@ -78,8 +71,6 @@ a nice python feature to create list.
     snowpack = [make_snowpack([1000.0], "sticky_hard_spheres",
                               density=density, temperature=265,
                               radius=x, stickiness=0.15) for x in radius]
-
-    # see an even BETTER APPROACH at the end using pandas.DataFrame
 
 .. code:: ipython3
 
@@ -91,7 +82,8 @@ a nice python feature to create list.
     #run!
 
 Now we have a list of snowpacks, we want to call the model for each
-snowpack. We can use list comprehension again.
+snowpack. Here, results is a list of `Results` objects and a loop is again necessary to extract the TB for each snowpack
+ and plot it. This works but approach is not recommended.
 
 .. code:: ipython3
 
@@ -99,88 +91,63 @@ snowpack. We can use list comprehension again.
     # call many times 'run' and get a list of results
     results = [model.run(sensor, sp) for sp in snowpack]
 
-    # look at what we get:
-    results
-
-This return a list of results. To extract the TB V for each result can
-be done with another list comprehension. And then we plot the results.
-
-.. code:: ipython3
-
-    # still the NAIVE APPROACH
     tbv = [res.TbV() for res in results]
     plt.figure()
     plt.plot(radius, tbv)
 
-Nice ? We can do much better because ``Model`` can directly run on a
-list of snowpacks. It does not return a list of results, but **a unique
-result with a new coordinate** which is much more convenient.
+Instead, the `run` function can directly take a list of snowpacks and returns a unique result with a new coordinate named
+`snowpack`.
 
 .. code:: ipython3
 
     # a BETTER APPROACH
+    # snowpack is a list of Snowpack objects
+
+    results = model.run(sensor, snowpack)
+
+    # results is a Result object not a list
+
+    plt.figure()
+    plt.plot(radius, results.TbV())
+
+It is possible to give a custom name and values to the new dimension with `snowpack_dimension` argument.
+
+.. code:: ipython3
 
     results = model.run(sensor, snowpack, snowpack_dimension=('radius', radius))
-    # look at what we get:
-    results
-
-
-
-
-.. parsed-literal::
-
-    <smrt.core.result.PassiveResult at 0x7f31e6691eb0>
-
-
-
-.. code:: ipython3
-
-    results.coords # look, we have several coordinates, one is call radius
-
-
-
-
-.. parsed-literal::
-
-    Coordinates:
-      * theta         (theta) float64 55.0
-      * polarization  (polarization) <U1 'V' 'H'
-      * radius        (radius) float64 5e-05 6e-05 7e-05 ... 0.00047 0.00048 0.00049
-      * frequency     (frequency) float64 1.87e+10 3.65e+10
-
-
-
-This is more compact and nicer, ``results`` explicitly show the radius
-dimension. Plotting is thus easier:
-
-.. code:: ipython3
 
     plt.figure()
     plt.plot(results.radius, results.TbV())
 
-And it is easy to save all the result to disk:
+The simulations are run in parallel by default, so the computation time is much shorter than the naive approach.
+It is possible to disable parallel computation by setting `parallel_computation=False`. It is sometimes easier when*
+debugging, the error messages are clearer without parallel computation.
+
+  .. code:: ipython3
+
+    results = model.run(sensor, snowpack, snowpack_dimension=('radius', radius), parallel_computation=False)
+
+
+It is also possible to save the result siumations to disk:
 
 .. code:: ipython3
 
     results.save("radius-sensitivity.nc")
 
-.. code:: ipython3
+and later read the results, and get a `Result` object as if the simulations were just run:
 
-    # and you get // computation for free, just adding parallel_computation=True
+    from smrt import open_result
 
-    t0 = time.time()
-    results = model.run(sensor, snowpack, snowpack_dimension=('radius', radius))
-    print("sequential duration: ", time.time() - t0)
-
-    t0 = time.time()
-    results = model.run(sensor, snowpack, snowpack_dimension=('radius', radius), parallel_computation=True)
-    print("parallel duration: ", time.time() - t0)
+    results = open_result("radius-sensitivity.nc")
 
 
-    results
 
-Using pandas.DataFrame
-----------------------
+Sensitivity with pandas.DataFrame
+---------------------------------
+
+
+Instead of a list of snowpack and providing the dimension name and values, a more concise approach is using pandas.DataFrame:
+
 
 .. code:: ipython3
 
@@ -193,274 +160,14 @@ Using pandas.DataFrame
                               density=density, temperature=265,
                               radius=row['radius'], stickiness=0.15) for i, row in sp.iterrows()]
 
-    # show the dataframe
-    sp
-
-
-
-
-.. raw:: html
-
-    <div>
-    <style scoped>
-        .dataframe tbody tr th:only-of-type {
-            vertical-align: middle;
-        }
-
-        .dataframe tbody tr th {
-            vertical-align: top;
-        }
-
-        .dataframe thead th {
-            text-align: right;
-        }
-    </style>
-    <table border="1" class="dataframe">
-      <thead>
-        <tr style="text-align: right;">
-          <th></th>
-          <th>radius</th>
-          <th>snowpack</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <th>0</th>
-          <td>0.00005</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>1</th>
-          <td>0.00006</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>2</th>
-          <td>0.00007</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>3</th>
-          <td>0.00008</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>4</th>
-          <td>0.00009</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>5</th>
-          <td>0.00010</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>6</th>
-          <td>0.00011</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>7</th>
-          <td>0.00012</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>8</th>
-          <td>0.00013</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>9</th>
-          <td>0.00014</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>10</th>
-          <td>0.00015</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>11</th>
-          <td>0.00016</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>12</th>
-          <td>0.00017</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>13</th>
-          <td>0.00018</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>14</th>
-          <td>0.00019</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>15</th>
-          <td>0.00020</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>16</th>
-          <td>0.00021</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>17</th>
-          <td>0.00022</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>18</th>
-          <td>0.00023</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>19</th>
-          <td>0.00024</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>20</th>
-          <td>0.00025</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>21</th>
-          <td>0.00026</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>22</th>
-          <td>0.00027</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>23</th>
-          <td>0.00028</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>24</th>
-          <td>0.00029</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>25</th>
-          <td>0.00030</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>26</th>
-          <td>0.00031</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>27</th>
-          <td>0.00032</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>28</th>
-          <td>0.00033</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>29</th>
-          <td>0.00034</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>30</th>
-          <td>0.00035</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>31</th>
-          <td>0.00036</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>32</th>
-          <td>0.00037</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>33</th>
-          <td>0.00038</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>34</th>
-          <td>0.00039</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>35</th>
-          <td>0.00040</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>36</th>
-          <td>0.00041</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>37</th>
-          <td>0.00042</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>38</th>
-          <td>0.00043</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>39</th>
-          <td>0.00044</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>40</th>
-          <td>0.00045</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>41</th>
-          <td>0.00046</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>42</th>
-          <td>0.00047</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>43</th>
-          <td>0.00048</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-        <tr>
-          <th>44</th>
-          <td>0.00049</td>
-          <td>Snowpack:       layer                         ...</td>
-        </tr>
-      </tbody>
-    </table>
-    </div>
-
-
-
-.. code:: ipython3
-
     results = model.run(sensor, sp)
 
-    # that's it
     results
+
+The key step is to add a column named "snowpack" in the DataFrame that contains the `Snowpack`` objects.
+While `pandas.DataFrame`` is mainly used with numerical values, it is possible to add any kind of object into the columns.
+
+This approach is particularly useful when using pandas to read a database of sites, and build the snowpacks directly from it.
 
 .. code:: ipython3
 
@@ -470,17 +177,18 @@ Using pandas.DataFrame
     # that's it
     results
 
-It is recommended to use a named sensor with a channel_map (e.g. amsre,
-smos, …) as defined in smrt.sensor.list. In this case the columns of the
-DataFrame are the channels of the sensor. It is a very convenient way to
-run multiple simulations and use the results for plotting or stats.
+The `to_dataframe()` method converts the `Result`` object into a dataframe.
 
-.. code:: ipython3
+It is recommended to use a named sensor (e.g. amsre, smos, …) defined in `smrt.sensor.list`. The sensors define a
+channel_map that allows elegant conversion into DataFrame. In this case the columns of the DataFrame are the channels
+of the sensor. This is the most convenient way to run multiple simulations and use the results for plotting or stats.
 
-    # try this.
+
 
 Recap:
 ------
+
+The two recommended ways to run sensitivity analysis are:
 
 .. code:: ipython3
 
@@ -488,9 +196,9 @@ Recap:
     snowpack = [make_snowpack([1000.0], "sticky_hard_spheres", density=density, temperature=265, radius=x, stickiness=0.15) for x in radius]
 
     model = make_model("iba", "dort")
-    sensor = sensor_list.passive([19e9, 37e9], 55)
+    sensor = sensor_list.amsre(['19', '37'])
 
-    results = model.run(sensor, snowpack, snowpack_dimension=('radius', radius), parallel_computation=True)
+    results = model.run(sensor, snowpack, snowpack_dimension=('radius', radius))
 
     plt.figure()
     plt.plot(results.radius, results.TbV(frequency=19e9), label="19 GHz")
@@ -502,9 +210,8 @@ Recap:
     # with DataFrame
     sp = pd.DataFrame({'radius' : np.arange(0.05, 0.5, 0.01) * 1e-3})
 
-    sp['snowpack'] = [make_snowpack([1000.0], "sticky_hard_spheres",
-                              density=density, temperature=265,
-                              radius=row['radius'], stickiness=0.15) for i, row in sp.iterrows()]
+    sp['snowpack'] = [make_snowpack([1000.0], "sticky_hard_spheres", density=density, temperature=265, radius=row['radius'],
+      stickiness=0.15) for i, row in sp.iterrows()]
 
     model = make_model("iba", "dort")
     sensor = sensor_list.amsre(['19', '37'])
@@ -515,10 +222,3 @@ Recap:
     plt.plot(results['radius'], results['19V'], label="19 GHz")
     plt.plot(results['radius'], results['37V'], label="37 GHz")
     plt.legend()
-
-Do it yourself
---------------
-
-Easy: plot Tb as a function liquid_water_content for a single-layer
-snowpack or More invovled: plot a map of Tb(radius, density) using a
-single run call (hint: use pd.DataFrame)
