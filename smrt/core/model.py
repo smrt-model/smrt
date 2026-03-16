@@ -337,17 +337,15 @@ class Model(object):
         Args:
             sensor: sensor to use for the calculation. Can be a list of the same size as the snowpack list. In this
                 case, the computation is performed for each pair (sensor, snowpack).
-
             snowpack: snowpack to use for the calculation. Can be a single snowpack, a list of snowpack, a dict of
                 snowpack or a SensitivityStudy object.
             atmosphere:  (Default value = None) snowpack_dimension: name and values (as a tuple) of the dimension to
                 create for the results when a list of snowpack is provided. E.g. time, point, longitude, latitude. By
                 default the dimension is called 'snowpack' and the values are from 1 to the number of snowpacks.
-
             snowpack_column: when snowpack is a DataFrame this argument is used to specify which column contains the
-                Snowpack objects (Default value = 'snowpack') progressbar: if True, display a progress bar during
+                Snowpack objects (Default value = 'snowpack')
+            progressbar: if True, display a progress bar during
                 multi-snowpacks computation (Default value = False)
-
             parallel_computation: if True (default), use the joblib library to run the simulations of many snowpacks in parallel.
                 Otherwise, the simulations are run sequentially, one after one. See 'runner' for a more advanced control on
                 parallel computations. Note for users seeking performances: numpy and scipy usually also perform low- level
@@ -358,7 +356,6 @@ class Model(object):
                 scipy parallelism is NOT disabled. If you really want to use a single core for the simulations, you must first
                 call :py:func:`~smrt.core.lib.set_max_numerical_threads` with 1 as argument and then call Model.run with
                 parallel_computation=False. (Default value = False)
-
             runner: a 'runner' is a function (or more likely a class with a __call__ method) that takes a function and a
                 list/generator of simulations, executes the function on each simulation and returns a list of results.
                 'parallel_computation' allows to select between two default (basic) runners (sequential and joblib). Use
