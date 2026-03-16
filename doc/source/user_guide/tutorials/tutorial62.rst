@@ -5,9 +5,13 @@ Using active substrate
 Table of Contents
 -----------------
 
-**Goal**: - Active Substrate: specify the reflectivity - Active
-Substrate: use a backscatter model - Investigate the sensitivity to
-substrate parameters.
+**Goal**: 
+
+- Active Substrate: specify the reflectivity 
+
+- Active Substrate: use a backscatter model 
+
+- Investigate the sensitivity to substrate parameters.
 
 **Learning**: How to incorporate substrate into a snowpack for active
 simulations.
@@ -17,7 +21,6 @@ simulations.
     # Import statements
     import numpy as np
     import matplotlib.pyplot as plt
-    %matplotlib inline
 
     from smrt import make_snowpack, make_model, make_soil  # Core model functionality
     from smrt.inputs.sensor_list import active
@@ -42,11 +45,6 @@ Active: prescribed backscatter
     scatt = active(13e9, 45)
 
 Make a snowpack with a substrate
-
-.. code:: ipython3
-
-    # snow = ...
-    # medium = ...
 
 Run model and output results in dB
 
@@ -89,9 +87,6 @@ applied to represent the substrate. Here we’ll use IEM
 
 Make a single layer snowpack, add substrate and run the model
 
-.. code:: ipython3
-
-    #snow = ...
 
 You can also change the bottom (or any!) interface to use the
 backscatter model
@@ -107,14 +102,11 @@ backscatter model
 Look at the snowpack - you can see the interface for the bottom layer
 has now changed.
 
-.. code:: ipython3
-
-    snow
 
 Note that this is the interface at the top of the layer, not the bottom
 so is equivalent here to setting the surface of the snowpack to be
 rough. You can also set a rough snow surface by passing the argument
-surface=rough_interface when creating the snowpack.
+``surface=rough_interface`` when creating the snowpack.
 
 Construct a medium for snow on sea ice - assign a rough interface for
 the highest (or single) sea ice layer. This then makes the interface

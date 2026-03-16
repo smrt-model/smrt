@@ -5,8 +5,11 @@ Including the atmosphere
 Table of Contents
 -----------------
 
-**Goal**: - Add atmosphere to snowpack - Investigate the sensitivity to
-atmosphere parameters.
+**Goal**: 
+
+- Add atmosphere to snowpack 
+
+- Investigate the sensitivity to atmosphere parameters.
 
 **Learning**: How to incorporate simple atmosphere into a snowpack.
 
@@ -17,7 +20,6 @@ atmosphere parameters.
     from smrt import make_snowpack, make_model  # Core model functionality
 
     import matplotlib.pyplot as plt
-    %matplotlib inline
 
 Atmosphere
 ==========
@@ -27,9 +29,9 @@ to deal with advanced atmosphere models. This may affect this part of
 the tutorial in the future.
 
 Import module and define atmosphere. It is possible to include the
-downwelling atmospheric contribution (tbdown), and the upwelling
-contribution (tbup) and/or the atmospheric transmissivity (trans). The
-default values are tbup, tbdown = 0 and transmittivity = 1.
+downwelling atmospheric contribution (``tbdown``), and the upwelling
+contribution (``tbup``) and/or the atmospheric transmissivity (``trans``). The
+default values are ``tbup``, ``tbdown = 0`` and ``transmittivity = 1``.
 
 .. code:: ipython3
 
