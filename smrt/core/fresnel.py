@@ -35,7 +35,7 @@ def fresnel_coefficients_old(eps_1, eps_2, mu1):
     return rv, rh, mu2
 
 
-def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=False):
+def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu, mu_medium="1", full_output=False):
     """
     Compute the reflection in two polarizations (H and V) for lossly media with the "classical Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
@@ -49,8 +49,8 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=Fals
     Args:
         eps_1: permittivity of medium 1.
         eps_2: permittivity of medium 2.
-        mu1: cosine zenith angle in medium 1.
-        full_output: return full output (Default value = False).
+        mu: cosine zenith angle in medium 1 or in the void according to mu_medium.
+        mu_medium: string indicating which medium the angle is defined in ("1" or "void").
 
     Returns:
         : rv, rh, mu2 the cosine of the angle in medium 2
@@ -60,7 +60,13 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu1, full_output=Fals
     # incident wavenumber
     n1 = np.sqrt(eps_1)
 
-    kiz2 = n1.real**2 * (1 - mu1**2)  # kiz = n1 * sin(theta)
+    if mu_medium == "1":
+        kiz2 = n1.real**2 * (1 - mu**2)  # this the square of kiz = n1 * sin(theta)
+    elif mu_medium == "void":
+        kiz2 = 1 - mu**2  # this the square of kiz = sin(theta0)
+    else:
+        raise SMRTError("mu_medium must be either '1' or 'void'")
+
     kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
 
     ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
@@ -168,13 +174,6 @@ def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium
 
     # incident wavenumber
     n1 = np.sqrt(eps_1)
-
-    # if mu_medium == "1":
-    #     kiz2 = n1.real**2 * (1 - mu**2)  # this the square of kiz = n1 * sin(theta)
-    # elif mu_medium == "void":
-    #     kiz2 = 1 - mu**2  # this the square of kiz = sin(theta0)
-    # else:
-    #     raise SMRTError("mu_medium must be either '1' or 'void'")
 
     if mu_medium == "1":
         kiz2 = n1.real**2 * (1 - mu**2)
