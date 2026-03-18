@@ -67,6 +67,7 @@ class PyRTlibERA5Atmosphere(PyRTlibAtmosphereBase):
         self.df_era5 = df_era5
 
         self.z = df_era5.z.values
+        assert np.all(self.z >= 0), f"Negative altitude values are not supported by PyRTlibAtmosphere: {self.z=}"
         self.p = df_era5.p.values
         self.t = df_era5.t.values
         self.rh = df_era5.rh.values

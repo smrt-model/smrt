@@ -121,6 +121,7 @@ class PyRTlibAtmosphereBase(AtmosphereBase):
                 + down_res["tauice"].values
             )
 
+        assert np.all(tau >= 0)
         trans = np.exp(-np.array(tau))
 
         return AtmosphereResult(
