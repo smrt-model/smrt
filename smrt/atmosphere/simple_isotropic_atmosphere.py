@@ -71,4 +71,8 @@ class SimpleIsotropicAtmosphere(AtmosphereBase):
             tb_down=create_array(self.constant_tbdown),
             tb_up=create_array(self.constant_tbup),
             transmittance=create_array(self.constant_trans),
+            coords={
+                "polarization": ["V", "H", "U"][:npol],
+                "mu": costheta,
+            },
         )

@@ -79,6 +79,10 @@ class SimpleAtmosphere(AtmosphereBase):
             tb_down=interpolate(self.tb_down),
             tb_up=interpolate(self.tb_up),
             transmittance=interpolate(self.transmittance),
+            coords={
+                "polarization": ["V", "H", "U"][:npol],
+                "mu": costheta,
+            },
         )
 
 

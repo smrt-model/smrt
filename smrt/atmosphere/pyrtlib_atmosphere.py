@@ -7,7 +7,12 @@ Saverio Teodosio Nilo, and Filomena Romano. According to the authors, it does no
 art models as used in the meteorological centers for instance, but has instead an educational purpose and has the major
 advantage of being fully written in Python, synonym of easy installation and compatibility with SMRT.
 
-PyRTLib is licensed under the GPL-3.0 License, and it must be installed independently of SMRT. pip install smrt[pyrtlib] may work.
+PyRTLib is licensed under the GPL-3.0 License, and it must be installed independently of SMRT.
+
+In general pip install smrt[pyrtlib] may work. HOWEVER, as of March 2025, the latest version of PyRTLib is incompatible
+with recent numpy versions and reading era5 in netcdf format (not the default) may fail. It is required  to install
+PyRTLib separately using pip install git+https://github.com/ghislainp/pyrtlib/tree/migrate_numpy2 until a new official
+release of PyRTLib is made available by the authors.
 
 PyRTlib allows to simulate and calculate radiometric parameters and estimating propogation parameters needed by SMRT using
 meteorological data as input. Some meteorological datasets are built-in in PyRTlib and others can be download and used
@@ -28,7 +33,8 @@ The simpliest is for climatological profiles::
 
     atmos = make_atmosphere('pyrtlib_climatology_atmosphere', profile='Subarctic Summer', absorption_model = 'R20')
 
-The list of climatologies is however limited, see the documentation at https://satclop.github.io/pyrtlib/en/main/generated/pyrtlib.climatology.AtmosphericProfiles.html
+The list of climatologies is however limited, see the documentation at
+https://satclop.github.io/pyrtlib/en/main/generated/pyrtlib.climatology.AtmosphericProfiles.html
 
 For a more specific calculations in term of location and date, it is possible obtain data from ERA5 Reanalysis::
 
@@ -43,8 +49,9 @@ Note that in April 2024, the CDS is announced to be disrupted "soon", which will
 The downloaded file is copied in a temporary directory, unless the `era5_directory` argument is specified, which is
 recommended to avoid repetitive downloads.
 
-If interested in several locations, it is more efficient to download a single file with the full extent following the PyRTlib documentation:
-https://satclop.github.io/pyrtlib/en/main/generated/pyrtlib.apiwebservices.ERA5Reanalysis.request_data.html and then use the 'ncfile' argument::
+If interested in several locations, it is more efficient to download a single file with the full extent following the
+PyRTlib documentation: https://satclop.github.io/pyrtlib/en/main/generated/pyrtlib.apiwebservices.ERA5Reanalysis.request_data.html
+and then use the 'ncfile' argument::
 
     from smrt import make_atmosphere
 
@@ -121,18 +128,30 @@ class PyRTlibAtmosphereBase(AtmosphereBase):
                 + down_res["tauice"].values
             )
 
+        tau = np.array(tau)
         assert np.all(tau >= 0)
-        trans = np.exp(-np.array(tau))
+        trans = np.exp(-tau)
+
+        coords = (
+            {
+                "polarization": ["V", "H", "U"][:npol],
+                "mu": costheta,
+            },
+        )
+
+        if np.isscalar(frequency):
+            # remove the frequency dimension if the input was scalar
+            downwelling = downwelling[0]
+            upwelling = upwelling[0]
+            trans = trans[0]
+        else:
+            coords["frequency"] = frequency
 
         return AtmosphereResult(
             tb_down=np.stack([downwelling] * npol),
             tb_up=np.stack([upwelling] * npol),
             transmittance=np.stack([trans] * npol),
-            coords={
-                "polarization": ["V", "H", "U"][:npol],
-                "frequency": frequency,
-                "mu": costheta,
-            },
+            coords=coords,
         )
 
 
