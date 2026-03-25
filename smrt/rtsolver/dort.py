@@ -338,7 +338,9 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
 
         if self.sensor.mode == "P":
             if self.atmosphere_result is not None:
-                e = 1 - self.atmosphere_result.transmittance  # assume non scattering atmosphere for this calculation
+                e = (1 - self.atmosphere_result.transmittance).clip(
+                    1e-5, 1
+                )  # assume non scattering atmosphere for this calculation
                 intensity_up = (
                     self.planck_function(self.atmosphere_result.tb_up / e) * e
                     + self.atmosphere_result.transmittance * intensity_up
@@ -395,7 +397,9 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             if self.atmosphere_result is not None:
                 # incident radiation is a function of frequency and incidence angle
                 # assume azimuthally symmetric
-                e = 1 - self.atmosphere_result.transmittance  # assume non scattering atmosphere for this calculation
+                e = (1 - self.atmosphere_result.transmittance).clip(
+                    1e-5, 1
+                )  # assume non scattering atmosphere for this calculation
                 intensity_0 = self.planck_function(self.atmosphere_result.tb_down / e) * e
                 assert intensity_0.shape == (npol, self.streams.n_air), (
                     f"unexpected shape for the downwelling intensity: {intensity_0.shape}, expected {(npol, self.streams.n_air)}"
