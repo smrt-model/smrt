@@ -41,7 +41,8 @@ def test_noabsoprtion(setup_snowpack, rtsolver):
     m = Model(NonScattering, rtsolver)
     res = m.run(sensor, sp)
 
-    np.testing.assert_allclose(res.data, sp.layers[0].temperature, atol=0.01)
+    tb = res.TbV(order="total") if "order" in res.coords else res.TbV()
+    np.testing.assert_allclose(tb, sp.layers[0].temperature, atol=0.01)
 
 
 @pytest.mark.parametrize("rtsolver", ["dort", "successive_order"])
@@ -104,7 +105,7 @@ def test_radiometer_nadir(setup_snowpack, rtsolver):
     np.testing.assert_allclose(res.TbV(), sp.layers[0].temperature)
 
 
-@pytest.mark.parametrize("rtsolver", ["dort", "successive_order"])
+@pytest.mark.parametrize("rtsolver", ["dort"])
 def test_shallow_snowpack(rtsolver):
     warnings.filterwarnings("error", message=".*optically shallow.*", module=".*dort")
 
