@@ -132,7 +132,10 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             experimental, please report success and failure.
         rayleigh_jeans_approximation: In passive mode, if True, use the Rayleigh-Jeans approximation for the Planck function.
             This mode was used by default up to SMRT 1.5.1, but is not as precise as the full Planck function at higher
-            frequencies and low temperatures.
+            frequencies and low temperatures. Warning: When the full planck function is used and an atmosphere is set,
+            this RT solver assumes a non scattering atmosphere to convert tb_down and tb_up to downwelling and upwelling
+            radiance, which is not strictly correct but is the best that can be done without a more complex coupling
+            between the atmosphere and the RT solver.
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the
@@ -335,8 +338,9 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
 
         if self.sensor.mode == "P":
             if self.atmosphere_result is not None:
+                e = 1 - self.atmosphere_result.transmittance  # assume non scattering atmosphere for this calculation
                 intensity_up = (
-                    self.planck_function(self.atmosphere_result.tb_up)
+                    self.planck_function(self.atmosphere_result.tb_up / e) * e
                     + self.atmosphere_result.transmittance * intensity_up
                 )
             intensity_up = self.inverse_planck_function(intensity_up)  # convert back to brightness temperature
@@ -391,8 +395,11 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             if self.atmosphere_result is not None:
                 # incident radiation is a function of frequency and incidence angle
                 # assume azimuthally symmetric
-                intensity_0 = self.planck_function(self.atmosphere_result.tb_down)
-                assert intensity_0.shape == (npol, self.streams.n_air)
+                e = 1 - self.atmosphere_result.transmittance  # assume non scattering atmosphere for this calculation
+                intensity_0 = self.planck_function(self.atmosphere_result.tb_down / e) * e
+                assert intensity_0.shape == (npol, self.streams.n_air), (
+                    f"unexpected shape for the downwelling intensity: {intensity_0.shape}, expected {(npol, self.streams.n_air)}"
+                )
                 # convert pola, theta to (theta, pola) and add batch dimension
                 intensity_0 = np.swapaxes(intensity_0, 0, 1).flatten()[:, np.newaxis]
                 intensity_higher = np.zeros_like(intensity_0)

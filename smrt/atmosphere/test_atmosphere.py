@@ -34,7 +34,7 @@ def test_simple_isotropic_atmosphere(default_snowpack):
 
     # create the EM Model - Equivalent DMRTML
     rads = sensor_list.amsre("36V")
-    m = make_model("iba", "dort")
+    m = make_model("iba", "dort", rtsolver_options=dict(rayleigh_jeans_approximation=True))
 
     res1 = m.run(rads, default_snowpack)
     res2 = m.run(rads, snowpack)
@@ -42,8 +42,8 @@ def test_simple_isotropic_atmosphere(default_snowpack):
     print("TB 1: ", res1.TbV(), "TB2: ", res2.TbV())
 
     # absorption with effective permittivity
-    assert abs(res1.TbV() - 227.73331276273777) < 1e-2
-    assert abs(res2.TbV() - 213.9133292330192) < 1e-2
+    assert abs(res1.TbV() - 227.61002775786866) < 1e-2
+    assert abs(res2.TbV() - 214.65840930416707) < 1e-2
 
 
 def test_simple_atmosphere(default_snowpack):
@@ -59,7 +59,7 @@ def test_simple_atmosphere(default_snowpack):
     snowpack = atmos + default_snowpack
 
     # create the EM Model - Equivalent DMRTML
-    iba = make_model("iba", "dort")
+    iba = make_model("iba", "dort", rtsolver_options=dict(rayleigh_jeans_approximation=True))
 
     res1 = iba.run(rads, default_snowpack)
     res2 = iba.run(rads, snowpack)
@@ -67,8 +67,8 @@ def test_simple_atmosphere(default_snowpack):
     print("TB 1: ", res1.TbV(), "TB2: ", res2.TbV())
 
     # absorption with effective permittivity
-    assert abs(res1.TbV() - 227.73331276273777) < 1e-2
-    assert abs(res2.TbV() - 224.16055686943304) < 1e-2
+    assert abs(res1.TbV() - 227.61002775786866) < 1e-2
+    assert abs(res2.TbV() - 224.90274319946758) < 1e-2
 
 
 def test_frequency_dependent_atmosphere():

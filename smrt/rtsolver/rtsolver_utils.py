@@ -295,7 +295,7 @@ def planck_function(frequency, temperature):
     temperature = np.asarray(temperature)
     high_temperature = temperature > 1e-10
 
-    b = np.divide((PLANCK_CONSTANT / BOLTZMANN_CONSTANT) * frequency, temperature, where=high_temperature)
+    b = np.divide((PLANCK_CONSTANT / BOLTZMANN_CONSTANT) * frequency, temperature, where=high_temperature, out=None)
 
     radiance = np.zeros_like(temperature, dtype=float)
     np.divide(
@@ -308,7 +308,7 @@ def inverse_planck_function(frequency, radiance):
     radiance = np.asarray(radiance)
     positive_radiance = radiance > 1e-40
 
-    x = np.divide((2.0 * PLANCK_CONSTANT / C_SPEED**2) * frequency**3, radiance, where=positive_radiance)
+    x = np.divide((2.0 * PLANCK_CONSTANT / C_SPEED**2) * frequency**3, radiance, where=positive_radiance, out=None)
 
     temperature = np.zeros_like(radiance, dtype=float)
     np.divide(
