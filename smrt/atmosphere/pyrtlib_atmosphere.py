@@ -73,10 +73,10 @@ import numpy as np
 from pyrtlib.absorption_model import AbsModel
 from pyrtlib.tb_spectrum import TbCloudRTE
 
-from ..core.atmosphere import AtmosphereBase, AtmosphereResult
+from smrt.core.atmosphere import AtmosphereBase, make_nonscattering_atmosphere_results
 
 # local import
-from ..core.globalconstants import GHz
+from smrt.core.globalconstants import GHz
 
 default_absorption_model = "R20"
 
@@ -90,7 +90,7 @@ class PyRTlibAtmosphereBase(AtmosphereBase):
     def available_absorption_models(cls):
         return AbsModel.implemented_models()
 
-    def run(self, frequency, costheta, npol):
+    def run(self, frequency, costheta, npol, rayleigh_jeans_approximation=False):
         # scalar_frequency = np.isscalar(frequency)
 
         upwelling = []
@@ -147,11 +147,13 @@ class PyRTlibAtmosphereBase(AtmosphereBase):
         else:
             coords["frequency"] = frequency
 
-        return AtmosphereResult(
+        return make_nonscattering_atmosphere_results(
+            frequency=frequency,
             tb_down=np.stack([downwelling] * npol),
             tb_up=np.stack([upwelling] * npol),
             transmittance=np.stack([trans] * npol),
             coords=coords,
+            rayleigh_jeans_approximation=rayleigh_jeans_approximation,
         )
 
 

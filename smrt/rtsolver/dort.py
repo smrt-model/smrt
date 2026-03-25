@@ -245,7 +245,12 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
         # prepare the atmosphere
 
         self.atmosphere_result = (
-            self.atmosphere.run(self.sensor.frequency, self.streams.outmu, npol)
+            self.atmosphere.run(
+                self.sensor.frequency,
+                self.streams.outmu,
+                npol,
+                rayleigh_jeans_approximation=self.rayleigh_jeans_approximation,
+            )
             if self.atmosphere is not None
             else None
         )
@@ -335,10 +340,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
 
         if self.sensor.mode == "P":
             if self.atmosphere_result is not None:
-                intensity_up = (
-                    self.planck_function(self.atmosphere_result.tb_up)
-                    + self.atmosphere_result.transmittance * intensity_up
-                )
+                intensity_up = self.atmosphere_result.intensity_up + self.atmosphere_result.transmittance * intensity_up
             intensity_up = self.inverse_planck_function(intensity_up)  # convert back to brightness temperature
             outmu = self.streams.outmu
         elif self.sensor.mode == "A":
@@ -391,7 +393,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             if self.atmosphere_result is not None:
                 # incident radiation is a function of frequency and incidence angle
                 # assume azimuthally symmetric
-                intensity_0 = self.planck_function(self.atmosphere_result.tb_down)
+                intensity_0 = self.atmosphere_result.intensity_down
                 assert intensity_0.shape == (npol, self.streams.n_air)
                 # convert pola, theta to (theta, pola) and add batch dimension
                 intensity_0 = np.swapaxes(intensity_0, 0, 1).flatten()[:, np.newaxis]

@@ -1,11 +1,14 @@
 import os
 from collections.abc import Sequence
+from functools import lru_cache
 from typing import Type, Union
 
 import numpy as np
 import pandas as pd
+from scipy.special import roots_legendre
 
 from smrt.core.error import SMRTError
+from smrt.core.globalconstants import BOLTZMANN_CONSTANT, C_SPEED, PLANCK_CONSTANT
 from smrt.core.optional_numba import numba
 
 
@@ -587,6 +590,35 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
     return ft_even_p  # order is pola_s, pola_i, m, mu_s, mu_i
 
 
+def planck_function(frequency, temperature):
+    temperature = np.asarray(temperature)
+    high_temperature = temperature > 1e-10
+
+    b = np.divide((PLANCK_CONSTANT / BOLTZMANN_CONSTANT) * frequency, temperature, where=high_temperature, out=None)
+
+    radiance = np.zeros_like(temperature, dtype=float)
+    np.divide(
+        (2.0 * PLANCK_CONSTANT / C_SPEED**2) * frequency**3,
+        np.exp(b) - 1.0,
+        out=radiance,
+        where=high_temperature,
+    )
+    return radiance
+
+
+def inverse_planck_function(frequency, radiance):
+    radiance = np.asarray(radiance)
+    positive_radiance = radiance > 1e-40
+
+    x = np.divide((2.0 * PLANCK_CONSTANT / C_SPEED**2) * frequency**3, radiance, where=positive_radiance, out=None)
+
+    temperature = np.zeros_like(radiance, dtype=float)
+    np.divide(
+        (PLANCK_CONSTANT / BOLTZMANN_CONSTANT) * frequency, np.log(1 + x), out=temperature, where=positive_radiance
+    )
+    return temperature
+
+
 def vectorize_angles(mu_s, mu_i, dphi, compute_cross_product=True, compute_sin=True):
     """
     Return angular cosines and sinus with proper dimensions, ready for vectorized calculations.
@@ -637,18 +669,21 @@ def set_max_numerical_threads(nthreads):
     os.environ["NUMEXPR_NUM_THREADS"] = nthreads
 
 
-def cached_roots_legendre(n):
+@lru_cache(maxsize=32)
+def cached_roots_legendre(n, a=-1, b=1):
     """
-    Cache roots_legendre results to speed up calls of the fixed_quad
-    function.
+    Cache roots_legendre results
+
+    Args:
+        n: number of points
+        a: lower bound
+        b: upper bound
     """
-    if n in cached_roots_legendre.cache:
-        return cached_roots_legendre.cache[n]
 
-    from scipy.special import roots_legendre
+    x, w = roots_legendre(n)
 
-    cached_roots_legendre.cache[n] = roots_legendre(n)
-    return cached_roots_legendre.cache[n]
-
-
-cached_roots_legendre.cache = dict()
+    if a != -1 or b != 1:
+        delta = (b - a) / 2.0
+        x = delta * (x + 1) + a
+        w *= delta
+    return x, w

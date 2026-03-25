@@ -44,7 +44,7 @@ import numpy as np
 from smrt.core.error import SMRTError
 
 # local import
-from ..core.atmosphere import AtmosphereBase, AtmosphereResult
+from ..core.atmosphere import AtmosphereBase, make_nonscattering_atmosphere_results
 
 
 class SimpleAtmosphere(AtmosphereBase):
@@ -65,7 +65,7 @@ class SimpleAtmosphere(AtmosphereBase):
         self.tb_up = _sort_variable(tb_up, i, "tb_up", len(self.theta))
         self.transmittance = _sort_variable(transmittance, i, "transmittance", len(self.theta))
 
-    def run(self, frequency, costheta, npol):
+    def run(self, frequency, costheta, npol, rayleigh_jeans_approximation=False):
         def interpolate(x):
             if isinstance(x, dict):
                 if frequency not in x.keys():
@@ -75,7 +75,8 @@ class SimpleAtmosphere(AtmosphereBase):
             x = np.interp(costheta, self.costheta, x)
             return np.stack([x] * npol)
 
-        return AtmosphereResult(
+        return make_nonscattering_atmosphere_results(
+            frequency=frequency,
             tb_down=interpolate(self.tb_down),
             tb_up=interpolate(self.tb_up),
             transmittance=interpolate(self.transmittance),
@@ -83,6 +84,7 @@ class SimpleAtmosphere(AtmosphereBase):
                 "polarization": ["V", "H", "U"][:npol],
                 "mu": costheta,
             },
+            rayleigh_jeans_approximation=rayleigh_jeans_approximation,
         )
 
 

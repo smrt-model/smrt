@@ -220,6 +220,10 @@ def substrate_from_interface(interface_cls):
         auto_add(ft_even_diffuse_reflection_matrix, "ft_even_diffuse_reflection_matrix")
         auto_add(diffuse_reflection_matrix, "diffuse_reflection_matrix")
 
+        # does not work due to metaclass conflicts
+        # parents = [o in cls.mro() for o in interface_cls.mro() if o not in [interface_cls, object, Interface]]
+        # newcls = type(cls.__name__, tuple(parents) + (SubstrateBase,), attributes)
+
         newcls = type(cls.__name__, (SubstrateBase,), attributes)
         newcls.__doc__ = cls.__doc__
         return newcls

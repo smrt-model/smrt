@@ -187,7 +187,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
 
         # prepare the atmosphere
         self.atmosphere_result = (
-            self.atmosphere.run(self.sensor.frequency, self.streams.outmu, npol)
+            self.atmosphere.run(self.sensor.frequency, self.streams.outmu, npol, self.rayleigh_jeans_approximation)
             if self.atmosphere is not None
             else None
         )
@@ -364,10 +364,8 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
 
         if self.sensor.mode == "P":
             if self.atmosphere_result is not None:
-                intensity_up = (
-                    self.planck_function(self.atmosphere_result.tb_up)
-                    + self.atmosphere_result.transmittance * intensity_up
-                )
+                intensity_up = self.atmosphere_result.intensity_up + self.atmosphere_result.transmittance * intensity_up
+
             total_intensity_up = np.sum(intensity_up, axis=-1)
             total_intensity_up = self.inverse_planck_function(total_intensity_up)
             intensity_up = self.inverse_planck_function(intensity_up)

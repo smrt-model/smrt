@@ -20,13 +20,12 @@ Examples::
 """
 
 # Stdlib import
-from warnings import warn
-
 # other import
 import numpy as np
 
 # local import
-from ..core.atmosphere import AtmosphereBase, AtmosphereResult
+from smrt.core.atmosphere import AtmosphereBase, make_nonscattering_atmosphere_results
+from smrt.core.error import smrt_warn
 
 #
 # For the developers:
@@ -45,7 +44,7 @@ def make_atmosphere(tb_down=0, tb_up=0, transmittance=1):
         tb_up:  (Default value = 0)
         transmittance:  (Default value = 1)
     """
-    warn(
+    smrt_warn(
         """This function 'make_atmosphere' is going to be depreciated. Use smrt.inputs.make_medium.make_atmosphere or the
 short cut smrt.make_atmosphere instead.""",
         DeprecationWarning,
@@ -61,13 +60,14 @@ class SimpleIsotropicAtmosphere(AtmosphereBase):
         self.constant_tbup = tb_up
         self.constant_trans = transmittance
 
-    def run(self, frequency, costheta, npol):
+    def run(self, frequency, costheta, npol, rayleigh_jeans_approximation=False):
         def create_array(x):
             if isinstance(x, dict):
                 x = x[frequency]
             return np.full((npol, len(costheta)), x)
 
-        return AtmosphereResult(
+        return make_nonscattering_atmosphere_results(
+            frequency=frequency,
             tb_down=create_array(self.constant_tbdown),
             tb_up=create_array(self.constant_tbup),
             transmittance=create_array(self.constant_trans),
@@ -75,4 +75,5 @@ class SimpleIsotropicAtmosphere(AtmosphereBase):
                 "polarization": ["V", "H", "U"][:npol],
                 "mu": costheta,
             },
+            rayleigh_jeans_approximation=rayleigh_jeans_approximation,
         )

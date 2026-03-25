@@ -27,14 +27,37 @@ def default_snowpack():
     return snowpack
 
 
-def test_simple_isotropic_atmosphere(default_snowpack):
+@pytest.fixture()
+def atmosphere1():
+    return SimpleIsotropicAtmosphere(tb_down=20.0, tb_up=6.0, transmittance=0.90)
+
+
+@pytest.fixture()
+def atmosphere2():
+    return SimpleIsotropicAtmosphere(tb_down=10.0, tb_up=4.0, transmittance=0.80)
+
+
+@pytest.fixture()
+def atmosphere3():
+    return SimpleIsotropicAtmosphere(tb_down=5.0, tb_up=2.0, transmittance=0.70)
+
+
+def test_tb_access(atmosphere1):
+    res = atmosphere1.run(frequency=10e9, costheta=np.array([1.0]), npol=1, rayleigh_jeans_approximation=True)
+
+    np.testing.assert_equal(res.tb_down, res.intensity_down)
+    np.testing.assert_equal(res.tb_up, res.intensity_up)
+
+
+@pytest.mark.parametrize("rayleigh_jeans_approximation", [False, True])
+def test_simple_isotropic_atmosphere(default_snowpack, rayleigh_jeans_approximation):
     atmos = SimpleIsotropicAtmosphere(tb_down=30.0, tb_up=6.0, transmittance=0.90)
 
     snowpack = atmos + default_snowpack
 
     # create the EM Model - Equivalent DMRTML
     rads = sensor_list.amsre("36V")
-    m = make_model("iba", "dort")
+    m = make_model("iba", "dort", rtsolver_options=dict(rayleigh_jeans_approximation=rayleigh_jeans_approximation))
 
     res1 = m.run(rads, default_snowpack)
     res2 = m.run(rads, snowpack)
@@ -42,11 +65,15 @@ def test_simple_isotropic_atmosphere(default_snowpack):
     print("TB 1: ", res1.TbV(), "TB2: ", res2.TbV())
 
     # absorption with effective permittivity
-    assert abs(res1.TbV() - 227.73331276273777) < 1e-2
-    assert abs(res2.TbV() - 213.9133292330192) < 1e-2
+    if rayleigh_jeans_approximation:
+        np.testing.assert_allclose(res1.TbV(), 227.61002775786866, atol=1e-2)
+        np.testing.assert_allclose(res2.TbV(), 214.65840930416707, atol=1e-2)
+    else:
+        np.testing.assert_allclose(res1.TbV(), 227.73331276273777, atol=1e-2)
+        np.testing.assert_allclose(res2.TbV(), 214.7585010400213, atol=1e-2)
 
 
-def test_simple_atmosphere(default_snowpack):
+def test_simple_atmosphere_rayleigh_jeans(default_snowpack):
     rads = sensor_list.amsre("36V")
 
     atmos = SimpleAtmosphere(
@@ -62,13 +89,16 @@ def test_simple_atmosphere(default_snowpack):
     iba = make_model("iba", "dort")
 
     res1 = iba.run(rads, default_snowpack)
-    res2 = iba.run(rads, snowpack)
+    res2 = iba.run(
+        rads,
+        snowpack,
+    )
 
     print("TB 1: ", res1.TbV(), "TB2: ", res2.TbV())
 
     # absorption with effective permittivity
-    assert abs(res1.TbV() - 227.73331276273777) < 1e-2
-    assert abs(res2.TbV() - 224.16055686943304) < 1e-2
+    np.testing.assert_allclose(res1.TbV(), 227.73331276273777, atol=1e-2)
+    np.testing.assert_allclose(res2.TbV(), 224.99367249667932, atol=1e-2)
 
 
 def test_frequency_dependent_atmosphere():
@@ -79,9 +109,11 @@ def test_frequency_dependent_atmosphere():
         transmittance={10e9: 1, 21e9: 0.95},
     )
 
-    assert np.all(atmos.run(frequency=10e9, costheta=mu, npol=2).tb_up == 5)
-    assert np.all(atmos.run(frequency=21e9, costheta=mu, npol=2).tb_down == 23)
-    assert np.all(atmos.run(frequency=21e9, costheta=mu, npol=2).transmittance == 0.95)
+    kwargs = dict(costheta=mu, npol=2, rayleigh_jeans_approximation=True)
+
+    np.testing.assert_equal(atmos.run(frequency=10e9, **kwargs).tb_up, 5)
+    np.testing.assert_equal(atmos.run(frequency=21e9, **kwargs).tb_down, 23)
+    np.testing.assert_equal(atmos.run(frequency=21e9, **kwargs).transmittance, 0.95)
 
 
 def test_dict_param_atmosphere():
@@ -90,40 +122,34 @@ def test_dict_param_atmosphere():
     mu = np.cos(np.arange(0, 90))
     atmos = SimpleIsotropicAtmosphere(tb_down={10e9: 15, 21e9: 23})
 
-    assert np.all(atmos.run(frequency=21e9, costheta=mu, npol=2).tb_down == 23)
-    assert np.all(atmos.run(frequency=10e9, costheta=mu, npol=2).tb_down == 15)
-    assert np.all(atmos.run(frequency=21e9, costheta=mu, npol=2).tb_up == 0)
-    assert np.all(atmos.run(frequency=10e9, costheta=mu, npol=2).tb_up == 0)
-    assert np.all(atmos.run(frequency=21e9, costheta=mu, npol=2).transmittance == 1)
-    assert np.all(atmos.run(frequency=10e9, costheta=mu, npol=2).transmittance == 1)
+    kwargs = dict(costheta=mu, npol=2, rayleigh_jeans_approximation=True)
+    np.testing.assert_equal(atmos.run(frequency=21e9, **kwargs).tb_down, 23)
+    np.testing.assert_equal(atmos.run(frequency=10e9, **kwargs).tb_down, 15)
+    np.testing.assert_equal(atmos.run(frequency=21e9, **kwargs).tb_up, 0)
+    np.testing.assert_equal(atmos.run(frequency=10e9, **kwargs).tb_up, 0)
+    np.testing.assert_equal(atmos.run(frequency=21e9, **kwargs).transmittance, 1)
+    np.testing.assert_equal(atmos.run(frequency=10e9, **kwargs).transmittance, 1)
 
 
-def test_adding_atmospheres():
-    atmos1 = SimpleIsotropicAtmosphere(tb_down=20.0, tb_up=6.0, transmittance=0.90)
-    atmos2 = SimpleIsotropicAtmosphere(tb_down=10.0, tb_up=4.0, transmittance=0.80)
-
-    stacked_atmos = atmos1 + atmos2
+def test_adding_atmospheres(atmosphere1, atmosphere2):
+    stacked_atmos = atmosphere1 + atmosphere2
 
     assert isinstance(stacked_atmos, AtmosphereStack)
 
-    res = stacked_atmos.run(frequency=10e9, costheta=np.array([1.0]), npol=1)
+    res = stacked_atmos.run(frequency=10e9, costheta=np.array([1.0]), npol=1, rayleigh_jeans_approximation=True)
 
-    assert abs(res.tb_down - (20.0 * 0.80 + 10.0)) < 1e-6
-    assert abs(res.tb_up - (6.0 + 0.90 * 4.0)) < 1e-6
-    assert abs(res.transmittance - (0.90 * 0.80)) < 1e-6
+    np.testing.assert_allclose(res.intensity_down, (20.0 * 0.80 + 10.0), atol=1e-6)
+    np.testing.assert_allclose(res.intensity_up, (6.0 + 0.90 * 4.0), atol=1e-6)
+    np.testing.assert_allclose(res.transmittance, (0.90 * 0.80), atol=1e-6)
 
 
-def test_inplace_adding_atmospheres():
-    atmos1 = SimpleIsotropicAtmosphere(tb_down=20.0, tb_up=6.0, transmittance=0.90)
-    atmos2 = SimpleIsotropicAtmosphere(tb_down=10.0, tb_up=4.0, transmittance=0.80)
-    atmos3 = SimpleIsotropicAtmosphere(tb_down=5.0, tb_up=2.0, transmittance=0.70)
+def test_inplace_adding_atmospheres(atmosphere1, atmosphere2, atmosphere3):
+    stacked_atmos = atmosphere1 + atmosphere2
 
-    stacked_atmos = atmos1 + atmos2
+    stacked_atmos += atmosphere3
 
-    stacked_atmos += atmos3
+    res = stacked_atmos.run(frequency=10e9, costheta=np.array([1.0]), npol=1, rayleigh_jeans_approximation=True)
 
-    res = stacked_atmos.run(frequency=10e9, costheta=np.array([1.0]), npol=1)
-
-    assert abs(res.tb_down - ((20.0 * 0.80 + 10.0) * 0.70 + 5.0)) < 1e-6
-    assert abs(res.tb_up - (6.0 + 0.90 * 4.0 + 0.80 * 0.90 * 2.0)) < 1e-6
-    assert abs(res.transmittance - (0.90 * 0.80 * 0.70)) < 1e-6
+    np.testing.assert_allclose(res.intensity_down, ((20.0 * 0.80 + 10.0) * 0.70 + 5.0), atol=1e-6)
+    np.testing.assert_allclose(res.intensity_up, (6.0 + 0.90 * 4.0 + 0.80 * 0.90 * 2.0), atol=1e-6)
+    np.testing.assert_allclose(res.transmittance, (0.90 * 0.80 * 0.70), atol=1e-6)
