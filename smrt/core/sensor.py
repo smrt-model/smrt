@@ -307,7 +307,7 @@ class Sensor(SensorBase):
                 raise SMRTError("Zenith angle theta_inc has duplicated values which is invalid.")
 
             self.theta_inc = np.radians(self.theta_inc_deg)
-            self.mu_s = np.cos(self.theta_inc)
+            self.mu_i = np.cos(self.theta_inc)
 
     @property
     def wavenumber(self):
