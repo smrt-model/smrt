@@ -30,7 +30,7 @@ commit_msg=$(cat "$commit_msg_file")
 
 # Define a regex pattern to check for imperative mood
 # This pattern checks if the message starts with a verb in imperative form
-pattern="^(add|fix|update|remove|refactor|improve|change|create|delete|document|optimize|revert|bump|clean|upgrade|downgrade|move|rename|replace|secure|simplify|test|upgrade|use|verify)[ :]"
+pattern="^(add|fix|update|remove|refactor|improve|change|create|delete|document|optimize|revert|bump|clean|upgrade|downgrade|move|rename|replace|secure|simplify|test|upgrade|use|verify|apply)[ :]"
 
 # Check if the commit message matches the pattern
 if ! echo "$commit_msg" | grep -iqE "$pattern"; then
