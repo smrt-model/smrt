@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Compute scattering from Improved Born Approximation theory as described in Mätzler 1998 and Mätzler and Wiesman 1999,
+"""Compute scattering from Improved Born Approximation theory as described in Mätzler 1998 and Mätzler and Wiesman 1999,
 except the absorption coefficient which is computed with Polden von Staten formulation instead of the Eq 24 in Mätzler
 1998. See iba_original.py for a fully conforming IBA version. This model allows for different microstructural models
 provided that the Fourier transform of the correlation function may be performed. All properties relate to a single
@@ -42,19 +41,17 @@ from .common import (
 
 
 def derived_IBA(effective_permittivity_model=polder_van_santen):
-    """return a new IBA model with variant from the default IBA.
+    """Return a new IBA model with variant from the default IBA.
 
     :param effective_permittivity_model: permittivity mixing formula.
 
     :returns: a new class inheriting from IBA but with patched methods
     """
-
     return derived_EMModel(IBA, effective_permittivity_model)
 
 
 class IBA(AdjustableEffectivePermittivityMixin, IsotropicScatteringMixin, GenericFTPhaseMixin):
-    """
-    Improved Born Approximation electromagnetic model class.
+    """Improved Born Approximation electromagnetic model class.
 
     As with all electromagnetic modules, this class is used to create an electromagnetic
     object that holds information about the effective permittivity, extinction coefficient and
@@ -155,7 +152,6 @@ become a default in the future.""")
         Uses layer effective permittivity.
 
         """
-
         apparent_permittivity = self._effective_permittivity * (1 - self.depol_xyz) + self.e0 * self.depol_xyz
         y2 = (1.0 / 3.0) * np.sum(
             np.absolute(apparent_permittivity / (apparent_permittivity + (self.eps - self.e0) * self.depol_xyz)) ** 2.0
@@ -174,7 +170,6 @@ become a default in the future.""")
         Returns:
             float: Scattering coefficient.
         """
-
         k = 6  # number of samples. This should be adaptative depending on the size/wavelength
         mu = np.linspace(1, -1, 2**k + 1)
         y = self.ks_integrand(mu)
@@ -201,7 +196,6 @@ become a default in the future.""")
         The integration is performed outside this method.
 
         """
-
         # Set up scattering geometry for 1-2 frame
         # Choose incident zenith angle to be 0 so scattering angle = scattering zenith angle (use mhu)
         # phi in the 1-2 frame for calculation of p11 is pi
@@ -257,7 +251,6 @@ become a default in the future.""")
         Note:
             This may not be suitable for high density material.
         """
-
         # after several go and back, the situation is now clear:
         # MEMLS uses the formulation in IBA98 paper. In SMRT this formulation is available in iba_original.py
         # here we use Polden von Staten which is known to be better and accommodate the full range of density/frac_volume

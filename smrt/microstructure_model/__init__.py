@@ -1,5 +1,4 @@
-"""
-Provides several microstructure models.
+"""Provides several microstructure models.
 
 Because these representations are different, the parameters to describe actual snow micro-structure depend on the model. For instance, the Sticky Hard Spheres medium is implemented
 in smrt.microstructure_model.sticky_hard_spheres and its parameters are: the `radius` (required) and

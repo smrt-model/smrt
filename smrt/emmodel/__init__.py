@@ -1,5 +1,4 @@
-"""
-This package contains the different electromagnetic (EM) models that compute the scattering and absorption coefficients
+"""This package contains the different electromagnetic (EM) models that compute the scattering and absorption coefficients
 and the phase function in a given layer. The computation of the inter-layer propagation is done by the
 `smrt.rtsolver` package.
 

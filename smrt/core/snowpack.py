@@ -1,6 +1,4 @@
-"""
-
-This module defines the Snowpack class. A :py:class:`Snowpack` instance contains the description of the snowpack,
+"""This module defines the Snowpack class. A :py:class:`Snowpack` instance contains the description of the snowpack,
 including a list of layers and interfaces between the layers, and the substrate (soil, ice, ...).
 
 To create a snowpack, it is recommended to use the :py:func:`~smrt.inputs.make_medium.make_snowpack` function which
@@ -34,9 +32,7 @@ from .layer import Layer
 
 
 class Snowpack(object):
-    """
-    Hold the description of the snowpack, including the layers, interfaces, and the substrate.
-    """
+    """Hold the description of the snowpack, including the layers, interfaces, and the substrate."""
 
     def __init__(self, layers=None, interfaces=None, substrate=None, atmosphere=None, terrain_info=None):
         super().__init__()
@@ -51,9 +47,7 @@ class Snowpack(object):
 
     @property
     def nlayer(self):
-        """
-        Return the number of layers.
-        """
+        """Return the number of layers."""
         return len(self.layers)
 
     @property
@@ -62,16 +56,12 @@ class Snowpack(object):
 
     @property
     def layer_thicknesses(self):
-        """
-        Return the thickness of each layer.
-        """
+        """Return the thickness of each layer."""
         return [lay.thickness for lay in self.layers]  # TODO Ghi: caching
 
     @property
     def layer_depths(self):
-        """
-        Return the depth of the bottom of each layer.
-        """
+        """Return the depth of the bottom of each layer."""
         warnings.warn(
             "layer_depths is ambiguous, use bottom_layer_depths, top_layer_depths or mid_layer_depths instead."
             "This function will be removed in a next version",
@@ -81,38 +71,28 @@ class Snowpack(object):
 
     @property
     def bottom_layer_depths(self):
-        """
-        Return the depth of the bottom of each layer.
-        """
+        """Return the depth of the bottom of each layer."""
         return np.cumsum(self.profile("thickness"))  # TODO Ghi: caching
 
     @property
     def top_layer_depths(self):
-        """
-        Return the depth of the bottom of each layer.
-        """
+        """Return the depth of the bottom of each layer."""
         return self.z[:-1]
 
     @property
     def mid_layer_depths(self):
-        """
-        Return the depth of the bottom of each layer.
-        """
+        """Return the depth of the bottom of each layer."""
         ld = self.z
         return (ld[1:] + ld[:-1]) / 2
 
     @property
     def z(self):
-        """
-        Return the depth of each interface, that is, 0 and the depths of the bottom of each layer.
-        """
+        """Return the depth of each interface, that is, 0 and the depths of the bottom of each layer."""
         return np.insert(self.bottom_layer_depths, 0, 0)
 
     @property
     def layer_densities(self):
-        """
-        Return the density of each layer.
-        """
+        """Return the density of each layer."""
         warnings.warn(
             "layer_densities is ambiguous, use the profile('density') instead. This function will be removed in a next version",
             DeprecationWarning,
@@ -120,8 +100,7 @@ class Snowpack(object):
         return [lay.density for lay in self.layers]  # TODO Ghi: caching
 
     def profile(self, property_name: str, where: str = "all", raise_attributeerror: bool = False) -> np.ndarray:
-        """
-        Return the vertical profile of property_name. The property is searched either in the layer, microstructure or interface.
+        """Return the vertical profile of property_name. The property is searched either in the layer, microstructure or interface.
 
         Args:
             property_name: Name of the property.
@@ -163,8 +142,7 @@ class Snowpack(object):
         return np.array(prof)
 
     def append(self, layer, interface=None):
-        """
-        Append a new layer at the bottom of the stack of layers.
+        """Append a new layer at the bottom of the stack of layers.
 
         The interface is that at the top of the appended layer.
 
@@ -173,7 +151,6 @@ class Snowpack(object):
             interface: type of interface. By default, flat surface (Flat) is considered meaning the coefficients are calculated with Fresnel coefficient
                 and using the effective permittivity of the surrounding layers.
         """
-
         if not isinstance(layer, Layer):
             raise Warning(
                 "the layer to append in the snowpack is not an instance of the class Layer. This may be a mistake in your code."
@@ -188,13 +165,11 @@ class Snowpack(object):
         self.interfaces.append(interface)
 
     def delete(self, ilayer):
-        """
-        Delete a layer and the upper interface.
+        """Delete a layer and the upper interface.
 
         Args:
             ilayer (int): Index of the layer.
         """
-
         warnings.warn(
             "The delete method will be depreciated in the future. Use the delete_layer method instead which is exactly equivalent.",
             DeprecationWarning,
@@ -202,8 +177,7 @@ class Snowpack(object):
         return self.delete_layer(ilayer)
 
     def delete_layer(self, ilayer):
-        """
-        Delete a layer and the upper interface.
+        """Delete a layer and the upper interface.
 
         Args:
             ilayer (int): Index of the layer.
@@ -212,8 +186,7 @@ class Snowpack(object):
         self.interfaces.pop(ilayer)
 
     def delete_bottom(self, ilayer):
-        """
-        Delete the bottom of the snowpack from layer n. Deletes also the substrate.
+        """Delete the bottom of the snowpack from layer n. Deletes also the substrate.
 
         Args:
             ilayer (int): Index of the first layer to delete.
@@ -224,8 +197,7 @@ class Snowpack(object):
         self.substrate = None
 
     def shallow_copy(self, cut_bottom=None):
-        """
-        Make a shallow copy of a snowpack by copying the list of layers and interfaces but not the layers and interfaces
+        """Make a shallow copy of a snowpack by copying the list of layers and interfaces but not the layers and interfaces
         themselves which are still shared with the original snowpack.
 
         This method allows the advanced user to create a new snowpack and remove, append or replace some layers or
@@ -243,7 +215,6 @@ class Snowpack(object):
         Returns:
             Snowpack: The shallow copy of the snowpack.
         """
-
         new_sp = copy.copy(self)
 
         if (cut_bottom is None) or (cut_bottom >= self.nlayer):
@@ -263,8 +234,7 @@ class Snowpack(object):
         return self.shallow_copy(cut_bottom=cut_bottom)
 
     def deepcopy(self):
-        """
-        Make a deep copy of a snowpack.
+        """Make a deep copy of a snowpack.
 
         Returns:
             Snowpack: The deep copy of the snowpack.
@@ -276,8 +246,7 @@ class Snowpack(object):
         return copy.deepcopy(self)
 
     def deep_copy(self):
-        """
-        Make a deep copy of a snowpack.
+        """Make a deep copy of a snowpack.
 
         Returns:
             Snowpack: The deep copy of the snowpack.
@@ -324,8 +293,7 @@ class Snowpack(object):
             self.layers[i].number = i
 
     def __add__(self, other):
-        """
-        Return a new snowpack made of the first snowpack (or layer) stacked on top of the second snowpack (or layer or
+        """Return a new snowpack made of the first snowpack (or layer) stacked on top of the second snowpack (or layer or
         substrate).
 
         .. note:: if a layer is added on top (at bottom), the top (bottom) interface is duplicated.
@@ -373,8 +341,7 @@ class Snowpack(object):
             return other.__add__(self)
 
     def __iadd__(self, other):  # just for optimization
-        """
-        Add inplace the other object to snowpack.
+        """Add inplace the other object to snowpack.
 
         See :func:`~snowpack.Snowpack.__add__` description.
         """
@@ -404,7 +371,6 @@ class Snowpack(object):
         Returns:
             _type_: A pandas DataFrame representing the snowpack.
         """
-
         columns = [
             "thickness",
             "microstructure_model",
@@ -462,16 +428,12 @@ class Snowpack(object):
         return df.dropna(axis=1, how="all")
 
     def __repr__(self):
-        """
-        Return a string representation of the Snowpack object.
-        """
+        """Return a string representation of the Snowpack object."""
         return "Snowpack: " + repr(self.to_dataframe())
 
     def _repr_html_(self):
-        """
-        Return html to display a snowpack in a pretty format.
+        """Return html to display a snowpack in a pretty format.
 
         Used by IPython notebook to display the snowpack.
         """
-
         return "Snowpack: " + self.to_dataframe().to_html(notebook=True, na_rep="--", justify="start")

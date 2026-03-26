@@ -1,6 +1,5 @@
 # coding: utf-8
-"""
-Implements a one-layer atmosphere with prescribed frequency-dependent emission (up and down) and transmittance.
+"""Implements a one-layer atmosphere with prescribed frequency-dependent emission (up and down) and transmittance.
 
 TB and transmissivity are given as array of incidence and optionally as frequency-dependent dictionary.
 

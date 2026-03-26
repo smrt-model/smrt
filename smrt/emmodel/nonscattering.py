@@ -38,8 +38,7 @@ class NonScattering(IsotropicScatteringMixin):
         pass
 
     def ft_even_phase(self, mu_s, mu_i, m_max, npol=None):
-        """
-        Non-scattering phase matrix.
+        """Non-scattering phase matrix.
 
         Args:
             mu_s:
@@ -56,8 +55,7 @@ class NonScattering(IsotropicScatteringMixin):
         return smrt_matrix.zeros((npol, npol, m_max + 1, len_atleast_1d(mu_s), len_atleast_1d(mu_i)))
 
     def phase(self, mu_s, mu_i, dphi, npol=2):
-        """
-        Non-scattering phase matrix.
+        """Non-scattering phase matrix.
 
         Args:
             mu_s:
@@ -68,7 +66,6 @@ class NonScattering(IsotropicScatteringMixin):
         Returns:
             null phase matrix
         """
-
         return smrt_matrix.zeros(
             (
                 npol,

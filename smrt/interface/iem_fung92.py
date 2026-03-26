@@ -1,5 +1,4 @@
-"""
-Provide the interface boundary condition under IEM formulation provided by Fung et al. 1992.
+"""Provide the interface boundary condition under IEM formulation provided by Fung et al. 1992.
 
 Notes:
     It only computes the backscatter diffuse reflection as described in Fung et al. 1992, the specular reflection
@@ -48,8 +47,7 @@ class IEM_Fung92(
     KirchoffApproximationCoherentInterfaceMixin,
     Interface,
 ):
-    """
-    Implement a moderate rough surface model with backscatter, specular reflection and transmission only.
+    """Implement a moderate rough surface model with backscatter, specular reflection and transmission only.
 
     It is not suitable for emissivity calculations. Use with care!
 
@@ -81,16 +79,12 @@ class IEM_Fung92(
             )
 
     def fresnel_coefficients(self, eps_1, eps_2, mu_i, ks, kl):
-        """
-        Calculate the fresnel coefficients at the angle mu_i whatever is ks and kl according to the original formulation of Fung 1992
-        """
-
+        """Calculate the fresnel coefficients at the angle mu_i whatever is ks and kl according to the original formulation of Fung 1992"""
         Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
         return Rv, Rh
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol, debug=False):
-        """
-        Compute the diffuse reflection coefficients.
+        """Compute the diffuse reflection coefficients.
 
         Coefficients are calculated for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the
         beam is transmitted.

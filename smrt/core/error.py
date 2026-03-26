@@ -1,31 +1,22 @@
-"""
-Definition of the Exception specific to SMRT.
-"""
+"""Definition of the Exception specific to SMRT."""
 
 import warnings
 
 
 class SMRTError(Exception):
-    """
-    Error raised by the model.
-    """
+    """Error raised by the model."""
 
     pass
 
 
 class SMRTWarning(Warning):
-    """
-    Warning raised by the model.
-    """
+    """Warning raised by the model."""
 
     pass
 
 
 def smrt_warn(message, **kwargs):
-    """
-    Issue a SMRT warning with a standard message about disabling warnings.
-    """
-
+    """Issue a SMRT warning with a standard message about disabling warnings."""
     disable_warning_message = """To disable all smrt warnings, use: import warnings;
 warnings.filterwarnings("ignore", smrt.error.SMRTWarning). See the warnings Python documentation for finer
 controls.

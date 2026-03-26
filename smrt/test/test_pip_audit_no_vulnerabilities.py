@@ -1,5 +1,4 @@
-"""
-Based on https://mkennedy.codes/posts/python-supply-chain-security-made-easy/
+"""Based on https://mkennedy.codes/posts/python-supply-chain-security-made-easy/
 
 Security audit tests using pip-audit to detect known vulnerabilities.
 This test runs pip-audit against the installed packages and fails if any
@@ -14,8 +13,7 @@ import pytest
 
 
 def test_pip_audit_no_vulnerabilities():
-    """
-    Run pip-audit to check for known security vulnerabilities.
+    """Run pip-audit to check for known security vulnerabilities.
     This test will fail if any vulnerabilities are detected in the installed packages.
     Note: CVE-2025-53000 (nbconvert Windows vulnerability) is ignored as it only affects
     Windows platforms and is a known acceptable risk for this project.
@@ -72,8 +70,7 @@ def test_pip_audit_no_vulnerabilities():
 
 
 def test_pip_audit_runs_successfully():
-    """
-    Verify that pip-audit can run successfully (even if vulnerabilities are found).
+    """Verify that pip-audit can run successfully (even if vulnerabilities are found).
     This is a smoke test to ensure pip-audit is properly installed and functional.
     """
     try:

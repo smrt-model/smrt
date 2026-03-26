@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements the independent sphere model of the microstructure.
+"""Implements the independent sphere model of the microstructure.
 
 Args:
     frac_volume (float): Fractional volume.
@@ -32,7 +31,7 @@ class IndependentSphere(Autocorrelation):
         return 4.0 / 3 * self.radius
 
     def basic_check(self):
-        """check consistency between the parameters"""
+        """Check consistency between the parameters"""
         pass
 
     def compute_ssa(self):
@@ -41,7 +40,7 @@ class IndependentSphere(Autocorrelation):
         return 3.0 / (DENSITY_OF_ICE * self.radius)
 
     def autocorrelation_function(self, r):
-        """compute the real space autocorrelation function for an independent sphere"""
+        """Compute the real space autocorrelation function for an independent sphere"""
         # spherical correlation function
         acf = np.empty_like(r)
 
@@ -58,7 +57,6 @@ class IndependentSphere(Autocorrelation):
         (float).
 
         """
-
         X = self.radius * np.asarray(k)
         volume_sphere = 4.0 / 3 * np.pi * self.radius**3
 

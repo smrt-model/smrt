@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Provide an iterative second-order radiative transfer solver based on Karam et al. 1995.
+"""Provide an iterative second-order radiative transfer solver based on Karam et al. 1995.
 
 This module implements a second-order iterative solution of the radiative transfer equation
 to calculate backscatter coefficients. The solver computes zeroth, first and second-order
@@ -85,8 +84,7 @@ from smrt.rtsolver.streams import compute_stream
 
 
 class IterativeSecondOrder(RTSolverBase):
-    """
-    Implement the iterative radiative transfer solver using second-order approximation.
+    """Implement the iterative radiative transfer solver using second-order approximation.
 
     This solver computes the zeroth first-order and second-order terms of the iterative solution
     for the radiative transfer equation. It provides efficient backscatter calculations
@@ -137,8 +135,7 @@ class IterativeSecondOrder(RTSolverBase):
         self.compute_scattering_interlayer = compute_scattering_interlayer
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
-        """
-        Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
+        """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
             snowpack: Snowpack object.

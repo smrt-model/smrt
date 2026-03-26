@@ -1,6 +1,4 @@
-"""
-Contain functions to compute various properties of brines.
-"""
+"""Contain functions to compute various properties of brines."""
 
 import warnings
 
@@ -13,8 +11,7 @@ from ..core.layer import layer_properties
 
 
 def brine_conductivity_stogryn85(temperature):
-    """
-    Compute ionic conductivity of dissolved salts, Stogryn and Desargant, 1985.
+    """Compute ionic conductivity of dissolved salts, Stogryn and Desargant, 1985.
 
     Args:
         temperature: thermometric temperature in K.
@@ -26,7 +23,6 @@ def brine_conductivity_stogryn85(temperature):
         Stogryn, A., & Desargant, G. (1985). The dielectric properties of brine in sea ice at microwave frequencies. IEEE
         Transactions on Antennas and Propagation, 33(5), 523–532. https://doi.org/10.1109/tap.1985.1143610
     """
-
     tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
     if tempC >= -22.9:
         sigma = -tempC * np.exp(0.5193 + 0.08755 * tempC)  # Eq 7
@@ -36,8 +32,7 @@ def brine_conductivity_stogryn85(temperature):
 
 
 def brine_relaxation_time_stogryn85(temperature):
-    """
-    Compute relaxation time of brine, Stogryn and Desargant, 1985.
+    """Compute relaxation time of brine, Stogryn and Desargant, 1985.
 
     Args:
         temperature: thermometric temperature in K.
@@ -49,7 +44,6 @@ def brine_relaxation_time_stogryn85(temperature):
         Stogryn, A., & Desargant, G. (1985). The dielectric properties of brine in sea ice at microwave frequencies. IEEE
         Transactions on Antennas and Propagation, 33(5), 523–532. https://doi.org/10.1109/tap.1985.1143610
     """
-
     tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
 
     # Eq. (12) in Stogryn and Desargant given in seconds)
@@ -58,8 +52,7 @@ def brine_relaxation_time_stogryn85(temperature):
 
 
 def brine_salinity(temperature):
-    """
-    Compute the salinity of brine (in ppt) for a given temperature.
+    """Compute the salinity of brine (in ppt) for a given temperature.
 
     Note:
         The origin of this code is unknown, to be investigate. It was attributed to (Cox and Weeks, 1975)
@@ -84,8 +77,7 @@ def brine_salinity(temperature):
 
 
 def brine_salinity_coxandweeks75(temperature):
-    """
-    Compute the salinity of brine (in ppt) for a given temperature (Cox and Weeks, 1975, equation 15).
+    """Compute the salinity of brine (in ppt) for a given temperature (Cox and Weeks, 1975, equation 15).
 
     Args:
         temperature: snow temperature in K.
@@ -106,8 +98,7 @@ def brine_salinity_coxandweeks75(temperature):
 
 
 def brine_salinity_assur60poe72(temperature):
-    """
-    Compute the salinity of brine (in psu) for a given temperature (Assur, 1960; Poe et al., 1972;
+    """Compute the salinity of brine (in psu) for a given temperature (Assur, 1960; Poe et al., 1972;
     as cited in Ulaby and Long (2014) (equation 4.46)).
 
     Validity range:
@@ -151,8 +142,7 @@ def brine_salinity_assur60poe72(temperature):
 
 @layer_properties("temperature")
 def static_brine_permittivity_stogryn85(temperature):
-    """
-    Compute static dielectric constant of brine, after Stogryn and Desargant, 1985.
+    """Compute static dielectric constant of brine, after Stogryn and Desargant, 1985.
 
     Args:
         temperature: thermometric temperature in K.
@@ -161,7 +151,6 @@ def static_brine_permittivity_stogryn85(temperature):
         Stogryn, A., & Desargant, G. (1985). The dielectric properties of brine in sea ice at microwave frequencies. IEEE
         Transactions on Antennas and Propagation, 33(5), 523–532. https://doi.org/10.1109/tap.1985.1143610
     """
-
     tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
     eps_static = (939.66 - 19.068 * tempC) / (10.737 - tempC)  # Static dielectric constant of saline water # Eq 10
     return eps_static
@@ -169,8 +158,7 @@ def static_brine_permittivity_stogryn85(temperature):
 
 @layer_properties("temperature")
 def permittivity_high_frequency_limit_stogryn85(temperature):
-    """
-    Compute permittivity, after Stogryn and Desargant, 1985.
+    """Compute permittivity, after Stogryn and Desargant, 1985.
 
     Args:
         temperature: ice or snow temperature in K.
@@ -179,15 +167,13 @@ def permittivity_high_frequency_limit_stogryn85(temperature):
         Stogryn, A., & Desargant, G. (1985). The dielectric properties of brine in sea ice at microwave frequencies. IEEE
         Transactions on Antennas and Propagation, 33(5), 523–532. https://doi.org/10.1109/tap.1985.1143610
     """
-
     tempC = temperature - FREEZING_POINT  # temperature in deg Celsius
     eps_inf = (82.79 + 8.19 * tempC**2) / (15.68 + tempC**2)  # Eq 11
     return eps_inf
 
 
 def water_freezing_temperature(salinity):
-    """
-    Calculate temperature at which saline water freezes.
+    """Calculate temperature at which saline water freezes.
 
     Note:
         Use polynomial fits of the Gibbs function given in TEOS-10: The international thermodynamic
@@ -200,7 +186,6 @@ def water_freezing_temperature(salinity):
     Args:
         salinity: salinity of ice in kg/kg (see PSU constant in smrt module)
     """
-
     # Coefficients for polynomial:
     c0 = 0.017947064327968736
     c1 = -6.076099099929818
@@ -243,8 +228,7 @@ def water_freezing_temperature(salinity):
 
 
 def brine_volume_cox83_lepparanta88(temperature, salinity, porosity=0, bulk_density=None):
-    """
-    Compute brine volume fraction using coefficients from Cox and Weeks (1983). If ice temperature is below -2 deg C,
+    """Compute brine volume fraction using coefficients from Cox and Weeks (1983). If ice temperature is below -2 deg C,
     coefficients determined by Lepparanta and Manninen (1988).
 
     Args:
@@ -260,7 +244,6 @@ def brine_volume_cox83_lepparanta88(temperature, salinity, porosity=0, bulk_dens
         Leppäranta, M., & Manninen, T. (1988). The brine and gas content of sea ice with attention
         to low salinities and high temperatures. Finnish Institute of Marine Research. http://hdl.handle.net/1834/23905
     """
-
     if temperature > water_freezing_temperature(salinity):
         return 1.0  # if temperature of ice is above freezing temperature, which
     # is determined by salinity of the ice, brine volume fraction is set to 1, meaning that the saline ice is liquid (= saline water)
@@ -348,8 +331,7 @@ def brine_volume(*args, **kwargs):
 
 
 def brine_volume_frankenstein67(temperature, salinity):
-    """
-    Compute brine volume fraction using the simpliest equation of Frankenstein and Garner (1967).
+    """Compute brine volume fraction using the simpliest equation of Frankenstein and Garner (1967).
 
     Args:
         temperature: ice temperature in K.
@@ -359,7 +341,6 @@ def brine_volume_frankenstein67(temperature, salinity):
         Frankenstein G, and Garner R. Equations for Determining the Brine Volume of Sea Ice from −0.5° to −22.9°C.
         Journal of Glaciology.1967;6(48):943-944. https://doi.org:/10.3189/S0022143000020244
     """
-
     S_ice = salinity  # convert from kg/kg to PSU
 
     Vb = S_ice * (-49.185 / (temperature - FREEZING_POINT) + 0.532)  # Eq 5
@@ -368,8 +349,7 @@ def brine_volume_frankenstein67(temperature, salinity):
 
 
 def brine_volume_function_stogryn_1987(temperature, salinity):
-    """
-    Compute brine volume fraction using coefficients from Stogryn (1987).
+    """Compute brine volume fraction using coefficients from Stogryn (1987).
 
     Args:
         temperature: ice temperature in K.
@@ -394,7 +374,6 @@ def brine_volume_function_stogryn_1987(temperature, salinity):
         A. Stogryn (1987). An Analysis of the Tensor Dielectnc Constant of Sea Ice at Microwave Frequencies,
         IEEE Transactions on Geoscience and Remote Sensing, vol. GE-25, no. 2, pp. 147-158 https://doi.org:/10.1109/TGRS.1987.289814.
     """
-
     temperature = np.array(temperature)
     salinity = np.array(salinity)
     # Convert temperature from Kelvin to Celsius

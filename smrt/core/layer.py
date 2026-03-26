@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-:py:class:`Layer` instance contains all the properties for a single snow layer (e.g. temperature, frac_volume, etc).
+""":py:class:`Layer` instance contains all the properties for a single snow layer (e.g. temperature, frac_volume, etc).
 It also contains a `microstructure` attribute that holds the microstructural properties (e.g. radius, corr_length, etc).
 The class of this attribute defines the microstructure model to use (see :py:mod:`smrt.microstructure_model` package).
 
@@ -28,8 +27,7 @@ from .plugin import import_class
 
 
 class Layer(object):
-    """
-    This class contains the properties for a single layer including the microstructure attribute which holds the microstructure properties.
+    """This class contains the properties for a single layer including the microstructure attribute which holds the microstructure properties.
 
     To create a layer, it is recommended to use the functions `make_snow_layer` or similar.
     """
@@ -45,8 +43,7 @@ class Layer(object):
         emmodel_options=None,
         **kwargs,
     ):
-        """
-        Builds a snow layer.
+        """Builds a snow layer.
 
         Args:
             thickness (float): Thickness of the snow layer in meters. microstructure_model (module, optional): Module
@@ -100,9 +97,7 @@ class Layer(object):
 
     @property
     def ssa(self):
-        """
-        Return the SSA, computing it if necessary.
-        """
+        """Return the SSA, computing it if necessary."""
         if not hasattr(self, "_ssa") or self._ssa is None:
             self._ssa = self.microstructure.compute_ssa()
         return self._ssa
@@ -116,8 +111,7 @@ class Layer(object):
         self.microstructure.frac_volume = f  # set the frac_volume in the microstructure
 
     def permittivity(self, i: int, frequency):
-        """
-        Return the permittivity of the i-th medium depending on the frequency and internal layer properties.
+        """Return the permittivity of the i-th medium depending on the frequency and internal layer properties.
 
         Args:
             i (int): Number of the medium. 0 is reserved for the background.
@@ -153,8 +147,7 @@ class Layer(object):
             return self.permittivity_model[i]
 
     def basic_checks(self):
-        """
-        Perform basic input checks on the layer information.
+        """Perform basic input checks on the layer information.
 
         Checks:
             - Temperature is between 100 and the freezing point (Kelvin units check).
@@ -182,8 +175,7 @@ class Layer(object):
             raise SMRTError("Check density units are kg per m3")
 
     def inverted_medium(self):
-        """
-        Return the layer with inverted autocorrelation and inverted permittivities.
+        """Return the layer with inverted autocorrelation and inverted permittivities.
 
         Returns:
             Layer: A new layer object with inverted properties.
@@ -218,8 +210,7 @@ class Layer(object):
         #     callback(self, name)
 
     def update(self, **kwargs):
-        """
-        Update the attributes. This method is to be used when recalculation of the state of the object
+        """Update the attributes. This method is to be used when recalculation of the state of the object
         is necessary. See for instance :py:class:`~smrt.inputs.make_medium.SnowLayer`.
 
         Args:
@@ -230,8 +221,7 @@ class Layer(object):
 
 
 def get_microstructure_model(modulename, classname=None):
-    """
-    Return the class corresponding to the microstructure_model defined in modulename.
+    """Return the class corresponding to the microstructure_model defined in modulename.
 
     This function imports the correct module `modulename` if possible and returns the first class found in the module.
     It is used internally and should not be needed for normal usage.
@@ -245,8 +235,7 @@ def get_microstructure_model(modulename, classname=None):
 
 
 def make_microstructure_model(modelname_or_class, **kwargs):
-    """
-    Create a microstructure instance.
+    """Create a microstructure instance.
 
     Args:
         modelname_or_class (str or type): Name of the module or directly the class.
@@ -265,7 +254,6 @@ def make_microstructure_model(modelname_or_class, **kwargs):
 
          shs = make_autocorrelation("StickyHardSpheres", radius=0.001, stickiness=0.5, frac_volume=0.3)
     """
-
     if isinstance(modelname_or_class, str):
         cls = get_microstructure_model(modelname_or_class)
     else:
@@ -275,8 +263,7 @@ def make_microstructure_model(modelname_or_class, **kwargs):
 
 
 def layer_properties(*required_arguments, optional_arguments=None, **kwargs):
-    """
-    This decorator is used for the permittivity functions (or any other functions) to inject layer's attributes as arguments.
+    """This decorator is used for the permittivity functions (or any other functions) to inject layer's attributes as arguments.
     The decorator declares the layer properties needed to call the function and the optional ones.
     This allows permittivity functions to use any property of the layer, as long as it is defined.
 

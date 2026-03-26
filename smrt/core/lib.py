@@ -13,8 +13,7 @@ from smrt.core.optional_numba import numba
 
 
 def get(x, i, name=None):
-    """
-    Return the i-th value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the value.
+    """Return the i-th value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the value.
 
     Args:
         x: flexible array like object or scalar
@@ -46,17 +45,16 @@ def get(x, i, name=None):
 
 
 def check_argument_size(x, n, name=None):
-    """
-    Check that x is either a scalar or a sequence of exactly n items and raise an error otherwise.
+    """Check that x is either a scalar or a sequence of exactly n items and raise an error otherwise.
 
     Args:
         x: array like object or scalar
         n: expected size
         name: name of the object x, for reporting error messages. Defaults to None.
+
     Raises:
         SMRTError: if x is not a scalar or a sequence of size n
     """
-
     if isinstance(x, pd.DataFrame) or isinstance(x, pd.Series):
         error = len(x.values) != n
     elif (not isinstance(x, str) and isinstance(x, Sequence)) or isinstance(x, np.ndarray):
@@ -72,8 +70,7 @@ def check_argument_size(x, n, name=None):
 
 
 def is_sequence(x):
-    """
-    Check that x is a sequence
+    """Check that x is a sequence
 
     Args:
         x: flexible object
@@ -88,8 +85,7 @@ def is_sequence(x):
 
 
 def class_specializer(domain: str, cls: Union[str, Type], **options) -> Type:
-    """
-    Return a subclass of cls (imported from the domain if cls is a string) that use the provided "options" for __init__.
+    """Return a subclass of cls (imported from the domain if cls is a string) that use the provided "options" for __init__.
 
     This is equivalent to functools.partial but for a class.
 
@@ -122,8 +118,7 @@ def class_specializer(domain: str, cls: Union[str, Type], **options) -> Type:
 
 
 def len_atleast_1d(x):
-    """
-    Return length of x if it is an array or similar, otherwise return 1, or 0 if None.
+    """Return length of x if it is an array or similar, otherwise return 1, or 0 if None.
 
     Args:
         x: object to return the length of
@@ -138,8 +133,7 @@ def len_atleast_1d(x):
 
 
 class smrt_diag(object):
-    """
-    Define a simple diagonal matrix class.
+    """Define a simple diagonal matrix class.
 
     Scipy.sparse is very slow for diagonal matrix and numpy has no good support for linear algebra. This diag class
     implements simple diagonal object without numpy subclassing (but without much features).
@@ -243,8 +237,7 @@ class smrt_diag(object):
 
 
 class smrt_matrix(object):
-    """
-    Return a smrt_matrix object.
+    """Return a smrt_matrix object.
 
     SMRT uses two formats of matrix: one most suitable to implement emmodel where equations are different for each
     polarization and another one suitable for DORT computation where stream and polarization are collapsed in one
@@ -315,8 +308,7 @@ class smrt_matrix(object):
         return is_equal_zero(self)
 
     def compress(self, mode=None, auto_reduce_npol=False):
-        """
-        Compresses a matrix. This comprises several actions:
+        """Compresses a matrix. This comprises several actions:
         1) select one mode, if relevant (dense5, and diagonal5).
         2) reduce the number of polarization from 3 to 2 if mode==0 and auto_reduce_npol=True.
         3) convert the format of the matrix to compressed numpy, involving a change of the dimension order (pola and streams are merged).
@@ -467,8 +459,7 @@ class smrt_matrix(object):
 
 
 def is_zero_scalar(m):
-    """
-    Returns true if the object is a scalar equal to zero
+    """Returns true if the object is a scalar equal to zero
 
     Args:
         m: object to test
@@ -479,15 +470,13 @@ def is_zero_scalar(m):
 
 
 def is_equal_zero(m):
-    """
-    Returns true if the smrt matrix is null
+    """Returns true if the smrt matrix is null
 
     Args:
         m: object to test
     Returns:
         : True if m is equal to zero
     """
-
     if isinstance(m, smrt_diag):
         m = m.diagonal()
 
@@ -506,8 +495,7 @@ else:
 
 
 def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
-    """
-    Compute the Fourier transform of an even matrix.
+    """Compute the Fourier transform of an even matrix.
 
     This matrix can be a phase function, reflection or transmission matrix.
 
@@ -529,7 +517,6 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
         m_max: maximum Fourier decomposition mode needed
         nsamples: number of samples to use for the Fourier decomposition. If None, it is automatically computed.
     """
-
     # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
     if nsamples is None:
         nsamples = 2 ** np.ceil(3 + np.log(m_max + 1) / np.log(2))
@@ -620,8 +607,7 @@ def inverse_planck_function(frequency, radiance):
 
 
 def vectorize_angles(mu_s, mu_i, dphi, compute_cross_product=True, compute_sin=True):
-    """
-    Return angular cosines and sinus with proper dimensions, ready for vectorized calculations.
+    """Return angular cosines and sinus with proper dimensions, ready for vectorized calculations.
 
     Args:
         mu_s: scattering cosine angle.
@@ -634,7 +620,6 @@ def vectorize_angles(mu_s, mu_i, dphi, compute_cross_product=True, compute_sin=T
     Returns:
         vectorize angles
     """
-
     mu_s = np.atleast_1d(mu_s)
     mu_i = np.atleast_1d(mu_i)
     dphi = np.atleast_1d(dphi)
@@ -654,13 +639,11 @@ def vectorize_angles(mu_s, mu_i, dphi, compute_cross_product=True, compute_sin=T
 
 
 def set_max_numerical_threads(nthreads):
-    """
-    Set the maximum number of threads for a few known library.
+    """Set the maximum number of threads for a few known library.
 
     This is useful to disable parallel computing in SMRT when using parallel computing to call multiple // SMRT runs.
     This avoid over-committing the CPUs and results in much better performance. Inspire from joblib.
     """
-
     nthreads = str(nthreads)
     os.environ["MKL_NUM_THREADS"] = nthreads
     os.environ["OPENBLAS_NUM_THREADS"] = nthreads
@@ -671,15 +654,13 @@ def set_max_numerical_threads(nthreads):
 
 @lru_cache(maxsize=32)
 def cached_roots_legendre(n, a=-1, b=1):
-    """
-    Cache roots_legendre results
+    """Cache roots_legendre results
 
     Args:
         n: number of points
         a: lower bound
         b: upper bound
     """
-
     x, w = roots_legendre(n)
 
     if a != -1 or b != 1:

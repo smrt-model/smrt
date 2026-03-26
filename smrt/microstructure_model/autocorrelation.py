@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Contains the base classes for the microstructure classes.
+"""Contains the base classes for the microstructure classes.
 **It is not used directly**.
 """
 
@@ -81,11 +80,10 @@ class Autocorrelation(AutocorrelationBase):
             self.autocorrelation_function = self.autocorrelation_function_invfft
 
     def ft_autocorrelation_function_fft(self, k):
-        """compute the fourier transform of the autocorrelation function via fft
+        """Compute the fourier transform of the autocorrelation function via fft
         Args:
         k: array of wave vector magnitude values, ordered, and non-negative
         """
-
         k_abs = np.abs(k)
 
         # assert((np.diff(k) > 0).all())  # check k is sorted
@@ -120,7 +118,6 @@ class Autocorrelation(AutocorrelationBase):
         Args:
         r: array of lag vector magnitude values, ordered, non-negative
         """
-
         assert (np.diff(r) > 0).all()  # check if r is sorted
         assert (r > -np.finfo(float).eps).all()  # check if r is non-negative
 
@@ -147,11 +144,10 @@ class Autocorrelation(AutocorrelationBase):
         return C
 
     def inverted_medium(self):
-        """return the same autocorrelation for the inverted medium. In general, it is only necessary to invert the fractional volume if
+        """Return the same autocorrelation for the inverted medium. In general, it is only necessary to invert the fractional volume if
         the autocorrelation function is numerically symmetric as it should be. This needs to be reimplemented in the sub classes if this is
         not sufficient.
         """
-
         obj = copy.copy(self)
         obj.frac_volume = 1.0 - self.frac_volume
         return obj

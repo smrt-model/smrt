@@ -1,6 +1,4 @@
-"""
-Provide formaluations for the depolarization factors used with the Polden van Santen or Maxwell Garnett mixing formulations.
-"""
+"""Provide formaluations for the depolarization factors used with the Polden van Santen or Maxwell Garnett mixing formulations."""
 
 from typing import Optional
 
@@ -8,8 +6,7 @@ import numpy as np
 
 
 def depolarization_factors_spheroids(length_ratio: Optional[float] = None, **kwargs):
-    """
-    Calculate depolarization factors for use in effective permittivity models. These
+    """Calculate depolarization factors for use in effective permittivity models. These
     are a measure of the anisotropy of the snow. Default is spherical isotropy.
 
     Args:
@@ -33,7 +30,6 @@ def depolarization_factors_spheroids(length_ratio: Optional[float] = None, **kwa
         Löwe, H., Riche, F., and Schneebeli, M.: A general treatment of snow microstructure exemplified by an improved
         relation for thermal conductivity, The Cryosphere, 7, 1473–1480, https://doi.org/10.5194/tc-7-1473-2013, 2013.
     """
-
     # If a length ratio is not specified, assumes spherical isotropy
     if length_ratio is None:
         length_ratio = 1.0
@@ -56,8 +52,7 @@ def depolarization_factors_spheroids(length_ratio: Optional[float] = None, **kwa
 
 
 def depolarization_factors_matzler96(frac_volume: float, **kwargs):
-    """
-    Calculate depolarization factors with Mätzler (1996) for the Polden van Santen (Sihvola, 1999) permittivity model.
+    """Calculate depolarization factors with Mätzler (1996) for the Polden van Santen (Sihvola, 1999) permittivity model.
 
     Args:
         frac_volume: fractional volume of ice.
@@ -72,7 +67,6 @@ def depolarization_factors_matzler96(frac_volume: float, **kwargs):
         Sihvola, A.: Electromagnetic Mixing Formulas and Applications, 1999, INSTITUTION OF ENGINEERING & T
         http://www.ebook.de/de/product/21470462/a_sihvola_electromagnetic_mixing_formulas_and_applications.html
     """
-
     anisotropy_q = np.where(
         frac_volume < 0.33,
         01.0 + 0.5 * frac_volume,
@@ -82,8 +76,7 @@ def depolarization_factors_matzler96(frac_volume: float, **kwargs):
 
 
 def depolarization_factors_oblate_matzler98(frac_volume: float, **kwargs):
-    """
-    Calculate depolarization factors with Mätzler (1998) for the Polden van Santen (Sihvola, 1999) permittivity model.
+    """Calculate depolarization factors with Mätzler (1998) for the Polden van Santen (Sihvola, 1999) permittivity model.
 
     Args:
         frac_volume: fractional volume of ice.
@@ -98,7 +91,6 @@ def depolarization_factors_oblate_matzler98(frac_volume: float, **kwargs):
         Sihvola, A.: Electromagnetic Mixing Formulas and Applications, 1999, INSTITUTION OF ENGINEERING & T
         http://www.ebook.de/de/product/21470462/a_sihvola_electromagnetic_mixing_formulas_and_applications.html
     """
-
     anisotropy_q = np.where(
         frac_volume < 0.33,
         01.0 + 0.5 * frac_volume,

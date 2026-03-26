@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements a reflective boundary condition with prescribed reflection coefficient in the specular direction.
+"""Implements a reflective boundary condition with prescribed reflection coefficient in the specular direction.
 
 The reflection is set to a value or a function of theta. Azimuthal symmetry is assumed (no dependence on phi).
 
@@ -43,7 +42,6 @@ from smrt.core.lib import smrt_matrix
 
 def make_reflector(temperature=None, specular_reflection=None):
     """Construct a reflector or absorber instance."""
-
     # create the instance
     return Reflector(temperature=temperature, specular_reflection=specular_reflection)
 

@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Wraps the original MEMLS matlab code using the SMRT framework.
+"""Wraps the original MEMLS matlab code using the SMRT framework.
 
 To use this module, extra installations are needed:
 
@@ -38,8 +37,7 @@ _memls_path = None
 
 
 def set_memls_path(path):
-    """
-    Sets the path where MEMLS archive has been uncompressed, i.e. where the file `memlsmain.m` is located.
+    """Sets the path where MEMLS archive has been uncompressed, i.e. where the file `memlsmain.m` is located.
 
     Args:
         path: Path to the MEMLS directory.
@@ -69,23 +67,21 @@ def run(
     memls_driver=None,
     snowpack_dimension=None,
 ):
+    """Calls MEMLS for the snowpack and sensor configuration given as argument. Any microstructure model that defines the "corr_length" parameter is valid, but it must be clear that MEMLS only considers exponential autocorrelation.
+
+    :param snowpack: describe the snowpack.
+    :param sensor: describe the sensor configuration.
+    :param scattering_choice: MEMLS proposes several formulation to compute scattering_function. scattering_choice=ABORN (equals 12) is the default
+        here and is recommended choice to compare with IBA. Note that some comments in memlsmain.m suggest to use
+        scattering_choice=MEMLS_RECOMMENDED (equals 11). Note also that the default grain type in memlsmain is graintype=1
+        corresponding to oblate spheroidal calculation of effective permittivity from the empirical representation of depolarization factors. To use a Polder-Van Santen representation of effective permittivity for small spheres, graintype=2 must be set in your local copy of MEMLS.
+    :param atmosphere: describe the atmosphere. Only tbdown is used for the Tsky argument of memlsmain.
+    :param memls_path: directory path to the memls Matlab scripts
+    :param memls_driver: matlab function to call to run memls. memlsmain.m is the default driver in the original MEMLS distribution for the passive case and amemlsmain.m for the active case.
+    :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and the values are from 1 to the number of snowpacks.
+
+
     """
-    Calls MEMLS for the snowpack and sensor configuration given as argument. Any microstructure model that defines the "corr_length" parameter is valid, but it must be clear that MEMLS only considers exponential autocorrelation.
-
-        :param snowpack: describe the snowpack.
-        :param sensor: describe the sensor configuration.
-        :param scattering_choice: MEMLS proposes several formulation to compute scattering_function. scattering_choice=ABORN (equals 12) is the default
-            here and is recommended choice to compare with IBA. Note that some comments in memlsmain.m suggest to use
-            scattering_choice=MEMLS_RECOMMENDED (equals 11). Note also that the default grain type in memlsmain is graintype=1
-            corresponding to oblate spheroidal calculation of effective permittivity from the empirical representation of depolarization factors. To use a Polder-Van Santen representation of effective permittivity for small spheres, graintype=2 must be set in your local copy of MEMLS.
-        :param atmosphere: describe the atmosphere. Only tbdown is used for the Tsky argument of memlsmain.
-        :param memls_path: directory path to the memls Matlab scripts
-        :param memls_driver: matlab function to call to run memls. memlsmain.m is the default driver in the original MEMLS distribution for the passive case and amemlsmain.m for the active case.
-        :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and the values are from 1 to the number of snowpacks.
-
-
-    """
-
     if memls_path is not None:
         set_memls_path(memls_path)
 
@@ -204,8 +200,8 @@ def memls_emmodel(sensor, layer, scattering_choice=ABORN, graintype=2):
 
     :param layer: describe the layer.
     :param sensor: describe the sensor configuration.
-    :param scattering_choice: MEMLS proposes several formulation to compute scattering_function. scattering_choice=ABORN (equals 12) is the defaut here and is recommended choice to compare with IBA."""
-
+    :param scattering_choice: MEMLS proposes several formulation to compute scattering_function. scattering_choice=ABORN (equals 12) is the defaut here and is recommended choice to compare with IBA.
+    """
     res = octave.memlsscatt(
         sensor.frequency / 1e9,
         float(layer.temperature),

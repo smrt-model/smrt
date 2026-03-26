@@ -213,13 +213,11 @@ def compute_stream_uniform(n_max_stream, permittivity):
 
 
 def gauss_legendre_quadrature(n):
-    """
-    Return the gauss-legendre roots and weight, only the positive roots are return in descending order.
+    """Return the gauss-legendre roots and weight, only the positive roots are return in descending order.
 
     Args:
         n: number of (positive) points in the quadrature. Must be larger than 2
     """
-
     assert n >= 2
 
     mu, weight = cached_roots_legendre(2 * n)

@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Wraps the original DMRT_QMS matlab code using the SMRT framework.
+"""Wraps the original DMRT_QMS matlab code using the SMRT framework.
 
 To use this module, extra installations are needed:
 
@@ -32,8 +31,7 @@ _dmrt_qms_path = None
 
 
 def set_dmrt_qms_path(path):
-    """
-    Sets the path where dmrt_qms archive has been uncompressed, i.e. where the file `dmrt_qmsmain.m` is located.
+    """Sets the path where dmrt_qms archive has been uncompressed, i.e. where the file `dmrt_qmsmain.m` is located.
 
     Args:
         path: Path to the DMRT_QMS directory.
@@ -57,8 +55,7 @@ except KeyError:
 
 
 def run(sensor, snowpack, dmrt_qms_path=None, snowpack_dimension=None, full_output=False):
-    """
-    Calls DMRT-QMS for the snowpack and sensor configuration given as argument. The :py:mod:`~smrt.microstructure_model.sticky_hard_spheres` microstructure model
+    """Calls DMRT-QMS for the snowpack and sensor configuration given as argument. The :py:mod:`~smrt.microstructure_model.sticky_hard_spheres` microstructure model
     must be used.
 
     Args:
@@ -71,7 +68,6 @@ def run(sensor, snowpack, dmrt_qms_path=None, snowpack_dimension=None, full_outp
     Returns:
         PassiveResult or tuple with additional outputs if full_output is True.
     """
-
     if dmrt_qms_path is not None:
         set_dmrt_qms_path(dmrt_qms_path)
 
@@ -196,8 +192,7 @@ def dmrt_qms_active(sensor, snowpack):
 
 
 def dmrt_qms_emmodel(sensor, layer, dmrt_qms_path=None):
-    """
-    Computes scattering and absorption coefficients using DMRT QMS.
+    """Computes scattering and absorption coefficients using DMRT QMS.
 
     Args:
         sensor: Sensor configuration.
@@ -207,7 +202,6 @@ def dmrt_qms_emmodel(sensor, layer, dmrt_qms_path=None):
     Returns:
         namedtuple with ks and ka.
     """
-
     diameter = np.float64([layer.microstructure.radius * 200])
     density = np.float64([layer.frac_volume * DENSITY_OF_ICE / 1000])
     thickness = np.float64([layer.thickness * 100.0])

@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements the monodisperse sticky hard sphere model of the microstructure.
+"""Implements the monodisperse sticky hard sphere model of the microstructure.
 
 Args:
     frac_volume (float): Fractional volume.
@@ -44,7 +43,7 @@ class StickyHardSpheres(Autocorrelation):
         return 4.0 / 3 * self.radius * (1 - self.frac_volume)
 
     def basic_check(self):
-        """check consistency between the parameters"""
+        """Check consistency between the parameters"""
         if self.stickiness < self.tau_min(self.frac_volume):
             raise SMRTError(
                 "For volume fraction "
@@ -68,7 +67,6 @@ class StickyHardSpheres(Autocorrelation):
         (float).
 
         """
-
         # TODO LH:
         # * get solution for t directly from method compute_t
         # (this would include a check if the combination of stickiness
@@ -129,8 +127,7 @@ class StickyHardSpheres(Autocorrelation):
         return Ctilde
 
     def compute_t(self):
-        """compute the t parameter used in the stickiness"""
-
+        """Compute the t parameter used in the stickiness"""
         if self.stickiness == np.inf:  # none-sticky case
             return 0
 
@@ -167,7 +164,7 @@ class StickyHardSpheres(Autocorrelation):
         return t
 
     def tau_min(self, frac_volume):
-        """compute the minimum possible stickiness value for given ice volume
+        """Compute the minimum possible stickiness value for given ice volume
         fraction
 
         """

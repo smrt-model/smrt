@@ -71,7 +71,6 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
 
     def compute_A2A2inv(self):
         """Compute A2 using equation 26"""
-
         assert self.symmetrical
 
         # invert the microstructure
@@ -144,7 +143,6 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
 
     def compute_phase_norm(self):
         """Compute the norm needed for the IBA phase matrix (=Rayleigh x microstructure ) when ks is known"""
-
         if self.ks == 0:
             return 0
 
@@ -159,8 +157,7 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         return self._ks / (ks_int / 4.0)  # Ding et al. (2010), normalised by (1/4pi)
 
     def ks_integrand(self, mu):
-        """
-        This is the scattering function for the IBA model.
+        """This is the scattering function for the IBA model.
 
         It uses the phase matrix in the 1-2 frame. With incident angle chosen to be 0, the scattering
         angle becomes the scattering zenith angle:
@@ -181,7 +178,6 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
 
         The integration is performed outside this method.
         """
-
         # Set up scattering geometry for 1-2 frame
         # Choose incident zenith angle to be 0 so scattering angle = scattering zenith angle (use mhu)
         # phi in the 1-2 frame for calculation of p11 is pi
@@ -208,8 +204,7 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         return ks_int.real
 
     def phase(self, mu_s, mu_i, dphi, npol=2):
-        """
-        IBA Phase function (not decomposed).
+        """IBA Phase function (not decomposed).
 
         Args:
             mu_s:
@@ -217,7 +212,6 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
             dphi:
             npol:  (Default value = 2)
         """
-
         if not hasattr(self, "_phase_norm"):
             self._phase_norm = self.compute_phase_norm()
 
@@ -238,8 +232,7 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         return smrt_matrix(self._phase_norm * ft_corr_fn * p)
 
     def compute_ka(self):
-        """
-        SCE absorption coefficient calculated from the low-loss assumption of a general lossy medium.
+        """SCE absorption coefficient calculated from the low-loss assumption of a general lossy medium.
 
         Calculates ka from wavenumber in free space (determined from sensor), and effective permittivity
         of the medium.
@@ -251,7 +244,6 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
             This may not be suitable for high density material
 
         """
-
         return 2 * self.k0 * np.sqrt(self._effective_permittivity).imag
 
 

@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-This module defines the configuration for sensors used in radiative transfer simulations. The sensor configuration
+"""This module defines the configuration for sensors used in radiative transfer simulations. The sensor configuration
 includes all the information describing the sensor viewing geometry (incidence, ...) and operating parameters
 (frequency, polarization, ...). The easiest and recommended way to create a :py:class:`Sensor` instance is to use one of
 the convenience functions such as :py:func:`~smrt.inputs.sensor_list.passive`,
@@ -22,8 +21,7 @@ from .error import SMRTError, smrt_warn
 
 
 def passive(frequency, theta, polarization=None, channel_map=None, name=None):
-    """
-    Return a generic configuration for passive microwave sensor.
+    """Return a generic configuration for passive microwave sensor.
 
     Return a :py:class:`Sensor` for a microwave radiometer with given frequency, incidence angle and polarization
 
@@ -54,7 +52,6 @@ def passive(frequency, theta, polarization=None, channel_map=None, name=None):
         from smrt import sensor_list radiometer = sensor_list.passive(18e9, 50) radiometer = sensor_list.passive(18e9,
         50, "V") radiometer = sensor_list.passive([18e9,36.5e9], [50,55], ["V","H"])
     """
-
     if polarization is None:
         polarization = ["V", "H"]
 
@@ -75,8 +72,7 @@ def passive(frequency, theta, polarization=None, channel_map=None, name=None):
 
 
 def channel_map_for_radar(frequency=None, polarization="HV", order="fp"):
-    """
-    Create a channel map for radar sensors.
+    """Create a channel map for radar sensors.
 
     Args:
         frequency:  frequency
@@ -87,7 +83,6 @@ def channel_map_for_radar(frequency=None, polarization="HV", order="fp"):
         name of the channels is in GHz with leading 0 if necessary.
         The polarization is after the frequency if order is 'fp' and before if order is 'pf'.
     """
-
     if frequency is None:
         frequency_str = ""
     else:
@@ -126,8 +121,7 @@ def active(
     channel_map=None,
     name=None,
 ):
-    """
-    Return a generic configuration for active microwave sensor.
+    """Return a generic configuration for active microwave sensor.
 
     Return a :py:class:`Sensor` for a radar with given frequency, incidence and viewing angles and polarization
 
@@ -168,7 +162,6 @@ def active(
         scatterometer = sensor_list.active(18e9, 50, 50, 0, "V", "V")
         scatterometer = sensor_list.active([18e9,36.5e9], theta=50, theta_inc=50, polarization_inc=["V", "H"], polarization=["V", "H"])
     """
-
     # if polarization is None or polarization == '4P':
     #     polarization = ['VV', 'VH', 'HV', 'HH']
 
@@ -219,8 +212,7 @@ class SensorBase(object):
 
 
 class Sensor(SensorBase):
-    """
-    This class contains a sensor configuration.
+    """This class contains a sensor configuration.
 
     Use of the functions :py:func:`passive`, :py:func:`active`, or the sensor specific functions
     e.g. :py:func:`amsre` are recommended to access this class.
@@ -238,8 +230,7 @@ class Sensor(SensorBase):
         name=None,
         wavelength=None,
     ):
-        """
-        Build a Sensor.
+        """Build a Sensor.
 
         Setting theta_inc to None means passive mode
 
@@ -315,10 +306,7 @@ class Sensor(SensorBase):
 
     @property
     def mode(self):
-        """
-        Return the mode of observation: "A" for active or "P" for passive.
-        """
-
+        """Return the mode of observation: "A" for active or "P" for passive."""
         if self.theta_inc is None:
             return "P"
         else:
@@ -348,8 +336,7 @@ class Sensor(SensorBase):
                 yield axis, values
 
     def iterate(self, axis):
-        """
-        Iterate over the configuration for the given axis.
+        """Iterate over the configuration for the given axis.
 
         Args:
             axis: one of the attribute of the sensor (frequency, ...) to iterate along
@@ -406,8 +393,7 @@ class SensorList(SensorBase):
 
 
 class Altimeter(Sensor):
-    """
-    This class contains a configuration for altimeter.
+    """This class contains a configuration for altimeter.
 
     Use of the functions :py:func:`altimeter`, or the sensor specific functions
     e.g. :py:func:`envisat_ra2` are recommended to access this class.

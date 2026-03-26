@@ -25,13 +25,12 @@ class CeleryParallelRunner(object):
     """Run the simulations using dask.distributed on a cluster."""
 
     def __init__(self, broker="redis://localhost:6379", chunk=10):
-        """prepare a dask runner.
+        """Prepare a dask runner.
 
         Args:
             broker (str or Celery): The url or a Celery object (app).
             chunk (int): Size of the chunk to transmit to the runner.
         """
-
         super().__init__()
 
         # if isinstance(broker, str):

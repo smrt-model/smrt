@@ -1,7 +1,5 @@
 # coding: utf-8
-"""
-Provide equations to compute the effective permittivity of saline water.
-"""
+"""Provide equations to compute the effective permittivity of saline water."""
 
 import numpy as np
 
@@ -24,8 +22,7 @@ from .brine import (
 
 @layer_properties("temperature", "salinity")
 def seawater_permittivity_klein76(frequency, temperature, salinity):
-    """
-    Calculate permittivity (dielectric constant) of water using an empirical relationship described by Klein and Swift (1976).
+    """Calculate permittivity (dielectric constant) of water using an empirical relationship described by Klein and Swift (1976).
 
     Args:
         frequency: frequency in Hz.
@@ -42,7 +39,6 @@ def seawater_permittivity_klein76(frequency, temperature, salinity):
         Klein, A.L., and Swift, C.T. (1975) An Improved Model for-the Dielectric Constant of Sea Water at Microwave.
         Frequencies. https://aquarius.oceansciences.org/docs/ed_klien_swift_1978.pdf
     """
-
     tempC = temperature - FREEZING_POINT
 
     Sppt = salinity / PSU
@@ -85,8 +81,7 @@ def seawater_permittivity_klein76(frequency, temperature, salinity):
 
 @layer_properties("temperature")
 def seawater_permittivity_stogryn71(frequency, temperature):
-    """
-    Compute dielectric constant of brine, complex_b (Stogryn, 1971 approach)
+    """Compute dielectric constant of brine, complex_b (Stogryn, 1971 approach)
 
     Note:
         From polynomial fit in Stogryn and Desargent, 1985
@@ -105,7 +100,6 @@ def seawater_permittivity_stogryn71(frequency, temperature):
         A. Stogryn. (1971) Equations for Calculating the Dielectric Constant of Saline Water (Correspondence), IEEE
         Transactions on Microwave Theory and Techniques, vol. 19, no. 8, pp. 733-736, https://doi.org/10.1109/TMTT.1971.1127617
     """
-
     # High-frequency dielectric constant of saline water
     eps_inf = permittivity_high_frequency_limit_stogryn85(temperature)
 
@@ -133,8 +127,7 @@ def seawater_permittivity_stogryn71(frequency, temperature):
 
 @layer_properties("temperature")
 def brine_permittivity_stogryn85(frequency, temperature):
-    """
-    Compute permittivity and loss of brine using equations given in Stogryn and Desargant (1985).
+    """Compute permittivity and loss of brine using equations given in Stogryn and Desargant (1985).
 
     Args:
         frequency: frequency in Hz.
@@ -148,7 +141,6 @@ def brine_permittivity_stogryn85(frequency, temperature):
         IEEE Transactions on Antennas and Propagation, vol. 33, no. 5, pp. 523-532,
         https://doi.org/10.1109/TAP.1985.1143610
     """
-
     eps_static = static_brine_permittivity_stogryn85(temperature)  # limiting static permittivity
     tau = brine_relaxation_time_stogryn85(temperature)  # relaxation time
     sigma = brine_conductivity_stogryn85(temperature)  # ionic conductivity of dissolved salts
@@ -163,8 +155,7 @@ def brine_permittivity_stogryn85(frequency, temperature):
 
 @layer_properties("temperature", "salinity")
 def seawater_permittivity_stogryn95(frequency, temperature, salinity):
-    """
-    Compute seawater dielectric constant using Stogryn 1995.
+    """Compute seawater dielectric constant using Stogryn 1995.
 
     Args:
         frequency: frequency in Hz.
@@ -181,7 +172,6 @@ def seawater_permittivity_stogryn95(frequency, temperature, salinity):
         Stogryn, A. P., Bull, H. T., Rubayi, K., & Iravanchy, S. (1995). The microwave dielectric properties of sea and
         fresh water. GenCorp Aerojet.
     """
-
     #   real, intent (in) :: f     ! [GHz]    Frequency (valid from 0 to 1000 GHz)
     #   real, intent (in) :: T     ! [°C]     Temperature
     #   real, intent (in) :: S     ! [permil] Salinity
@@ -258,8 +248,7 @@ def seawater_permittivity_stogryn95(frequency, temperature, salinity):
 
 @layer_properties("temperature", "salinity")
 def seawwater_permittivity_boutin23_2function(frequency, temperature, salinity):
-    """
-    Compute the permittivity using BVZ 2 from Equations (7) and (8) in Boutin et al. (2023).
+    """Compute the permittivity using BVZ 2 from Equations (7) and (8) in Boutin et al. (2023).
 
     BVZ 2functions' has been derived from L-Band GW2020 measurements,  following the assumptions of Somaraju and Trumpf
     (2006). It reasonnably fits P-Band dielectric constants laboratory measurements over the 0-150 pss range (Le vine et al. 2025,
@@ -372,8 +361,7 @@ def seawwater_permittivity_boutin23_2function(frequency, temperature, salinity):
 
 @layer_properties("temperature", "salinity")
 def seawwater_permittivity_boutin23_3function(frequency, temperature, salinity):
-    """
-    Compute the permittivity using BVZ 2 from Equations (9,10,11) Boutin et al. (2023).
+    """Compute the permittivity using BVZ 2 from Equations (9,10,11) Boutin et al. (2023).
 
     Model derived from L-Band GW2020 measurements and validated wit SMOS SSS retrievals. In order to better fit GW2020
     measurements, and with respect to Somaraju and Trumpf (2006) assumptions. An additional dependency of alpha with S
@@ -413,7 +401,6 @@ def seawwater_permittivity_boutin23_3function(frequency, temperature, salinity):
         Somaraju, R., and Trumpf, J., (2006). Frequency, Temperature and Salinity Variation of the Permittivity of Seawater,
         IEEE Transactions on Antennas and Propagation, vol. 54, no. 11, pp. 3441-3448, https://doi.org/10.1109/TAP.2006.884290.
     """
-
     import gsw
 
     # Input variables

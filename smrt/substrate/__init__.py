@@ -1,5 +1,4 @@
-"""
-Contains different options to represent the substrate, that is, the lower boundary conditions of the radiative transfer equation.
+"""Contains different options to represent the substrate, that is, the lower boundary conditions of the radiative transfer equation.
 
 This is usually the soil, ice, or water but can also be an aluminium plate or an absorber.
 

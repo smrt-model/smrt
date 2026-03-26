@@ -1,5 +1,4 @@
-"""
-Provide permittivity formulations for use with saline ice, and possibly in some cases with saline snow.
+"""Provide permittivity formulations for use with saline ice, and possibly in some cases with saline snow.
 
 See also :py:mod:`smrt.permittivity.saline_snow.py` in the latter case.
 """
@@ -18,8 +17,7 @@ from smrt.permittivity.saline_water import brine_permittivity_stogryn85
 
 @layer_properties("temperature", "salinity")
 def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
-    """
-    Compute permittivity of impure ice from Maetzler (2006).
+    """Compute permittivity of impure ice from Maetzler (2006).
 
     Note:
         Model developed for salinity around 0.013 PSU. The extrapolation is based on linear assumption to salinity, so
@@ -41,7 +39,6 @@ def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
         Mätzler, C. (2006). Thermal Microwave Radiation: Applications for Remote Sensing p456-461,
         https://doi.org/10.1049/PBEW052E
     """
-
     # Issue warning if salinity > 0.013 PSU
     if salinity > 0.013e-3:
         warnings.warn(
@@ -85,8 +82,7 @@ def saline_ice_permittivity_pvs_mixing(
     ice_permittivity_model=None,
     brine_permittivity_model=None,
 ):
-    """
-    Compute effective permittivity of saline ice using the Polder Van Santen mixing formulaes.
+    """Compute effective permittivity of saline ice using the Polder Van Santen mixing formulaes.
 
     Args:
         frequency: frequency in Hz.
@@ -106,7 +102,6 @@ def saline_ice_permittivity_pvs_mixing(
     Returns:
         complex permittivity of saline ice.
     """
-
     if ice_permittivity_model is None:
         ice_permittivity_model = ice_permittivity_maetzler06  # default ice permittivity model
 

@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Wraps the original HUT matlab using SMRT framework.
+"""Wraps the original HUT matlab using SMRT framework.
 
 To use this module, extra installations are needed:
 
@@ -29,8 +28,7 @@ _hut_path = None
 
 
 def set_hut_path(path):
-    """
-    Sets the path where HUT archive has been uncompressed, i.e. where the file `memlsmain.m` is located.
+    """Sets the path where HUT archive has been uncompressed, i.e. where the file `memlsmain.m` is located.
 
     Args:
         path: Path to the HUT directory.
@@ -52,8 +50,7 @@ except KeyError:
 
 
 def run(sensor, snowpack, ke_option=0, grainsize_option=1, hut_path=None):
-    """
-    Calls HUT for the snowpack and sensor configuration given as argument. Any microstructure model that defines the "radius" parameter is valid.
+    """Calls HUT for the snowpack and sensor configuration given as argument. Any microstructure model that defines the "radius" parameter is valid.
 
     Args:
         sensor: Sensor configuration.
@@ -65,7 +62,6 @@ def run(sensor, snowpack, ke_option=0, grainsize_option=1, hut_path=None):
     Returns:
         Result object.
     """
-
     if hut_path is not None:
         set_hut_path(hut_path)
 

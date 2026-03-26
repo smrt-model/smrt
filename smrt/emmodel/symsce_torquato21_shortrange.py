@@ -33,14 +33,11 @@ def derived_SymSCETK21_ShortRange(effective_permittivity_model):
     Returns:
         class: A new class inheriting from SymSCE_ShortRange but with patched methods.
     """
-
     return derived_EMModel(SymSCETK21_ShortRange, effective_permittivity_model)
 
 
 class SymSCETK21_ShortRange(AdjustableEffectivePermittivityMixins, SCEBase):
-    """
-    To be documented.
-    """
+    """To be documented."""
 
     # default effective_permittivity_model is polder_van_santen according to the SymSCE theory
     effective_permittivity_model = staticmethod(polder_van_santen)

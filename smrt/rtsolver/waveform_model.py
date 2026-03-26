@@ -1,5 +1,4 @@
-"""
-Provide Waveform models use in py:mod:`smrt.rtsolver.nadir_lrm_altimetry`.
+"""Provide Waveform models use in py:mod:`smrt.rtsolver.nadir_lrm_altimetry`.
 
 Brown1977:
     - Brown, G. (1977).The average impulse response of a rough surface and its applications. IEEE Transactions on Antennas and
@@ -21,8 +20,7 @@ class WaveformModel(object):
 
 
 class Brown1977(WaveformModel):
-    """
-    Implement the Antenna Gain formulation used by Brown 1977.
+    """Implement the Antenna Gain formulation used by Brown 1977.
 
     The formula is \\ (\\exp \\left(\\frac{2}{\\gamma} \\sin^2 \\theta \\right) \\) for the perfect nadir case,
     but is also available with off-nadir angles.
@@ -135,8 +133,7 @@ class Brown1977(WaveformModel):
 
 
 class Newkrik1992(WaveformModel):
-    """
-    Implement the Antenna Gain formulation proposed by Newkrik and Brown, 1992.
+    """Implement the Antenna Gain formulation proposed by Newkrik and Brown, 1992.
 
     Compared to the classical Brown 1977, it takes into account
     the asymmetry of the antenna pattern in the co and cross-track direction.

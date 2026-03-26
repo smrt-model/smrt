@@ -1,5 +1,4 @@
-"""
-Provide the interface boundary condition under IIEM (Improved IEM) formulation provided by Fung et al. 2002.
+"""Provide the interface boundary condition under IIEM (Improved IEM) formulation provided by Fung et al. 2002.
 
 The extended domain of validity (for large roughness or correlation length) is produced by using the transition Fresnel
 coefficients (Fung et al. 2004). This code also produces bi-static coefficients for passive sensor and second order interaction with
@@ -40,8 +39,7 @@ from smrt.interface.iem_fung92 import IEM_Fung92
 
 
 class IIEM_Fung2002(IEM_Fung92):
-    """
-    Implement a moderate rough surface model for passive and active. Provide bi-static coefficient
+    """Implement a moderate rough surface model for passive and active. Provide bi-static coefficient
 
     Multiple scattering only for crosspol backscatter since it's assumed to be negligeable for co pol (passive??? to be implemented).
     Use with care
@@ -78,9 +76,7 @@ class IIEM_Fung2002(IEM_Fung92):
             )
 
     def transition_fresnel_coefficients(self, eps_1, eps_2, mu_i, k, k_w, n):
-        """
-        Calculate the transition Fresnel coefficients for IIEM (see Fung et al 2004)
-        """
+        """Calculate the transition Fresnel coefficients for IIEM (see Fung et al 2004)"""
         eps_r = eps_2.real
 
         # at 0
@@ -119,8 +115,7 @@ class IIEM_Fung2002(IEM_Fung92):
         return Rv_t, Rh_t
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
-        """
-        Compute the diffuse reflection coefficients.
+        """Compute the diffuse reflection coefficients.
 
         Coefficients are calculated for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the
         beam is transmitted.
@@ -137,7 +132,6 @@ class IIEM_Fung2002(IEM_Fung92):
         Returns:
             The reflection matrix.
         """
-
         mu_i = np.atleast_1d(_clip_mu(mu_i))[np.newaxis, np.newaxis, :, np.newaxis]
         mu_s = np.atleast_1d(_clip_mu(mu_s))[np.newaxis, :, np.newaxis, np.newaxis]
         dphi = np.atleast_1d(dphi)[:, np.newaxis, np.newaxis, np.newaxis]
@@ -224,8 +218,8 @@ class IIEM_Fung2002(IEM_Fung92):
             # reshape to match angles shape set initially
             svh = self.double_integral(k, ks2, mu_i, eps_2, Rvh, n, self.N_integral).reshape(1, 1, mu_i.shape[2])
             # reshape to match angles shape set initially
-            mu_i = mu_i.squeeze(axis = -1)
-            sin_i = sin_i.squeeze(axis = -1)
+            mu_i = mu_i.squeeze(axis=-1)
+            sin_i = sin_i.squeeze(axis=-1)
 
             if self.shadow_correction:
                 s = 1 / (1 + shadow_function(mean_square_slope, mu_i / sin_i) * 2)
@@ -243,8 +237,7 @@ class IIEM_Fung2002(IEM_Fung92):
         return generic_ft_even_matrix(reflection_function, m_max, nsamples=256)
 
     def diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_t, mu_i, dphi, npol):
-        """
-        Compute the transmission coefficients for the azimuthal mode m and for an array of incidence angles (given by their cosine)
+        """Compute the transmission coefficients for the azimuthal mode m and for an array of incidence angles (given by their cosine)
         in medium 1. Medium 2 is where the beam is transmitted.
 
         :param eps_1: permittivity of the medium where the incident beam is propagating.
@@ -254,17 +247,13 @@ class IIEM_Fung2002(IEM_Fung92):
 
         :return: the transmission matrix
         """
-
         return NotImplementedError(
             "The use of the iiem is restricted to substrate only for now,"
             " Missing the implementation of the diffuse transmission"
         )
 
     def W_n_2D(self, n, k, rx, ry, sin_i):
-        """
-        Calculate the 2-D roughness spectra for n (multiple scattering)
-        """
-
+        """Calculate the 2-D roughness spectra for n (multiple scattering)"""
         kl2 = (k.norm() * self.corr_length) ** 2
 
         if self.autocorrelation_function == "gaussian":
@@ -279,9 +268,7 @@ class IIEM_Fung2002(IEM_Fung92):
             raise SMRTError("The autocorrelation function must be expoential or gaussian")
 
     def W_m_2D(self, n, k, rx, ry, sin_i):
-        """
-        Calculate the 2-D roughness spectra for m (multiple scattering)
-        """
+        """Calculate the 2-D roughness spectra for m (multiple scattering)"""
         kl2 = (k.norm() * self.corr_length) ** 2
 
         if self.autocorrelation_function == "gaussian":
@@ -348,8 +335,7 @@ class IIEM_Fung2002(IEM_Fung92):
         return VH
 
     def double_integral(self, k, ks2, mu_i, eps_2, Rvh, n, n_order):
-        """
-        Double integral function that is vectorized to handle multidimensionnal integrand (mu_i)
+        """Double integral function that is vectorized to handle multidimensionnal integrand (mu_i)
         Using Gauss legendre polynomials to do a fixed order quadrature
         """
         # can handle multidimensionnal integrand
@@ -381,8 +367,7 @@ class IIEM_Fung2002(IEM_Fung92):
 
 
 def calculate_F(ud, is_, Rv, Rh, eps_r, k_norm, kz, k_sz, mu_i, mu_s, dphi):
-    """
-    Calculate propagating field coefficients (F) and c_i coefficients, eqn 2 and 3 in Fung et al 2002.
+    """Calculate propagating field coefficients (F) and c_i coefficients, eqn 2 and 3 in Fung et al 2002.
     Code modified from ulaby et al 2014 matlab code and Robbie Mallet https://github.com/robbiemallett/IIEM
     """
     # geometry
@@ -481,9 +466,7 @@ def calculate_F(ud, is_, Rv, Rh, eps_r, k_norm, kz, k_sz, mu_i, mu_s, dphi):
 
 
 def calculate_Iqp(eps_1, eps_2, k_norm, kz, k_sz, Rv, Rh, n, mu_i, mu_s, dphi, rms2):
-    """
-    Calculate Iqp, eqn 5 in Fung et al 2002.
-    """
+    """Calculate Iqp, eqn 5 in Fung et al 2002."""
     eps_r = eps_2.real / eps_1.real
 
     sin_i = np.sqrt(1 - mu_i**2)

@@ -1,5 +1,4 @@
-"""
-Provide interface boundary condition under IEM formulation with an extended domain.
+"""Provide interface boundary condition under IEM formulation with an extended domain.
 
 The interface boundary condition under IEM formulation provided by Fung et al. 1992 in IEEE TGRS with an extended domain of
 validity (for large roughness or correlation length) by switching the Fresnel coefficients according to Brogioni et al. 2010. A better
@@ -28,8 +27,7 @@ from smrt.interface.iem_fung92 import IEM_Fung92
 
 
 class IEM_Fung92_Briogoni10(IEM_Fung92):
-    """
-    Implement a moderate rough surface model with backscatter, specular reflection and transmission only. Use with care!
+    """Implement a moderate rough surface model with backscatter, specular reflection and transmission only. Use with care!
 
     Calculate the fresnel coefficients at the angle mu_i or 0° depending on ks*kl. The transition is abrupt. The fresnel coefficients
     are computed with mu = 1 for ks * kl > np.sqrt(eps_2 / eps_1).

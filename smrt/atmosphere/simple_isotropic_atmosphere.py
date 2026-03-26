@@ -1,6 +1,5 @@
 # coding: utf-8
-"""
-Implements an isotropic atmosphere with prescribed frequency-dependent emission (up and down) and transmittance.
+"""Implements an isotropic atmosphere with prescribed frequency-dependent emission (up and down) and transmittance.
 
  TB and transmissivity can be specified as a constant, or a frequency-dependent dictionary
 
@@ -36,8 +35,7 @@ from smrt.core.error import smrt_warn
 
 
 def make_atmosphere(tb_down=0, tb_up=0, transmittance=1):
-    """
-    Construct an atmosphere instance.
+    """Construct an atmosphere instance.
 
     Args:
         tb_down:  (Default value = 0)

@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Provide mixing formulae relevant to snow and equations to compute the effective permittivity of snow.
+"""Provide mixing formulae relevant to snow and equations to compute the effective permittivity of snow.
 
 These functions are to be used with :py:mod:`smrt.emmodel.iba.derived_IBA` or
 :py:mod:`smrt.emmodel.symsce_torquato21.derived_SymSCETK21` to change the default of most emmodels (IBA, DMRT, SFT
@@ -40,8 +39,7 @@ def wetsnow_permittivity_tinga73(
     ice_permittivity_model=None,
     water_permittivity_model=None,
 ):
-    """
-    Compute the effective permittivity proposed by Tinga et al. 1(973) for three-component mixing.
+    """Compute the effective permittivity proposed by Tinga et al. 1(973) for three-component mixing.
 
     The component 1 is the background ("a" here), the compoment 2 ("w" here) is a spherical shell surrounding the component 3 ("i" here).
     It was used by Tiuri as well as T. Mote to compute wet snolw permittivity.
@@ -64,7 +62,6 @@ def wetsnow_permittivity_tinga73(
         Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publication 2153.)
 
     """
-
     if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
         raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
 
@@ -115,8 +112,7 @@ def wetsnow_permittivity_tinga73(
 
 
 def compute_frac_volumes(density, liquid_water):
-    """
-    Compute the fractional volume of ice+water, the fractional volume of ice, and the fractional volume of water from the (wet)
+    """Compute the fractional volume of ice+water, the fractional volume of ice, and the fractional volume of water from the (wet)
     snow density and the liquid_water which is the volume fraction of liquid with respect to ice + liquid (but no air).
 
     Args:
@@ -152,8 +148,7 @@ def wetsnow_permittivity_colbeck80_caseI(
     ice_permittivity_model=None,
     water_permittivity_model=None,
 ):
-    """
-    Compute the effective permittivity proposed by Colbeck, 1980 for the pendular regime.
+    """Compute the effective permittivity proposed by Colbeck, 1980 for the pendular regime.
 
     Args:
         temperature: temperature in K.
@@ -214,8 +209,7 @@ def wetsnow_permittivity_colbeck80_caseII(
     ice_permittivity_model=None,
     water_permittivity_model=None,
 ):
-    """
-    Compute the effective permittivity proposed by Colbeck, 1980 for the funicular regime and low dry snow density.
+    """Compute the effective permittivity proposed by Colbeck, 1980 for the funicular regime and low dry snow density.
 
     Args:
         temperature: temperature in K.
@@ -233,7 +227,6 @@ def wetsnow_permittivity_colbeck80_caseII(
         https://apps.dtic.mil/sti/tr/pdf/ADP000148.pdf
 
     """
-
     if (temperature < FREEZING_POINT) and np.any(liquid_water > 0):
         raise SMRTError("Liquid water is positive and temperature is set below freezing. This seems incompatible.")
 
@@ -266,8 +259,7 @@ def wetsnow_permittivity_colbeck80_caseIII(
     ice_permittivity_model=None,
     water_permittivity_model=None,
 ):
-    """
-    Compute the effective permittivity proposed by Colbeck, 1980 for the low porosity.
+    """Compute the effective permittivity proposed by Colbeck, 1980 for the low porosity.
 
     Args:
         temperature: temperature in K.
@@ -315,8 +307,7 @@ def wetsnow_permittivity_colbeck80_caseIII(
 
 @layer_properties("density", "liquid_water")
 def wetsnow_permittivity_hallikainen86(frequency, density, liquid_water):
-    """
-    Compute the effective permittivity of a snow mixture calculated with the Modified Debye model by Hallikainen 1986
+    """Compute the effective permittivity of a snow mixture calculated with the Modified Debye model by Hallikainen 1986
 
     The implementation of this function follows the equations formulation of the original paper
     (Hallikainen et al. 1986). Anyway this formulation does not allow the reproduction of the results
@@ -342,7 +333,6 @@ def wetsnow_permittivity_hallikainen86(frequency, density, liquid_water):
         Ulaby, F. T., et al. (2014). Microwave radar and radiometric remote sensing.
 
     """
-
     smrt_warn(
         "This model cannot reproduce the results of the original paper. "
         "You may want to use wetsnow_permittivity_hallikainen86_ulaby14 instead."
@@ -380,8 +370,7 @@ def wetsnow_permittivity_hallikainen86(frequency, density, liquid_water):
 
 @layer_properties("density", "liquid_water")
 def wetsnow_permittivity_hallikainen86_ulaby14(frequency, density, liquid_water):
-    """
-    Compute the effective permittivity of a snow mixture calculated with the Modified Debye model by Hallikainen 1986
+    """Compute the effective permittivity of a snow mixture calculated with the Modified Debye model by Hallikainen 1986
     and revised in Microwave Radar and Radiometric Remote Sensing by Ulaby et al. 2014.
 
     Note:
@@ -402,7 +391,6 @@ def wetsnow_permittivity_hallikainen86_ulaby14(frequency, density, liquid_water)
 
         Ulaby, F. T., et al. (2014). Microwave radar and radiometric remote sensing. Chapter 4
     """
-
     frac_volume, fi, fw = compute_frac_volumes(density, liquid_water)
 
     # fractional volume of water in %
@@ -450,8 +438,7 @@ def wetsnow_permittivity_hallikainen86_ulaby14(frequency, density, liquid_water)
     optional_arguments=["ice_permittivity_model"],
 )
 def wetsnow_permittivity_wiesmann99(frequency, temperature, density, liquid_water, ice_permittivity_model=None):
-    """
-    Compute the effective permittivity of a snow mixture as presented in MEMLS by Wiesmann and Matzler, 1999.
+    """Compute the effective permittivity of a snow mixture as presented in MEMLS by Wiesmann and Matzler, 1999.
 
     Note:
         The version implemented in MEMLS v3 is different.
@@ -519,8 +506,7 @@ def wetsnow_permittivity_memls(
     ice_permittivity_model=None,
     water_permittivity_model=None,
 ):
-    """
-    Compute the effective permittivity of a snow mixture as calculated in MEMLS using Maxwell-Garnett Mixing rule of water in dry snow
+    """Compute the effective permittivity of a snow mixture as calculated in MEMLS using Maxwell-Garnett Mixing rule of water in dry snow
     for prolate spheroidal water with experimentally determined. Dry snow permittivity is here determined with Polder van Santen.
 
     Args:
@@ -604,8 +590,7 @@ def wetsnow_permittivity_three_component_polder_van_santen(
     ice_permittivity_model=None,
     water_permittivity_model=None,
 ):
-    """
-    Compute the effective permittivity of a snow mixture using the three components polder_van_santen, assuming spherical inclusions.
+    """Compute the effective permittivity of a snow mixture using the three components polder_van_santen, assuming spherical inclusions.
 
     Args:
         temperature: temperature in K.

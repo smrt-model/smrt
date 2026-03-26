@@ -23,8 +23,7 @@ from .iba import IBA
 
 
 class IBA_MaxwellGarnett(IBA):
-    """
-    Modified Improved Born Approximation electromagnetic model class.
+    """Modified Improved Born Approximation electromagnetic model class.
 
     This class is used to create an electromagnetic object that holds information about the effective permittivity,
     extinction coefficient and phase function for a particular snow layer. Due to the frequency dependence, information

@@ -1,9 +1,6 @@
 # coding: utf-8
 
-"""
-Implement a surface with a backscatter of 4pi.
-
-"""
+"""Implement a surface with a backscatter of 4pi."""
 
 # local import
 from smrt.core.interface import Interface

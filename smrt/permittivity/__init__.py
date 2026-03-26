@@ -1,5 +1,4 @@
-"""
-Provide many formulations for the permittivity of various materials (ice, water, etc.) or for mixing formulae.
+"""Provide many formulations for the permittivity of various materials (ice, water, etc.) or for mixing formulae.
 
 The former are to be used as input of the functions in :py:mod:`smrt.inputs` in order
 to prescribe the scatterers and background permittivity, while the latter are to be used in :py:mod:`smrt.emmodels` to

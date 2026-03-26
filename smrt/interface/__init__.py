@@ -1,5 +1,4 @@
-"""
-Contains different types of boundary conditions between the layers.
+"""Contains different types of boundary conditions between the layers.
 
 .. admonition::  **For developers**
 

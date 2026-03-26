@@ -1,5 +1,4 @@
-"""
-This package includes modules to create the medium and sensor configuration required for the simulations.
+"""This package includes modules to create the medium and sensor configuration required for the simulations.
 The recommended way to build these objects::
 
     from smrt import make_snowpack, sensor_list

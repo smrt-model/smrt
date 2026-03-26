@@ -36,7 +36,6 @@ class RTSolverBase(metaclass=ABCMeta):
         Returns:
             result: Result object, :py:mod:`smrt.core.result.Result`.
         """
-
         # all these assignements are for convenience, this would break with parallel code (// !!)
         self.emmodels = emmodels
         self.snowpack = snowpack
@@ -65,8 +64,7 @@ class RTSolverBase(metaclass=ABCMeta):
 
 
 class DiscreteOrdinatesMixin(metaclass=ABCMeta):
-    """
-    This mixin provides features to deal with discrete ordinates.
+    """This mixin provides features to deal with discrete ordinates.
 
     .. note::
 
@@ -82,14 +80,12 @@ class DiscreteOrdinatesMixin(metaclass=ABCMeta):
 
     def prepare_streams(self):
         """Compute the streams angle using a quadrature or equivalent"""
-
         rtsolver = cast(RTSolverBase, self)
 
         self.streams = compute_stream(self.n_max_stream, rtsolver.effective_permittivity, mode=self.stream_mode)
 
     def prepare_incident_streams(self) -> list:
         """Compute the streams nearest to the user-requested incident angle (for radar only)."""
-
         sensor = cast(RTSolverBase, self).sensor
         incident_streams = set()
 
@@ -107,7 +103,7 @@ class DiscreteOrdinatesMixin(metaclass=ABCMeta):
         return incident_streams
 
     def add_intensity_mode(self, intensity, intensity_m, m):
-        """add intensity mode m to the intensity.
+        """Add intensity mode m to the intensity.
 
         This function assumes that the intensity dimensions are pola, incidence, pola, incidence,...
 
@@ -213,8 +209,7 @@ class DiscreteOrdinatesMixin(metaclass=ABCMeta):
 
 
 class CoherentLayerMixin(metaclass=ABCMeta):
-    """
-    This mixin provides features to deal with coherent layer for RT Solvers.
+    """This mixin provides features to deal with coherent layer for RT Solvers.
 
     It provides a function to perform the snowpack transformation.
     """
@@ -240,8 +235,7 @@ class CoherentLayerMixin(metaclass=ABCMeta):
 
 
 def prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity=None, mu=1):
-    """
-    Return a dict with the profiles of ka, ks, ke and effective permittivity. Can be directly used by Solver to insert
+    """Return a dict with the profiles of ka, ks, ke and effective permittivity. Can be directly used by Solver to insert
     data in other_data.
 
     ks and ke are the mean in all directions given by mu.
@@ -252,7 +246,6 @@ def prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivi
         effective_permittivity: list of permittivity. If None, it is obtained from the emmodels
         mu: cosine angles where to compute ks.
     """
-
     if effective_permittivity is None:
         effective_permittivity = np.array([emmodel.effective_permittivity() for emmodel in emmodels])
 
@@ -270,8 +263,7 @@ def prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivi
 
 
 class PlanckMixin(metaclass=ABCMeta):
-    """
-    This mixin provides features to deal with Planck function.
+    """This mixin provides features to deal with Planck function.
 
     .. note::
 

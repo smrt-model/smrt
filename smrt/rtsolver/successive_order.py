@@ -1,5 +1,4 @@
-"""
-Provide the Successive Order Solver as a multi-stream solver of the radiative transfer model based on Lenoble et al.
+"""Provide the Successive Order Solver as a multi-stream solver of the radiative transfer model based on Lenoble et al.
 2007 and Greenwald et al. 2005, with some adaptation using SMRT DORT code.
 
 The main interests of this solver are:
@@ -54,8 +53,7 @@ from smrt.rtsolver.rtsolver_utils import (
 
 
 class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, RTSolverBase):
-    """
-    Implement the Successive Order solver.
+    """Implement the Successive Order solver.
 
     Args:
         n_iteration_max: maximum number of computed orders. Setting a value of e.g. 2 only computes first and second
@@ -149,7 +147,6 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         Returns:
             result: Result object, :py:mod:`smrt.core.result.Result`.
         """
-
         self.init_solve(snowpack, emmodels, sensor, atmosphere)
 
         self.process_coherent_layers()  # must be before prepare_streams
@@ -442,9 +439,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         )
 
     def prepare_snowpack_properties(self, m_max):
-        """
-        Args:
-        """
+        """Args:"""
         extinction = []
         weighted_phase = list_of_empty_list(m_max + 1)
         n_sublayer = []

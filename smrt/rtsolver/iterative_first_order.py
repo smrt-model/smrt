@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Provide the iterative first-order radiative transfer solver.
+"""Provide the iterative first-order radiative transfer solver.
 
 This module implements a first-order iterative solution for the radiative transfer equation
 to calculate backscatter coefficients. The solver computes both zeroth and first-order
@@ -70,8 +69,7 @@ from smrt.rtsolver.rtsolver_utils import RTSolverBase, prepare_kskaeps_profile_i
 
 
 class IterativeFirstOrder(RTSolverBase):
-    """
-    Implement the iterative radiative transfer solver using first-order approximation.
+    """Implement the iterative radiative transfer solver using first-order approximation.
 
     This solver computes the zeroth and first-order terms of the iterative solution
     for the radiative transfer equation. It provides efficient backscatter calculations
@@ -99,8 +97,7 @@ class IterativeFirstOrder(RTSolverBase):
         self.return_contributions = return_contributions
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
-        """
-        Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
+        """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
             snowpack: Snowpack object.

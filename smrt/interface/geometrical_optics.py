@@ -1,5 +1,4 @@
-"""
-Implement the interface boundary condition under the Geometrical Approximation between layers characterized by their
+"""Implement the interface boundary condition under the Geometrical Approximation between layers characterized by their
 effective permittivities.
 
 This approximation is suitable for surfaces with roughness much larger than the roughness scales, typically k*s >> 1 and k*l >> 1, where
@@ -29,11 +28,11 @@ from smrt.core.fresnel import fresnel_coefficients
 from smrt.core.interface import Interface
 from smrt.core.lib import abs2, generic_ft_even_matrix, smrt_matrix
 from smrt.core.vector3 import vector3
+from smrt.interface.interface_utils import HemisphericalIntegrationMixin
 
 
-class GeometricalOptics(Interface):
-    """
-    Implement a very rough surface.
+class GeometricalOptics(HemisphericalIntegrationMixin, Interface):
+    """Implement a very rough surface.
 
     Args:
         mean_square_slope: Roughness parameter of a gaussian surface, ``mean_square_slope = 2*roughness_rms**2/corr_length**2``.
@@ -67,8 +66,7 @@ class GeometricalOptics(Interface):
             raise SMRTError("Either mean_square_slope or both roughness_rms and corr_length must be set.")
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """
-        Compute the specular reflection coefficients.
+        """Compute the specular reflection coefficients.
 
         Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
         beam is transmitted.
@@ -83,12 +81,10 @@ class GeometricalOptics(Interface):
         Returns:
             The reflection matrix.
         """
-
         return smrt_matrix(0)  # this is an approximation for non nadir looking
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
-        """
-        Compute the diffuse reflection coefficients.
+        """Compute the diffuse reflection coefficients.
 
         Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
         beam is transmitted.
@@ -164,7 +160,8 @@ class GeometricalOptics(Interface):
         reflection_coefficients[1, 0] = fhv
         reflection_coefficients[1, 1] = fhh
 
-        smrt_norm = 1 / (4 * np.pi)  # divide by 4*pi because this is the norm for SMRT
+        # SMRT requires scattering coefficient / 4 * pi. See def 2.1.125 in TsangIII to understand how gamma is defined.
+        smrt_norm = 1 / (4 * np.pi)
 
         coef = (
             smrt_norm
@@ -208,8 +205,7 @@ class GeometricalOptics(Interface):
         return generic_ft_even_matrix(transmission_function, m_max, nsamples=256)
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """
-        Compute the coherent transmission coefficients.
+        """Compute the coherent transmission coefficients.
 
         Coefficients are calculated for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1.
         Medium 2 is where the beam is transmitted.
@@ -224,12 +220,10 @@ class GeometricalOptics(Interface):
         Returns:
             The transmission matrix.
         """
-
         return smrt_matrix(0)
 
     def diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_t, mu_i, dphi, npol):
-        """
-        Compute the diffuse transmission coefficients.
+        """Compute the diffuse transmission coefficients.
 
         Coefficient are calculated for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the
         beam is transmitted.
@@ -326,7 +320,8 @@ class GeometricalOptics(Interface):
         transmission_coefficients[1, 0] = Whv
         transmission_coefficients[1, 1] = Whh
 
-        smrt_norm = 1 / (4 * np.pi)  # SMRT requires scattering coefficient / 4 * pi
+        # SMRT requires scattering coefficient / 4 * pi. See def 2.1.125 in TsangIII to understand how gamma is defined.
+        smrt_norm = 1 / (4 * np.pi)
 
         coef = (
             smrt_norm
@@ -485,39 +480,6 @@ class GeometricalOptics(Interface):
             coef *= s
 
         return coef * Tv, coef * Th
-
-    def reflection_coefficients(self, frequency, eps_1, eps_2, mu_i):
-        # for debugging only at this stage
-        n_mu = 512 + 1
-        n_phi = 128
-
-        mu = np.linspace(1e-7, 1, n_mu, endpoint=True)
-        dphi = np.linspace(0, 2 * np.pi, n_phi, endpoint=False)
-
-        R = self.diffuse_reflection_matrix(frequency, eps_1, eps_2, mu, mu_i, dphi, 2)
-
-        return _integrate_coefficients(mu, dphi, R)
-
-    def transmission_coefficients(self, frequency, eps_1, eps_2, mu_i):
-        # for debugging only at this stage
-        n_mu = 128 + 1
-        n_phi = 128
-
-        mu = np.linspace(1e-7, 1, n_mu, endpoint=True)
-        dphi = np.linspace(0, 2 * np.pi, n_phi, endpoint=False)
-
-        T = self.diffuse_transmission_matrix(frequency, eps_1, eps_2, mu, mu_i, dphi, 2)
-
-        return _integrate_coefficients(mu, dphi, T)
-
-
-def _integrate_coefficients(mu, dphi, x):
-    # integrate the pola first, then the azimuth and last the mu
-    x = x.values.sum(axis=(0, 2))
-
-    # x is not pola_inc, mu_inc
-    # return scipy.integrate.simps(x, mu, axis=0) * (dphi[1] - dphi[0])  # use simpson method if n_mu is not 2**n + 1
-    return scipy.integrate.romb(x, dx=mu[1] - mu[0], axis=1) * (dphi[1] - dphi[0])
 
 
 def _clip_mu(mu):

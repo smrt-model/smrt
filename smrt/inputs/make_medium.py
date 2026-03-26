@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Provide helper functions to create snowpacks, sea-ice, and other media. These functions are user-friendly and recommended
+"""Provide helper functions to create snowpacks, sea-ice, and other media. These functions are user-friendly and recommended
 for most usages. Extension of these functions is welcome on the condition they keep a generic structure.
 
 The function `make_snowpack` is the first entry point the user should consider to build a snowpack.
@@ -63,8 +62,7 @@ from smrt.substrate.flat import Flat
 
 
 def make_medium(data, surface=None, interface=None, substrate=None, **kwargs):
-    """
-    Build a multi-layered medium using a pandas DataFrame (or a dict that can be transformed into a DataFrame) and optional arguments.
+    """Build a multi-layered medium using a pandas DataFrame (or a dict that can be transformed into a DataFrame) and optional arguments.
 
     The 'medium' column (or key) in data indicates the medium type: 'snow' or 'ice'. If not given, it defaults to 'snow'.
     'data' must contain enough information to build either a snowpack or an ice_column. The minimum requirements are:
@@ -160,8 +158,7 @@ def make_snowpack(
     atmosphere=None,
     **kwargs,
 ):
-    """
-    Build a multi-layered snowpack. Each parameter can be an array, list or a constant value.
+    """Build a multi-layered snowpack. Each parameter can be an array, list or a constant value.
 
     Args:
         thickness: Thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf"
@@ -237,8 +234,7 @@ def make_snow_layer(
     medium="snow",
     **kwargs,
 ):
-    """
-    Make a snow layer for a given microstructure_model.
+    """Make a snow layer for a given microstructure_model.
 
     The microstructural parameters depend on the microstructural model and should be given as
     additional arguments to this function. To know which parameters are required or optional, refer to the documentation
@@ -324,8 +320,7 @@ class SnowLayer(Layer):
         liquid_water=None,
         **kwargs,
     ):
-        """
-        Create a specialized SnowLayer
+        """Create a specialized SnowLayer
 
         Args:
             density: New density value.
@@ -335,7 +330,6 @@ class SnowLayer(Layer):
 
         SnowLayer: Instance of SnowLayer.
         """
-
         frac_volume, liquid_water = SnowLayer.compute_frac_volumes(density, volumetric_liquid_water, liquid_water)
 
         super().__init__(
@@ -353,8 +347,7 @@ class SnowLayer(Layer):
         }
 
     def update(self, density=None, volumetric_liquid_water=None, liquid_water=None, **kwargs):
-        """
-        Update the density and/or volumetric_liquid_water.
+        """Update the density and/or volumetric_liquid_water.
 
         This method must be used every time density and/or volumetric_liquid_water are changed.
         Setting directly the corresponding attributes of the Layer object raises an error because
@@ -367,7 +360,6 @@ class SnowLayer(Layer):
             liquid_water: New liquid_water value.
             **kwargs: Other attributes to update.
         """
-
         if density is not None:
             # avoid the readonly status
             self.__dict__["density"] = density
@@ -384,8 +376,7 @@ class SnowLayer(Layer):
 
     @staticmethod
     def compute_frac_volumes(density, volumetric_liquid_water=None, liquid_water=None):
-        """
-        Compute and return the fractional volumes for ice and liquid water.
+        """Compute and return the fractional volumes for ice and liquid water.
 
         The calculations are:
             - frac_volume = (ice+water) / (ice+water+air)
@@ -399,7 +390,6 @@ class SnowLayer(Layer):
         Returns:
             tuple with (frac_volume, liquid_water)
         """
-
         if volumetric_liquid_water is not None:
             if liquid_water is not None:
                 raise SMRTError("Setting both liquid_water and volumetric_liquid_water is ambiguous")
@@ -452,8 +442,7 @@ def make_ice_column(
     atmosphere=None,
     **kwargs,
 ):
-    """
-    Build a multi-layered ice column. Each parameter can be an array, list or a constant value.
+    """Build a multi-layered ice column. Each parameter can be an array, list or a constant value.
 
     `ice_type` argument determines the type of ice, which has a big impact on how the medium is modelled and the parameters:
         - First year ice is modelled as scattering brines embedded in a pure ice background
@@ -493,7 +482,6 @@ def make_ice_column(
     The documentation of this function describes in detail the parameters used/required depending on ice_type.
 
     """
-
     # add a substrate underneath the ice (if wanted):
     if add_water_substrate:
         wp = water_parameters(ice_type, **kwargs)
@@ -750,8 +738,7 @@ def make_water_body(
     atmosphere=None,
     substrate=None,
 ):
-    """
-    Make a water body with a single layer of water at given temperature and salinity.
+    """Make a water body with a single layer of water at given temperature and salinity.
 
     Note:
         Water is a very strong absorber even fresh water, it is unlikely that the layers under a water body
@@ -810,8 +797,7 @@ def make_water_layer(
     foam_bubble_radius=0.1e-3,
     **kwargs,
 ):
-    """
-    Make a water layer at given temperature and salinity.
+    """Make a water layer at given temperature and salinity.
 
     Args:
         layer_thickness: Thickness of ice layer in m.
@@ -854,8 +840,7 @@ def make_water_layer(
 
 
 def water_parameters(ice_type, **kwargs):
-    """
-    Return the water parameters to make a semi-infinite water layer.
+    """Return the water parameters to make a semi-infinite water layer.
 
     Args:
         ice_type: Type of ice used to determine if a saline or fresh water layer is added.
@@ -866,7 +851,6 @@ def water_parameters(ice_type, **kwargs):
     Returns:
         namedtuple: WaterParameter with water_temperature, water_salinity, water_permittivity_model.
     """
-
     # prepare default
     if ice_type in ["firstyear", "multiyear"]:
         water_temperature = FREEZING_POINT - 1.8
@@ -896,8 +880,7 @@ def water_parameters(ice_type, **kwargs):
 
 
 def bulk_ice_density(temperature, salinity, porosity):
-    """
-    Compute bulk density of sea ice (in kg m :sup:`-3`), when considering the influence from brine, solid salts, and
+    """Compute bulk density of sea ice (in kg m :sup:`-3`), when considering the influence from brine, solid salts, and
     air bubbles in the ice.
 
     Formulation from Cox & Weeks (1983): Equations for determining the gas and brine volumes in sea ice samples,
@@ -912,7 +895,6 @@ def bulk_ice_density(temperature, salinity, porosity):
     Returns:
         float: Density of ice mixture in kg m :sup:`-3`
     """
-
     Tc = temperature - FREEZING_POINT
 
     if Tc > -2.0:
@@ -954,8 +936,7 @@ def make_generic_stack(
     substrate=None,
     atmosphere=None,
 ):
-    """
-    Build a multi-layered medium with prescribed scattering and absorption coefficients and effective permittivity.
+    """Build a multi-layered medium with prescribed scattering and absorption coefficients and effective permittivity.
     Must be used with :py:mod:`smrt.emmodel.prescribed_kskaeps` emmodel.
 
     Args:
@@ -1009,8 +990,7 @@ def make_generic_stack(
 
 
 def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, temperature=FREEZING_POINT):
-    """
-    Make a generic layer with prescribed scattering and absorption coefficients and effective permittivity.
+    """Make a generic layer with prescribed scattering and absorption coefficients and effective permittivity.
     Must be used with :py:mod:`smrt.emmodel.prescribed_kskaeps` emmodel.
 
     Args:
@@ -1022,7 +1002,6 @@ def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, te
     Returns:
         Layer: Instance of Layer.
     """
-
     lay = Layer(layer_thickness, temperature=temperature)
 
     lay.temperature = float(temperature)
@@ -1034,8 +1013,7 @@ def make_generic_layer(layer_thickness, ks=0, ka=0, effective_permittivity=1, te
 
 
 def add_transparent_layer(snowpack):
-    """
-    Adds a transparent layer to the snowpack.
+    """Adds a transparent layer to the snowpack.
 
     Args:
         snowpack: The substrate under the transparent layer.
@@ -1044,7 +1022,6 @@ def add_transparent_layer(snowpack):
 
         sp = add_transparent_layer(sp)
     """
-
     layer = Layer(
         thickness=0,
         microstructure_model=get_microstructure_model("homogeneous"),
@@ -1060,8 +1037,7 @@ def add_transparent_layer(snowpack):
 
 
 def make_transparent_volume(substrate=None, atmosphere=None):
-    """
-    Build a transparent single-layer snowpack. This is useful to run SMRT with substrate only, without any volume.
+    """Build a transparent single-layer snowpack. This is useful to run SMRT with substrate only, without any volume.
 
     Args:
         substrate: The substrate under the transparent layer.
@@ -1070,13 +1046,11 @@ def make_transparent_volume(substrate=None, atmosphere=None):
 
         sp = make_transparent_volume()
     """
-
     return add_transparent_layer(Snowpack(substrate=substrate, atmosphere=atmosphere))
 
 
 def make_atmosphere(atmosphere_model, **kwargs):
-    """
-    Make an atmospheric single-layer using the prescribed atmosphere model.
+    """Make an atmospheric single-layer using the prescribed atmosphere model.
 
     Warning:
         This function is subject to change in the future when refactoring how SMRT deals with atmosphere.
@@ -1088,15 +1062,13 @@ def make_atmosphere(atmosphere_model, **kwargs):
     Returns:
         Instance of the atmosphere model.
     """
-
     atmosphere_class = import_class("atmosphere", atmosphere_model)
 
     return atmosphere_class(**kwargs)
 
 
 def compute_thickness_from_z(z):
-    """
-    Computes the thickness of layers given the elevation `z`. Whatever the sign of `z`, the order *MUST* be from the topmost layer to the
+    """Computes the thickness of layers given the elevation `z`. Whatever the sign of `z`, the order *MUST* be from the topmost layer to the
     lowermost.
 
     Several situations are accepted and interpreted as follows:
@@ -1117,7 +1089,6 @@ def compute_thickness_from_z(z):
     Returns:
         ndarray: Thickness array.
     """
-
     order = np.diff(z) < 0
     if np.any(z == 0):
         raise SMRTError("z must not include 0")
@@ -1149,11 +1120,7 @@ def compute_thickness_from_z(z):
 
 
 def _warn_mixing_formula(permittivity_model, name):
-    """
-    Print a warning when the permittivity model is a mixing formula.
-
-    """
-
+    """Print a warning when the permittivity model is a mixing formula."""
     if not callable(permittivity_model):
         return
 

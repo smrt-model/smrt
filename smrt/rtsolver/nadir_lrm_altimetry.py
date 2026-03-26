@@ -1,5 +1,4 @@
-"""
-Compute waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the given snowpack and sensor (or complex
+"""Compute waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the given snowpack and sensor (or complex
 terrain soon).
 
 The implementation is based on Adams and Brown 1998 and Lacroix et al. 2008. Both models differ in the specific choices
@@ -43,8 +42,7 @@ from smrt.rtsolver.waveform_model import Brown1977
 
 
 class NadirLRMAltimetry(object):
-    """
-    Implement the Nadir LRM Mode Altimetry RT solver.
+    """Implement the Nadir LRM Mode Altimetry RT solver.
 
     Args:
         oversampling_time: integer number defining the number of subgates used for the computation in each altimeter gate.
@@ -94,8 +92,7 @@ class NadirLRMAltimetry(object):
         self.theta_inc_sampling = theta_inc_sampling
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
-        """
-        Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
+        """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
             snowpack: Snowpack object.
@@ -561,10 +558,9 @@ def coherent_reflection_square_decay(sensor):
 
 
 def coherent_reflection_factor(sensor, roughness_rms, mu):
-    """return the factor to account for the coherent echo due to the spherical wave (see Fung and Eom, 1983) equation 6.
+    """Return the factor to account for the coherent echo due to the spherical wave (see Fung and Eom, 1983) equation 6.
     This neglects the macroscopic slope of the terrain, which should be included in principle.
     """
-
     sintheta2 = 1 - mu**2  # we neglect the slope
     theta2 = sintheta2  # approximation
 
@@ -574,9 +570,8 @@ def coherent_reflection_factor(sensor, roughness_rms, mu):
 
 
 def local_incidence_cosine(sensor, mu):
-    """compute the cosine of the local incidence angle considering a small pitch and roll.
+    """Compute the cosine of the local incidence angle considering a small pitch and roll.
 
     This function assumes pitch and roll are small, otherwise yaw would be involved in the equation
     """
-
     return mu * np.cos(sensor.pitch_angle) * np.cos(sensor.roll_angle)

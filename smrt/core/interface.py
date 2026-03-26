@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-This module implements the base class for all the substrate models.
+"""This module implements the base class for all the substrate models.
 To create a substrate, it is recommended to use help functions such as :py:func:`~smrt.inputs.make_soil.make_soil`
 rather than the class constructor.
 
@@ -16,8 +15,7 @@ from smrt.core.plugin import import_class
 
 
 def make_interface(inst_class_or_modulename, broadcast=True, **kwargs):
-    """
-    Return an instance corresponding to the interface model with the provided arguments.
+    """Return an instance corresponding to the interface model with the provided arguments.
 
     This function imports the interface module if necessary and
     returns an instance of the interface class with the provided arguments in \\**kwargs.
@@ -27,7 +25,6 @@ def make_interface(inst_class_or_modulename, broadcast=True, **kwargs):
         broadcast:  (Default value = True)
         **kwargs:
     """
-
     # import the module
     if inst_class_or_modulename is None:
         from ..interface.flat import (
@@ -57,8 +54,7 @@ def make_interface(inst_class_or_modulename, broadcast=True, **kwargs):
 
 
 class Interface(object):
-    """
-    Abstract class for interface between layer and substrate at the bottom of the snowpack.
+    """Abstract class for interface between layer and substrate at the bottom of the snowpack.
     It provides argument handling.
 
     """
@@ -67,15 +63,13 @@ class Interface(object):
     optional_args = {}
 
     def __init__(self, **kwargs):
-        """
-        Build the interface.
+        """Build the interface.
 
         Args:
             **kwargs: parameters such as roughness_rms, corr_length, Q, N, etc are required or optional depending on the
                 model. See the documentation of the model.
 
         """
-
         # super().__init__()  # must not be call. This interfers with substrate_from_interface presumably
 
         for arg in self.args:
@@ -89,15 +83,13 @@ class Interface(object):
 
 
 class SubstrateBase(object):
-    """
-    Abstract class for substrate at the bottom of the snowpack.
+    """Abstract class for substrate at the bottom of the snowpack.
     It provides calculation of the permittivity constant for soil case. Argument handline is delegated to the instance of the interface
 
     """
 
     def __init__(self, temperature=None, permittivity_model=None):
-        """
-        Build the substrate at the base of the snowpack.
+        """Build the substrate at the base of the snowpack.
 
         Args:
             temperature: temperature of the base of the snowpack. Can be the effective temperature if the substrate is
@@ -108,7 +100,6 @@ class SubstrateBase(object):
                 required or optional depending on the model. See the document of the model.
 
         """
-
         # super().__init__()  # must not be call. This interfers with substrate_from_interface presumably
 
         self.temperature = temperature
@@ -127,14 +118,12 @@ class SubstrateBase(object):
             self.permittivity_model = permittivity_model
 
     def permittivity(self, frequency):
-        """
-        Compute the permittivity for the given frequency using permittivity_model. This method returns None when no permittivity model is
+        """Compute the permittivity for the given frequency using permittivity_model. This method returns None when no permittivity model is
         available. This must be handled by the calling code and interpreted suitably.
 
         Args:
             frequency: frenquency in Hz
         """
-
         if self.permittivity_model is None:
             raise SMRTError(
                 "No permittivity_model have been given to the substrate. "
@@ -157,8 +146,7 @@ class SubstrateBase(object):
 
 
 def substrate_from_interface(interface_cls):
-    """
-    Decorator to transform an interface class into a substrate class with automatic method
+    """Decorator to transform an interface class into a substrate class with automatic method
 
     Args:
         interface_cls:
@@ -239,8 +227,7 @@ class Substrate(SubstrateBase, Interface):
 
 
 def get_substrate_model(substrate_model):
-    """
-    Return the class corresponding to the substrate model called name.
+    """Return the class corresponding to the substrate model called name.
 
     Args:
         substrate_model:
@@ -248,5 +235,4 @@ def get_substrate_model(substrate_model):
     Returns:
         This function imports the correct module if possible and returns the class
     """
-
     return import_class("substrate", substrate_model)

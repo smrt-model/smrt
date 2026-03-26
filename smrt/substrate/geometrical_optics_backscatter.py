@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements the geometrical optics rough substrate.
+"""Implements the geometrical optics rough substrate.
 
 See the documentation in smrt.interface.geometrical_optics_backscatter.
 """

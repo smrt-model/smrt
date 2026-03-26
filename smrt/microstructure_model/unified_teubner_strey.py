@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements the extended Teubner Strey model as described by Ruland 2010. This microstructure uses unified parameters as defined by
+"""Implements the extended Teubner Strey model as described by Ruland 2010. This microstructure uses unified parameters as defined by
 G. Picard, H. Löwe, F. Domine, L. Arnaud, F. Larue, V. Favier, E. Le Meur, E. Lefebvre, J. Savarino, A. Royer, The snow microstructural control on microwave scattering, AGU Advances.
 
 Args:
@@ -36,7 +35,7 @@ class UnifiedTeubnerStrey(UnifiedAutocorrelation):
             self.zeta2 = self.porod_length * np.sqrt(1 / (1 / K32 - 1))
 
     def basic_check(self):
-        """check consistency between the parameters"""
+        """Check consistency between the parameters"""
         pass
 
     def compute_ssa(self):
@@ -45,8 +44,7 @@ class UnifiedTeubnerStrey(UnifiedAutocorrelation):
         raise NotImplementedError("to be implemented")
 
     def autocorrelation_function(self, r):
-        """compute the real space autocorrelation function for the Teubner Strey model"""
-
+        """Compute the real space autocorrelation function for the Teubner Strey model"""
         if self.polydispersity >= 1:
             inv_harmonic_mean = 1 / self.zeta1 - 1 / self.zeta2
             denom = r * inv_harmonic_mean
@@ -68,7 +66,6 @@ class UnifiedTeubnerStrey(UnifiedAutocorrelation):
         (float).
 
         """
-
         if self.polydispersity >= 1:
             ft_acf_normalized = (4 * np.pi * self.zeta1 * self.zeta2 * (self.zeta1 + self.zeta2)) / (
                 (1 + (self.zeta1 * k) ** 2) * (1 + (self.zeta2 * k) ** 2)

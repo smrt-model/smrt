@@ -1,5 +1,4 @@
-"""
-Provide the coherent flat pseudo-interface, as in MEMLS.
+"""Provide the coherent flat pseudo-interface, as in MEMLS.
 
 This interface is obtained by collapsing one layer and two interfaces into a single interface. Scattering in the layer is neglected.
 """
@@ -51,8 +50,7 @@ def process_coherent_layers(snowpack, emmodel_list, effective_permittivity, sens
 
 
 class CoherentFlat(object):
-    """
-    Implement a flat interface (coherent).
+    """Implement a flat interface (coherent).
 
     The reflection is in the specular direction and the coefficient is calculated with the Fresnel coefficients.
 
@@ -69,8 +67,7 @@ class CoherentFlat(object):
         self.permittivity = permittivity
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """
-        Compute the reflection coefficients.
+        """Compute the reflection coefficients.
 
         Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
         beam is transmitted.
@@ -85,7 +82,6 @@ class CoherentFlat(object):
         Returns:
             The reflection matrix.
         """
-
         R01_v, R01_h, R1t_v, R1t_h, exp_kd, exp_2kd, mu_t = self._prepare_computation(frequency, eps_1, eps_2, mu1)
 
         R_v = (R01_v + R1t_v * exp_2kd) / (1 + R01_v * R1t_v * exp_2kd)
@@ -105,11 +101,11 @@ class CoherentFlat(object):
         return smrt_matrix(0)
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """
-        Compute the transmission coefficients.
+        """Compute the transmission coefficients.
 
         Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
         beam is transmitted.
+
         Args:
             frequency: Frequency of the incident wave.
             eps_1: Permittivity of the medium where the incident beam is propagating.
@@ -120,7 +116,6 @@ class CoherentFlat(object):
         Returns:
             The transmission matrix.
         """
-
         R01_v, R01_h, R1t_v, R1t_h, exp_kd, exp_2kd, mu_t = self._prepare_computation(frequency, eps_1, eps_2, mu1)
 
         T_v = (1 + R01_v) * (1 + R1t_v) * exp_kd / (1 + R01_v * R1t_v * exp_2kd)  # see TsnagI 5.2.10-12

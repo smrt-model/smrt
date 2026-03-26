@@ -1,5 +1,4 @@
-"""
-This code computes the reflection for a stack of multiple incoherent layers.
+"""This code computes the reflection for a stack of multiple incoherent layers.
 A convenience function is provided to compute the reflection of a stack of pair of layers
 
 References:
@@ -48,7 +47,6 @@ def compute_matrix_slab(
             contribution of the lowest layers is neglegible.
         air_permittivity: permittivity in above the slab
     """
-
     kd = 2 * np.pi * frequency / C_SPEED * np.array(thickness)
 
     mu = np.atleast_1d(outmu)
@@ -85,7 +83,7 @@ def compute_matrix_slab(
 def forward_matrix(
     eps1: complex, eps2: complex, mu: float, kd: float, temperature: float, limit_optical_depth: Optional[float] = None
 ):
-    """compute the operator to go from layer 1 to 2.
+    """Compute the operator to go from layer 1 to 2.
 
     Args:
         eps1: permittivity of the upper layer
@@ -105,7 +103,7 @@ def forward_matrix(
 def forward_matrix_fulloutput(
     eps1: complex, eps2: complex, mu: float, kd: float, temperature: float, limit_optical_depth: Optional[float] = None
 ):
-    """compute the operator to go from layer 1 to 2.
+    """Compute the operator to go from layer 1 to 2.
 
     Args:
         eps1: permittivity of the upper layer
@@ -165,7 +163,6 @@ def combine(Fs: Sequence):
     Args:
         Fs: sequence of matrices
     """
-
     Fout = Fs[0]
 
     for F in Fs[1:]:
@@ -183,7 +180,6 @@ def matrix_power(a: npt.NDArray[np.floating], n: int):
         a: matrix
         n: exponent (positive integer)
     """
-
     # axes = [(0, 1), (0, 1), (0, 1)]  # assume the first two dimensions are the matrix dimension.
     assert n >= 3
 
@@ -206,7 +202,6 @@ def compute_emerging_radiation(M: npt.NDArray[np.floating]):
     Args:
         M: the transfer matrix
     """
-
     return -M[1, 0] * M[0, 2] / M[0, 0] + M[1, 2]
 
 
@@ -216,7 +211,6 @@ def compute_reflection(M: npt.NDArray[np.floating]):
     Args:
         M: the transfer matrix
     """
-
     return M[1, 0, VPOL, :] / M[0, 0, VPOL, :], M[1, 0, HPOL, :] / M[0, 0, HPOL, :]
 
 
@@ -235,7 +229,6 @@ def matmul3(a: npt.NDArray[np.floating], b: npt.NDArray[np.floating]):
         a: first matrix
         b: second matrix
     """
-
     assert a.shape == b.shape
 
     c = np.empty((2, 3, *a.shape[2:]), dtype=a.dtype)

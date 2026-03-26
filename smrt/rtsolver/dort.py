@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Provide the Discrete Ordinate and Eigenvalue Solver as a multi-stream solver of the radiative transfer model in active
+"""Provide the Discrete Ordinate and Eigenvalue Solver as a multi-stream solver of the radiative transfer model in active
 and passive mode.
 
 This solver is precise but less efficient than 2 or 6 flux solvers. Different flavours of DORT (or DISORT) exist in the
@@ -81,8 +80,7 @@ from smrt.rtsolver.rtsolver_utils import (
 
 
 class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin):
-    """
-    Implement the Discrete Ordinate and Eigenvalue Solver.
+    """Implement the Discrete Ordinate and Eigenvalue Solver.
 
     Args:
         n_max_stream: number of stream in the most refringent layer.
@@ -198,7 +196,6 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
         Returns:
             result: Result object.
         """
-
         self.init_solve(snowpack, emmodels, sensor, atmosphere)
 
         self.process_coherent_layers()  # must be before prepare_streams
@@ -669,7 +666,6 @@ def _muleye(x):
         ndarray: If ``x`` is ``smrt_diag``, returns its diagonal as 1D array. If ``x`` is a scalar,
         returns at least a 1D array with that value. If ``x`` is a 2D array, returns the row-wise sum.
     """
-
     if isinstance(x, smrt_diag):
         return x.diagonal()
     elif (is_zero_scalar(x)) or (len(x.shape) == 0):
@@ -694,7 +690,6 @@ def _matmul(a, b, *args):
     Returns:
         The result of the chained multiplication.
     """
-
     if args:
         b = _matmul(b, *args)
     if np.isscalar(a) or np.isscalar(b):
@@ -716,7 +711,6 @@ def _todiag(bmat, oi, oj, dmat):
         oj (int): Column offset where the block should be placed.
         dmat (ndarray): Dense matrix block to insert.
     """
-
     u = (bmat.shape[0] - 1) // 2
 
     n, m = dmat.shape

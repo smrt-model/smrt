@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements the exponential autocorrelation function model of the microstructure. This microstructure model is used by MEMLS when IBA is selected.
+"""Implements the exponential autocorrelation function model of the microstructure. This microstructure model is used by MEMLS when IBA is selected.
 
 Args:
     frac_volume (float): Fractional volume.
@@ -38,20 +37,20 @@ class Exponential(Autocorrelation):
         return self.corr_length
 
     def basic_check(self):
-        """check consistency between the parameters"""
+        """Check consistency between the parameters"""
         pass
 
     def compute_ssa(self):
-        """compute the ssa for the exponential model according to Debye 1957. See also Maetzler 2002 Eq. 11"""
+        """Compute the ssa for the exponential model according to Debye 1957. See also Maetzler 2002 Eq. 11"""
         return 3 * (1 - self.frac_volume) / (DENSITY_OF_ICE * self.corr_length)
 
     def autocorrelation_function(self, r):
-        """compute the real space autocorrelation function"""
+        """Compute the real space autocorrelation function"""
         f_real = self.corr_func_at_origin * np.exp(-r / self.corr_length)
         return f_real
 
     def ft_autocorrelation_function(self, k):
-        """compute the fourier transform of the autocorrelation function analytically"""
+        """Compute the fourier transform of the autocorrelation function analytically"""
         X = (k * self.corr_length) ** 2
 
         ft = self.corr_func_at_origin * 8 * np.pi * self.corr_length**3 / (1.0 + X) ** 2

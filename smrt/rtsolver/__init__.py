@@ -1,5 +1,4 @@
-"""
-This package contains several solvers of the radiative transfer equation. Based on the electromagnetic properties of
+"""This package contains several solvers of the radiative transfer equation. Based on the electromagnetic properties of
 each layer computed by the EM model, these RT solvers compute the emission and propagation of energy in the medium up to
 the surface (the atmosphere is usually dealt with independently in dedicated modules in :py:mod:`smrt.atmosphere`).
 

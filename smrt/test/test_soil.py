@@ -4,8 +4,9 @@ import numpy as np
 import pytest
 
 from smrt import make_model, make_snowpack, make_soil, sensor
-from smrt.inputs.make_soil import make_soil_column
 from smrt.core.globalconstants import PERMITTIVITY_OF_FREE_SPACE
+from smrt.inputs.make_soil import make_soil_column
+
 #
 # Ghi: rapid hack, should be splitted in different functions
 #
@@ -144,6 +145,6 @@ def test_soil_bedrock_complex():
     freq = 1.41e9
     substrate = make_soil("flat", "frozen_bedrock_tulaczyk20", temperature=soiltemperature)
     eps = substrate.permittivity_model(freq, soiltemperature)
-    
+
     expected = 2.7 + 1j * (0.0002 / (2 * np.pi * freq * PERMITTIVITY_OF_FREE_SPACE))
     assert np.isclose(eps, expected)

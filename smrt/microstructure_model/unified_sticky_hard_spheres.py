@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements the monodisperse sticky hard sphere model of the microstructure. This microstructure uses unified parameters as defined by
+"""Implements the monodisperse sticky hard sphere model of the microstructure. This microstructure uses unified parameters as defined by
 G. Picard, H. Löwe, F. Domine, L. Arnaud, F. Larue, V. Favier, E. Le Meur, E. Lefebvre, J. Savarino, A. Royer, The snow microstructural control on microwave scattering, AGU Advances.
 
 Args:
@@ -32,7 +31,7 @@ class UnifiedStickyHardSpheres(UnifiedAutocorrelation):
         # t must check the condition t * f (1-f) < 1 + 2*f  which seems to be always valid...
 
     def basic_check(self):
-        """check consistency between the parameters"""
+        """Check consistency between the parameters"""
         pass
 
     # No analytical function exists
@@ -49,7 +48,6 @@ class UnifiedStickyHardSpheres(UnifiedAutocorrelation):
         (float).
 
         """
-
         # TODO LH:
         # * get solution for t directly from method compute_t
         # (this would include a check if the combination of stickiness

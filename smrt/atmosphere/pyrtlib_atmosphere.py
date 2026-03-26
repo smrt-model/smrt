@@ -169,8 +169,7 @@ class PyRTlibAtmosphere(PyRTlibAtmosphereBase):
         water_density=0,
         absorption_model=None,
     ):
-        """
-        Return an PyRTlib atmosphere with a prescribed profile with pressure, temperature and humidity and optionally clouds
+        """Return an PyRTlib atmosphere with a prescribed profile with pressure, temperature and humidity and optionally clouds
 
         :param altitude: Altitude of the layers (m). The first element of the array should be the highest.
         :param pressure: Pressure in each layers (Pa).

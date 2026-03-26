@@ -52,11 +52,17 @@ build-backend = "setuptools.build_meta"
 packages = ['smrt']
 
 [tool.ruff]
+select = ["E","F","D"]
 line-length = 120
 target-version = "py310"
 lint.ignore = ["E741"]
 lint.pydocstyle.convention = "google"
 extend-exclude = ["attic"]
+
+
+[tool.ruff.pydocstyle]
+convention = "google"
+
 
 [tool.setuptools_scm]
 

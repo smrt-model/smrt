@@ -19,8 +19,7 @@ class AtmosphereBase(object):
         raise NotImplementedError("The run method must be implemented in subclasses.")
 
     def __add__(self, other):
-        """
-        Return a new snowpack made by setting the atmosphere.
+        """Return a new snowpack made by setting the atmosphere.
 
         Args:
             other: The snowpack to add.
@@ -31,7 +30,6 @@ class AtmosphereBase(object):
         Raises:
             SMRTError: If the other object is not a Snowpack.
         """
-
         match other:
             case AtmosphereBase():
                 # adding two atmospheres results in stacking them
@@ -133,8 +131,7 @@ class AtmosphereResult:
 def make_nonscattering_atmosphere_results(
     frequency, tb_down, tb_up, transmittance, coords=None, rayleigh_jeans_approximation=False
 ):
-    """
-    Make an AtmosphereResult for a non-scattering atmosphere given the downwelling and upwelling brightness temperatures
+    """Make an AtmosphereResult for a non-scattering atmosphere given the downwelling and upwelling brightness temperatures
     and the transmittance. The nonscattering assumption is used to compute the intensity from the brightness temperature
     by calculating the emissivity and using the Planck function. The Rayleigh-Jeans approximation can be used to
     directly use the brightness temperature as intensity.
@@ -147,7 +144,6 @@ def make_nonscattering_atmosphere_results(
         coords (dict, optional): Coordinates for the output AtmosphereResult. Defaults to None.
         rayleigh_jeans_approximation (bool, optional): Whether to use the Rayleigh-Jeans approximation. Defaults to False.
     """
-
     if rayleigh_jeans_approximation:
         intensity_down = tb_down
         intensity_up = tb_up

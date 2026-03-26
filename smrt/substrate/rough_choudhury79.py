@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements the rough boundary reflectivity presented in Choudhury et al. (1979).
+"""Implements the rough boundary reflectivity presented in Choudhury et al. (1979).
 
 This model is not suitable for the active mode and is applicable for ksigma << 1.
 

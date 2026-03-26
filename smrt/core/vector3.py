@@ -80,9 +80,7 @@ class vector3(object):
         return self * (1 / self.norm())
 
     def asarray(self):
-        """
-        Convert to an nd.array.
-        """
+        """Convert to an nd.array."""
         return np.array([self.x, self.y, self.z])
 
     def __repr__(self):
@@ -98,8 +96,6 @@ class vector3(object):
 
     @staticmethod
     def matmul(matrix: np.ndarray, v):
-        """
-        Multiply a matrix (a 3x3 nd array)
-        """
+        """Multiply a matrix (a 3x3 nd array)"""
         v = v.asarray() if isinstance(v, vector3) else np.asarray(v)
         return vector3.from_array(np.matmul(matrix, v))

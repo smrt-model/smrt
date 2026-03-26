@@ -1,8 +1,6 @@
 # coding: utf-8
 
-"""
-Contain functions to compute various permittivity of ice.
-"""
+"""Contain functions to compute various permittivity of ice."""
 
 from __future__ import print_function
 
@@ -24,8 +22,7 @@ from ..core.layer import layer_properties
 
 @layer_properties("temperature")
 def ice_permittivity_maetzler06(frequency, temperature):
-    """
-    Calculate the complex ice dielectric constant depending on the frequency and temperature
+    """Calculate the complex ice dielectric constant depending on the frequency and temperature
     based on Mätzler (2006).
 
     This is the default model used in :py:func:`smrt.inputs.make_medium.make_snow_layer()`.
@@ -51,7 +48,6 @@ def ice_permittivity_maetzler06(frequency, temperature):
         Mätzler, C. (2006). Thermal Microwave Radiation: Applications for Remote Sensing p456-461,
         https://doi.org/10.1049/PBEW052E
     """
-
     freqGHz = frequency / 1e9
 
     tempC = temperature - FREEZING_POINT
@@ -78,8 +74,7 @@ def ice_permittivity_maetzler06(frequency, temperature):
 
 @layer_properties("temperature")
 def ice_permittivity_cuzzi80(frequency, temperature=100):
-    """
-    Compute ice permittivity at 100 K using Whalley and Labbe (1969) as given in Cuzzi et al. (1980).
+    """Compute ice permittivity at 100 K using Whalley and Labbe (1969) as given in Cuzzi et al. (1980).
 
     References:
     - Johari, G. P., & Whalley, E. (1976). Dielectric properties of ice VI at low temperatures. The Journal of Chemical Physics, 64(11), 4484–4489. https://doi.org/10.1063/1.432074
@@ -98,8 +93,7 @@ def ice_permittivity_cuzzi80(frequency, temperature=100):
 
 @layer_properties("temperature")
 def ice_permittivity_maetzler98(frequency, temperature):
-    """
-    Compute permittivity of ice (accounting for ionic impurities in ice?), equations from Hufford (1991)
+    """Compute permittivity of ice (accounting for ionic impurities in ice?), equations from Hufford (1991)
     as given in Mätzler (1998).
 
     Args:
@@ -117,7 +111,6 @@ def ice_permittivity_maetzler98(frequency, temperature):
         Solar System Ices. Astrophysics and Space Science Library, vol 227. Springer, Dordrecht.
         https://doi.org/10.1007/978-94-011-5252-5_10
     """
-
     tempC = temperature - FREEZING_POINT
 
     if np.any(tempC > 0):
@@ -137,8 +130,7 @@ def ice_permittivity_maetzler98(frequency, temperature):
 
 @layer_properties("temperature")
 def ice_permittivity_maetzler87(frequency, temperature):
-    """
-    Calculate the complex ice dielectric constant depending on the frequency and temperature
+    """Calculate the complex ice dielectric constant depending on the frequency and temperature
     based on Mätzler, C. and Wegmüller (1987).
 
     Args:
@@ -161,7 +153,6 @@ def ice_permittivity_maetzler87(frequency, temperature):
         Mätzler, C. and Wegmüller (1987). Dielectric properties of fresh-water ice at microwave frequencies.
         J. Phys. D: Appl. Phys. 20, 1623-1630. https://doi.org/10.1088/0022-3727/20/12/013
     """
-
     import warnings
 
     freqGHz = frequency / 1e9
@@ -196,8 +187,7 @@ def ice_permittivity_maetzler87(frequency, temperature):
 
 @layer_properties("temperature")
 def ice_permittivity_tiuri84(frequency, temperature):
-    """
-    Calculate the complex ice dielectric constant depending on the frequency and temperature
+    """Calculate the complex ice dielectric constant depending on the frequency and temperature
     based on Tiuri et al. (1984).
 
     Args:
@@ -216,7 +206,6 @@ def ice_permittivity_tiuri84(frequency, temperature):
         Tiuri et al. (1984). The Complex Dielectric Constant of Snow at Microwave Frequencies.
         IEEE Journal of Oceanic Engineering, vol. 9, no. 5., pp. 377-382. https://doi.org/10.1109/JOE.1984.1145645.
     """
-
     tempC = temperature - FREEZING_POINT
 
     if np.any(tempC > 0):
@@ -338,8 +327,7 @@ def _ice_permittivity_MEMLS(frequency, temperature, salinity):
 
 @layer_properties("temperature")
 def ice_permittivity_hufford91_maetzler87(frequency, temperature):
-    """
-    Calculate the complex ice dielectric constant depending on the frequency and temperature with the real part of
+    """Calculate the complex ice dielectric constant depending on the frequency and temperature with the real part of
     permittivity follows Mätzler and Wegmuller (1987) and the imaginary part is based on Hufford 1991.
 
     Note:
@@ -364,7 +352,6 @@ def ice_permittivity_hufford91_maetzler87(frequency, temperature):
         Arctic for a Multi-Parameter Retrieval of Surface and Atmospheric Variables From Microwave Radiometer Satellite Data,
         Earth and Space Scienc, 10(10), https://doi.org/10.1029/2023EA003177
     """
-
     # Raise exception if temperature is zero
     if np.any(temperature > FREEZING_POINT):
         raise SMRTError(f"The ice temperature must be lower or equal to {FREEZING_POINT}K")

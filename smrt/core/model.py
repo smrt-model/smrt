@@ -1,5 +1,4 @@
-"""
-This module defines a Model class that drives the whole calculation of SMRT.
+"""This module defines a Model class that drives the whole calculation of SMRT.
 
 A model in SMRT is composed of the electromagnetic scattering theory (:py:mod:`smrt.emmodel`) and
 the radiative transfer solver (:py:mod:`smrt.rtsolver`).
@@ -124,8 +123,7 @@ def make_model(
     emmodel_kwargs=None,
     rtsolver_kwargs=None,
 ):
-    """
-    Create a new model with a given EM model and RT solver.
+    """Create a new model with a given EM model and RT solver.
 
     The model is then ready to be run using the :py:meth:`Model.run` method. This function is the privileged way to
     create models compared to class instantiation. It supports automatic import of the emmodel and rtsolver modules.
@@ -161,7 +159,6 @@ def make_model(
     Returns:
         a model instance
     """
-
     if emmodel_kwargs is not None:
         raise DeprecationWarning("Use emmodel_options instead of emmodel_kwargs")
         emmodel_options = emmodel_kwargs
@@ -179,8 +176,7 @@ def make_model(
 
 
 def make_rtsolver(rtsolver_class: Union[str, Type], **options) -> Type:
-    """
-    Return a rtsolver subclass of cls (either given as a string or a class) where the provided options are applied to
+    """Return a rtsolver subclass of cls (either given as a string or a class) where the provided options are applied to
     __init__.
 
     Args:
@@ -197,8 +193,7 @@ def make_rtsolver(rtsolver_class: Union[str, Type], **options) -> Type:
 
 
 def make_emmodel(emmodel_class: Union[str, Type], **options) -> Type:
-    """
-    Return a emmodel subclass of cls (either given as a string or a class) where the provided options are applied to
+    """Return a emmodel subclass of cls (either given as a string or a class) where the provided options are applied to
     __init__.
 
     Args:
@@ -215,13 +210,11 @@ def make_emmodel(emmodel_class: Union[str, Type], **options) -> Type:
 
 
 def get_emmodel(emmodel):
-    """
-    Return an emmodel class from the file name 'emmodel'.
+    """Return an emmodel class from the file name 'emmodel'.
 
     Args:
         emmodel:
     """
-
     raise DeprecationWarning("This function will be remove soon, use make_emmodel instead.")
     if isinstance(emmodel, str):
         emmodel = import_class("emmodel", emmodel)
@@ -230,8 +223,7 @@ def get_emmodel(emmodel):
 
 
 def make_emmodel_instance(emmodel, sensor, layer, **emmodel_options):
-    """
-    Create a new emmodel instance based on the emmodel class or string. This function used to be called `make_emmodel`
+    """Create a new emmodel instance based on the emmodel class or string. This function used to be called `make_emmodel`
     but has been renamed from SMRT v1.4 and will soon be depreciated. It is recommended to use instead::
 
         em = make_emmodel(emmodel)(sensor, layer, **emmodel_options)
@@ -246,7 +238,6 @@ def make_emmodel_instance(emmodel, sensor, layer, **emmodel_options):
         sensor: sensor to use for the calculation.
         layer: layer to use for the calculation **emmodel_options:
     """
-
     # instantiate
     emmodel = make_emmodel(emmodel)  # get the class
     if not isinstance(sensor, SensorBase):
@@ -255,17 +246,13 @@ def make_emmodel_instance(emmodel, sensor, layer, **emmodel_options):
 
 
 class Model(object):
-    """
-    Drive the whole calculation.
-    """
+    """Drive the whole calculation."""
 
     def __init__(self, emmodel, rtsolver, emmodel_options=None, rtsolver_options=None):
-        """
-        Create a new model.
+        """Create a new model.
 
         It is not recommended to instantiate Model class directly. Instead use the :py:meth:`make_model` function.
         """
-
         # emmodel can be a single value (class or string), an array with the same size as snowpack layers array, or a
         # mapping between an emmodel for each layer medium
 
@@ -291,8 +278,7 @@ class Model(object):
         self.rtsolver_options = rtsolver_options if rtsolver_options is not None else dict()
 
     def set_rtsolver_options(self, options=None, **kwargs):
-        """
-        Set the option for the rtsolver.
+        """Set the option for the rtsolver.
 
         Args:
             options:  (Default value = None)
@@ -306,8 +292,7 @@ class Model(object):
         self.rtsolver_options.update(kwargs)  # update the options
 
     def set_emmodel_options(self, options=None, **kwargs):
-        """
-        Set the options for the emmodel.
+        """Set the options for the emmodel.
 
         Args:
             options:  (Default value = None)
@@ -331,8 +316,7 @@ class Model(object):
         parallel_computation=True,
         runner=None,
     ):
-        """
-        Run the model for the given sensor configuration and returns the results.
+        """Run the model for the given sensor configuration and returns the results.
 
         Args:
             sensor: sensor to use for the calculation. Can be a list of the same size as the snowpack list. In this
@@ -365,7 +349,6 @@ class Model(object):
         Returns:
             result of the calculation(s) as a :py:class:`Results` instance
         """
-
         if atmosphere is not None:
             raise DeprecationWarning("""The atmosphere argument of the run method is depreciated.
 Setting the 'atmosphere' through make_snowpack (and similar functions) or using medium = atmosphere + snowpack are now the recommended ways.""")
@@ -406,8 +389,7 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
         return results
 
     def prepare_simulations(self, sensor, snowpack, snowpack_dimension, snowpack_column):
-        """
-        Return a flat list of pairs (sensor, snowpack).
+        """Return a flat list of pairs (sensor, snowpack).
 
         Each is a unique simulation. The second returned parameter is the list of (axis, values) to be used to
         concatenate the results.
@@ -418,7 +400,6 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
             snowpack_dimension: snowpack dimension information
             snowpack_column: snowpack column information
         """
-
         # determine if we have several snowpacks
         # is it a SensitivityStudy object ?
         if isinstance(snowpack, SensitivityStudy):
@@ -477,8 +458,7 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
             return sensor_configurations
 
         def prepare_recursive(sensor, sensor_configurations, snowpack):
-            """
-            Return the cross product of sensor x snowpack.
+            """Return the cross product of sensor x snowpack.
 
             Args:
                 sensor: sensor object or list of sensor objects
@@ -520,14 +500,12 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
         return simulations, dimensions
 
     def prepare_emmodels(self, sensor, snowpack):
-        """
-        Return emmodels instances for each layer.
+        """Return emmodels instances for each layer.
 
         Args:
             sensor: sensor to use for the calculation.
             snowpack: snowpack to use for the calculation.
         """
-
         if lib.is_sequence(self.emmodel):
             # check we have the same number as layer in the snowpack
             assert len(self.emmodel) == snowpack.nlayer  # check we have the same number as layer in the snowpack
@@ -573,8 +551,7 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
         return emmodel_instances
 
     def run_single_simulation(self, simulation, atmosphere):
-        """
-        Run a single simulation.
+        """Run a single simulation.
 
         Args:
             simulation: a tuple (sensor, snowpack)

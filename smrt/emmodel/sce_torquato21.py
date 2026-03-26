@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Computes scattering with the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021.
+"""Computes scattering with the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021.
 This SCE is the "non-local approximation" in Torquato, also called "long range" in Tsang's books.
 It applies to scatterer size up to 1 wavelength.
 
@@ -36,14 +35,11 @@ def derived_SCETK21(effective_permittivity_model):
     Returns:
         class: A new class inheriting from SCE_ShortRange but with patched methods.
     """
-
     return derived_EMModel(SCETK21, effective_permittivity_model)
 
 
 class SCETK21(AdjustableEffectivePermittivityMixin, SCEBase):
-    """
-    To be documented.
-    """
+    """To be documented."""
 
     # default effective_permittivity_model is maxwell_garnett according to the SCE theory
     effective_permittivity_model = staticmethod(maxwell_garnett_for_spheres)

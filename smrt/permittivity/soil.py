@@ -1,7 +1,6 @@
 """This module implements various soil dielectric constant models.
 
 References:
-
     - Dobson, M. C., Ulaby, F. T., Hallikainen, M. T., & El-Rayes, M. A. (1985).
       Microwave dielectric behavior of wet soil—Part II: Dielectric mixing models.
       IEEE Transactions on Geoscience and Remote Sensing, GE-23(1), 35–46.
@@ -43,7 +42,6 @@ def soil_permittivity_dobson85_peplinski95(frequency, temperature, moisture, san
         - added references and equation number by M. Leduc-Leballeur and G. Picard (2026)
 
     References:
-
     - Dobson, M. C., Ulaby, F. T., Hallikainen, M. T., & El-Rayes, M. A. (1985).
       Microwave dielectric behavior of wet soil—Part II: Dielectric mixing models.
       IEEE Transactions on Geoscience and Remote Sensing, GE-23(1), 35–46.
@@ -54,7 +52,6 @@ def soil_permittivity_dobson85_peplinski95(frequency, temperature, moisture, san
     - A. Stogryn, "Equations for calculating the dielectric constant of saline water," IEEE Trans. Microwave Theory
       Tech., vol. MTT-19, pp. 733-736, 1971.
     """
-
     e_0 = PERMITTIVITY_OF_FREE_SPACE
     e_w_inf = 4.9
     e_s = 4.7
@@ -95,7 +92,6 @@ def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
         - added by M. Leduc-Leballeur and G. Picard (2026)
 
     References:
-
     - Dobson, M. C., Ulaby, F. T., Hallikainen, M. T., & El-Rayes, M. A. (1985).
       Microwave dielectric behavior of wet soil—Part II: Dielectric mixing models.
       IEEE Transactions on Geoscience and Remote Sensing, GE-23(1), 35–46.
@@ -106,7 +102,6 @@ def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
     - A. Stogryn, "Equations for calculating the dielectric constant of saline water," IEEE Trans. Microwave Theory
       Tech., vol. MTT-19, pp. 733-736, 1971.
     """
-
     e_0 = PERMITTIVITY_OF_FREE_SPACE
     e_w_inf = 4.9
     e_s = 4.7
@@ -175,8 +170,7 @@ def soil_permittivity_hut(frequency, temperature, moisture, sand, clay, dry_matt
 
 @layer_properties("temperature")
 def soil_permittivity_montpetit08(frequency, temperature):
-    """
-    Computes the soil dielectric constant using the Montpetit et al. (2018) formulation.
+    """Computes the soil dielectric constant using the Montpetit et al. (2018) formulation.
 
     The formulation is only valid for below-freezing point temperature.
 

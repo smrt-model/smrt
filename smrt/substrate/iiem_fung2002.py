@@ -1,7 +1,4 @@
-"""
-Implement the iiem rough substrate. See the documentation in :py:mod:`~smrt.interface.iiem_fung2002`
-
-"""
+"""Implement the iiem rough substrate. See the documentation in :py:mod:`~smrt.interface.iiem_fung2002`"""
 
 # local import
 from smrt.core.interface import substrate_from_interface

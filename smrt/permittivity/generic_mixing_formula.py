@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Provide functions that are not tied to a particular electromagnetic model
+"""Provide functions that are not tied to a particular electromagnetic model
 and are available to be imported by any electromagnetic model.
 
 Note:
@@ -40,8 +39,7 @@ def polder_van_santen(
     inclusion_shape: Optional[str | Sequence | Mapping] = None,
     mixing_ratio: Optional[int] = None,
 ):
-    """
-    Calculate the effective permittivity of snow by solution of quadratic Polder Van Santen equation for spherical
+    """Calculate the effective permittivity of snow by solution of quadratic Polder Van Santen equation for spherical
     or random needle inclusions only, potentially a mixing of these shapes (Sihvola, 1999).
 
     Note:
@@ -75,7 +73,7 @@ def polder_van_santen(
         or
         >>> effective_permittivity = polder_van_santen(frac_volume, e0, eps, inclusion_shape=("spheres", "random_needles"), mixing_ratio=0.3)
 
-    todo:
+    Todo:
         Extend Polder Van Santen model to account for ellipsoidal inclusions
 
     References:
@@ -83,7 +81,6 @@ def polder_van_santen(
         http://www.ebook.de/de/product/21470462/a_sihvola_electromagnetic_mixing_formulas_and_applications.html
 
     """
-
     # first deal with the case inclusion_shape is a dict or a Sequence
     if inclusion_shape is not None and not isinstance(inclusion_shape, str):
         # then it is a sequence or dict
@@ -149,8 +146,7 @@ def general_polder_van_santen(
     length_ratio: Optional[float] = None,
     inclusion_shape: Optional[str] = None,
 ):
-    """
-    Calculate the effective permittivity of snow by solution of quadratic Polder Van Santen equation.
+    """Calculate the effective permittivity of snow by solution of quadratic Polder Van Santen equation.
 
     Note:
         For spherical or random needle inclusions only, potentially a mixing of these shapes (Sihvola, 1999).
@@ -174,11 +170,10 @@ def general_polder_van_santen(
     Returns:
         Effective permittivity.
 
-    References
+    References:
         Sihvola, A.: Electromagnetic Mixing Formulas and Applications, 1999, INSTITUTION OF ENGINEERING & T
         http://www.ebook.de/de/product/21470462/a_sihvola_electromagnetic_mixing_formulas_and_applications.html
     """
-
     depol_xyz = _get_depolarization_factors(depolarization_factors, inclusion_shape, frac_volume, length_ratio)
 
     def pvs_equation(x):
@@ -201,8 +196,7 @@ bruggeman = polder_van_santen
 
 
 def polder_van_santen_three_spherical_components(f1, f2, eps0, eps1, eps2):
-    """
-    Calculate effective permittivity using Polder and van Santen with three components assuming spherical inclusions.
+    """Calculate effective permittivity using Polder and van Santen with three components assuming spherical inclusions.
 
     Args:
         f1: fractional volume of component 1.
@@ -214,7 +208,7 @@ def polder_van_santen_three_spherical_components(f1, f2, eps0, eps1, eps2):
     Returns:
         Effective permittivity.
 
-    References
+    References:
         Sihvola, A.: Electromagnetic Mixing Formulas and Applications, 1999, INSTITUTION OF ENGINEERING & T
         http://www.ebook.de/de/product/21470462/a_sihvola_electromagnetic_mixing_formulas_and_applications.html
     """
@@ -247,8 +241,7 @@ def polder_van_santen_three_spherical_components(f1, f2, eps0, eps1, eps2):
 
 
 def polder_van_santen_three_components(f1, f2, eps0, eps1, eps2, A1, A2):
-    """
-    Calculate effective permittivity using Polder and van Santen with three components
+    """Calculate effective permittivity using Polder and van Santen with three components
 
     Args:
         f1: fractional volume of component 1.
@@ -262,7 +255,7 @@ def polder_van_santen_three_components(f1, f2, eps0, eps1, eps2, A1, A2):
     Returns:
         Effective permittivity.
 
-    References
+    References:
         Sihvola, A.: Electromagnetic Mixing Formulas and Applications, 1999, INSTITUTION OF ENGINEERING & T
         http://www.ebook.de/de/product/21470462/a_sihvola_electromagnetic_mixing_formulas_and_applications.html
     """
@@ -309,8 +302,7 @@ def maxwell_garnett(
     inclusion_shape=None,
     length_ratio=None,
 ):
-    """
-    Calculate effective permittivity using Maxwell-Garnett equation.
+    """Calculate effective permittivity using Maxwell-Garnett equation.
 
     Args:
         frac_volume: Fractional volume of snow.
@@ -337,7 +329,6 @@ def maxwell_garnett(
         #If accessed from elsewhere, use absolute import
         from smrt.emmodel.commonfunc import maxwell_garnett
     """
-
     assert np.all(frac_volume <= 1)
 
     if inclusion_shape is not None and inclusion_shape != "spheres":
@@ -359,8 +350,7 @@ def maxwell_garnett(
 
 @layer_properties("frac_volume")
 def maxwell_garnett_for_spheres(frac_volume, e0, eps):
-    """
-    Calculate effective permittivity using Maxwell-Garnett equation assuming spherical inclusion.
+    """Calculate effective permittivity using Maxwell-Garnett equation assuming spherical inclusion.
 
     Note:
         This function is essentially an optimized version of py:func:`maxwell_garnett`.
@@ -373,7 +363,6 @@ def maxwell_garnett_for_spheres(frac_volume, e0, eps):
     Returns:
         Effective permittivity.
     """
-
     Cplus = eps + 2 * e0
     Cminus = (eps - e0) * frac_volume
 
@@ -388,10 +377,7 @@ def _get_depolarization_factors(
     frac_volume: float,
     length_ratio: float,
 ):
-    """
-    Process the parameter ``depolarizatio_factors`` and depending on its type compute the value of the depolarizationfactors.
-    """
-
+    """Process the parameter ``depolarizatio_factors`` and depending on its type compute the value of the depolarizationfactors."""
     if depolarization_factors is None:
         depol_xyz = depolarization_factors_spheroids(
             inclusion_shape=inclusion_shape,

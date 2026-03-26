@@ -23,9 +23,7 @@ from .sce_common import SCEBase
 
 
 class SCER08(SCEBase):
-    """
-    To be documented.
-    """
+    """To be documented."""
 
     def __init__(self, sensor, layer):
         super().__init__(sensor, layer)
@@ -44,7 +42,6 @@ class SCER08(SCEBase):
 
     def compute_A2(self, Q, microstructure):
         """Compute A2 using equation 26"""
-
         # compute the real part
         p = 12  # number of samples. This should be adaptative depending on the size/wavelength
 
@@ -80,5 +77,4 @@ class SCER08(SCEBase):
         Returns:
             float: Effective permittivity.
         """
-
         return maxwell_garnett_for_spheres(self.frac_volume, self.e0, self.eps)

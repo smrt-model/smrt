@@ -1,6 +1,5 @@
 # coding: utf-8
-"""
-Provide equations to compute the effective permittivity of wet ice.
+"""Provide equations to compute the effective permittivity of wet ice.
 
 The wetsnow module is to be removed in a future version. It has been renamed wetice because the naming was ambiguous.
 """
@@ -22,8 +21,7 @@ warnings.warn(
 
 @layer_properties("temperature", "liquid_water")
 def wetsnow_permittivity(frequency, temperature, liquid_water):
-    """
-    Calculate the dielectric constant of wet particles of ice using Bohren and Huffman (1983) according to Ya Qi Jin (1996),
+    """Calculate the dielectric constant of wet particles of ice using Bohren and Huffman (1983) according to Ya Qi Jin (1996),
     eq 8-69, p282.
 
     Note:

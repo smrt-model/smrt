@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Provide the Multi-Fresnel Thermal Emission (MFTE) RT solver for passive sensor.
+"""Provide the Multi-Fresnel Thermal Emission (MFTE) RT solver for passive sensor.
 
 Multi-Fresnel Thermal Emission (MFTE) is a fast RT solver suitable for passive microwave and none scattering
 media. It computes the thermal emission of a multi-layer stack of homogeneous layers (absorption only, no scattering)
@@ -51,8 +50,7 @@ from .multifresnel.multifresnel import compute_emerging_radiation, compute_matri
 
 
 class MultiFresnelThermalEmission(object):
-    """
-    Implement the Multi-Fresnel Thermal Emission (MFTE) solver for SMRT.
+    """Implement the Multi-Fresnel Thermal Emission (MFTE) solver for SMRT.
 
     Args:
         error_handling: If set to "exception" (the default), raise an exception in cause of error, stopping the code.
@@ -74,8 +72,7 @@ class MultiFresnelThermalEmission(object):
         self.prune_deep_snowpack = prune_deep_snowpack
 
     def solve(self, snowpack, emmodels, sensor, atmosphere=None):
-        """
-        Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
+        """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
             snowpack: Snowpack object.
@@ -87,7 +84,6 @@ class MultiFresnelThermalEmission(object):
         Returns:
             result: Result object.
         """
-
         if sensor.mode != "P":
             raise SMRTError(
                 "the MFTE solver is only suitable for passive microwave. Use an adequate sensor falling in"

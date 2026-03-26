@@ -1,7 +1,5 @@
 # coding: utf-8
-"""
-Provide equations to compute the effective permittivity of wet ice.
-"""
+"""Provide equations to compute the effective permittivity of wet ice."""
 
 import numpy as np
 
@@ -13,8 +11,7 @@ from .water import water_permittivity_maetzler87
 
 @layer_properties("temperature", "liquid_water")
 def wetice_permittivity_bohren83(frequency, temperature, liquid_water):
-    """
-    Calculate the dielectric constant of wet particules of ice using Maxwell Garnet equation using water as the background and
+    """Calculate the dielectric constant of wet particules of ice using Maxwell Garnet equation using water as the background and
     ice as the inclusions. As reported by Bohren and Huffman 1983 according to Ya Qi Jin (1993), eq 8-69, p282.
 
     Note:
@@ -36,7 +33,6 @@ def wetice_permittivity_bohren83(frequency, temperature, liquid_water):
 
          Jin, Y.Q., 1993. Electromagnetic scattering modelling for quantitative remote sensing. World Scientific.
     """
-
     epsice = ice_permittivity_maetzler06(frequency, temperature)
 
     if np.all(liquid_water <= 0.0):
@@ -49,8 +45,7 @@ def wetice_permittivity_bohren83(frequency, temperature, liquid_water):
 
 @layer_properties("temperature", "liquid_water")
 def symmetric_wetice_permittivity(frequency, temperature, liquid_water):
-    """
-    Calculate the dielectric constant of wet particules of ice using Polder van Santen Maxwell equation
+    """Calculate the dielectric constant of wet particules of ice using Polder van Santen Maxwell equation
     assuming both ice and water are fully mixed.
 
     Note:
@@ -64,7 +59,6 @@ def symmetric_wetice_permittivity(frequency, temperature, liquid_water):
     Returns:
         Complex permittivity of pure ice.
     """
-
     epsice = ice_permittivity_maetzler06(frequency, temperature)
 
     if np.all(liquid_water <= 0.0):

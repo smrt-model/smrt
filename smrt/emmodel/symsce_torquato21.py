@@ -1,6 +1,5 @@
 # coding: utf-8
-"""
-Computes scattering with the symmetrized version of the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021 under
+"""Computes scattering with the symmetrized version of the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021 under
 the non-local approximation, a.k.a long range in Tsang's books. The truncation of the series is at second order.
 
 References:
@@ -28,8 +27,7 @@ from .sce_common import SCEBase
 
 
 def derived_SymSCETK21(effective_permittivity_model):
-    """
-    Returns a new SymSCE model with variant from the default SymSCE.
+    """Returns a new SymSCE model with variant from the default SymSCE.
 
     Args:
         effective_permittivity_model: Permittivity mixing formula.
@@ -37,7 +35,6 @@ def derived_SymSCETK21(effective_permittivity_model):
     Returns:
         class: A new class inheriting from SymSCE but with patched methods.
     """
-
     return derived_EMModel(SymSCETK21, effective_permittivity_model)
 
 

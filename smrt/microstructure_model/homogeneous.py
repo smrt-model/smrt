@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements the homogeneous microstructure. This microstructure model is to be used with non-scattering emmodel.
+"""Implements the homogeneous microstructure. This microstructure model is to be used with non-scattering emmodel.
 
 Args:
     None
@@ -29,19 +28,19 @@ class Homogeneous(Autocorrelation):
         return 0
 
     def basic_check(self):
-        """check consistency between the parameters"""
+        """Check consistency between the parameters"""
         pass
 
     def compute_ssa(self):
-        """compute the ssa of an homogeneous medium"""
+        """Compute the ssa of an homogeneous medium"""
         return 0
 
     def autocorrelation_function(self, r):
-        """compute the real space autocorrelation function"""
+        """Compute the real space autocorrelation function"""
         f_real = 0
         return f_real
 
     def ft_autocorrelation_function(self, k):
-        """compute the fourier transform of the autocorrelation function analytically"""
+        """Compute the fourier transform of the autocorrelation function analytically"""
         ft = 0
         return ft

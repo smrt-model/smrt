@@ -1,5 +1,4 @@
-"""
-Contains various utilities that work with/for SMRT.
+"""Contains various utilities that work with/for SMRT.
 
 The wrappers to legacy snow radiative transfer models can be used to run DMRT-QMS (passive mode), HUT and MEMLS (passive mode).
 Other tools are listed below.
@@ -12,8 +11,7 @@ LOG10 = np.log(10.0)
 
 
 def dB(x):
-    """
-    Computes the ratio x in dB. Any small value is converted to -200dB.
+    """Computes the ratio x in dB. Any small value is converted to -200dB.
 
     Args:
         x: Input value or array.
@@ -25,8 +23,7 @@ def dB(x):
 
 
 def invdB(x):
-    """
-    Computes the dB value x in natural value.
+    """Computes the dB value x in natural value.
 
     Args:
         x: Value(s) in dB.

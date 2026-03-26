@@ -1,5 +1,4 @@
-"""
-Provide the interface boundary condition under the Geometrical Approximation between layers characterized by their
+"""Provide the interface boundary condition under the Geometrical Approximation between layers characterized by their
 effective permittivities.
 
 This code is for backscatter only, that is, to use as a substrate and at low frequency when
@@ -21,16 +20,13 @@ from smrt.interface.geometrical_optics import GeometricalOptics, shadow_function
 
 
 class GeometricalOpticsBackscatter(GeometricalOptics):
-    """
-    Implement a very rough surface for backscatter.
-    """
+    """Implement a very rough surface for backscatter."""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """
-        Compute the specular reflection coefficients.
+        """Compute the specular reflection coefficients.
 
         Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
         beam is transmitted.
@@ -45,12 +41,10 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
         Returns:
             The reflection matrix.
         """
-
         return smrt_matrix(0)
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
-        """
-        Compute the diffuse reflection coefficients.
+        """Compute the diffuse reflection coefficients.
 
         Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
         beam is transmitted.
@@ -124,8 +118,7 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
         return diffuse_refl_coeff
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
-        """
-        Compute the coherent transmission coefficients.
+        """Compute the coherent transmission coefficients.
 
         Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
         beam is transmitted. While Geometrical Optics, it here considers that power not reflected is scattered in the specular

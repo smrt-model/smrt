@@ -55,8 +55,7 @@ def make_soil_substrate(
     dry_matter=None,
     **kwargs,
 ) -> Substrate:
-    """
-    Construct a soil or bedrock substrate instance based on a given surface electromagnetic model, a permittivity model and parameters.
+    """Construct a soil or bedrock substrate instance based on a given surface electromagnetic model, a permittivity model and parameters.
 
     This function returns a substrate and can only be used as a bottom boundary condition in a snowpack or soil-snowpack model.
     See :py:func:`~smrt.inputs.make_soil.make_soil_layer` and :py:func:`~smrt.inputs.make_soil.make_soil_column` functions
@@ -64,7 +63,7 @@ def make_soil_substrate(
 
     Args:
         substrate_model: Name of substrate model, can be a class or a string. e.g. fresnel, wegmuller...
-        permittivity_model: Permittivity model to use. Can be a name (soil: "hut_epss", "dobson85_peplinski95", "montpetit2008"; 
+        permittivity_model: Permittivity model to use. Can be a name (soil: "hut_epss", "dobson85_peplinski95", "montpetit2008";
             bedrock: "granite_hartlieb16", "frozen_bedrock_tulaczyk20", ...),
             a function of frequency and temperature or a complex value.
         temperature: Temperature of the soil/bedrock.
@@ -83,14 +82,9 @@ def make_soil_substrate(
         bottom = substrate.make('Flat', permittivity_model=complex('6-0.5j'))
         bottom = substrate.make('Wegmuller', permittivity_model='soil', roughness_rms=0.25, moisture=0.25)
     """
-
     # process the permittivity_model argument
     permittivity_model = resolve_make_soil_permittivity_model(
-        permittivity_model, 
-        moisture=moisture, 
-        sand=sand, 
-        clay=clay, 
-        dry_matter=dry_matter
+        permittivity_model, moisture=moisture, sand=sand, clay=clay, dry_matter=dry_matter
     )
 
     # process the substrate_model argument
@@ -115,8 +109,7 @@ def make_soil_column(
     atmosphere=None,
     **kwargs,
 ) -> Snowpack:
-    """
-    Build a multi-layered soil column. Each parameter can be an array, list or a constant value.
+    """Build a multi-layered soil column. Each parameter can be an array, list or a constant value.
 
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf"
         for a semi-infinite layer. Any layer with zero thickness is removed.
@@ -139,7 +132,6 @@ def make_soil_column(
     The documentation of this function describes in detail the parameters used/required depending on ice_type.
 
     """
-
     sp = Snowpack(
         substrate=substrate, atmosphere=atmosphere
     )  # ??????????????????????????????????????????????????????????????????????????
@@ -197,8 +189,7 @@ def make_soil_layer(
     dry_matter=None,
     **kwargs,
 ) -> Layer:
-    """
-    Make a soil layer with given geophysical parameters
+    """Make a soil layer with given geophysical parameters
 
     Args:
         soil_permittivity_model: Permittivity model to use (see :py:mod:`~smrt.permittivity.soil`).  If None, the default is
@@ -213,7 +204,6 @@ def make_soil_layer(
     Returns:
         Layer: Instance of Layer.
     """
-
     # background permittivity (default = soil_permittivity_dobson85_peplinski95)
     eps_1 = resolve_make_soil_permittivity_model(soil_permittivity_model) or soil_permittivity_dobson85_peplinski95
 
@@ -239,9 +229,9 @@ def make_soil_layer(
 
     return lay
 
+
 def resolve_make_soil_permittivity_model(permittivity_model, moisture=None, sand=None, clay=None, dry_matter=None):
     """Helper function to find the correct permittivity model from a string, with parameters bound if necessary."""
-
     if not isinstance(permittivity_model, str):
         if moisture is not None or sand is not None or clay is not None or dry_matter is not None:
             smrt_warn(
@@ -254,7 +244,7 @@ def resolve_make_soil_permittivity_model(permittivity_model, moisture=None, sand
             if moisture is None or sand is None or clay is None or dry_matter is None:
                 raise SMRTError("The parameters moisture, sand, clay and dry_matter must be set")
             return partial(soil_permittivity_hut, moisture=moisture, sand=sand, clay=clay, dry_matter=dry_matter)
-            
+
         case "dobson85":
             raise SMRTError(
                 "The model labelled 'dobson85' in SMRT was using dobson85 modified peplinski95. "
@@ -275,7 +265,7 @@ def resolve_make_soil_permittivity_model(permittivity_model, moisture=None, sand
         case "montpetit2008":
             return soil_permittivity_montpetit08
 
-        case _: # look for bedrock and soil permittivity models
+        case _:  # look for bedrock and soil permittivity models
             if "_permittivity_" in permittivity_model:
                 return permittivity_function(permittivity_model)
             else:
@@ -286,4 +276,6 @@ def resolve_make_soil_permittivity_model(permittivity_model, moisture=None, sand
                         return permittivity_function(f"{prefix}_permittivity_{permittivity_model}")
                     except (ValueError, SMRTError):
                         continue
-                raise SMRTError(f"The permittivity model '{permittivity_model}' is not recognized. Tried prefixes: {prefixes}")
+                raise SMRTError(
+                    f"The permittivity model '{permittivity_model}' is not recognized. Tried prefixes: {prefixes}"
+                )

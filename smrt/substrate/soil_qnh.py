@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements the QNH soil model proposed by Wang, 1983.
+"""Implements the QNH soil model proposed by Wang, 1983.
 
 This model is for the passive mode and is not suitable for the active mode.
 

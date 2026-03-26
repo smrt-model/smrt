@@ -19,8 +19,7 @@ from smrt.core.sensor import (
 
 
 def amsre(channel=None, frequency=None, polarization=None, theta=55):
-    """
-    Returns a configuration for AMSR-E sensor.
+    """Returns a configuration for AMSR-E sensor.
 
     This function can be used to simulate all 12 AMSR-E channels i.e. frequencies of 6.925, 10.65, 18.7, 23.8, 36.5 and 89 GHz
     at both polarizations H and V. Alternatively single channels can be specified with 3-character identifiers. 18 and 19 GHz can
@@ -44,7 +43,6 @@ def amsre(channel=None, frequency=None, polarization=None, theta=55):
         radiometer = sensor.amsre('36V')  # Simulates 36.5 GHz channel only
         radiometer = sensor.amsre('06H')  # 6.925 GHz channel
     """
-
     amsre_frequency_dict = {
         "06": 6.925e9,
         "10": 10.65e9,
@@ -65,8 +63,7 @@ def amsre(channel=None, frequency=None, polarization=None, theta=55):
 
 
 def amsr2(channel=None, frequency=None, polarization=None, theta=55):
-    """
-    Returns a configuration for AMSR-2 sensor.
+    """Returns a configuration for AMSR-2 sensor.
 
     This function can be used to simulate all 14 AMSR2 channels i.e. frequencies of 6.925, 10.65, 18.7, 23.8, 36.5 and 89 GHz
     at both polarizations H and V. Alternatively single channels can be specified with 3-character identifiers. 18 and 19 GHz can
@@ -90,7 +87,6 @@ def amsr2(channel=None, frequency=None, polarization=None, theta=55):
         radiometer = sensor.amsre('36V')  # Simulates 36.5 GHz channel only
         radiometer = sensor.amsre('06H')  # 6.925 GHz channel
     """
-
     amsr2_frequency_dict = {
         "06": 6.925e9,
         "07": 7.3e9,
@@ -112,8 +108,7 @@ def amsr2(channel=None, frequency=None, polarization=None, theta=55):
 
 
 def cimr(channel=None, frequency=None, polarization=None, theta=55):
-    """
-    Returns a configuration for CIMR sensor.
+    """Returns a configuration for CIMR sensor.
 
     This function can be used to simulate all 10 CIMR channels i.e. frequencies of 1.4, 6.9, 10.6, 18.7, 36.5 GHz
     at both polarizations H and V. Alternatively single channels can be specified with 3-character identifiers. 18 and 19 GHz can
@@ -130,7 +125,6 @@ def cimr(channel=None, frequency=None, polarization=None, theta=55):
     Returns:
         Sensor: Instance of Sensor.
     """
-
     cimr_frequency_dict = {
         "01": 1.4135e9,
         "06": 6.925e9,
@@ -206,8 +200,7 @@ def common_conical_pmw(
 
 
 def quikscat(channel=None, theta=None):
-    """
-    Returns a configuration for quikscat sensor.
+    """Returns a configuration for quikscat sensor.
 
     This function can be used to simulate the 4 QUIKSCAT channels i.e. incidence angles 46° and 54° and HH and VV polarizations.
     Alternatively a subset of these channels can be specified with 4-character identifiers with polarization first .e.g. HH46, VV54
@@ -219,7 +212,6 @@ def quikscat(channel=None, theta=None):
     Returns:
         Sensor: Instance of Sensor.
     """
-
     channel_map = {
         "HH46": dict(polarization="H", polarization_inc="H", theta=46, theta_inc=46),
         "VV54": dict(polarization="V", polarization_inc="V", theta=54, theta_inc=54),
@@ -255,8 +247,7 @@ def quikscat(channel=None, theta=None):
 
 
 def ascat(theta=None):
-    """
-    Returns a configuration for ASCAT on MetOp satellites.
+    """Returns a configuration for ASCAT on MetOp satellites.
 
     Characteristics of the observation configuration: https://ieeexplore.ieee.org/document/7815274
 
@@ -268,7 +259,6 @@ def ascat(theta=None):
     Returns:
         Sensor: Instance of Sensor.
     """
-
     if theta is None:
         theta = np.arange(25, 70, 5)
 
@@ -287,8 +277,7 @@ def ascat(theta=None):
 
 
 def sentinel1(theta=None):
-    """
-    Returns a configuration for C-SAR on Sentinel 1.
+    """Returns a configuration for C-SAR on Sentinel 1.
 
     This function returns a sensor at 5.405 GHz (C-band). The incidence angle can be chosen or is by default from 20 to 45° by step of 5°
 
@@ -298,7 +287,6 @@ def sentinel1(theta=None):
     Returns:
         Sensor: Instance of Sensor.
     """
-
     if theta is None:
         theta = np.arange(20, 46, 5)
 
@@ -313,8 +301,7 @@ def sentinel1(theta=None):
 
 
 def smos(theta=None):
-    """
-    Returns a configuration for MIRAS on SMOS.
+    """Returns a configuration for MIRAS on SMOS.
 
     This function returns a passive sensor at 1.41 GHz (L-band). The incidence angle can be chosen or is by default from 0 to 60° by step of 5°
 
@@ -324,7 +311,6 @@ def smos(theta=None):
     Returns:
         Sensor: Instance of Sensor.
     """
-
     if theta is None:
         theta = np.arange(0, 61, 5)
 
@@ -337,8 +323,7 @@ def smos(theta=None):
 
 
 def smap(mode, theta=40):
-    """
-    Returns a configuration for the passive (mode='P') and active (mode='A') sensor on SMAP.
+    """Returns a configuration for the passive (mode='P') and active (mode='A') sensor on SMAP.
 
     This function returns either a passive sensor at 1.4 GHz (L-band) sensor or an active sensor at 1.26 GHz. The incidence angle is 40°.
 
@@ -352,7 +337,6 @@ def smap(mode, theta=40):
     Raises:
         SMRTError: If mode is not 'A' or 'P'.
     """
-
     if mode == "P":
         return passive(
             1.4e9,
@@ -377,7 +361,8 @@ def smap(mode, theta=40):
 def cristal_amrcr(channel):
     """3-frequencies:18.7, 23.8 and 34 GHz.
     An experimental high-frequency component, HRMR is alongside for higher resolution, see HRMR page for details.
-    Evolution of the AMR flown on JASON 2 and 3"""
+    Evolution of the AMR flown on JASON 2 and 3
+    """
     raise NotImplementedError()
 
 

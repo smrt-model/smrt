@@ -29,8 +29,7 @@ class Benchmark(ABC):
 
 
 class ManySemiInfiniteSnowpacks(Benchmark):
-    """
-    Benchmark time and peak memory for creating multiple snowpacks and running model in parrallel
+    """Benchmark time and peak memory for creating multiple snowpacks and running model in parrallel
 
     Inspired from smrt/test/test_model.py
     """
@@ -51,9 +50,7 @@ class ManySemiInfiniteSnowpacks(Benchmark):
     ]  # Add values for multiple benchmarks
 
     def setup(self, params):
-        """
-        Initiates model and sensor for the benchmarks
-        """
+        """Initiates model and sensor for the benchmarks"""
         self.temperature_list = np.linspace(200, 270, params["n_snowpacks"])
         self.radius_list = np.linspace(50e-6, 1000e-6, params["n_snowpacks"])
         self.model = Model(params["emmodel"], params["solver"])
@@ -79,8 +76,7 @@ class ManySemiInfiniteSnowpacks(Benchmark):
 
 
 class MultiLayerSnowpack(Benchmark):
-    """
-    Benchmark time and peak memory for creating a large snowpack and running model
+    """Benchmark time and peak memory for creating a large snowpack and running model
 
     Inspired from smrt/test/test_coherent_layer.py
     """
@@ -101,9 +97,7 @@ class MultiLayerSnowpack(Benchmark):
     ]  # Add values for multiple benchmarks
 
     def setup(self, params):
-        """
-        Initiates snowpack, model and sensor for the benchmarks
-        """
+        """Initiates snowpack, model and sensor for the benchmarks"""
         self.density = np.linspace(300, 916 / 2, params["n_layers"])
         self.thickness = np.full(params["n_layers"], 200 / params["n_layers"])
         self.temperature = np.linspace(200, 270, params["n_layers"])

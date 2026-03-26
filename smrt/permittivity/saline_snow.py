@@ -1,5 +1,4 @@
-"""
-Provide mixing formulae relevant to saline snow and equations to compute the effective permittivity of saline snow.
+"""Provide mixing formulae relevant to saline snow and equations to compute the effective permittivity of saline snow.
 
 These functions are to be used with :py:mod:`smrt.emmodel.iba.derived_IBA` or
 :py:mod:`smrt.emmodel.symsce_torquato21.derived_SymSCETK21` to change the default of most emmodels (IBA, DMRT, SFT
@@ -41,8 +40,7 @@ from .saline_water import (
 
 @layer_properties("density", "temperature", "salinity")
 def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salinity):
-    """
-    Compute permittivity of saline snow using the frequency dispersion model published by Geldsetzer et al. (2009).
+    """Compute permittivity of saline snow using the frequency dispersion model published by Geldsetzer et al. (2009).
 
     Note:
         In-situ measurements collected had salinity concentration between 0.1e-3 and 12e3 kg/kg, temperatures
@@ -64,7 +62,6 @@ def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salin
         Geldsetzer, T., Langlois, A., Yackel, J., (2009) Dielectric properties of brine-wetted snow on first-year sea ice,
         Cold Regions Science and Technology, Volume 58, Issues 1–2,pp 47-56. https://doi.org/10.1016/j.coldregions.2009.03.009.
     """
-
     if np.max(frequency) > 40e9:
         warnings.warn(
             "The permittivity model of Geldsetzer et al. 2009 "
@@ -108,12 +105,10 @@ def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salin
 
 @layer_properties("density", "temperature", "salinity")
 def saline_snow_permittivity_scharien_with_stogryn71(frequency, density, temperature, salinity):
-    """
-    Compute permittivity of saline snow with :py:mod:`seawater_permittivity_stogryn71`.
+    """Compute permittivity of saline snow with :py:mod:`seawater_permittivity_stogryn71`.
 
     See :py:mod:`saline_snow_permittivity_scharien` documentation.
     """
-
     return saline_snow_permittivity_scharien(
         density,
         temperature,
@@ -124,12 +119,10 @@ def saline_snow_permittivity_scharien_with_stogryn71(frequency, density, tempera
 
 @layer_properties("density", "temperature", "salinity")
 def saline_snow_permittivity_scharien_with_stogryn95(frequency, density, temperature, salinity):
-    """
-    Compute permittivity of saline snow with :py:mod:`seawater_permittivity_stogryn95`.
+    """Compute permittivity of saline snow with :py:mod:`seawater_permittivity_stogryn95`.
 
     See :py:mod:`saline_snow_permittivity_scharien` documentation.
     """
-
     return saline_snow_permittivity_scharien(
         density,
         temperature,
@@ -139,8 +132,7 @@ def saline_snow_permittivity_scharien_with_stogryn95(frequency, density, tempera
 
 
 def saline_snow_permittivity_scharien(density, temperature, salinity, brine_permittivity):
-    """
-    Compute permittivity of saline snow using the Denoth / Matzler Mixture Model - Dielectric Constant of Saline Snow.
+    """Compute permittivity of saline snow using the Denoth / Matzler Mixture Model - Dielectric Constant of Saline Snow.
 
     Note:
         Assumptions:
@@ -172,7 +164,6 @@ def saline_snow_permittivity_scharien(density, temperature, salinity, brine_perm
         Sea Ice at GHz Requencies. Journal of Glaciology. 1988;34(118):274-282.
         https://doi.org/10.3189/S0022143000007012
     """
-
     # convert units
     tempC = temperature - FREEZING_POINT
     Sppt = salinity / PSU  # snow salinity in ppt

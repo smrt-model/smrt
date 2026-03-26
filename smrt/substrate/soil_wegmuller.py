@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements the empirical soil model presented in Wegmuller and Maetzler 1999.
+"""Implements the empirical soil model presented in Wegmuller and Maetzler 1999.
 
 This model is often used in microwave radiometry. It is not suitable for the active mode.
 
