@@ -12,9 +12,9 @@ from smrt.rtsolver.dort import DORT, symmetrize_phase_matrix
 
 @pytest.mark.parametrize(
     "microstructure_model,m_max,emmodel,diagonalization_method",
-    [("independent_sphere", 6, Rayleigh, "shur"), ("exponential", 16, IBA, "shur_forcedtriu")],
+    [("independent_sphere", 6, Rayleigh, "schur"), ("exponential", 16, IBA, "schur_forcedtriu")],
 )
-def test_shur_based_diagonalisation(microstructure_model, m_max, emmodel, diagonalization_method):
+def test_schur_based_diagonalisation(microstructure_model, m_max, emmodel, diagonalization_method):
     sp = make_snowpack(
         thickness=[1000],
         microstructure_model=microstructure_model,
@@ -27,7 +27,7 @@ def test_shur_based_diagonalisation(microstructure_model, m_max, emmodel, diagon
     nstreams = 32
 
     # this setting fails when DORT  use scipy.linalg.eig
-    # but this works with the shur diagonalization. Let check this:
+    # but this works with the schur diagonalization. Let check this:
 
     m = Model(
         emmodel,
