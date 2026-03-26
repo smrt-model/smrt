@@ -496,12 +496,12 @@ class IterativeSecondOrder(RTSolverBase):
         n_mu_i = len(mus_i)
 
         phase_mu_int_mu = emmodel.ft_even_phase(mu_int_sym, mu_i_sym, m_max) / (4 * np.pi)
-        # phase_mu_mu_int = emmodel.ft_even_phase(mu_i_sym, mu_int_sym, m_max) / (4 * np.pi)
+        phase_mu_mu_int = emmodel.ft_even_phase(mu_i_sym, mu_int_sym, m_max) / (4 * np.pi)
 
         R1 = Rbottom_diff_int["i_int"][:, :, :, n_mu_i:, n_stream:]  # R(mu_i, mu_int)
         P1 = phase_mu_int_mu[:, :, :, 0:n_stream, 0:n_mu_i]  # P(-mu_int, -mu_i)
-        R2 = Rbottom_diff_int["i_int"][:, :, :, n_mu_i:, 0:n_stream]  # R(mu_i, -mu_int)
-        P2 = phase_mu_int_mu[:, :, :, n_stream:, 0:n_mu_i]  # P(mu_int, -mu_i)
+        R2 = Rbottom_diff_int["int_i"][:, :, :, n_stream:, 0:n_mu_i]  # R(mu_int, -mu_i)
+        P2 = phase_mu_mu_int[:, :, :, n_mu_i:, n_stream:]  # P(mu_i, mu_int)
 
         sum_e = 0
         for mu, w, i in zip(mu_int, weight, range(n_stream)):
@@ -513,7 +513,7 @@ class IterativeSecondOrder(RTSolverBase):
             E = compute_E(mus_i, mu, ke, layer_optical_depth, layer_optical_depth_ln_ground)
             sum_e += w * (
                 (E * compute_integral_phi(R1[:, :, :, :, i], P1[:, :, :, i, :], m_max, len_mu, npol, np.pi))
-                + (E * compute_integral_phi(R2[:, :, :, :, i], P2[:, :, :, i, :], m_max, len_mu, npol, np.pi))
+                + (E * compute_integral_phi(R2[:, :, :, i, :], P2[:, :, :, :, i], m_max, len_mu, npol, np.pi))
             )
 
         return sum_e @ I_l

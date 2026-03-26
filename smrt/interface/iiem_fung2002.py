@@ -219,16 +219,18 @@ class IIEM_Fung2002(IEM_Fung92):
             Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
             Rvh = (Rv - Rh) / 2
             ks2 = ks**2
-            svh = self.double_integral(k, ks2, mu_i, eps_2, Rvh, n, self.N_integral)
+
+            # only compute for incident angle
             # reshape to match angles shape set initially
-            svh = svh.reshape(1, 1, mu_i.shape[2], 1)
+            svh = self.double_integral(k, ks2, mu_i, eps_2, Rvh, n, self.N_integral).reshape(1, 1, mu_i.shape[2])
+            # reshape to match angles shape set initially
+            mu_i = mu_i.squeeze(axis = -1)
+            sin_i = sin_i.squeeze(axis = -1)
 
             if self.shadow_correction:
                 s = 1 / (1 + shadow_function(mean_square_slope, mu_i / sin_i) * 2)
                 svh *= s
 
-            # reshape again to match result final shape
-            svh = svh.reshape(1, 1, mu_i.shape[2])
             reflection_coefficients[0, 1] = svh / (4 * np.pi * mu_i)
             reflection_coefficients[1, 0] = svh / (4 * np.pi * mu_i)
 
