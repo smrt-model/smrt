@@ -1,11 +1,11 @@
 # coding: utf-8
 
-# local import
+import numpy as np
 import pytest
 
 from smrt import make_model, make_snowpack, make_soil, sensor
 from smrt.inputs.make_soil import make_soil_column
-
+from smrt.core.globalconstants import PERMITTIVITY_OF_FREE_SPACE
 #
 # Ghi: rapid hack, should be splitted in different functions
 #
@@ -127,3 +127,23 @@ def test_soil_column():
     assert abs(res.TbH() - 159.44393511008025) < 1e-4
     # note value from DMRTML Fortran running in the same conditions:
     # H=255.88187817295605 V=262.60345275739024
+
+
+def test_soil_bedrock():
+    # Test that make_soil works with bedrock permittivity models (granite)
+    soiltemperature = 270
+    # Using a bedrock model by its short name
+    substrate = make_soil("flat", "granite_hartlieb16", temperature=soiltemperature)
+    eps = substrate.permittivity_model(1.41e9, soiltemperature)
+    assert np.isclose(eps, 5.45 + 0.038j)
+
+
+def test_soil_bedrock_complex():
+    # Test that make_soil works with bedrock permittivity models (frozen bedrock with conductivity)
+    soiltemperature = 270
+    freq = 1.41e9
+    substrate = make_soil("flat", "frozen_bedrock_tulaczyk20", temperature=soiltemperature)
+    eps = substrate.permittivity_model(freq, soiltemperature)
+    
+    expected = 2.7 + 1j * (0.0002 / (2 * np.pi * freq * PERMITTIVITY_OF_FREE_SPACE))
+    assert np.isclose(eps, expected)
