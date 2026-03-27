@@ -43,7 +43,7 @@ import numpy as np
 from smrt.core.error import SMRTError
 
 # local import
-from ..core.atmosphere import AtmosphereBase, make_nonscattering_atmosphere_results
+from ..core.atmosphere import AtmosphereBase, make_atmosphere_results
 
 
 class SimpleAtmosphere(AtmosphereBase):
@@ -74,7 +74,7 @@ class SimpleAtmosphere(AtmosphereBase):
             x = np.interp(costheta, self.costheta, x)
             return np.stack([x] * npol)
 
-        return make_nonscattering_atmosphere_results(
+        return make_atmosphere_results(
             frequency=frequency,
             tb_down=interpolate(self.tb_down),
             tb_up=interpolate(self.tb_up),

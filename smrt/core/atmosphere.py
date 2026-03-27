@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import numpy as np
 import xarray as xr
 
-from smrt.core.lib import planck_function
+from smrt.core.lib import inverse_planck_function, planck_function
 
 from .error import SMRTError
 from .snowpack import Snowpack
@@ -102,6 +102,7 @@ class AtmosphereResult:
     intensity_down: np.ndarray
     intensity_up: np.ndarray
     transmittance: np.ndarray
+    frequency: float
     coords: dict = None
     rayleigh_jeans_approximation: bool = False
 
@@ -117,23 +118,24 @@ class AtmosphereResult:
 
     @property
     def tb_down(self):
-        if not self.rayleigh_jeans_approximation:
-            raise SMRTError("tb_down is only available when rayleigh_jeans_approximation is True.")
-        return self.intensity_down
+        if self.rayleigh_jeans_approximation:
+            return self.intensity_down
+        else:
+            return inverse_planck_function(self.frequency, self.intensity_down)
 
     @property
     def tb_up(self):
-        if not self.rayleigh_jeans_approximation:
-            raise SMRTError("tb_up is only available when rayleigh_jeans_approximation is True.")
-        return self.intensity_up
+        if self.rayleigh_jeans_approximation:
+            return self.intensity_up
+        else:
+            return inverse_planck_function(self.frequency, self.intensity_up)
 
 
-def make_nonscattering_atmosphere_results(
+def make_atmosphere_results(
     frequency, tb_down, tb_up, transmittance, coords=None, rayleigh_jeans_approximation=False
 ):
-    """Make an AtmosphereResult for a non-scattering atmosphere given the downwelling and upwelling brightness temperatures
-    and the transmittance. The nonscattering assumption is used to compute the intensity from the brightness temperature
-    by calculating the emissivity and using the Planck function. The Rayleigh-Jeans approximation can be used to
+    """Make an AtmosphereResult given the downwelling and upwelling brightness temperatures
+    and the transmittance. The Rayleigh-Jeans approximation can be used to
     directly use the brightness temperature as intensity.
 
     Args:
@@ -148,11 +150,11 @@ def make_nonscattering_atmosphere_results(
         intensity_down = tb_down
         intensity_up = tb_up
     else:
-        e = (1 - transmittance).clip(1e-5, 1)
-        intensity_down = planck_function(frequency, tb_down / e) * e
-        intensity_up = planck_function(frequency, tb_up / e) * e
+        intensity_down = planck_function(frequency, tb_down)
+        intensity_up = planck_function(frequency, tb_up)
 
     return AtmosphereResult(
+        frequency=frequency,
         intensity_down=intensity_down,
         intensity_up=intensity_up,
         transmittance=transmittance,

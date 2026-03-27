@@ -73,7 +73,7 @@ import numpy as np
 from pyrtlib.absorption_model import AbsModel
 from pyrtlib.tb_spectrum import TbCloudRTE
 
-from smrt.core.atmosphere import AtmosphereBase, make_nonscattering_atmosphere_results
+from smrt.core.atmosphere import AtmosphereBase, make_atmosphere_results
 
 # local import
 from smrt.core.globalconstants import GHz
@@ -147,7 +147,7 @@ class PyRTlibAtmosphereBase(AtmosphereBase):
         else:
             coords["frequency"] = frequency
 
-        return make_nonscattering_atmosphere_results(
+        return make_atmosphere_results(
             frequency=frequency,
             tb_down=np.stack([downwelling] * npol),
             tb_up=np.stack([upwelling] * npol),

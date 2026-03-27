@@ -70,10 +70,10 @@ def test_simple_isotropic_atmosphere(default_snowpack, rayleigh_jeans_approximat
         np.testing.assert_allclose(res2.TbV(), 214.65840930416707, atol=1e-2)
     else:
         np.testing.assert_allclose(res1.TbV(), 227.73331276273777, atol=1e-2)
-        np.testing.assert_allclose(res2.TbV(), 214.7585010400213, atol=1e-2)
+        np.testing.assert_allclose(res2.TbV(), 213.9133292330192, atol=1e-2)
 
 
-def test_simple_atmosphere_rayleigh_jeans(default_snowpack):
+def test_simple_atmosphere(default_snowpack):
     rads = sensor_list.amsre("36V")
 
     atmos = SimpleAtmosphere(
@@ -98,7 +98,7 @@ def test_simple_atmosphere_rayleigh_jeans(default_snowpack):
 
     # absorption with effective permittivity
     np.testing.assert_allclose(res1.TbV(), 227.73331276273777, atol=1e-2)
-    np.testing.assert_allclose(res2.TbV(), 224.99367249667932, atol=1e-2)
+    np.testing.assert_allclose(res2.TbV(), 224.16055686943304, atol=1e-2)
 
 
 def test_frequency_dependent_atmosphere():

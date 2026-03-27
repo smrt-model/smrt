@@ -23,7 +23,7 @@ Examples::
 import numpy as np
 
 # local import
-from smrt.core.atmosphere import AtmosphereBase, make_nonscattering_atmosphere_results
+from smrt.core.atmosphere import AtmosphereBase, make_atmosphere_results
 from smrt.core.error import smrt_warn
 
 #
@@ -64,7 +64,7 @@ class SimpleIsotropicAtmosphere(AtmosphereBase):
                 x = x[frequency]
             return np.full((npol, len(costheta)), x)
 
-        return make_nonscattering_atmosphere_results(
+        return make_atmosphere_results(
             frequency=frequency,
             tb_down=create_array(self.constant_tbdown),
             tb_up=create_array(self.constant_tbup),
