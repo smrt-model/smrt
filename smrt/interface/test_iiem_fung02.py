@@ -1,13 +1,13 @@
 import numpy as np
 
-from smrt.interface.iiem_fung2002 import IIEM_Fung2002
+from smrt.interface.iiem_fung02 import IIEM_Fung02
 from smrt.utils import dB
 
 
-def test_iem_fung92():
+def test_iem_fung02():
     eps_r = 3 + 0.1j
 
-    iem_fung = IIEM_Fung2002(roughness_rms=0.429e-2, corr_length=3e-2)
+    iem_fung = IIEM_Fung02(roughness_rms=0.429e-2, corr_length=3e-2)
 
     frequency = 2.2e9
 

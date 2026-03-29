@@ -38,7 +38,7 @@ from smrt.interface.geometrical_optics import _clip_mu, shadow_function
 from smrt.interface.iem_fung92 import IEM_Fung92
 
 
-class IIEM_Fung2002(IEM_Fung92):
+class IIEM_Fung02(IEM_Fung92):
     """Implement a moderate rough surface model for passive and active. Provide bi-static coefficient
 
     Multiple scattering only for crosspol backscatter since it's assumed to be negligeable for co pol (passive??? to be implemented).
