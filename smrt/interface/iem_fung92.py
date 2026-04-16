@@ -30,7 +30,7 @@ References:
 
 import numpy as np
 
-from smrt.core.error import SMRTError
+from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.fresnel import (
     fresnel_coefficients,
 )
@@ -55,8 +55,8 @@ class IEM_Fung92(
         roughness_rms: Root-Mean-Squared surface roughness.
         corr_length: Correlation length of the surface.
         autocorrelation_function: [Optional] Type of autocorrelation function to use. Default is "exponential".
-        warning_handling: [Optional] Parameter that dictates how to handle wanring. Default is "print".
         series_truncation: [Optional] Number of iterations to use in the summation of roughness spectra.
+        warning_handling: [Optional] Parameter that dictates how to handle wanring. Default is "print".
     """
 
     args = ["roughness_rms", "corr_length"]
@@ -124,7 +124,7 @@ class IEM_Fung92(
             self.check_validity(ks, kl, eps_r)
         except SMRTError as e:
             if self.warning_handling == "print":
-                print(e)
+                smrt_warn(str(e))
             elif self.warning_handling == "nan":
                 return smrt_matrix.full((npol, len(mu_i)), np.nan)
 
