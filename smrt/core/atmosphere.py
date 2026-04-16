@@ -131,9 +131,7 @@ class AtmosphereResult:
             return inverse_planck_function(self.frequency, self.intensity_up)
 
 
-def make_atmosphere_results(
-    frequency, tb_down, tb_up, transmittance, coords=None, rayleigh_jeans_approximation=False
-):
+def make_atmosphere_results(frequency, tb_down, tb_up, transmittance, coords=None, rayleigh_jeans_approximation=False):
     """Make an AtmosphereResult given the downwelling and upwelling brightness temperatures
     and the transmittance. The Rayleigh-Jeans approximation can be used to
     directly use the brightness temperature as intensity.

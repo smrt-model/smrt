@@ -2,7 +2,7 @@
 effective permittivities.
 
 This code is for backscatter only, that is, to use as a substrate and at low frequency when
-the backscatter is the main mecahnism, and conversely when mulitple scattering and double bounce between snow and
+the backscatter is the main mecahnism, and conversely when multiple scattering and double bounce between snow and
 substrate are negligible. In other case, it is recommended to use :py:mod:`~smrt.interface.geometrical_optics`.
 
 Note:
