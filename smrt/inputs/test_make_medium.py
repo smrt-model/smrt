@@ -9,6 +9,7 @@ from ..interface.transparent import Transparent
 from .make_medium import (
     make_ice_column,
     make_medium,
+    make_slush,
     make_snow_layer,
     make_snowpack,
     make_transparent_volume,
@@ -197,6 +198,23 @@ def test_make_snowpack_emmodel():
         emmodel="iba",
     )
     assert sp.layers[0].emmodel == "iba"
+
+
+@pytest.mark.parametrize("background_material", ["auto", "ice", "water"])
+@pytest.mark.parametrize("liquid_frac_volume", [0.4, 0.6])
+def test_make_slush(background_material, liquid_frac_volume):
+    sp = make_slush(
+        thickness=1,
+        microstructure_model="homogeneous",
+        density=300,
+        frac_liquid_water=liquid_frac_volume,
+        background_material=background_material,
+    )
+
+    if background_material == "auto":
+        np.testing.assert_allclose(sp.layers[0].frac_volume, 0.4)
+    else:
+        np.testing.assert_allclose(sp.layers[0].frac_volume, liquid_frac_volume)
 
 
 def test_make_transparent_volume():

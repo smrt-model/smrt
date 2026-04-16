@@ -19,6 +19,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 	- add atmosphere objects together now results in an atmosphere stack
 	- allow to use a string where permittivity_module function are expected. Import is automatic.
 	- add method Result.ks() and Result.ka().
+	- add method __repr__ to provide a printable representation of results. Useful to show the results in notebooks.
+	- add make_slush function in make_medium
 
 ### Changed
 	- the full planck function is now used in DORT and other solvers for passive mode calculations. This should slightly improve the brightness temperature at high frequencies and low temperatures. Rayleigh Jeans approximations can be enable to recover the previous behavior.

@@ -728,6 +728,87 @@ def make_ice_layer(
     return lay
 
 
+def make_slush(
+    thickness,
+    microstructure_model,
+    temperature=FREEZING_POINT,
+    frac_liquid_water=0.5,
+    ice_permittivity_model=None,
+    water_permittivity_model=None,
+    background_material="auto",
+    salinity=0,
+    **kwargs,
+):
+    """Make a layer of slush, a mixture of water and ice.
+
+    Args:
+        layer_thickness: Thickness of ice layer in m.
+        microstructure_model: Microstructure model to use (e.g. exponential).
+        temperature: Temperature of layer in K. Default to the freezing point of pure water.
+        frac_liquid_water: Fraction of liquid water in the layer (0--1). The remaining is ice.
+            If background_material is "auto" (default), the background_material is determined automatically as follows:
+            If liquid_water_fraction is higher or equal to 0.5, the layer is considered as a water layer with ice
+            inclusions, otherwise it is considered as an ice layer with liquid water inclusions.
+            Setting background_material to "water" or "ice" for one or the other configuration.
+            The background and scatter is important when 1) the microstructure model is not symmetric (e.g. sticky_hard_
+            spheres is non-symmetrical, exponential is symmetric) and 2) when the emmodel is not symmetric with respect
+            to the two phases (e.g. IBA is non-symmetric, SymSCE is symmetric)
+        ice_permittivity_model: Ice permittivity formulation (default is
+            :py:func:`~smrt.permittivity.ice.ice_permittivity_bohren83`). It can be a function, a value or the name of a
+            permittivity function.
+        water_permittivity_model: Water permittivity formulation (default is
+            :py:func:`~smrt.permittivity.saline_water.seawater_permittivity_klein76`). It can be a function, a value or
+            the name of a permittivity function.
+        salinity: Salinity in kg kg :sup:`-1` (see PSU constant in smrt module) of the water phase (if the default
+            perimittivity models are used, otherwise the salinity can be interpreted by both the ice and water
+            permittivity models).
+
+        Returns:
+            Layer: Instance of Layer.
+    """
+    if water_permittivity_model is None:
+        from smrt.permittivity.saline_water import seawater_permittivity_klein76
+
+        water_permittivity_model = seawater_permittivity_klein76
+
+    if ice_permittivity_model is None:
+        # default ice permittivity model:wetice_permittivity_bohren83, use ice_permittivity_maetzler06 for dry snow and
+        # add support for wet snow
+        from smrt.permittivity.wetice import wetice_permittivity_bohren83
+
+        ice_permittivity_model = wetice_permittivity_bohren83
+
+    if background_material == "auto" and frac_liquid_water >= 0.5:
+        # invert the materials, water is in the background and ice in the scatterers
+        eps = (water_permittivity_model, ice_permittivity_model)
+        frac_volume = 1 - frac_liquid_water
+    elif background_material in ["auto", "ice"]:
+        # ice is in the background and water in the scatterers
+        eps = (ice_permittivity_model, water_permittivity_model)
+        frac_volume = frac_liquid_water
+    elif background_material == "water":
+        # water is in the background and ice in the scatterers
+        eps = (water_permittivity_model, ice_permittivity_model)
+        frac_volume = frac_liquid_water
+    else:
+        raise SMRTError("Invalid background_material. Must be 'auto', 'ice' or 'water'")
+
+    lay = Layer(
+        asfloat(thickness),
+        medium="slush",
+        microstructure_model=get_microstructure_model(microstructure_model),
+        frac_volume=asfloat(frac_volume),
+        temperature=temperature,
+        permittivity_model=eps,
+        salinity=asfloat(salinity),
+        **kwargs,
+    )
+
+    interface = make_interface("flat")
+    slush = Snowpack(layers=[lay], interfaces=[interface])  # Add flat interface on top
+    return slush
+
+
 def make_water_body(
     layer_thickness=1000,
     temperature=FREEZING_POINT,
