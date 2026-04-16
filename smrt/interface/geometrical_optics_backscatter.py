@@ -7,8 +7,9 @@ substrate are negligible. In other case, it is recommended to use :py:mod:`~smrt
 
 Note:
     The transmitted energy is also computed in an approximate way suitable for first order scattering such as
-    :py:mod:`smrt.rtsolver.nadir_lrm_altimetry`. It uses energy conservation to compute the total transmitted energy and considers that
-    all this energy is transmitted in the  refracted direction. This approach compensates for the deficiencies of first order scattering
+    :py:mod:`smrt.rtsolver.nadir_lrm_altimetry`. It uses energy conservation to compute the total transmitted energy and
+    considers that all this energy is transmitted in the  refracted direction. This approach compensates for the
+    deficiencies of first order scattering
     RT solvers.
 """
 
@@ -28,8 +29,8 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """Compute the specular reflection coefficients.
 
-        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
-        beam is transmitted.
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is
+        where the beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -46,8 +47,8 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
         """Compute the diffuse reflection coefficients.
 
-        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
-        beam is transmitted.
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is
+        where the beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -66,7 +67,8 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
 
         if not np.allclose(mu_s, mu_i) or not np.allclose(dphi, np.pi):
             raise NotImplementedError(
-                "Only the backscattering coefficient is implemented at this stage. This is a very preliminary implementation"
+                "Only the backscattering coefficient is implemented at this stage."
+                " This is a very preliminary implementation"
             )
 
         if len(np.atleast_1d(dphi)) != 1:
@@ -120,9 +122,10 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """Compute the coherent transmission coefficients.
 
-        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
-        beam is transmitted. While Geometrical Optics, it here considers that power not reflected is scattered in the specular
-        transmitted direction. This is an approximation which is reasonable in the context of a "1st order" geometrical optics.
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is
+        where the beam is transmitted. While Geometrical Optics, it here considers that power not reflected is scattered
+        in the specular transmitted direction. This is an approximation which is reasonable in the context of a
+        "1st order" geometrical optics.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -145,3 +148,23 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
         transmission_matrix[1] = 1 - total_reflection[1]
 
         return transmission_matrix
+
+    def diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_t, mu_i, dphi, npol):
+        """Compute the diffuse transmission coefficients.
+
+        Coefficient are calculated for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where
+        the beam is transmitted.
+
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu_t: Array of cosine of transmitted wave angles.
+            mu_i: Array of cosine of incident angles.
+            dphi: Azimuth angles.
+            npol: Number of polarization.
+
+        Returns:
+            The transmission matrix.
+        """
+        return smrt_matrix(0)
