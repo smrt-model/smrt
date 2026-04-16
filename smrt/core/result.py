@@ -415,6 +415,9 @@ class PassiveResult(Result):
         theta = np.deg2rad(self.data.theta)
         return self.TbH(**kwargs) * np.cos(theta) ** 2 + self.TbV(**kwargs) * np.sin(theta) ** 2
 
+    def __repr__(self):
+        return f"PassiveResult: TbV={self.TbV()}, TbH={self.TbH()}"
+
 
 class ActiveResult(Result):
     mode = "A"
@@ -665,6 +668,14 @@ class ActiveResult(Result):
     #    return ResultGroup(self.data.groupby(variable))
     #    #for x, data in self.data.groupby(variable):
     #    #    yield Result(data)
+
+    def __repr__(self):
+        return (
+            "ActiveResult:"
+            f"sigmaVV={self.sigmaVV_dB()} dB, "
+            f"sigmaHH={self.sigmaHH_dB()} dB, "
+            f"sigmaHV={self.sigmaHV_dB()} dB"
+        )
 
 
 class AltimetryResult(ActiveResult):
