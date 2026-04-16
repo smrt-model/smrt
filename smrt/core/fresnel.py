@@ -137,6 +137,7 @@ def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu, mu_medium="1") -> 
     rv = (
         n1.conjugate() * (eps_2 * kyi - eps_1 * kyt) / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))
     )  # Eq 61
+    # n1.conjugate() / n1 can be replaced by eps_1.conjugate / abs(eps_1)
 
     mu2 = -kyt.real / np.sqrt(eps_2).real  # by definition of kyt
 
