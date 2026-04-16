@@ -517,6 +517,7 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
         m_max: maximum Fourier decomposition mode needed
         nsamples: number of samples to use for the Fourier decomposition. If None, it is automatically computed.
     """
+
     # samples of dphi for fourier decomposition. Highest efficiency for 2^n. 2^2 ok
     if nsamples is None:
         nsamples = 2 ** np.ceil(3 + np.log(m_max + 1) / np.log(2))
@@ -530,6 +531,10 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
 
     # compute the phase function
     p = phase_function(dphi)
+
+    if p.is_equal_zero():
+        # if the phase function is zero, we can save a lot of time by not doing the Fourier transform
+        return smrt_matrix(0)
 
     npol = p.npol
 
