@@ -18,9 +18,9 @@ from .common import AdjustableEffectivePermittivityMixin, derived_EMModel
 from .sce_common import SCEBase
 
 #
-# For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
-# initialisation and precomputation can be done in the prepare method that is called only once for each layer whereas
-# phase, ke and effective_permittivity can be called several times.
+# For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same
+# arguments as here initialisation and precomputation can be done in the prepare method that is called only once for
+# each layer whereas phase, ke and effective_permittivity can be called several times.
 #
 
 
