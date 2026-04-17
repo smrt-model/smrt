@@ -75,7 +75,8 @@ def honour_promise(filename, save_result_to=None, force_compute=True):
         if os.path.isdir(save_result_to):
             if getattr(promise, "result_filename", None) is None:
                 raise SMRTError(
-                    "promise has no predefined output filename and save_result_to is a directory. Either rebuild the promise or provide a file for save_result_to."
+                    "promise has no predefined output filename and save_result_to is a directory. Either rebuild the "
+                    "promise or provide a file for save_result_to."
                 )
             outfilename = os.path.join(save_result_to, promise.result_filename)
         elif os.path.isfile(save_result_to):

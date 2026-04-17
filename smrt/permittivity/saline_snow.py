@@ -3,12 +3,13 @@
 These functions are to be used with :py:mod:`smrt.emmodel.iba.derived_IBA` or
 :py:mod:`smrt.emmodel.symsce_torquato21.derived_SymSCETK21` to change the default of most emmodels (IBA, DMRT, SFT
 Rayleigh, SCE) using the generic mixing formula Polder van Staten that automatically mixes the permittivities of the
-background (e.g.) and the scatterer materials (e.g. saline ice) to compute the effective permittivity of snow in a proportion
-determined by ``frac_volume``.
+background (e.g.) and the scatterer materials (e.g. saline ice) to compute the effective permittivity of snow in a
+proportion determined by ``frac_volume``.
 
 Note:
-    They should not be used to set the material permittivities as input of :py:func:`smrt.inputs.make_medium.make_snowpack` and
-    similar functions (because the emmodel would re-mix the already mixed materials with the background material).
+    They should not be used to set the material permittivities as input of
+    :py:func:`smrt.inputs.make_medium.make_snowpack` and similar functions (because the emmodel would re-mix the already
+    mixed materials with the background material).
 """
 
 import warnings
@@ -59,8 +60,9 @@ def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salin
         Matlab code, Ludovic Brucker.
 
     References:
-        Geldsetzer, T., Langlois, A., Yackel, J., (2009) Dielectric properties of brine-wetted snow on first-year sea ice,
-        Cold Regions Science and Technology, Volume 58, Issues 1–2,pp 47-56. https://doi.org/10.1016/j.coldregions.2009.03.009.
+        Geldsetzer, T., Langlois, A., Yackel, J., (2009) Dielectric properties of brine-wetted snow on first-year sea
+        ice, Cold Regions Science and Technology, Volume 58, Issues 1–2,pp 47-56.
+        https://doi.org/10.1016/j.coldregions.2009.03.009.
     """
     if np.max(frequency) > 40e9:
         warnings.warn(
@@ -132,7 +134,8 @@ def saline_snow_permittivity_scharien_with_stogryn95(frequency, density, tempera
 
 
 def saline_snow_permittivity_scharien(density, temperature, salinity, brine_permittivity):
-    """Compute permittivity of saline snow using the Denoth / Matzler Mixture Model - Dielectric Constant of Saline Snow.
+    """Compute permittivity of saline snow using the Denoth / Matzler Mixture Model - Dielectric Constant of Saline
+    Snow.
 
     Note:
         Assumptions:

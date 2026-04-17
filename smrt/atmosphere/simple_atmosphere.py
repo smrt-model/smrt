@@ -5,9 +5,9 @@ TB and transmissivity are given as array of incidence and optionally as frequenc
 
 In the current implementation, there are two constraints:
 - All the parameters (theta, tbub, tbdown and transmission) must be 1D list or arrays of the same length.
-- The provided theta angles must cover the widest range possible in [0°, 90°] given that only interpolation is implemented at this stage.
-  When the RT solver calls this atmosphere, the requested cosines must be within the range of provided theta values.
-  Ideally 0° and 90° should be provided.
+- The provided theta angles must cover the widest range possible in [0°, 90°] given that only interpolation is
+  implemented at this stage. When the RT solver calls this atmosphere, the requested cosines must be within the range of
+  provided theta values. Ideally 0° and 90° should be provided.
 
  To make an atmosphere, it is recommended to use the helper function :py:func:`~smrt.inputs.make_model.make_atmosphere`.
 
@@ -50,7 +50,8 @@ class SimpleAtmosphere(AtmosphereBase):
     def __init__(self, theta, tb_down, tb_up, transmittance):
         if len(theta) < 2:
             raise SMRTError(
-                "The theta parameter must be a list or array of angles in degrees with at least two values (0° and close to 90° recommended)."
+                "The theta parameter must be a list or array of angles in degrees with at least two values"
+                " (0° and close to 90° recommended)."
             )
 
         costheta = np.cos(np.deg2rad(theta))

@@ -43,8 +43,8 @@ def make_atmosphere(tb_down=0, tb_up=0, transmittance=1):
         transmittance:  (Default value = 1)
     """
     smrt_warn(
-        """This function 'make_atmosphere' is going to be depreciated. Use smrt.inputs.make_medium.make_atmosphere or the
-short cut smrt.make_atmosphere instead.""",
+        "This function 'make_atmosphere' is going to be depreciated. Use smrt.inputs.make_medium.make_atmosphere or the"
+        "short cut smrt.make_atmosphere instead.",
         DeprecationWarning,
     )
 

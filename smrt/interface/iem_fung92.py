@@ -3,9 +3,9 @@
 Notes:
     It only computes the backscatter diffuse reflection as described in Fung et al. 1992, the specular reflection
     and the coherent transmission. It does not compute the full bi-static diffuse reflection and transmission.
-    As a consequence it is only suitable for emissivity calculation and when single scattering is dominant, usually at low
-    frequency when the medium is weakly scattering. This happends when the main mechanism is the backscatter from the
-    interface attenuated by the medium.  Another case is when the rough surface is relatively smooth, the specular
+    As a consequence it is only suitable for emissivity calculation and when single scattering is dominant, usually at
+    low frequency when the medium is weakly scattering. This happends when the main mechanism is the backscatter from
+    the interface attenuated by the medium.  Another case is when the rough surface is relatively smooth, the specular
     reflection is relatively strong and the energy can be scattered back by the medium (double bounce). For other
     situations, this code is not recommended.
 
@@ -24,8 +24,8 @@ Notes:
                                             clay=clay, sand=sand, drymatter=drymatter)
 
 References:
-    Fung, A.K, Zongqian, L., and Chen, K.S. (1992). Backscattering from a randomly rough dielectric surface. IEEE TRANSACTIONS ON
-    GEOSCIENCE AND REMOTE SENSING, 30-2. https://doi.org/10.1109/36.134085
+    Fung, A.K, Zongqian, L., and Chen, K.S. (1992). Backscattering from a randomly rough dielectric surface. IEEE
+    TRANSACTIONS ON GEOSCIENCE AND REMOTE SENSING, 30-2. https://doi.org/10.1109/36.134085
 """
 
 import numpy as np
@@ -75,19 +75,21 @@ class IEM_Fung92(
 
         if ks * kl > np.sqrt(eps_r):
             raise SMRTError(
-                f"Warning, roughness_rms or correlation_length are too high for the given wavelength. Limit is ks * kl < sqrt(eps_r). Here ks*kl={ks * kl:g} and sqrt(eps_r)={np.sqrt(eps_r):g}"
+                f"Warning, roughness_rms or correlation_length are too high for the given wavelength. Limit is ks * kl "
+                f"< sqrt(eps_r). Here ks*kl={ks * kl:g} and sqrt(eps_r)={np.sqrt(eps_r):g}"
             )
 
     def fresnel_coefficients(self, eps_1, eps_2, mu_i, ks, kl):
-        """Calculate the fresnel coefficients at the angle mu_i whatever is ks and kl according to the original formulation of Fung 1992"""
+        """Calculate the fresnel coefficients at the angle mu_i whatever is ks and kl according to the original
+        formulation of Fung 1992"""
         Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
         return Rv, Rh
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol, debug=False):
         """Compute the diffuse reflection coefficients.
 
-        Coefficients are calculated for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the
-        beam is transmitted.
+        Coefficients are calculated for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is
+        where the beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -148,7 +150,8 @@ class IEM_Fung92(
         mu2 = mu**2
         sin2 = 1 - mu2
         tan2 = sin2 / mu2
-        # part of Eq 91. We don't use all the simplification because we want validity for n>1, especially not np.exp(-rms2 * k.z**2)=1
+        # part of Eq 91. We don't use all the simplification because we want validity for n>1, especially
+        # not np.exp(-rms2 * k.z**2)=1
         Ivv_n += k.z**n * (sin2 / mu * (1 + Rv) ** 2 * (1 - 1 / eps_r) * (1 + tan2 / eps_r))
         Ihh_n += -(k.z**n) * (sin2 / mu * (1 + Rh) ** 2 * (eps_r - 1) / mu2)  # part of Eq 95.
 
@@ -163,7 +166,8 @@ class IEM_Fung92(
         sigma_hh = coef * np.sum(coef_n * abs2(Ihh_n), axis=0)
 
         # if debug:
-        #    self.sigma_vv_1 = ( 8*k.norm()2**2*rms2*abs2(Rv*mu2 + (1-mu2)*(1+Rv)**2 / 2 * (1 - 1 / eps_r)) * self.W_n(1, -2 * k.x) ).flat
+        #    self.sigma_vv_1 = ( 8*k.norm()2**2*rms2*abs2(Rv*mu2 + (1-mu2)*(1+Rv)**2 / 2 * (1 - 1 / eps_r)) *
+        #       self.W_n(1, -2 * k.x) ).flat
         #    self.sigma_hh_1 = ( 8*k.norm()2**2*rms2*abs2(Rh*mu2) * self.W_n(1, -2 * k.x) ).flat
 
         reflection_coefficients = smrt_matrix.zeros((npol, len(mu_i)))

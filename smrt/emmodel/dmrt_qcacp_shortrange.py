@@ -1,8 +1,8 @@
 """Compute scattering with DMRT QCACP Short range like in DMRT-ML. Short range means that it is accurate only for small
 and weakly sticky spheres (high stickiness value). It diverges (increasing scattering coefficient) if these conditions
-are not met. Numerically the size conditions can be evaluated with the ratio radius/wavelength as for Rayleigh scatterers.
-For the stickiness, it is more difficult as this depends on the size of the scatterers and the fractional volume. In any case, it is
-dangerous to use too small a stickiness value, especially if the grains are big.
+are not met. Numerically the size conditions can be evaluated with the ratio radius/wavelength as for Rayleigh
+scatterers. For the stickiness, it is more difficult as this depends on the size of the scatterers and the fractional
+volume. In any case, it is dangerous to use too small a stickiness value, especially if the grains are big.
 
 This model is only compatible with the SHS microstructure model.
 
@@ -55,13 +55,14 @@ class DMRT_QCACP_ShortRange(Rayleigh):
 
     :param sensor: sensor instance
     :param layer: layer instance
-    :dense_snow_correction: set how snow denser than half the ice density (ie. fractional volume larger than 0.5 is handled).
-        "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air.
-        "bridging" should be developed in the future.
+    :dense_snow_correction: set how snow denser than half the ice density (ie. fractional volume larger than 0.5 is
+        handled). "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air. "bridging"
+        should be developed in the future.
     """
 
     def __init__(self, sensor, layer, dense_snow_correction="auto"):
-        # super().__init__()  # must not be called. Todo: write a generic RayleighBase object with phase function methods only
+        # super().__init__()  # must not be called. Todo: write a generic RayleighBase object with phase function
+        #  methods only
 
         if layer.frac_volume > 0.5 and dense_snow_correction == "auto":
             layer = layer.inverted_medium()

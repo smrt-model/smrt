@@ -1,7 +1,8 @@
 # coding: utf-8
 
-"""Compute scattering with the Strong-Contrast Expansion (SCE) from Rechtsman and Torquato, 2008 adapted by Ghislain Picard (unpublished at time of writing).
-This SCE is the local version valid for quasi-static frequency (i.e. low frequency or small scatterers). A non-local version has been devised recently.
+"""Compute scattering with the Strong-Contrast Expansion (SCE) from Rechtsman and Torquato, 2008 adapted by
+Picard et al. 2022 (The Cryosphere). This SCE is the local version valid for quasi-static frequency (i.e. low frequency
+or small scatterers). A non-local version has been devised recently.
 """
 
 # Stdlib import
@@ -16,9 +17,9 @@ from smrt.permittivity.generic_mixing_formula import maxwell_garnett_for_spheres
 from .sce_common import SCEBase
 
 #
-# For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
-# initialisation and precomputation can be done in the prepare method that is called only once for each layer whereas
-# phase, ke and effective_permittivity can be called several times.
+# For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same
+# arguments as here initialisation and precomputation can be done in the prepare method that is called only once for
+# each layer whereas phase, ke and effective_permittivity can be called several times.
 #
 
 
@@ -57,8 +58,9 @@ class SCER08(SCEBase):
         return A2
 
     def compute_ke(self):
-        # equation Eq 29 in Rechtsman and Torquato 2008 is equivalent to Maxwell Garnet with an adjusted fractional volume
-        # (it can be complex)
+        # equation Eq 29 in Rechtsman and Torquato 2008 is equivalent to Maxwell Garnet with an adjusted fractional
+        # volume (it can be complex)
+
         adjusted_fractional = self.frac_volume / (
             1 - self.A2 / self.frac_volume * (self.eps - self.e0) / (self.eps + 2 * self.e0)
         )

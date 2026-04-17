@@ -22,7 +22,8 @@ from .brine import (
 
 @layer_properties("temperature", "salinity")
 def seawater_permittivity_klein76(frequency, temperature, salinity):
-    """Calculate permittivity (dielectric constant) of water using an empirical relationship described by Klein and Swift (1976).
+    """Calculate permittivity (dielectric constant) of water using an empirical relationship described by Klein and
+    Swift (1976).
 
     Args:
         frequency: frequency in Hz.
@@ -47,7 +48,8 @@ def seawater_permittivity_klein76(frequency, temperature, salinity):
     tempF = -(0.0575 * Sppt - 1.710523e-3 * Sppt**1.5 + 2.154996e-4 * Sppt**2)
     if np.any(tempC < tempF - 0.1):  # take into account a small tolerance
         raise SMRTError(
-            f"The water temperature must be higher than the freezing point at the given salinity (here {tempF + FREEZING_POINT:.2f} K)."
+            "The water temperature must be higher than the freezing point at the given salinity"
+            f"(here {tempF + FREEZING_POINT:.2f} K)."
         )
 
     omega = 2 * np.pi * frequency
@@ -187,7 +189,8 @@ def seawater_permittivity_stogryn95(frequency, temperature, salinity):
     #   real :: sigma              ! [S/m]    Conductivity of sea water
     #   real :: sigma35            ! [S/m]    Conductivity for S=35
     #   real :: R15                !          Ratio of conductivity to conductivity of standard sea water at T = 15°C
-    #   real :: RtR15              !          Ratio of conductivity to conductivity of standard sea water at temp. T and salinity S
+    #   real :: RtR15              !          Ratio of conductivity to conductivity of standard sea water at temp. T and
+    #                                           salinity S
     #   real :: alpha0, alpha1     !          Fitting parameters for RtR15
     #   real :: a, b, b1, b2       !          Debye parameters
 
@@ -251,15 +254,16 @@ def seawwater_permittivity_boutin23_2function(frequency, temperature, salinity):
     """Compute the permittivity using BVZ 2 from Equations (7) and (8) in Boutin et al. (2023).
 
     BVZ 2functions' has been derived from L-Band GW2020 measurements,  following the assumptions of Somaraju and Trumpf
-    (2006). It reasonnably fits P-Band dielectric constants laboratory measurements over the 0-150 pss range (Le vine et al. 2025,
-    IEEE TGRS). With respect to the BV (Boutin et al. 2021) model, the following changes have been performed:
+    (2006). It reasonnably fits P-Band dielectric constants laboratory measurements over the 0-150 pss range (Le vine et
+    al. 2025, IEEE TGRS). With respect to the BV (Boutin et al. 2021) model, the following changes have been performed:
 
         - Conductivity=pss78 conductivity-salinity relationship from TEOS10.
         - tau = tauMW(1+gSST) instead of tau=tauMW.
         - alpha = (par(1)-par(2).SST).
 
     Note:
-        This function requires the Gibbs SeaWater Oceanographic Toolbox package (gsw): https://github.com/TEOS-10/GSW-python
+        This function requires the Gibbs SeaWater Oceanographic Toolbox package (gsw):
+        https://github.com/TEOS-10/GSW-python
 
     Args:
         frequency: frequency in Hz.
@@ -269,20 +273,22 @@ def seawwater_permittivity_boutin23_2function(frequency, temperature, salinity):
         complex water permittivity for a frequency f.
 
     References:
-        Boutin, J., Vergely, J-L., Bonjean, F., Perrot, X., Zhou, Y., and Dinnat, E.P., (2023). New Seawater Dielectric Constant
-        Parametrization and Application to SMOS Retrieved Salinity, IEEE Transactions on Geoscience and Remote Sensing, vol. 61,
-        pp. 1-13, 2023, Art no. 2000813, https://doi.org/10.1109/TGRS.2023.3257923.
+        Boutin, J., Vergely, J-L., Bonjean, F., Perrot, X., Zhou, Y., and Dinnat, E.P., (2023). New Seawater Dielectric
+        Constant Parametrization and Application to SMOS Retrieved Salinity, IEEE Transactions on Geoscience and Remote
+        Sensing, vol. 61, pp. 1-13, 2023, Art no. 2000813, https://doi.org/10.1109/TGRS.2023.3257923.
 
-        Boutin, J., Vergely, J. L., Perrot, X., Zhou, Y., Dinnat, E., and Sabia, R., (2021). Seawater Dielectric Constant At L-Band:
-        How Consistent Are New Parametrisations Inferred from Smos and Laboratory Measurements?, IEEE International Geoscience and
-        Remote Sensing Symposium IGARSS, Brussels, Belgium, 2021, pp. 7465-7467, https://doi.org/10.1109/IGARSS47720.2021.9554909.
+        Boutin, J., Vergely, J. L., Perrot, X., Zhou, Y., Dinnat, E., and Sabia, R., (2021). Seawater Dielectric
+        Constant At L-Band: How Consistent Are New Parametrisations Inferred from Smos and Laboratory Measurements?,
+        IEEE International Geoscience and Remote Sensing Symposium IGARSS, Brussels, Belgium, 2021, pp. 7465-7467,
+         https://doi.org/10.1109/IGARSS47720.2021.9554909.
 
-        Le Vine, D. M., Lang, R. H., Li, M., Dinnat,  E. P., Boutin, J., and Zhou, Y., (2025). The Dielectric Constant of Sea Water
-        at P-Band for Salinity From 0 to 150 pss, IEEE Transactions on Geoscience and Remote Sensing, vol. 63, pp. 1-11, 2025, Art
-        no. 4202011, https://doi.org/10.1109/TGRS.2025.3532180.
+        Le Vine, D. M., Lang, R. H., Li, M., Dinnat,  E. P., Boutin, J., and Zhou, Y., (2025). The Dielectric Constant
+        of Sea Water at P-Band for Salinity From 0 to 150 pss, IEEE Transactions on Geoscience and Remote Sensing, vol.
+        63, pp. 1-11, 2025, Art no. 4202011, https://doi.org/10.1109/TGRS.2025.3532180.
 
-        Somaraju, R., and Trumpf, J., (2006). Frequency, Temperature and Salinity Variation of the Permittivity of Seawater,
-        IEEE Transactions on Antennas and Propagation, vol. 54, no. 11, pp. 3441-3448, https://doi.org/10.1109/TAP.2006.884290.
+        Somaraju, R., and Trumpf, J., (2006). Frequency, Temperature and Salinity Variation of the Permittivity of
+        Seawater, IEEE Transactions on Antennas and Propagation, vol. 54, no. 11, pp. 3441-3448,
+        https://doi.org/10.1109/TAP.2006.884290.
     """
     import gsw
 
@@ -387,19 +393,22 @@ def seawwater_permittivity_boutin23_3function(frequency, temperature, salinity):
         complex water permittivity for a frequency f.
 
     References:
-        Boutin, J., Vergely, J-L., Bonjean, F., Perrot, X., Zhou, Y., and Dinnat, E.P., (2023). New Seawater Dielectric Constant
-        Parametrization and Application to SMOS Retrieved Salinity, IEEE Transactions on Geoscience and Remote Sensing, vol. 61,
-        pp. 1-13, 2023, Art no. 2000813, https://doi.org/10.1109/TGRS.2023.3257923.
+        Boutin, J., Vergely, J-L., Bonjean, F., Perrot, X., Zhou, Y., and Dinnat, E.P., (2023). New Seawater Dielectric
+        Constant Parametrization and Application to SMOS Retrieved Salinity, IEEE Transactions on Geoscience and Remote
+        Sensing, vol. 61, pp. 1-13, 2023, Art no. 2000813, https://doi.org/10.1109/TGRS.2023.3257923.
 
-        Boutin, J., Vergely, J. L., Perrot, X., Zhou, Y., Dinnat, E., and Sabia, R., (2021). Seawater Dielectric Constant At L-Band:
-        How Consistent Are New Parametrisations Inferred from Smos and Laboratory Measurements?, IEEE International Geoscience and
-        Remote Sensing Symposium IGARSS, Brussels, Belgium, 2021, pp. 7465-7467, https://doi.org/10.1109/IGARSS47720.2021.9554909.
+        Boutin, J., Vergely, J. L., Perrot, X., Zhou, Y., Dinnat, E., and Sabia, R., (2021). Seawater Dielectric
+        Constant At L-Band: How Consistent Are New Parametrisations Inferred from Smos and Laboratory Measurements?,
+        IEEE International Geoscience and Remote Sensing Symposium IGARSS, Brussels, Belgium, 2021, pp. 7465-7467,
+        https://doi.org/10.1109/IGARSS47720.2021.9554909.
 
-        Meissner, T., and Wentz, F. J., (2004). The complex dielectric constant of pure and sea water from microwave satellite observations,
-        IEEE Transactions on Geoscience and Remote Sensing, vol. 42, no. 9, pp. 1836-1849, https://doi.org/10.1109/TGRS.2004.831888
+        Meissner, T., and Wentz, F. J., (2004). The complex dielectric constant of pure and sea water from microwave
+        satellite observations, IEEE Transactions on Geoscience and Remote Sensing, vol. 42, no. 9, pp. 1836-1849,
+        https://doi.org/10.1109/TGRS.2004.831888
 
-        Somaraju, R., and Trumpf, J., (2006). Frequency, Temperature and Salinity Variation of the Permittivity of Seawater,
-        IEEE Transactions on Antennas and Propagation, vol. 54, no. 11, pp. 3441-3448, https://doi.org/10.1109/TAP.2006.884290.
+        Somaraju, R., and Trumpf, J., (2006). Frequency, Temperature and Salinity Variation of the Permittivity of
+        Seawater, IEEE Transactions on Antennas and Propagation, vol. 54, no. 11, pp. 3441-3448,
+        https://doi.org/10.1109/TAP.2006.884290.
     """
     import gsw
 

@@ -20,8 +20,8 @@ class KirchoffApproximationCoherentInterfaceMixin(metaclass=ABCMeta):
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """Compute the specular reflection coefficients.
 
-        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
-        beam is transmitted.
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is
+        where the beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -40,8 +40,8 @@ class KirchoffApproximationCoherentInterfaceMixin(metaclass=ABCMeta):
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """Compute the transmission coefficients.
 
-        Coefficients are calculated for the azimuthal mode m and for an array of incidence angles (given by their cosine) in medium 1.
-        Medium 2 is where the beam is transmitted.
+        Coefficients are calculated for the azimuthal mode m and for an array of incidence angles (given by their
+        cosine) in medium 1. Medium 2 is where the beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.

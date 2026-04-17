@@ -1,7 +1,7 @@
 # coding: utf-8
 
-"""Provide helper functions to create snowpacks, sea-ice, and other media. These functions are user-friendly and recommended
-for most usages. Extension of these functions is welcome on the condition they keep a generic structure.
+"""Provide helper functions to create snowpacks, sea-ice, and other media. These functions are user-friendly and
+recommended for most usages. Extension of these functions is welcome on the condition they keep a generic structure.
 
 The function `make_snowpack` is the first entry point the user should consider to build a snowpack.
 
@@ -9,22 +9,25 @@ Example::
 
     from smrt import make_snowpack
 
-    sp = make_snowpack([1000], density=[300], microstructure_model='sticky_hard_spheres', radius=[0.3e-3], stickiness=0.2)
+    sp = make_snowpack([1000], density=[300], microstructure_model='sticky_hard_spheres', radius=[0.3e-3],
+                       stickiness=0.2)
 
 Create a semi-infinite snowpack made of sticky hard spheres with radius 0.3mm and stickiness 0.2.
 The `Snowpack` object is in the `sp` variable.
 
 Note:
     Any layer with zero thickness is completely removed in most of these functions (as well as its top interface),
-    and a transparent layer is added if the resulting medium does not have any layer. This allows simulation of bare soil and bare ice
-    more easily. It is important to understand that any layer with non-zero thickness, even much smaller than the wavelength, even
-    10 :sup:`-20` m, has an impact in the radiative transfer framework due to the reflection, transmission and refraction. In reality,
-    and according to the wave theory such sub-wavelength layers and their interface should have reduced or close to zero impact.
-    It is the responsibility of the user to ensure that such thin layers (less than a quarter of wavelength) are removed from
-    the snowpack. Alternatively, setting the `process_coherent_layers` option when using the
-    :py:mod:`smrt.rtsolver.dort` solver allows to deal with sub-wavelength layers provided they are isolated between two thick layers.
+    and a transparent layer is added if the resulting medium does not have any layer. This allows simulation of bare
+    soil and bare ice more easily. It is important to understand that any layer with non-zero thickness, even much
+    smaller than the wavelength, even 10 :sup:`-20` m, has an impact in the radiative transfer framework due to the
+    reflection, transmission and refraction. In reality, and according to the wave theory such sub-wavelength layers and
+    their interface should have reduced or close to zero impact. It is the responsibility of the user to ensure that
+    such thin layers (less than a quarter of wavelength) are removed from the snowpack. Alternatively, setting the
+    `process_coherent_layers` option when using the :py:mod:`smrt.rtsolver.dort` solver allows to deal with
+    sub-wavelength layers provided they are isolated between two thick layers.
 
-    Note that `make_snowpack` is directly imported from :py:mod:`smrt` instead of :py:mod:`smrt.inputs.make_medium`. This feature is for convenience.
+    Note that `make_snowpack` is directly imported from :py:mod:`smrt` instead of :py:mod:`smrt.inputs.make_medium`.
+    This feature is for convenience.
 """
 
 import collections
@@ -62,30 +65,34 @@ from smrt.substrate.flat import Flat
 
 
 def make_medium(data, surface=None, interface=None, substrate=None, **kwargs):
-    """Build a multi-layered medium using a pandas DataFrame (or a dict that can be transformed into a DataFrame) and optional arguments.
+    """Build a multi-layered medium using a pandas DataFrame (or a dict that can be transformed into a DataFrame) and
+    optional arguments.
 
-    The 'medium' column (or key) in data indicates the medium type: 'snow' or 'ice'. If not given, it defaults to 'snow'.
-    'data' must contain enough information to build either a snowpack or an ice_column. The minimum requirements are:
-        - for a snowpack: ('z' or 'thickness'), 'density', 'microstructure_model' and the arguments required by the microstructural_model.
-        - for an ice column: ice_type, ('z' or 'thickness'), 'temperature', 'salinity', 'microstructure_model' and the arguments required by
-          the microstructural_model.
+    The 'medium' column (or key) in data indicates the medium type: 'snow' or 'ice'. If not given, it defaults to
+    'snow'. 'data' must contain enough information to build either a snowpack or an ice_column. The minimum requirements
+    are:
+        - for a snowpack: ('z' or 'thickness'), 'density', 'microstructure_model' and the arguments required by the
+          microstructural_model.
+        - for an ice column: ice_type, ('z' or 'thickness'), 'temperature', 'salinity', 'microstructure_model' and the
+          arguments required by the microstructural_model.
 
-    When reading a dataframe from disk for instance, it is convenient to use df.rename(columns={...}) to map the column names of the file
-    to the column names required by SMRT.
+    When reading a dataframe from disk for instance, it is convenient to use df.rename(columns={...}) to map the column
+    names of the file to the column names required by SMRT.
 
     If 'z' is given, the thickness is deduced using `compute_thickness_from_z`.
 
     Warning:
         Using this function is a bit dangerous as any unrecognized column names are silently ignored.
-        For instance, a column named 'Temperature' is ignored (due to the uppercase), and the temperature in the snowpack
-        will be set to the default value (273.15 K). This issue applies to any optional argument.
+        For instance, a column named 'Temperature' is ignored (due to the uppercase), and the temperature in the
+        snowpack will be set to the default value (273.15 K). This issue applies to any optional argument.
 
     Note:
-        `make_medium` creates layers using all the columns in the dataframe. It means that any column name becomes an attribute of
-        the layer objects, even if not recognized/used by SMRT. This can be seen as an interesting feature to store information in layers,
-        but this is also dangerous if column names collide with internal layer attributes or method names. For this reason,
-        this function is unsecure if the snowpack data are pulled from the internet or external source. Always check the content of the file,
-        and it is recommended to drop all the unnecessary columns with df.drop(columns=[...]) before calling make_medium.
+        `make_medium` creates layers using all the columns in the dataframe. It means that any column name becomes an
+        attribute of the layer objects, even if not recognized/used by SMRT. This can be seen as an interesting feature
+        to store information in layers, but this is also dangerous if column names collide with internal layer
+        attributes or method names. For this reason, this function is unsecure if the snowpack data are pulled from the
+        internet or external source. Always check the content of the file, and it is recommended to drop all the
+        unnecessary columns with df.drop(columns=[...]) before calling make_medium.
 
     Args:
         data: DataFrame or dict containing layer information.
@@ -163,31 +170,34 @@ def make_snowpack(
     Args:
         thickness: Thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf"
             for a semi-infinite layer. Any layer with zero thickness is removed.
-        microstructure_model: Microstructure model to use (e.g. sticky_hard_spheres or independent_sphere or exponential).
+        microstructure_model: Microstructure model to use (e.g. sticky_hard_spheres or independent_sphere or
+            exponential).
         surface: Type of surface interface, flat/fresnel is the default. If surface and interface are both set,
             the interface must be a constant referring to all the "internal" interfaces.
         interface: Type of interface, flat/fresnel is the default. It is usually a string for the interfaces
             without parameters (e.g. Flat or Transparent) or is created with `make_interface` in more complex cases.
-            Interface can be a constant or a list. In the latter case, its length must be the same as the number of layers,
-            and interface[0] refers to the surface interface.
+            Interface can be a constant or a list. In the latter case, its length must be the same as the number of
+            layers, and interface[0] refers to the surface interface.
         density: Densities of the layers.
         substrate: Set the substrate of the snowpack. Another way to add a substrate is to use the + operator
             (e.g. snowpack + substrate).
-        **kwargs: All the other parameters (temperature, microstructure parameters, emmodel, etc.) are given as optional arguments
-            (e.g. temperature=[270, 250]).
-            They are passed for each layer to the function :py:func:`~.smrt.inputs.make_medium.make_snow_layer`.
-            Thus, the documentation of this function is the reference. It describes precisely the available parameters.
-            The microstructure parameter(s) depend on the microstructure_model used and is documented in each microstructure_model module.
+        **kwargs: All the other parameters (temperature, microstructure parameters, emmodel, etc.) are given as optional
+            arguments (e.g. temperature=[270, 250]). They are passed for each layer to the function
+            :py:func:`~.smrt.inputs.make_medium.make_snow_layer`. Thus, the documentation of this function is the
+            reference. It describes precisely the available parameters. The microstructure parameter(s) depend on the
+            microstructure_model used and is documented in each microstructure_model module.
 
     Example::
 
-        sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
+        sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250],
+                           corr_length=[0.2e-3, 0.3e-3])
     """
     sp = Snowpack(substrate=substrate, atmosphere=atmosphere)
 
     if not isinstance(thickness, collections.abc.Iterable):
         raise SMRTError(
-            "The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame."
+            "The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or "
+            "DataFrame."
         )
 
     lib.check_argument_size(density, len(thickness), "density")
@@ -254,7 +264,8 @@ def make_snow_layer(
             with respect to ice+water volume (default=0). liquid_water = water_volume / (ice_volume + water_volume).
         salinity: Salinity in kg kg :sup:`-1`, for using PSU as unit see PSU constant in smrt module (default = 0).
         medium: Indicates which medium the layer is made of ("snow" is a default).
-            It is used when emmodel is a dictionary mapping from medium to emmodels in :py:func:`~.smrt.core.model.make_model`.
+            It is used when emmodel is a dictionary mapping from medium to emmodels in
+            :py:func:`~.smrt.core.model.make_model`.
         **kwargs: Other microstructure parameters are given as optional arguments but may be required.
 
     Returns:
@@ -409,7 +420,8 @@ class SnowLayer(Layer):
             f"the frac_volume of ice+water in snow is {frac_volume} but must be between 0 and 1."
         )
         " Check that volumetric_liquid_water is between 0 and 1,"
-        " and that density is between 0 and DENSITY_OF_ICE + (DENSITY_OF_WATER - DENSITY_OF_ICE) * volumetric_liquid_water. "
+        " and that density is between 0 and DENSITY_OF_ICE + (DENSITY_OF_WATER - DENSITY_OF_ICE) * "
+        "volumetric_liquid_water. "
 
         frac_volume = np.minimum(frac_volume, 1.0)
 
@@ -444,41 +456,47 @@ def make_ice_column(
 ):
     """Build a multi-layered ice column. Each parameter can be an array, list or a constant value.
 
-    `ice_type` argument determines the type of ice, which has a big impact on how the medium is modelled and the parameters:
+    `ice_type` argument determines the type of ice, which has a big impact on how the medium is modelled and the
+    parameters:
         - First year ice is modelled as scattering brines embedded in a pure ice background
-        - Multi year ice is modelled as scattering air bubbles in a saline ice background (but brines are non-scattering in this case).
-        - Fresh ice is modelled as scattering air bubbles in a pure ice background (but brines are non-scattering in this case).
+        - Multi year ice is modelled as scattering air bubbles in a saline ice background (but brines are non-scattering
+          in this case).
+        - Fresh ice is modelled as scattering air bubbles in a pure ice background (but brines are non-scattering in
+          this case).
 
-    First-year and multi-year ice are equivalent only if scattering and porosity are null. It is important to understand that
-    in multi-year ice scattering by brine pockets is neglected because scattering is only due to air bubbles. This limitation comes from
-    the unability of emmodels implemented up to now to deal with three-phase media.
+    First-year and multi-year ice are equivalent only if scattering and porosity are null. It is important to understand
+    that in multi-year ice scattering by brine pockets is neglected because scattering is only due to air bubbles. This
+    limitation comes from the unability of emmodels implemented up to now to deal with three-phase media.
 
     :param ice_type: Ice type. Options are "firstyear", "multiyear", "fresh".
-    :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf"
-        for a semi-infinite layer. Any layer with zero thickness is removed.
+    :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be
+        "numpy.inf" for a semi-infinite layer. Any layer with zero thickness is removed.
     :param temperature: temperature of ice/water in K.
     :param brine_inclusion_shape: assumption for shape of brine inclusions. So far, "spheres" or "random_needles"
         (i.e. elongated ellipsoidal inclusions), and "mix" (a mix of the two) are implemented.
-    :param salinity: salinity of ice/water in kg kg :sup:`-1` (see PSU constant in smrt module). Default is 0. If neither salinity
-        nor brine_volume_fraction are given, the ice column is considered to consist of fresh water ice.
-    :param brine_volume_fraction: brine / liquid water fraction in sea ice. Can be a value or a function depending on temperature and salinity.
-        See the module :py:mod:`smrt.permittivity.brine` for available options.
+    :param salinity: salinity of ice/water in kg kg :sup:`-1` (see PSU constant in smrt module). Default is 0. If
+        neither salinity nor brine_volume_fraction are given, the ice column is considered to consist of fresh water
+        ice.
+    :param brine_volume_fraction: brine / liquid water fraction in sea ice. Can be a value or a function depending on
+        temperature and salinity. See the module :py:mod:`smrt.permittivity.brine` for available options.
         This parameter is optional, if not given brine volume fraction is calculated from temperature and salinity in
         :py:func:`~.smrt.permittivity.brine.brine_volume_cox83_lepparanta88`.
     :param density: density of ice layer in kg m :sup:`-3`.
     :param porosity: porosity of ice layer (0 - 1). Default is 0.
     :param add_water_substrate: Adds a substrate made of water below the ice column.
-        Possible arguments are True (default) or False. If True looks for ice_type to determine if a saline or fresh water layer is
-        added and/or uses the optional arguments 'water_temperature', 'water_salinity' of the water substrate.
-    :param surface: type of surface interface, flat/fresnel is the default.  If surface and interface are both set, the interface must be
-        a constant refering to all the "internal" interfaces.
-    :param interface: type of interface, flat/fresnel is the default. It is usually a string for the interfaces without parameters
-        (e.g. Flat or Transparent) or is created with :py:func:`~smrt.core.interface.make_interface` in more complex cases.
-        Interface can be a constant or a list. In the latter case, its length must be the same as the number of layers,
-        and interface[0] refers to the surface interface.
+        Possible arguments are True (default) or False. If True looks for ice_type to determine if a saline or fresh
+        water layer is added and/or uses the optional arguments 'water_temperature', 'water_salinity' of the water
+        substrate.
+    :param surface: type of surface interface, flat/fresnel is the default.  If surface and interface are both set, the
+        interface must be a constant refering to all the "internal" interfaces.
+    :param interface: type of interface, flat/fresnel is the default. It is usually a string for the interfaces without
+        parameters (e.g. Flat or Transparent) or is created with :py:func:`~smrt.core.interface.make_interface` in more
+        complex cases. Interface can be a constant or a list. In the latter case, its length must be the same as the
+        number of layers, and interface[0] refers to the surface interface.
     :param substrate: if add_water_substrate is False, the substrate can be prescribed with this argument.
 
-    All the other optional arguments are passed for each layer to the function :py:func:`~smrt.inputs.make_medium.make_ice_layer`.
+    All the other optional arguments are passed for each layer to the function
+    :py:func:`~smrt.inputs.make_medium.make_ice_layer`.
     The documentation of this function describes in detail the parameters used/required depending on ice_type.
 
     """
@@ -566,10 +584,11 @@ def make_ice_layer(
     medium="ice",
     **kwargs,
 ):
-    """Make an ice layer for a given `microstructure_model` (see also :py:func:`~smrt.inputs.make_medium.make_ice_column`
-    to create many layers). The microstructural parameters depend on the microstructural model and should be given as
-    additional arguments to this function. To identify which parameters are available, required or optional, refer to the documentation
-    of the specific microstructure model used.
+    """Make an ice layer for a given `microstructure_model` (see also
+    :py:func:`~smrt.inputs.make_medium.make_ice_column` to create many layers). The microstructural parameters depend
+    on the microstructural model and should be given as additional arguments to this function. To identify which
+    parameters are available, required or optional, refer to the documentation of the specific microstructure model
+    used.
 
     Args:
         ice_type: Assumed ice type.
@@ -577,19 +596,21 @@ def make_ice_layer(
         temperature: Temperature of layer in K.
         salinity: (firstyear and multiyear) Salinity in kg kg :sup:`-1` (see PSU constant in smrt module).
         brine_inclusion_shape: (firstyear and multiyear) Assumption for shape of brine inclusions (so far,
-            "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions), and "mix_spheres_needles" are implemented)
-        brine_volume_fraction: Brine / liquid water fraction in sea ice. Can be a value or a function depending on temperature and salinity.
-            See the module :py:mod:`smrt.permittivity.brine` for available options.
-            This parameter is optional, if not given brine volume fraction is calculated from temperature and salinity in
-            `brine_volume_cox83_lepparanta88`.
+            "spheres" and "random_needles" (i.e. elongated ellipsoidal inclusions), and "mix_spheres_needles" are
+            implemented)
+        brine_volume_fraction: Brine / liquid water fraction in sea ice. Can be a value or a function depending on
+            temperature and salinity. See the module :py:mod:`smrt.permittivity.brine` for available options.
+            This parameter is optional, if not given brine volume fraction is calculated from temperature and salinity
+            in `brine_volume_cox83_lepparanta88`.
         brine_permittivity_model: (firstyear and multiyear) Brine permittivity formulation
-            (default is brine_permittivity_stogryn85). It can be a function, a value or the name of a permittivity function.
-        density: (multiyear) Density of ice layer in kg m :sup:`-3`. If not given, density is calculated from temperature,
-            salinity and ice porosity.
+            (default is brine_permittivity_stogryn85). It can be a function, a value or the name of a permittivity
+            function.
+        density: (multiyear) Density of ice layer in kg m :sup:`-3`. If not given, density is calculated from
+            temperature, salinity and ice porosity.
         porosity: (mutliyear and fresh) Air porosity of ice layer (0..1). Default is 0.
         ice_permittivity_model: (all) Pure ice permittivity formulation
-            (default is ice_permittivity_matzler06 for firstyear and fresh, and saline_ice_permittivity_pvs_mixing for multiyear).
-            It can be a function, a value or the name of a permittivity function.
+            (default is ice_permittivity_matzler06 for firstyear and fresh, and saline_ice_permittivity_pvs_mixing for
+            multiyear). It can be a function, a value or the name of a permittivity function.
         saline_ice_permittivity_model: (multiyear) Model to mix ice and brine. The default uses polder van staten and
             ice_permittivity_model and brine_permittivity_model. It is highly recommended to use the default.
             It can be a function, a value or the name of a permittivity function.
@@ -640,7 +661,8 @@ def make_ice_layer(
 
         # background permittivity
         if ice_permittivity_model is None:
-            # 'must import this here instead of the top of the file because of cross-dependencies' is what it says above,
+            # 'must import this here instead of the top of the file because of cross-dependencies' is what it says
+            # above,
             # so I did the same...
             eps_1 = ice_permittivity_maetzler06
         else:
@@ -677,7 +699,8 @@ def make_ice_layer(
 
         # background permittivity
         if ice_permittivity_model is None:
-            # 'must import this here instead of the top of the file because of cross-dependencies' is what it says above,
+            # 'must import this here instead of the top of the file because of cross-dependencies' is what it says
+            # above,
             # so I did the same...
             eps_1 = ice_permittivity_maetzler06
         else:
@@ -736,6 +759,7 @@ def make_slush(
     ice_permittivity_model=None,
     water_permittivity_model=None,
     background_material="auto",
+    inclusion_shape="spheres",
     salinity=0,
     **kwargs,
 ):
@@ -837,8 +861,8 @@ def make_water_body(
         water_permittivity_model: Water permittivity formulation (default is seawater_permittivity_klein76).
             It can be a function, a value or the name of a permittivity function.
         foam_frac_volume: Fractional volume of air bubbles in the water. See for instance Hwang et al. 2019.
-            https://doi.org/10.1175/JPO-D-19-0061.1 . Note that the permittivity mixing formula suggested in that paper is
-            different from the Polder van Santen used in most emmodels in SMRT.
+            https://doi.org/10.1175/JPO-D-19-0061.1 . Note that the permittivity mixing formula suggested in that paper
+            is different from the Polder van Santen used in most emmodels in SMRT.
         foam_bubble_radius: Effective radius of the foam bubbles. See for instance Golbraikh and Shtemler, 2018
             https://doi.org/10.1007/s10236-018-1166-4
         surface: Type of surface interface. Flat surface (Fresnel coefficient) is the default.
@@ -884,11 +908,12 @@ def make_water_layer(
         layer_thickness: Thickness of ice layer in m.
         temperature: Temperature of layer in K.
         salinity: Salinity in kg kg :sup:`-1` (see PSU constant in smrt module).
-        water_permittivity_model: Water permittivity formulation (default is :py:func:`~smrt.permittivity.saline_water.seawater_permittivity_klein76`)
-            It can be a function, a value or the name of a permittivity function.
+        water_permittivity_model: Water permittivity formulation (default is
+             :py:func:`~smrt.permittivity.saline_water.seawater_permittivity_klein76`). It can be a function, a value or
+              the name of a permittivity function.
         foam_frac_volume: Fractional volume of air bubbles in the water. See for instance Hwang et al. 2019.
-            https://doi.org/10.1175/JPO-D-19-0061.1 . Note that the permittivity mixing formula suggested in that paper is
-            different from the Polder van Santen used in most emmodels in SMRT.
+            https://doi.org/10.1175/JPO-D-19-0061.1 . Note that the permittivity mixing formula suggested in that paper
+            is different from the Polder van Santen used in most emmodels in SMRT.
         foam_bubble_radius: Effective radius of the foam bubbles. See for instance Golbraikh and Shtemler, 2018
             https://doi.org/10.1007/s10236-018-1166-4
 
@@ -942,8 +967,8 @@ def water_parameters(ice_type, **kwargs):
         water_salinity = 0.0
     else:
         raise SMRTError(
-            "'medium' must be set to one of the following: True (default), 'ocean', 'fresh'. Additional optional arguments"
-            " for function make_ice_column are 'water_temperature', 'water_salinity' and 'water_depth'."
+            "'medium' must be set to one of the following: True (default), 'ocean', 'fresh'. Additional optional"
+            " arguments  for function make_ice_column are 'water_temperature', 'water_salinity' and 'water_depth'."
         )
 
     # override the following variable if set
@@ -966,7 +991,8 @@ def bulk_ice_density(temperature, salinity, porosity):
 
     Formulation from Cox & Weeks (1983): Equations for determining the gas and brine volumes in sea ice samples,
     J Glac. Developed for temperatures between -2--30°C. For higher temperatures (>2°C) is used the formulation from
-    Lepparanta & Manninen (1988): The brine and gas content of sea ice with attention to low salinities and high temperatures.
+    Lepparanta & Manninen (1988): The brine and gas content of sea ice with attention to low salinities and high
+    temperatures.
 
     Args:
         temperature: Temperature in K
@@ -1021,8 +1047,8 @@ def make_generic_stack(
     Must be used with :py:mod:`smrt.emmodel.prescribed_kskaeps` emmodel.
 
     Args:
-        thickness: Thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf" for
-            a semi-infinite layer. Any layer with zero thickness is removed.
+        thickness: Thicknesses of the layers in meter (from top to bottom). The last layer thickness can be "numpy.inf"
+            for a semi-infinite layer. Any layer with zero thickness is removed.
         temperature: Temperature of layers in K
         ks: Scattering coefficient of layers in m :sum:`-1`.
         ka: Absorption coefficient of layers in m :sum:`-1`.
@@ -1033,20 +1059,16 @@ def make_generic_stack(
 
     Example::
 
-        sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
+        sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250],
+                            corr_length=[0.2e-3, 0.3e-3])
     """
-    # TODO: Add an example
-    #    e.g.::
-    #
-    #        sp = make_snowpack([1, 10], "exponential", density=[200,300], temperature=[240, 250], corr_length=[0.2e-3, 0.3e-3])
-    #
-    # """
 
     sp = Snowpack(substrate=substrate, atmosphere=atmosphere)
 
     if not isinstance(thickness, collections.abc.Iterable):
         raise SMRTError(
-            "The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or DataFrame."
+            "The thickness argument must be iterable, that is, a list of numbers, numpy array or pandas Series or "
+            "DataFrame."
         )
 
     for i, dz in enumerate(thickness):
@@ -1149,16 +1171,16 @@ def make_atmosphere(atmosphere_model, **kwargs):
 
 
 def compute_thickness_from_z(z):
-    """Computes the thickness of layers given the elevation `z`. Whatever the sign of `z`, the order *MUST* be from the topmost layer to the
-    lowermost.
+    """Computes the thickness of layers given the elevation `z`. Whatever the sign of `z`, the order *MUST* be from the
+    topmost layer to the lowermost.
 
     Several situations are accepted and interpreted as follows:
-        - z is positive and decreasing. The first value is the height of the surface above the ground (z=0) and z represents the top elevation
-          of each layer. This is typical of the seasonal snowpack.
-        - z is negative and decreasing. The first value is the elevation of the bottom of the first layer with respect to the surface (z=0).
-          This is typical of a snowpack on ice-sheet.
-        - z is positive and increasing. The first value is the depth of the bottom of the first layer with respect to the surface.
-          This is typical of a snowpack on ice-sheet.
+        - z is positive and decreasing. The first value is the height of the surface above the ground (z=0) and z
+          represents the top elevation of each layer. This is typical of the seasonal snowpack.
+        - z is negative and decreasing. The first value is the elevation of the bottom of the first layer with respect
+          to the surface (z=0). This is typical of a snowpack on ice-sheet.
+        - z is positive and increasing. The first value is the depth of the bottom of the first layer with respect to
+          the surface. This is typical of a snowpack on ice-sheet.
         - Other case, when z is not monotonic or is increasing with negative value raises an error.
 
     Because z indicates the top or the bottom of a layer depending whether z=0 is the ground or the surface,
@@ -1181,7 +1203,8 @@ def compute_thickness_from_z(z):
             # z >0, this is typically a seasonal snowpack. z= height above ground
             z = -np.append(z.values, 0)
         else:
-            # z < 0, this is typically a permanent, deep snowpack, without ground reference. z is the depth from the surface.
+            # z < 0, this is typically a permanent, deep snowpack, without ground reference. z is the depth from the
+            # surface.
             z = -np.insert(z.values, 0, 0)
 
     elif np.any(order):

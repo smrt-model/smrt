@@ -2,22 +2,25 @@
 
 """This module defines the Result class to hold the results of RT Solver calculations.
 
-This class provides several functions to access to the Stokes Vector and Muller matrix in a simple way. Most notable ones are :py:meth:`Result.TbV` and :py:meth:`Result.TbH`
-for the passive mode calculations and :py:meth:`Result.sigmaHH` and :py:meth:`Result.sigmaVV`. :py:meth:`Result.to_dataframe` is also
-very convenient for the sensors with a channel map (all specific satellite sensors have such a map,
-only generic sensors as :py:meth:`smrt.sensor_list.active` and :py:meth:`smrt.sensor_list.passive` does not provide a map by default).
+This class provides several functions to access to the Stokes Vector and Muller matrix in a simple way. Most notable
+ones are :py:meth:`Result.TbV` and :py:meth:`Result.TbH`
+for the passive mode calculations and :py:meth:`Result.sigmaHH` and :py:meth:`Result.sigmaVV`.
+:py:meth:`Result.to_dataframe` is also very convenient for the sensors with a channel map (all specific satellite
+sensors have such a map, only generic sensors as :py:meth:`smrt.sensor_list.active` and
+:py:meth:`smrt.sensor_list.passive` does not provide a map by default).
 
-In addition, the RT Solver stores some information in Result.other_data. Currently this includes the effective_permittivity,
-ks and ka for each layer. The data are accessed directly with e.g. result.other_data['ks'].
+In addition, the RT Solver stores some information in Result.other_data. Currently this includes the
+effective_permittivity, ks and ka for each layer. The data are accessed directly with e.g. result.other_data['ks'].
 
-To save results of calculations in a file, simply use the pickle module or other serialization schemes. We may provide a unified and
-inter-operable solution in the future.
+To save results of calculations in a file, simply use the pickle module or other serialization schemes. We may provide a
+unified and inter-operable solution in the future.
 
-Under the hood, :py:class:`Result` uses xarray module which provides multi-dimensional array with explicit, named, dimensions. Here the
-common dimensions are frequency, polarization, polarization_inc, theta_inc, theta, and phi. They are created by the RT Solver. The interest
-of using named dimension is that slice of the xarray (i.e. results) can be selected based on the dimension name whereas with numpy the order
-of the dimensions matters. Because this is very convenient, users may be interested in adding other dimensions specific to their context such
-as time, longitude, latitude, points, ... To do so, :py:meth:`smrt.core.model.Model.run` accepts a list of snowpack and optionally
+Under the hood, :py:class:`Result` uses xarray module which provides multi-dimensional array with explicit, named,
+dimensions. Here the common dimensions are frequency, polarization, polarization_inc, theta_inc, theta, and phi. They
+are created by the RT Solver. The interest of using named dimension is that slice of the xarray (i.e. results) can be
+selected based on the dimension name whereas with numpy the order of the dimensions matters. Because this is very
+convenient, users may be interested in adding other dimensions specific to their context such as time, longitude,
+latitude, points, ... To do so, :py:meth:`smrt.core.model.Model.run` accepts a list of snowpack and optionally
 the parameter `snowpack_dimension` is used to specify the name and values of the new dimension to build.
 
 Example::
@@ -27,9 +30,9 @@ Example::
 
     res = model.run(sensor, snowpacks, snowpack_dimension=('time', times))
 
-The `res` variable is a :py:class:`Result` instance, so that for all the methods of this class that can be called, they will return a timeseries.
-For instance result.TbV(theta=53) returns a time-series of brightness temperature at V polarization and 53° incidence angle and the following code
-plots this timeseries::
+The `res` variable is a :py:class:`Result` instance, so that for all the methods of this class that can be called, they
+will return a timeseries. For instance result.TbV(theta=53) returns a time-series of brightness temperature at
+V polarization and 53° incidence angle and the following code plots this timeseries::
 
     plot(times, result.TbV(theta=53))
 
@@ -197,7 +200,8 @@ class Result(object):
 
         if self.mother_df is not None:
             if channel_axis == "column":
-                # join without alignment. We assume both have the same order. In principle this is the case with model.py
+                # join without alignment. We assume both have the same order.
+                # In principle this is the case with model.py
                 df = df.reset_index(drop=True).join(self.mother_df.reset_index(drop=True))
                 df.index = self.mother_df.index
             elif channel_axis is None:
@@ -226,11 +230,8 @@ class Result(object):
 
                 df = df.reset_index().join(mother_df, on=name).set_index(df.index.names)
 
-            # silently ignore the case with channel_axis='index'. It is not clear what should be done but most probably nothing.
-            # for this reason, we don't any raise exception or warning.
-
-            # warnings("running a model with a pandas DataFrame snowpack (or Series) and calling to_dataframe with channel_axis='index' "
-            #             "is ambiguous / not implemented. The result is returned without joining with the snowpack DataFrame.")
+            # silently ignore the case with channel_axis='index'. It is not clear what should be done but most probably
+            # nothing. for this reason, we don't any raise exception or warning.
 
         return df
 
@@ -394,7 +395,8 @@ class PassiveResult(Result):
         )
 
     def Tb_quasiV(self, **kwargs):
-        """Return quasi vertical polarization as provided by microwave sounders (e.g. AMSU-B, MSH, some channels on AMSU-A...).
+        """Return quasi vertical polarization as provided by microwave sounders (e.g. AMSU-B, MSH, some channels on
+        AMSU-A...).
 
         Tb_quasiV = TbV * cos^2(theta) + TbH * sin^2(theta)
 
@@ -764,8 +766,8 @@ class AltimetryResult(ActiveResult):
 
 
 def concat_results(result_list, coord):
-    """Concatenate several results from :py:meth:`smrt.core.model.Model.run` (of type :py:class:`Result`) into a single result
-    (of type :py:class:`Result`).
+    """Concatenate several results from :py:meth:`smrt.core.model.Model.run` (of type :py:class:`Result`) into a single
+    result (of type :py:class:`Result`).
 
     This extends the number of dimension in the xarray hold by the instance. The new dimension
     is specified with coord

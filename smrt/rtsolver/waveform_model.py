@@ -1,12 +1,12 @@
 """Provide Waveform models use in py:mod:`smrt.rtsolver.nadir_lrm_altimetry`.
 
 Brown1977:
-    - Brown, G. (1977).The average impulse response of a rough surface and its applications. IEEE Transactions on Antennas and
-    Propagation. 25-1. pp.67-74. https://doi.org/10.1109/TAP.1977.1141536
+    - Brown, G. (1977).The average impulse response of a rough surface and its applications. IEEE Transactions on
+    Antennas and Propagation. 25-1. pp.67-74. https://doi.org/10.1109/TAP.1977.1141536
 
 Newkirk1992:
-    - Newkirk, M.H., Brown, G.S., 1992. Issues related to waveform computations for radar altimeter applications. IEEE Trans.
-    Antennas Propag. 40, 1478–1488. https://doi.org/10.1109/8.204738.
+    - Newkirk, M.H., Brown, G.S., 1992. Issues related to waveform computations for radar altimeter applications. IEEE
+    Trans. Antennas Propag. 40, 1478–1488. https://doi.org/10.1109/8.204738.
 """
 
 import numpy as np
@@ -74,8 +74,8 @@ class Brown1977(WaveformModel):
         if self.sensor.off_nadir_angle != 0 and surface_slope != 0:
             raise NotImplementedError(
                 "It is currently not possible to account for both off_nadir and tilted terrain. It would be necessary"
-                "to include the azimuths of the slope and the sensor tild and compute the true angle. To avoid this complexity"
-                "we consider only one can be set."
+                "to include the azimuths of the slope and the sensor tild and compute the true angle. To avoid this "
+                "complexity. we consider only one can be set."
             )
 
         theta = (

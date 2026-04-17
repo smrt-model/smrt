@@ -50,15 +50,17 @@ def polder_van_santen(
         frac_volume: Fractional volume of inclusions.
         e0: Permittivity of background (default is 1).
         eps: Permittivity of scattering material (default is 3.185 to compare with MEMLS)
-        depolarization_factors: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into account here.
+        depolarization_factors: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into
+            account here.
         length_ratio: Length_ratio. Used to estimate depolarization factors when they are not given.
-        inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape, or a list/tuple/dict of strings
-            for mixture of shapes. So far, we have the following shapes: "spheres" and "random_needles" (i.e. randomly-oriented elongated
-            ellipsoidal inclusions). If the argument is a dict, the keys are the shapes and the values are the mixing ratio. If it is
-            a list, the mixing_ratio argument is required.
-        mixing_ratio: The mixing ratio of the shapes. This is only relevant when inclusion_shape is a list/tuple. Mixing ratio must
-            be a sequence with length len(inclusion_shape)-1. The mixing ratio of the last shapes is deduced as the sum of the ratios
-            must equal to 1.
+        inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape, or a
+            list/tuple/dict of strings for mixture of shapes. So far, we have the following shapes: "spheres" and
+            "random_needles" (i.e. randomly-oriented elongated ellipsoidal inclusions). If the argument is a dict, the
+            keys are the shapes and the values are the mixing ratio. If it is a list, the mixing_ratio argument is
+            required.
+        mixing_ratio: The mixing ratio of the shapes. This is only relevant when inclusion_shape is a list/tuple. Mixing
+            ratio must be a sequence with length len(inclusion_shape)-1. The mixing ratio of the last shapes is deduced
+            as the sum of the ratios must equal to 1.
 
     Returns:
         Effective permittivity
@@ -68,10 +70,12 @@ def polder_van_santen(
         >>> effective_permittivity = polder_van_santen(frac_volume, e0, eps)
 
         for a mixture of 30% spheres and 70% needles
-        >>> effective_permittivity = polder_van_santen(frac_volume, e0, eps, inclusion_shape={"spheres": 0.3, "random_needles": 0.7})
+        >>> effective_permittivity = polder_van_santen(frac_volume, e0, eps, inclusion_shape={"spheres": 0.3,
+                "random_needles": 0.7})
 
         or
-        >>> effective_permittivity = polder_van_santen(frac_volume, e0, eps, inclusion_shape=("spheres", "random_needles"), mixing_ratio=0.3)
+        >>> effective_permittivity = polder_van_santen(frac_volume, e0, eps, inclusion_shape=("spheres",
+                "random_needles"), mixing_ratio=0.3)
 
     Todo:
         Extend Polder Van Santen model to account for ellipsoidal inclusions
@@ -119,8 +123,11 @@ def polder_van_santen(
         b_quad = eps - 2 * e0 - 3.0 * frac_volume * (eps - e0)
         c_quad = -eps * e0
 
-    # Polder and Van Santen model, modified by de Loor (according to Shokr (1998) simplified by Hoekstra and Capillino (1971))
-    # Solution of quadratic equation arising from eqn (18) in Shokr (1998): 'Field Observations and Model Calculations of Dielectric Properties of Arctic Sea Ice in the Microwave C-Band', IEEE.
+    # Polder and Van Santen model, modified by de Loor (according to Shokr (1998) simplified by Hoekstra and Capillino
+    # (1971))
+    # Solution of quadratic equation arising from eqn (18) in Shokr (1998):
+    # 'Field Observations and Model Calculations of Dielectric Properties of Arctic Sea Ice in the Microwave C-Band',
+    # IEEE.
     elif inclusion_shape == "random_needles":
         a_quad = 1.0
         b_quad = eps - e0 - 5.0 / 3.0 * frac_volume * (eps - e0)
@@ -150,22 +157,24 @@ def general_polder_van_santen(
 
     Note:
         For spherical or random needle inclusions only, potentially a mixing of these shapes (Sihvola, 1999).
-        See :py:func:`~smrt.permittivity.generic_mixing_formula.polder_van_santen` for an alternative function (faster but
-        specific to some shapes).
+        See :py:func:`~smrt.permittivity.generic_mixing_formula.polder_van_santen` for an alternative function (faster
+        but specific to some shapes).
 
     Args:
         frac_volume: Fractional volume of inclusions.
         e0: Permittivity of background (default is 1).
         eps: Permittivity of scattering material (default is 3.185 to compare with MEMLS).
-        depolarization_factors: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into account here.
+        depolarization_factors: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into
+            account here.
         length_ratio: Length_ratio. Used to estimate depolarization factors when they are not given.
-        inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape, or a list/tuple/dict of strings
-            for mixture of shapes. So far, we have the following shapes: "spheres" and "random_needles" (i.e. randomly-oriented elongated
-            ellipsoidal inclusions). If the argument is a dict, the keys are the shapes and the values are the mixing ratio. If it is a
-            list, the mixing_ratio argument is required.
-        mixing_ratio: The mixing ratio of the shapes. This is only relevant when inclusion_shape is a list/tuple. Mixing ratio must be
-            a sequence with length len(inclusion_shape)-1. The mixing ratio of the last shapes is deduced as the sum of the ratios must
-            equal to 1.
+        inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape, or a
+            list/tuple/dict of strings for mixture of shapes. So far, we have the following shapes: "spheres" and
+            "random_needles" (i.e. randomly-oriented elongated ellipsoidal inclusions). If the argument is a dict, the
+            keys are the shapes and the values are the mixing ratio. If it is a list, the mixing_ratio argument is
+            required.
+        mixing_ratio: The mixing ratio of the shapes. This is only relevant when inclusion_shape is a list/tuple. Mixing
+            ratio must be a sequence with length len(inclusion_shape)-1. The mixing ratio of the last shapes is deduced
+            as the sum of the ratios must equal to 1.
 
     Returns:
         Effective permittivity.
@@ -377,7 +386,8 @@ def _get_depolarization_factors(
     frac_volume: float,
     length_ratio: float,
 ):
-    """Process the parameter ``depolarizatio_factors`` and depending on its type compute the value of the depolarizationfactors."""
+    """Process the parameter ``depolarizatio_factors`` and depending on its type compute the value of the depolarization
+    factors."""
     if depolarization_factors is None:
         depol_xyz = depolarization_factors_spheroids(
             inclusion_shape=inclusion_shape,

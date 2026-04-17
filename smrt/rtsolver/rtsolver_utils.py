@@ -45,7 +45,8 @@ class RTSolverBase(metaclass=ABCMeta):
 
         self.effective_permittivity = np.array([emmodel.effective_permittivity() for emmodel in emmodels])
         # self.substrate_permittivity = (
-        #     self.snowpack.substrate.permittivity(self.sensor.frequency) if self.snowpack.substrate is not None else None
+        #     self.snowpack.substrate.permittivity(self.sensor.frequency) if self.snowpack.substrate is not None else
+        # None
         # )
 
         self.check_sensor()
@@ -169,7 +170,8 @@ class DiscreteOrdinatesMixin(metaclass=ABCMeta):
         # intfct = scipy.interpolate.interp1d(
         #     outmu[::-1], intensity[::-1, ...], axis=0, fill_value=fill_value, assume_sorted=True
         # )
-        # # the previous call could use fill_value to be smart about extrapolation, but it's safer to return NaN (default)
+        # # the previous call could use fill_value to be smart about extrapolation, but it's safer to return NaN
+        # (default)
 
         # # it seems there is a bug in scipy at least when checking the boundary, mu must be sorted
         # # original code that should work: intensity = intfct(mu)
@@ -235,8 +237,8 @@ class CoherentLayerMixin(metaclass=ABCMeta):
 
 
 def prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivity=None, mu=1):
-    """Return a dict with the profiles of ka, ks, ke and effective permittivity. Can be directly used by Solver to insert
-    data in other_data.
+    """Return a dict with the profiles of ka, ks, ke and effective permittivity. Can be directly used by Solver to
+    insert data in other_data.
 
     ks and ke are the mean in all directions given by mu.
 

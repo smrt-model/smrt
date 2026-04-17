@@ -94,13 +94,15 @@ class Snowpack(object):
     def layer_densities(self):
         """Return the density of each layer."""
         warnings.warn(
-            "layer_densities is ambiguous, use the profile('density') instead. This function will be removed in a next version",
+            "layer_densities is ambiguous, use the profile('density') instead. This function will be removed in a next "
+            "version",
             DeprecationWarning,
         )
         return [lay.density for lay in self.layers]  # TODO Ghi: caching
 
     def profile(self, property_name: str, where: str = "all", raise_attributeerror: bool = False) -> np.ndarray:
-        """Return the vertical profile of property_name. The property is searched either in the layer, microstructure or interface.
+        """Return the vertical profile of property_name. The property is searched either in the layer, microstructure or
+        interface.
 
         Args:
             property_name: Name of the property.
@@ -148,12 +150,13 @@ class Snowpack(object):
 
         Args:
             layer: instance of Layer.
-            interface: type of interface. By default, flat surface (Flat) is considered meaning the coefficients are calculated with Fresnel coefficient
-                and using the effective permittivity of the surrounding layers.
+            interface: type of interface. By default, flat surface (Flat) is considered meaning the coefficients are
+                calculated with Fresnel coefficient and using the effective permittivity of the surrounding layers.
         """
         if not isinstance(layer, Layer):
             raise Warning(
-                "the layer to append in the snowpack is not an instance of the class Layer. This may be a mistake in your code."
+                "the layer to append in the snowpack is not an instance of the class Layer. This may be a mistake in"
+                " your code."
             )
 
         layer.number = 0 if not self.layers else self.layers[-1].number + 1
@@ -171,7 +174,8 @@ class Snowpack(object):
             ilayer (int): Index of the layer.
         """
         warnings.warn(
-            "The delete method will be depreciated in the future. Use the delete_layer method instead which is exactly equivalent.",
+            "The delete method will be depreciated in the future. Use the delete_layer method instead which is exactly"
+            " equivalent.",
             DeprecationWarning,
         )
         return self.delete_layer(ilayer)
@@ -197,8 +201,8 @@ class Snowpack(object):
         self.substrate = None
 
     def shallow_copy(self, cut_bottom=None):
-        """Make a shallow copy of a snowpack by copying the list of layers and interfaces but not the layers and interfaces
-        themselves which are still shared with the original snowpack.
+        """Make a shallow copy of a snowpack by copying the list of layers and interfaces but not the layers and
+        interfaces themselves which are still shared with the original snowpack.
 
         This method allows the advanced user to create a new snowpack and remove, append or replace some layers or
         interfaces afterward. It does not allow to alter the layers or interfaces without changing the original
@@ -228,7 +232,8 @@ class Snowpack(object):
 
     def copy(self, cut_bottom=None):
         warnings.warn(
-            "The copy method will be depreciated in the future. Use the shallow_copy method instead which is exactly equivalent.",
+            "The copy method will be depreciated in the future. Use the shallow_copy method instead which is exactly "
+            "equivalent.",
             DeprecationWarning,
         )
         return self.shallow_copy(cut_bottom=cut_bottom)
@@ -240,7 +245,8 @@ class Snowpack(object):
             Snowpack: The deep copy of the snowpack.
         """
         warnings.warn(
-            "The deepcopy method will be depreciated in the future. Use the deep_copy method instead which is exactly equivalent.",
+            "The deepcopy method will be depreciated in the future. Use the deep_copy method instead which is exactly "
+            "equivalent.",
             DeprecationWarning,
         )
         return copy.deepcopy(self)
@@ -284,8 +290,8 @@ class Snowpack(object):
             )
         elif other.atmosphere is not None:
             raise SMRTError(
-                "While adding snowpacks, the second (bottommost) snowpack must not have an atmosphere. Unset the atmosphere"
-                " before adding the two snowpacks."
+                "While adding snowpacks, the second (bottommost) snowpack must not have an atmosphere. Unset the"
+                " atmosphere before adding the two snowpacks."
             )
 
     def update_layer_number(self):
@@ -293,8 +299,8 @@ class Snowpack(object):
             self.layers[i].number = i
 
     def __add__(self, other):
-        """Return a new snowpack made of the first snowpack (or layer) stacked on top of the second snowpack (or layer or
-        substrate).
+        """Return a new snowpack made of the first snowpack (or layer) stacked on top of the second snowpack (or layer
+        or substrate).
 
         .. note:: if a layer is added on top (at bottom), the top (bottom) interface is duplicated.
 

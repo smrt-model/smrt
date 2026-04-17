@@ -5,7 +5,8 @@ Example::
 
     from smrt.runner.celery import CeleryParallelRunner
 
-    runner = CeleryParallelRunner()   # Run with the default broker redis://localhost:6379/0 but any url can be provided, as well as a Celery object
+    # Run with the default broker redis://localhost:6379/0 but any url can be provided, as well as a Celery object
+    runner = CeleryParallelRunner()
 
     m = make_model(...)
 
@@ -44,7 +45,8 @@ class CeleryParallelRunner(object):
         # make a bag
         argument_list = list(argument_list)
 
-        # chunck does not work with pickle serializer. It seems the option of the function are not transmitted to the chunk
+        # chunck does not work with pickle serializer. It seems the option of the function are not transmitted to the
+        # chunk
         # iterator = [(function, *arg) for arg in argument_list]
         # task_group = _celery_call_with_single_numerical_threads.chunks(iterator, ntask) #.group()
 

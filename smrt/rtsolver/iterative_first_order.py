@@ -14,7 +14,8 @@ Key Features:
 
 Backscatter Components:
     Zeroth Order:
-        order0_backscatter: Backscatter from the surface, interfaces, and substrate after attenuation through the snowpack.
+        order0_backscatter: Backscatter from the surface, interfaces, and substrate after attenuation through the
+            snowpack.
         Volume Scattering is only included through its contribution to extinction.
         (Reference: Ulaby et al. 2014, first term of Eq. 11.74)
 
@@ -23,7 +24,8 @@ Backscatter Components:
         Calculate three main contributions (Ulaby et al. 2014, Eqs. 11.75 and 11.62):
             - order1_direct_backscatter: Single volume backscatter upwards by the layer.
             - order1_double_bounce: Single volume scattering and single reflection by the interfaces and the substrate.
-            - order1_reflected_backscatter: Single volume backscatter and double specular reflection by the interfaces and the substrate.
+            - order1_reflected_backscatter: Single volume backscatter and double specular reflection by the interfaces
+              and the substrate.
 
 Usage:
     Basic usage with default settings and iba emmodel:
@@ -37,21 +39,22 @@ Usage:
 
 Note:
     - This solver is designed for backscatter calculations only.
-    - Single scattering albedo should be < 0.5 for reliable results. Can compare to dort to estimate unaccounted scattering.
+    - Single scattering albedo should be < 0.5 for reliable results. Can compare to dort to estimate unaccounted
+      scattering.
     - Multiple scattering effects are not accounted for in first-order approximation.
     - For higher scattering albedos, a second-order solution is required.
 
 References:
     Ulaby, F. T., et al. (2014). Microwave radar and radiometric remote sensing. Chapter 11.
 
-    Tsang, L., Pan, J., Liang, D., Li, Z., Cline, D. W., & Tan, Y. (2007). Modeling Active Microwave Remote Sensing of Snow
-    Using Dense Media Radiative Transfer (DMRT) Theory With Multiple-Scattering Effects. IEEE Transactions on Geoscience and
-    Remote Sensing, 45(4), 990–1004. https://doi.org/10.1109/tgrs.2006.888854
+    Tsang, L., Pan, J., Liang, D., Li, Z., Cline, D. W., & Tan, Y. (2007). Modeling Active Microwave Remote Sensing of
+    Snow Using Dense Media Radiative Transfer (DMRT) Theory With Multiple-Scattering Effects. IEEE Transactions on
+    Geoscience and Remote Sensing, 45(4), 990–1004. https://doi.org/10.1109/tgrs.2006.888854
 
-    Tan, S., Chang, W., Tsang, L., Lemmetyinen, J., & Proksch, M. (2015). Modeling Both Active and Passive Microwave Remote
-    Sensing of Snow Using Dense Media Radiative Transfer (DMRT) Theory With Multiple Scattering and Backscattering
-    Enhancement. IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, 8(9), 4418–4430.
-    https://doi.org/10.1109/jstars.2015.2469290
+    Tan, S., Chang, W., Tsang, L., Lemmetyinen, J., & Proksch, M. (2015). Modeling Both Active and Passive Microwave
+    Remote Sensing of Snow Using Dense Media Radiative Transfer (DMRT) Theory With Multiple Scattering and
+    Backscattering Enhancement. IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, 8(9),
+    4418–4430. https://doi.org/10.1109/jstars.2015.2469290
 """
 
 
@@ -78,15 +81,19 @@ class IterativeFirstOrder(RTSolverBase):
     Args:
         error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
             If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
-            the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
+            the error message is not accessible. This is only recommended for long simulations that sometimes produce an
+            error.
 
         return_contributions: If False (default), returns only total backscatter.
             If True, returns individual contributions:
                 - 'total': Sum of all contributions.
-                - 'order0_backscatter': Backscatter from the surface, interfaces, and substrate after attenuation through the snowpack.
+                - 'order0_backscatter': Backscatter from the surface, interfaces, and substrate after attenuation
+                  through the snowpack.
                 - 'order1_direct_backscatter': Single volume backscatter upwards by the layer.
-                - 'order1_double_bounce': Single volume scattering and single reflection by the interfaces and the substrate.
-                - 'order1_reflected_backscatter': Single volume backscatter and double specular reflection by the interfaces and the substrate.
+                - 'order1_double_bounce': Single volume scattering and single reflection by the interfaces and the
+                  substrate.
+                - 'order1_reflected_backscatter': Single volume backscatter and double specular reflection by the
+                  interfaces and the substrate.
     """
 
     # Dimensions that this solver can handle directly:
@@ -314,9 +321,17 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
         """
         I1_backscatter = transmission_top @ ((1 - gammas2) / (2 * ke) * P_Up) @ I_l
 
-        I1_double_bounce = transmission_top @ (thickness[l] * gammas2 / mus_l * (P_Bi_Down @ reflection_bottom + reflection_bottom @ P_Bi_Up)) @ I_l  # fmt: skip
+        I1_double_bounce = (
+            transmission_top
+            @ (thickness[l] * gammas2 / mus_l * (P_Bi_Down @ reflection_bottom + reflection_bottom @ P_Bi_Up))
+            @ I_l
+        )
 
-        I1_reflected_backscatter = transmission_top @ (((1 - gammas2) / (2 * ke) * gammas2) * (reflection_bottom @ P_Down @ reflection_bottom)) @ I_l  # fmt: skip
+        I1_reflected_backscatter = (
+            transmission_top
+            @ (((1 - gammas2) / (2 * ke) * gammas2) * (reflection_bottom @ P_Down @ reflection_bottom))
+            @ I_l
+        )
 
         # shape of intensity (incident angle, first order contribution, npo, npol)
         I1 = np.array([I0, I1_backscatter, I1_double_bounce, I1_reflected_backscatter]).reshape(4, n, npol, npol)
@@ -333,7 +348,10 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
 
     if substrate is None and optical_depth < 5:
         smrt_warn(
-            f"The solver has detected that the snowpack is optically shallow (tau={optical_depth:g}) and no substrate has been set, meaning that the space under the snowpack is vaccum and that the snowpack is shallow enough to affect the signal measured at the surface. This is usually not wanted. Either increase the thickness of the snowpack or set a substrate. If wanted, add a transparent substrate to supress this warning"
+            f"The solver has detected that the snowpack is optically shallow (tau={optical_depth:g}) and no substrate"
+            " has been set, meaning that the space under the snowpack is vaccum and that the snowpack is shallow enough"
+            "to affect the signal measured at the surface. This is usually not wanted. Either increase the thickness "
+            "of the snowpack or set a substrate. If wanted, add a transparent substrate to supress this warning"
         )
 
     return intensity_up

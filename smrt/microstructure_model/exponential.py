@@ -1,6 +1,7 @@
 # coding: utf-8
 
-"""Implements the exponential autocorrelation function model of the microstructure. This microstructure model is used by MEMLS when IBA is selected.
+"""Implements the exponential autocorrelation function model of the microstructure. This microstructure model is used by
+MEMLS when IBA is selected.
 
 Args:
     frac_volume (float): Fractional volume.

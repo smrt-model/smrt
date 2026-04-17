@@ -34,9 +34,9 @@ from .common import (
 )
 
 #
-# For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
-# initialisation and precomputation can be done in the prepare method that is called only once for each layer whereas
-# phase, ke and effective_permittivity can be called several times.
+# For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same
+# arguments as here initialisation and precomputation can be done in the prepare method that is called only once for
+# each layer whereas phase, ke and effective_permittivity can be called several times.
 #
 
 
@@ -63,8 +63,9 @@ class IBA(AdjustableEffectivePermittivityMixin, IsotropicScatteringMixin, Generi
     Args:
         sensor: Object containing sensor characteristics.
         layer: Object containing snow layer characteristics (single layer).
-        dense_snow_correction: Set how snow denser than half the ice density (i.e. fractional volume larger than 0.5) is handled.
-            "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air. The default is None.
+        dense_snow_correction: Set how snow denser than half the ice density (i.e. fractional volume larger than 0.5) is
+            handled. "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air.
+            The default is None.
 
     Example:
         This class is not normally accessed directly by the user, but forms part of the
@@ -131,11 +132,13 @@ become a default in the future.""")
 
         if not (self._ks >= 0):
             print(
-                f"ks, the scattering coefficient has an invalid value '{self._ks:g}' in layer nb '{getattr(layer, 'number', 0)}'"
+                f"ks, the scattering coefficient has an invalid value '{self._ks:g}' in layer"
+                f" nb '{getattr(layer, 'number', 0)}'"
             )
 
     def compute_iba_coeff(self):
-        """Calculate angular independent IBA coefficient: used in both scattering coefficient and phase function calculations
+        """Calculate angular independent IBA coefficient: used in both scattering coefficient and phase function
+        calculations
 
         .. note::
 
@@ -187,7 +190,8 @@ become a default in the future.""")
             \\Theta= \\theta
 
 
-        Scattering coefficient is determined by integration over the scattering angle(0 to \\pi): param mu: cosine of the scattering angle(single angle)
+        Scattering coefficient is determined by integration over the scattering angle(0 to \\pi): param mu: cosine of
+        the scattering angle(single angle)
 
         .. math::
 
@@ -253,7 +257,8 @@ become a default in the future.""")
         """
         # after several go and back, the situation is now clear:
         # MEMLS uses the formulation in IBA98 paper. In SMRT this formulation is available in iba_original.py
-        # here we use Polden von Staten which is known to be better and accommodate the full range of density/frac_volume
+        # here we use Polden von Staten which is known to be better and accommodate the full range of
+        # density/frac_volume.
         # PvS is also now recommended by Christian Matzler and has been implemented in MEMLS modified for sea-ice.
         # This is therefore the default in SMRT. The fully MEMLS compatible IBA is in iba_original.py
 
@@ -264,7 +269,8 @@ class IBA_MM(IBA):
     # Undocumented: this is test code for comparison with MEMLS, and may be removed from later versions.
 
     def __init__(self, sensor, layer):
-        # Gives all IBA parameters. Some need to be recalculated (effective permittivity, scattering and absorption coefficients):
+        # Gives all IBA parameters. Some need to be recalculated (effective permittivity, scattering and absorption
+        # coefficients):
         IBA.__init__(self, sensor, layer)
 
         self._effective_permittivity = polder_van_santen(self.frac_volume, e0=1, eps=3.185)
@@ -289,7 +295,8 @@ class IBA_MM(IBA):
             ft_corr_fn = self.microstructure.ft_autocorrelation_function(k_diff)
         else:
             raise SMRTError(
-                "Fourier Transform of this microstructure model has not been defined, or there is a problem with its calculation"
+                "Fourier Transform of this microstructure model has not been defined, or there is a problem with its "
+                "calculation"
             )
 
         # MEMLS phase function has mean of H and V polarisation angle. Eqn 17c of Matzler and Wiesmann 1999.

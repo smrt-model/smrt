@@ -7,9 +7,9 @@ media. It computes the thermal emission of a multi-layer stack of homogeneous la
 with flat interfaces (no roughness) solely characterized by their permittivity and temperature. It is most suitable for
 instance for L-band and lower frequencies over the dry zone of the ice-sheet where the penetration is deep and the
 stratification of the snowpack and the profile of temperature are crucial to compute the emission.
-Note that the layers are incoherent, layer thickness smaller than the wavelength are not recommended (at least not smaller than a
-quarter of the wavelength). In principle, MFTE gives the same results as DORT, when the aforementioned assumption are
-respected, but much more rapidely.
+Note that the layers are incoherent, layer thickness smaller than the wavelength are not recommended (at least not
+smaller than a quarter of the wavelength). In principle, MFTE gives the same results as DORT, when the aforementioned
+assumption are respected, but much more rapidely.
 
 Even with a small number of layers, MFTE is x30 faster than DORT, and requires much less memory.
 The performance difference increases with the number of layers.
@@ -55,14 +55,16 @@ class MultiFresnelThermalEmission(object):
     Args:
         error_handling: If set to "exception" (the default), raise an exception in cause of error, stopping the code.
             If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
-            the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
+            the error message is not accessible. This is only recommended for long simulations that sometimes produce an
+            error.
         prune_deep_snowpack: this value is the optical depth from which the layers are discarded in the calculation.
             This prevents numerical unstability inherent to the MFTE formulation for a very deep snowpack.
             A value of 10 is used by default which is already very large / safe. In case of problems of stability, this
             value should be decreased. Set to None to deactivate pruning, but this is not recommended.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the
+    # caller (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta", "polarization"}
 
@@ -126,7 +128,11 @@ class MultiFresnelThermalEmission(object):
 
         if tau_snowpack < 5 and snowpack.substrate is None:
             smrt_warn(
-                f"Multifresnel has detected that the snowpack is optically shallow (tau={tau_snowpack:g}) and no substrate has been set, meaning that the space under the snowpack is 'empty' with snowpack shallow enough to affect the measured signal at the surface. This is usually not wanted and can produce wrong results. Either increase the thickness of the snowpack or set a substrate. If wanted, add a transparent substrate to supress this warning"
+                f"Multifresnel has detected that the snowpack is optically shallow (tau={tau_snowpack:g}) and no "
+                "substrate has been set, meaning that the space under the snowpack is 'empty' with snowpack shallow "
+                "enough to affect the measured signal at the surface. This is usually not wanted and can produce wrong "
+                "results. Either increase the thickness of the snowpack or set a substrate. If wanted, add a "
+                "transparent substrate to supress this warning"
             )
 
         Tbv, Tbh = compute_emerging_radiation(M)

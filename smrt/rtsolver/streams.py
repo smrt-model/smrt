@@ -30,8 +30,8 @@ class Streams(object):
 
 
 def compute_stream(n_max_stream, permittivity, mode="most_refringent") -> Streams:
-    # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent layer and
-    # use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
+    # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent
+    # layer and use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
 
     #     :param n_max_stream: number of stream
     #     :param permittivity: permittivity of each layer
@@ -50,8 +50,8 @@ def compute_stream(n_max_stream, permittivity, mode="most_refringent") -> Stream
 
 
 def compute_stream_gaussian(n_max_stream, permittivity, mode="most_refringent"):
-    # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent layer and
-    # use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
+    # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent
+    # layer and use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
 
     #     :param n_max_stream: number of stream
     #     :param permittivity: permittivity of each layer
@@ -140,9 +140,10 @@ def compute_stream_gaussian(n_max_stream, permittivity, mode="most_refringent"):
 
 
 def compute_stream_uniform(n_max_stream, permittivity):
-    # """Compute the angles of each layer. Use a regular step in angle in the air, then deduce the angles in the other layers
-    # using Snell-law. Then, in the most refringent layer, add regular stream up to close to 0, and then propagate back this second
-    # set of angles in the other layers using Snell-law and accounting for the total reflections
+    # """Compute the angles of each layer. Use a regular step in angle in the air, then deduce the angles in the other
+    # layers using Snell-law. Then, in the most refringent layer, add regular stream up to close to 0, and then
+    # propagate back this second set of angles in the other layers using Snell-law and accounting for the total
+    # reflections
 
     #     :param n_max_stream: number of stream
     #     :param permittivity: permittivity of each layer

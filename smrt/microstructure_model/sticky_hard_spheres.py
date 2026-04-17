@@ -84,7 +84,8 @@ class StickyHardSpheres(Autocorrelation):
         if np.isfinite(tau) and phi_2 > 0.0:
             t = ((6 * tau * phi_2 - 6 * phi_2 - 6 * tau + (36 * tau**2 * phi_2**2 - 72 * tau * phi_2**2
                                                            - 72 * tau**2 * phi_2 + 30 * phi_2**2
-                                                           + 72 * tau * phi_2 + 36 * tau**2 - 12 * phi_2)**0.5) / (phi_2 * (-1 + phi_2)))  # fmt: skip
+                                                           + 72 * tau * phi_2 + 36 * tau**2 - 12 * phi_2)**0.5) /
+                                                           (phi_2 * (-1 + phi_2)))  # fmt: skip
         else:
             t = 0
         # sphere volume
@@ -121,8 +122,10 @@ class StickyHardSpheres(Autocorrelation):
 
         # set limit value at k=0 manually, Eq. 33, LP2015
         # zerok = np.isclose(X, 0)
-        # Ctilde[zerok] = (n * vd**2 / (phi_2 / (1-phi_2) * ((1 - t*phi_2 + 3 * phi_2 / (1 - phi_2)) + (3 - t * (1 - phi_2))) + 1)**2)
-        Ctilde[zerok] = phi_2 * vd / (phi_2 / (1 - phi_2) * ((1 - t * phi_2 + 3 * phi_2 / (1 - phi_2)) + (3 - t * (1 - phi_2))) + 1) ** 2  # fmt: skip
+        # Ctilde[zerok] = (n * vd**2 / (phi_2 / (1-phi_2) * ((1 - t*phi_2 + 3 * phi_2 / (1 - phi_2)) +
+        # (3 - t * (1 - phi_2))) + 1)**2)
+        Ctilde[zerok] = phi_2 * vd / (phi_2 / (1 - phi_2) * ((1 - t * phi_2 + 3 * phi_2 / (1 - phi_2)) +
+                                                             (3 - t * (1 - phi_2))) + 1) ** 2  # fmt: skip
 
         return Ctilde
 

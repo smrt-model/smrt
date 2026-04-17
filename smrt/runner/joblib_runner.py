@@ -1,5 +1,5 @@
-"""This module implements a joblib runner tp execute smrt simulations in parallel. It is used by default if parallel_computation=True
-in py:func:`~smrt.core.model.make_model` function.
+"""This module implements a joblib runner tp execute smrt simulations in parallel. It is used by default if
+parallel_computation=True in py:func:`~smrt.core.model.make_model` function.
 
 Example::
     # Basic usage:
@@ -24,8 +24,8 @@ class JoblibParallelRunner(object):
         progressbar: show a progress bar if True
             backend: see joblib documentation. The default 'loky' is the recommended backend.
             n_jobs (int): see joblib documentation. The default is to use all the cores.
-            max_numerical_threads: :py:func:`~smrt.core.lib.set_max_numerical_threads`. The default avoid mixing different
-                parallelism techniques.
+            max_numerical_threads: :py:func:`~smrt.core.lib.set_max_numerical_threads`. The default avoid mixing
+                different parallelism techniques.
 
         """
         from joblib import cpu_count  # should become a lazy import in the future

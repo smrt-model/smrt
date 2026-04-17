@@ -26,7 +26,8 @@ from smrt.permittivity.ice import (
 #     ice_permittivity(np.array([230]), 10e9)
 #     # Verify some things
 #     assert len(w) == 1
-#     assert 'Warning: temperature is below 240K. Ice permittivity is out of range of applicability' in str(w[-1].message)
+#     assert 'Warning: temperature is below 240K. Ice permittivity is out of range of applicability' in
+#     str(w[-1].message)
 
 
 # Test output of this module against output from MEMLS code

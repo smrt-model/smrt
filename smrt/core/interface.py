@@ -84,7 +84,9 @@ class Interface(object):
 
 class SubstrateBase(object):
     """Abstract class for substrate at the bottom of the snowpack.
-    It provides calculation of the permittivity constant for soil case. Argument handline is delegated to the instance of the interface
+
+    It provides calculation of the permittivity constant for soil case. Argument handline is delegated to the instance
+    of the interface.
 
     """
 
@@ -118,8 +120,8 @@ class SubstrateBase(object):
             self.permittivity_model = permittivity_model
 
     def permittivity(self, frequency):
-        """Compute the permittivity for the given frequency using permittivity_model. This method returns None when no permittivity model is
-        available. This must be handled by the calling code and interpreted suitably.
+        """Compute the permittivity for the given frequency using permittivity_model. This method returns None when no
+        permittivity model is available. This must be handled by the calling code and interpreted suitably.
 
         Args:
             frequency: frenquency in Hz

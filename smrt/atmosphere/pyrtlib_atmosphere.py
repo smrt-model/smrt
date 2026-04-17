@@ -14,9 +14,9 @@ with recent numpy versions and reading era5 in netcdf format (not the default) m
 PyRTLib separately using pip install git+https://github.com/ghislainp/pyrtlib/tree/migrate_numpy2 until a new official
 release of PyRTLib is made available by the authors.
 
-PyRTlib allows to simulate and calculate radiometric parameters and estimating propogation parameters needed by SMRT using
-meteorological data as input. Some meteorological datasets are built-in in PyRTlib and others can be download and used
-directly in PyRTlib. Available datasets are described on the main website: https://satclop.github.io/pyrtlib/
+PyRTlib allows to simulate and calculate radiometric parameters and estimating propogation parameters needed by SMRT
+using meteorological data as input. Some meteorological datasets are built-in in PyRTlib and others can be download and
+used directly in PyRTlib. Available datasets are described on the main website: https://satclop.github.io/pyrtlib/
 
 Citation:
 Larosa, S., Cimini, D., Gallucci, D., Nilo, S. T., and Romano, F.: PyRTlib: an educational Python-based library for non-
@@ -24,8 +24,8 @@ scattering atmospheric microwave radiative transfer computations, Geosci. Model 
 https://doi.org/10.5194/gmd-17-2053-2024, 2024.
 
 To build an atmosphere in general, it is recommended to use the helper function
-:py:func:`~smrt.inputs.make_model.make_atmosphere`. In the case of PyRTLib, there are in fact three ways to initialize the
-atmosphere depending on the atmospheric input data to be used.
+:py:func:`~smrt.inputs.make_model.make_atmosphere`. In the case of PyRTLib, there are in fact three ways to initialize
+the atmosphere depending on the atmospheric input data to be used.
 
 The simpliest is for climatological profiles::
 
@@ -40,17 +40,20 @@ For a more specific calculations in term of location and date, it is possible ob
 
     from smrt import make_atmosphere
 
-    atmos = make_atmosphere('pyrtlib_era5_atmosphere', longitude=-75.07, latitude=123., date=datetime(2020, 2, 22, 12), absorption_model = 'R20')
+    atmos = make_atmosphere('pyrtlib_era5_atmosphere', longitude=-75.07, latitude=123., date=datetime(2020, 2, 22, 12),
+                            absorption_model = 'R20')
 
-An ERA5 file will be automatically downloaded which requires the installation of the CDSAPI and cfgrib python packages and to obain a CDS API Key.
-Please follow the instructions on the Copernicus site: https://cds.climate.copernicus.eu/api-how-to .
+An ERA5 file will be automatically downloaded which requires the installation of the CDSAPI and cfgrib python packages
+and to obain a CDS API Key. Please follow the instructions on the Copernicus site:
+https://cds.climate.copernicus.eu/api-how-to .
 Note that in April 2024, the CDS is announced to be disrupted "soon", which will impose changes in SMRT.
 
 The downloaded file is copied in a temporary directory, unless the `era5_directory` argument is specified, which is
 recommended to avoid repetitive downloads.
 
 If interested in several locations, it is more efficient to download a single file with the full extent following the
-PyRTlib documentation: https://satclop.github.io/pyrtlib/en/main/generated/pyrtlib.apiwebservices.ERA5Reanalysis.request_data.html
+PyRTlib documentation:
+https://satclop.github.io/pyrtlib/en/main/generated/pyrtlib.apiwebservices.ERA5Reanalysis.request_data.html
 and then use the 'ncfile' argument::
 
     from smrt import make_atmosphere
@@ -169,7 +172,8 @@ class PyRTlibAtmosphere(PyRTlibAtmosphereBase):
         water_density=0,
         absorption_model=None,
     ):
-        """Return an PyRTlib atmosphere with a prescribed profile with pressure, temperature and humidity and optionally clouds
+        """Return an PyRTlib atmosphere with a prescribed profile with pressure, temperature and humidity and optionally
+        clouds
 
         :param altitude: Altitude of the layers (m). The first element of the array should be the highest.
         :param pressure: Pressure in each layers (Pa).

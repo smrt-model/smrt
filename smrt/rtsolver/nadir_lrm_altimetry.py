@@ -1,5 +1,5 @@
-"""Compute waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the given snowpack and sensor (or complex
-terrain soon).
+"""Compute waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the given snowpack and sensor (or
+complex terrain soon).
 
 The implementation is based on Adams and Brown 1998 and Lacroix et al. 2008. Both models differ in the specific choices
 for the scattering and backscatter of the interface, but are similar in the way the waveform is calculated, which
@@ -25,8 +25,8 @@ Usage:
         >>> altimodel = make_model('iba', "nadir_lrm_altimetry", rtsolver_options={return_contributions=True})
 
 References:
-    - F. Larue, G. Picard, J. Aublanc, L. Arnaud, A. Robledano-Perez, E. Le Meur, V. Favier, B. Jourdain, J. Savarino, P.
-       Thibaut, Radar altimeter waveform simulations in Antarctica with the Snow Microwave Radiative Transfer Model
+    - F. Larue, G. Picard, J. Aublanc, L. Arnaud, A. Robledano-Perez, E. Le Meur, V. Favier, B. Jourdain, J. Savarino,
+      P. Thibaut, Radar altimeter waveform simulations in Antarctica with the Snow Microwave Radiative Transfer Model
        (SMRT) , Remote Sensing of Environment, 263, 112534 doi:10.1016/j.rse.2021.112534, 2021
 """
 
@@ -45,23 +45,27 @@ class NadirLRMAltimetry(object):
     """Implement the Nadir LRM Mode Altimetry RT solver.
 
     Args:
-        oversampling_time: integer number defining the number of subgates used for the computation in each altimeter gate.
-            This is equivalent to multiply the bandwidth by this number. It is used to perform more accurate computation.
-        return_oversampled: by default the backscatter is returned for each gate. If set to True, the oversampled waveform
-            is returned instead. See the 'oversampling' argument.
-        return_contributions: return "volume", "surface" and "interface" backscatter contributions in addition to the "total" backscatter.
+        oversampling_time: integer number defining the number of subgates used for the computation in each altimeter
+            gate. This is equivalent to multiply the bandwidth by this number. It is used to perform more accurate
+            computation.
+        return_oversampled: by default the backscatter is returned for each gate. If set to True, the oversampled
+            waveform is returned instead. See the 'oversampling' argument.
+        return_contributions: return "volume", "surface" and "interface" backscatter contributions in addition to the
+            "total" backscatter.
         compute_coherent_reflection: if True (default), compute the coherent reflection according to Fung and Eom, 1983.
         skip_pfs_convolution: return the vertical backscatter without the convolution by the PFS, if set to True.
-        theta_inc_sampling: number of subdivisions used to calculate the incidence angular variations of surface and inteface
-            backscatter (the higher the better but the more computationnaly expensive). Note
-            that the subdivisions are irregular in incidence angle but correspond to annulii of equi-duration. This number
-            must be a true divider of the number of gates.
+        theta_inc_sampling: number of subdivisions used to calculate the incidence angular variations of surface and
+            inteface backscatter (the higher the better but the more computationnaly expensive). Note
+            that the subdivisions are irregular in incidence angle but correspond to annulii of equi-duration. This
+            number must be a true divider of the number of gates.
         error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
             If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
-            the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
+            the error message is not accessible. This is only recommended for long simulations that sometimes produce an
+            error.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the
+    # caller (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {}
 
@@ -348,7 +352,8 @@ class NadirLRMAltimetry(object):
         return z[:-1], dz, b_gate, b_layer[:-1], b_interface
 
     def vertical_scattering_distribution(self, return_contributions, mu_i=1.0):
-        # """Compute the vertical backscattering distribution due to "grain" or volume scattering (symbol pvg in Eq 9 in Lacroix 2008) and
+        # """Compute the vertical backscattering distribution due to "grain" or volume scattering (symbol pvg in Eq 9 in
+        #  Lacroix 2008) and
         # "interfaces" or 'surface' scattering (symbol pvl in Eq 9 in Lacroix 2008)
 
         # :param mu: cosine of the incidence angles. Only the dependence on the surface scattering depend on mu_i
@@ -370,7 +375,8 @@ class NadirLRMAltimetry(object):
         subgate_layer_extinction = fill_forward(layer_extinction, b_layer)
 
         # layer backscatter
-        # backward scattering (take VV, is equal to HH) # nadir backward scattering. a.k.a gamma in Matzler's notation. We neglect mu_i.
+        # backward scattering (take VV, is equal to HH) # nadir backward scattering. a.k.a gamma in Matzler's notation.
+        #  We neglect mu_i.
         backward_scattering = np.array(
             [
                 em.phase(mu_s=-1.0, mu_i=1.0, dphi=np.pi, npol=2)[0, 0].squeeze().real / (4 * np.pi)
@@ -480,8 +486,8 @@ class NadirLRMAltimetry(object):
         # attenuation at the bottom of the layer is the product of layer and interface attenuation
         subgate_backscatter_i = fill(interface_echo, b_interface) * subgate_attenuation_v * subgate_attenuation_i
 
-        # compute the primitive of the subgate backscatter, select the gate interval and differentitate to get the integrated backscatter
-        # over each gate
+        # compute the primitive of the subgate backscatter, select the gate interval and differentitate to get the
+        # integrated backscatter over each gate
         if self.return_contributions or (self.theta_inc_sampling > 1):
             # volume contribution
             subgate_backscatter_v = np.insert(subgate_backscatter_v, 0, 0)

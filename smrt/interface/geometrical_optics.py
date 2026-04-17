@@ -369,7 +369,8 @@ class GeometricalOptics(HemisphericalIntegrationMixin, Interface):
         )  # Eq. 2.1.130   NB: k1^2 -> eps_2
 
         if self.shadow_correction:
-            # this hack to avoid division-by-zero is safe, because the shadow_function is only important for large angles
+            # this hack to avoid division-by-zero is safe, because the shadow_function is only important for large
+            # angles
             sin_i[sin_i < 1e-3] = 1e-3
             sin_t[sin_t < 1e-3] = 1e-3
             s = 1 / (

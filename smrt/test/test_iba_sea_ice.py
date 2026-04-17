@@ -43,8 +43,11 @@ def test_oneconfig_for_sea_ice(setup_seaice, ice_type, porosity, p_ex_value, res
         thickness=thickness,
         temperature=temperature,
         microstructure_model="exponential",
-        brine_inclusion_shape="spheres",  # inclusion_shape can be "spheres" or "random_needles", or "mix_spheres_needles"
-        salinity=salinity,  # either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water ice
+        brine_inclusion_shape="spheres",  # inclusion_shape can be "spheres" or "random_needles", or
+        # "mix_spheres_needles"
+        salinity=salinity,  # either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is
+        # given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water
+        # ice
         porosity=porosity,
         corr_length=p_ex,
         add_water_substrate="ocean",
@@ -78,9 +81,11 @@ def test_equivalence_porosity_density(setup_seaice):
         brine_inclusion_shape="spheres",
         # brine_inclusion_shape can be "spheres", "random_needles" or "mix" (a mix of spheres and needles)
         salinity=salinity,
-        # either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water ice
+        # either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume
+        # fraction is calculated in the model; if none is given, ice is treated as fresh water ice
         porosity=porosity,
-        # either density or 'porosity' should be set for sea ice. If porosity is given, density is calculated in the model. If none is given, ice is treated as having a porosity of 0% (no air inclusions)
+        # either density or 'porosity' should be set for sea ice. If porosity is given, density is calculated in the
+        # model. If none is given, ice is treated as having a porosity of 0% (no air inclusions)
         #                            density = density,
         corr_length=p_ex,
         add_water_substrate="ocean",  # see comment below
@@ -97,8 +102,11 @@ def test_equivalence_porosity_density(setup_seaice):
         brine_inclusion_shape="spheres",
         # brine_inclusion_shape can be "spheres", "random_needles" or "mix" (a mix of spheres and needles)
         salinity=salinity,
-        # either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water ice
-        #                            porosity = porosity, # either density or 'porosity' should be set for sea ice. If porosity is given, density is calculated in the model. If none is given, ice is treated as having a porosity of 0% (no air inclusions)
+        # either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume
+        # fraction is calculated in the model; if none is given, ice is treated as fresh water ice
+        #                            porosity = porosity, # either density or 'porosity' should be set for sea ice.
+        #  If porosity is given, density is calculated in the model. If none is given, ice is treated as having a
+        #  porosity of 0% (no air inclusions)
         density=density,
         corr_length=p_ex,
         add_water_substrate="ocean",  # see comment below

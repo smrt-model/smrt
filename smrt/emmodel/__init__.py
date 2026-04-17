@@ -1,5 +1,5 @@
-"""This package contains the different electromagnetic (EM) models that compute the scattering and absorption coefficients
-and the phase function in a given layer. The computation of the inter-layer propagation is done by the
+"""This package contains the different electromagnetic (EM) models that compute the scattering and absorption
+coefficients and the phase function in a given layer. The computation of the inter-layer propagation is done by the
 `smrt.rtsolver` package.
 
 The EM models differ in many aspects, one of which is the constraint on the microstructure model
@@ -12,8 +12,9 @@ The selection of the EM model is done with the :py:mod:`smrt.core.model.make_mod
 
 .. admonition::  **For developers**
 
-    To implement a new scattering formulation / phase function, we recommend to start from an existing module, probably rayleigh.py is the simplest.
-    Copy this file to `myscatteringtheory.py` or any meaningful name. It can be directly used with :py:func:`smrt.core.model.make_model` function as follows::
+    To implement a new scattering formulation / phase function, we recommend to start from an existing module, probably
+    rayleigh.py is the simplest. Copy this file to `myscatteringtheory.py` or any meaningful name. It can be directly
+    used with :py:func:`smrt.core.model.make_model` function as follows::
 
         m = make_model("myscatteringtheory", "dort")
 
@@ -25,5 +26,6 @@ The selection of the EM model is done with the :py:mod:`smrt.core.model.make_mod
         - ke() and effective_permittivity() methods
         - at least one of the phase and ft_even_phase methods (both is better).
 
-    For the details it is recommended to contact the authors as the calling arguments and required methods may change from time to time.
+    For the details it is recommended to contact the authors as the calling arguments and required methods may change
+    from time to time.
 """

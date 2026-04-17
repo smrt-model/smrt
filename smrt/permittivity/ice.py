@@ -40,9 +40,10 @@ def ice_permittivity_maetzler06(frequency, temperature):
         eps_ice = ice_permittivity_maetzler06(frequency=18e9, temperature=270)
 
     Note:
-        Ice permittivity is automatically calculated in :py:func:`smrt.inputs.make_medium.make_snow_layer()` and is not set by
-        the electromagnetic model module. An alternative to ``ice_permittivity_maetzler06`` may be specified as an argument to the
-        make_snow_layerfunction. The usage example is provided for external reference or testing purposes.
+        Ice permittivity is automatically calculated in :py:func:`smrt.inputs.make_medium.make_snow_layer()` and is not
+        set by the electromagnetic model module. An alternative to ``ice_permittivity_maetzler06`` may be specified as
+        an argument to the make_snow_layerfunction. The usage example is provided for external reference or testing
+        purposes.
 
     References:
         Mätzler, C. (2006). Thermal Microwave Radiation: Applications for Remote Sensing p456-461,
@@ -77,8 +78,10 @@ def ice_permittivity_cuzzi80(frequency, temperature=100):
     """Compute ice permittivity at 100 K using Whalley and Labbe (1969) as given in Cuzzi et al. (1980).
 
     References:
-    - Johari, G. P., & Whalley, E. (1976). Dielectric properties of ice VI at low temperatures. The Journal of Chemical Physics, 64(11), 4484–4489. https://doi.org/10.1063/1.432074
-    - Used in Cuzzi et al., 1980 for modeling the thermal emission from C-ring particles at 2.2-cm wavelength. Therefore relevant for Enceladus like temperature
+    - Johari, G. P., & Whalley, E. (1976). Dielectric properties of ice VI at low temperatures. The Journal of Chemical
+      Physics, 64(11), 4484–4489. https://doi.org/10.1063/1.432074
+    - Used in Cuzzi et al., 1980 for modeling the thermal emission from C-ring particles at 2.2-cm wavelength. Therefore
+    relevant for Enceladus like temperature
 
     """
     if np.any(np.abs(temperature - 100) > 10):
@@ -178,8 +181,8 @@ def ice_permittivity_maetzler87(frequency, temperature):
     # Issue warning if temperature different from values in paper
     if temperature not in [FREEZING_POINT - 5, FREEZING_POINT - 15]:
         warnings.warn(
-            "Strictly, this permittivity formulation was proposed for -5 and -15 deg C. It is recommended to use another "
-            "formulation if this is not for testing purpose"
+            "Strictly, this permittivity formulation was proposed for -5 and -15 deg C. It is recommended to use"
+            " another formulation if this is not for testing purpose"
         )
 
     return Ereal + Eimag * 1j
@@ -348,9 +351,9 @@ def ice_permittivity_hufford91_maetzler87(frequency, temperature):
         Mätzler, C. and Wegmüller (1987). Dielectric properties of fresh-water ice at microwave frequencies.
         J. Phys. D: Appl. Phys. 20, 1623-1630. https://doi.org/10.1088/0022-3727/20/12/013
 
-        Rückert, J., Huntemann, M., Tonboe, RT., and Spreen, G., (2023). Modeling Snow and Ice Microwave Emissions in the
-        Arctic for a Multi-Parameter Retrieval of Surface and Atmospheric Variables From Microwave Radiometer Satellite Data,
-        Earth and Space Scienc, 10(10), https://doi.org/10.1029/2023EA003177
+        Rückert, J., Huntemann, M., Tonboe, RT., and Spreen, G., (2023). Modeling Snow and Ice Microwave Emissions in
+        the Arctic for a Multi-Parameter Retrieval of Surface and Atmospheric Variables From Microwave Radiometer
+        Satellite Data, Earth and Space Scienc, 10(10), https://doi.org/10.1029/2023EA003177
     """
     # Raise exception if temperature is zero
     if np.any(temperature > FREEZING_POINT):

@@ -1,6 +1,6 @@
 # coding: utf-8
-"""Computes scattering with the symmetrized version of the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021 under
-the non-local approximation, a.k.a long range in Tsang's books. The truncation of the series is at second order.
+"""Computes scattering with the symmetrized version of the Strong-Contrast Expansion (SCE) from Torquato and Kom 2021
+under the non-local approximation, a.k.a long range in Tsang's books. The truncation of the series is at second order.
 
 References:
     - Torquato, S., & Kim, J. (2021). Nonlocal Effective Electromagnetic Wave Characteristics of
@@ -20,9 +20,9 @@ from .common import AdjustableEffectivePermittivityMixin, derived_EMModel
 from .sce_common import SCEBase
 
 #
-# For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
-# initialisation and precomputation can be done in the prepare method that is called only once for each layer whereas
-# phase, ke and effective_permittivity can be called several times.
+# For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same
+# arguments as here initialisation and precomputation can be done in the prepare method that is called only once for
+# each layer whereas phase, ke and effective_permittivity can be called several times.
 #
 
 

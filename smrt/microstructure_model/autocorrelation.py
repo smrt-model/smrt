@@ -61,8 +61,8 @@ class Autocorrelation(AutocorrelationBase):
     """Base class for autocorrelation function classes. It should not be
     used directly but sub-classed. It provides generic handling of the numerical fft and invfft when
     required by the user or when necessary due to the lack of implementation of
-    the real or ft autocorrelation functions. See the source of :py:class:`~smrt.microstructure_model.exponential.Exponential`
-    to see how to use this class.
+    the real or ft autocorrelation functions. See the source of
+    :py:class:`~smrt.microstructure_model.exponential.Exponential` to see how to use this class.
 
     """
 
@@ -144,9 +144,9 @@ class Autocorrelation(AutocorrelationBase):
         return C
 
     def inverted_medium(self):
-        """Return the same autocorrelation for the inverted medium. In general, it is only necessary to invert the fractional volume if
-        the autocorrelation function is numerically symmetric as it should be. This needs to be reimplemented in the sub classes if this is
-        not sufficient.
+        """Return the same autocorrelation for the inverted medium. In general, it is only necessary to invert the
+        fractional volume if the autocorrelation function is numerically symmetric as it should be. This needs to be
+        reimplemented in the sub classes if this is not sufficient.
         """
         obj = copy.copy(self)
         obj.frac_volume = 1.0 - self.frac_volume

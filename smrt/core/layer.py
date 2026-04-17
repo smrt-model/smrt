@@ -4,17 +4,23 @@
 It also contains a `microstructure` attribute that holds the microstructural properties (e.g. radius, corr_length, etc).
 The class of this attribute defines the microstructure model to use (see :py:mod:`smrt.microstructure_model` package).
 
-To create a single layer, it is recommended to use the function :py:func:`~smrt.inputs.make_medium.make_snow_layer` rather than the class constructor.
-However, it is usually more convenient to create a snowpack using :py:func:`~smrt.inputs.make_medium.make_snowpack`.
+To create a single layer, it is recommended to use the function :py:func:`~smrt.inputs.make_medium.make_snow_layer`
+rather than the class constructor. However, it is usually more convenient to create a snowpack using
+:py:func:`~smrt.inputs.make_medium.make_snowpack`.
 
 .. admonition:: **For developers**
 
-    The :py:class:`~smrt.core.layer.Layer` class should not be modified at all even if you need new properties to define the layer (e.g. brine concentration, humidity, ...). If the property you need to add is
-    related to geometric aspects, it is probably better to use an existing microstructure model or to create a new one. If the new parameter is not related to geometrical aspect,
-    write a function similar to :py:func:`~smrt.inputs.make_medium.make_snow_layer` (choose an explicit name for your purpose). In this function, create the layer by calling the Layer
-    constructor as in :py:func:`~smrt.inputs.make_medium.make_snow_layer` and then add your properties with lay.myproperty=xxx, ... See the example of liquid water in :py:func:`~smrt.inputs.make_medium.make_snow_layer`.
-    This approach avoids specialization of the Layer class. The new function can be in any file (inc. out of smrt directories), and should be added in :py:mod:`~smrt.inputs.make_medium`
-    if it is of general interest and written in a generic way, that is, covers many use cases for many users with default arguments, etc.
+    The :py:class:`~smrt.core.layer.Layer` class should not be modified at all even if you need new properties to define
+    the layer (e.g. brine concentration, humidity, ...). If the property you need to add is related to geometric
+    aspects, it is probably better to use an existing microstructure model or to create a new one. If the new parameter
+    is not related to geometrical aspect, write a function similar to
+    :py:func:`~smrt.inputs.make_medium.make_snow_layer` (choose an explicit name for your purpose). In this function,
+    create the layer by calling the Layer constructor as in :py:func:`~smrt.inputs.make_medium.make_snow_layer` and
+    then add your properties with lay.myproperty=xxx, ... See the example of liquid water in
+    :py:func:`~smrt.inputs.make_medium.make_snow_layer`. This approach avoids specialization of the Layer class. The
+    new function can be in any file (inc. out of smrt directories), and should be added in
+    :py:mod:`~smrt.inputs.make_medium` if it is of general interest and written in a generic way, that is, covers many
+    use cases for many users with default arguments, etc.
 """
 
 import copy
@@ -27,7 +33,8 @@ from .plugin import import_class
 
 
 class Layer(object):
-    """This class contains the properties for a single layer including the microstructure attribute which holds the microstructure properties.
+    """This class contains the properties for a single layer including the microstructure attribute which holds the
+    microstructure properties.
 
     To create a layer, it is recommended to use the functions `make_snow_layer` or similar.
     """
@@ -136,11 +143,13 @@ class Layer(object):
             # another approach would be to give the layer object as argument, but this creates a strong dependency
             # between the permittivity and the layer. We prefer to avoid this.
             # Neverthelees, if the list of arguments should lengthen, it will be better to pass the object.
-            # A elegant/functional alternative would be to use function of the temperature only, and use "functools.partial"
+            # A elegant/functional alternative would be to use function of the temperature only, and use
+            # "functools.partial"
             # when creating the layer to include the dependency to the layer properties.
 
-            # the chosen approach is based on the decorator required_layer_properties. See below. It allows the permittivity model to
-            # be called with the layer argument, but the initial permittivity_model function never heard about layers
+            # the chosen approach is based on the decorator required_layer_properties. See below. It allows the
+            # permittivity model to be called with the layer argument, but the initial permittivity_model function
+            # never heard about layers
             return self.permittivity_model[i](frequency, layer_to_inject=self)
 
         else:  # assume it is a constant, independent of the frequency.
@@ -250,7 +259,8 @@ def make_microstructure_model(modelname_or_class, **kwargs):
 
     :Example:
 
-         To import the StickyHardSpheres class with spheres radius of 1mm, stickiness of 0.5 and fractional_volume of 0.3::
+         To import the StickyHardSpheres class with spheres radius of 1mm, stickiness of 0.5 and fractional_volume of
+         0.3::
 
          shs = make_autocorrelation("StickyHardSpheres", radius=0.001, stickiness=0.5, frac_volume=0.3)
     """
@@ -263,7 +273,9 @@ def make_microstructure_model(modelname_or_class, **kwargs):
 
 
 def layer_properties(*required_arguments, optional_arguments=None, **kwargs):
-    """This decorator is used for the permittivity functions (or any other functions) to inject layer's attributes as arguments.
+    """This decorator is used for the permittivity functions (or any other functions) to inject layer's attributes as
+    arguments.
+
     The decorator declares the layer properties needed to call the function and the optional ones.
     This allows permittivity functions to use any property of the layer, as long as it is defined.
 

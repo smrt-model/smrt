@@ -1,9 +1,10 @@
 """Provide the interface boundary condition under IIEM (Improved IEM) formulation provided by Fung et al. 2002.
 
 The extended domain of validity (for large roughness or correlation length) is produced by using the transition Fresnel
-coefficients (Fung et al. 2004). This code also produces bi-static coefficients for passive sensor and second order interaction with
-snow volume. Multiple scattering for crosspol is implemented from the original formulation in Fung 92. The integral for multiple
-scattering is done by fixed order quadrature for faster computation. A more complex implementation would be AIEM (Wu et al 2004).
+coefficients (Fung et al. 2004). This code also produces bi-static coefficients for passive sensor and second order
+interaction with snow volume. Multiple scattering for crosspol is implemented from the original formulation in Fung 92.
+The integral for multiple scattering is done by fixed order quadrature for faster computation. A more complex
+implementation would be AIEM (Wu et al 2004).
 
 Notes:
     Compute diffuse reflection as described in Fung et al. 2002, the specular reflection
@@ -12,15 +13,17 @@ Notes:
 
 Usage:
     Basic usage with default settings:
-        >>> soil = make_soil('iiem_fung2002', complex(2, 0.01), roughness_rms = 0.001, corr_length = 0.02, temperature = 265)
+        >>> soil = make_soil('iiem_fung2002', complex(2, 0.01), roughness_rms=0.001, corr_length=0.02,
+        temperature=265)
 
 Credit:
-    This code was based on the MATLAB code published by Ulaby & Long, 2014: https://tools.grss-ieee.org/rscl1/coderecord.php?id=469
-    and Robbie Mallet's python version: https://github.com/robbiemallett/IIEM
+    This code was based on the MATLAB code published by Ulaby & Long, 2014:
+    https://tools.grss-ieee.org/rscl1/coderecord.php?id=469 and Robbie Mallet's python version:
+    https://github.com/robbiemallett/IIEM
 
 References:
-    Fung. A.K., Liu, W.Y., Chen, K.S., & Tsay, M.K. (2002). An Improved Iem Model for Bistatic Scattering From Rough Surfaces. Journal
-    of Electromagnetic Waves and Applications. 16(5), 689-702. https://doi.org/10.1163/156939302X01119
+    Fung. A.K., Liu, W.Y., Chen, K.S., & Tsay, M.K. (2002). An Improved Iem Model for Bistatic Scattering From Rough
+    Surfaces. Journal of Electromagnetic Waves and Applications. 16(5), 689-702. https://doi.org/10.1163/156939302X01119
 
     Fung. A. K., & Chen, K. S. (2004). An Update on the IEM Surface Backscattering Model. IEEE. 1(2), 75-77.
     https://doi.org/10.1109/LGRS.2004.826564
@@ -41,8 +44,8 @@ from smrt.interface.iem_fung92 import IEM_Fung92
 class IIEM_Fung02(IEM_Fung92):
     """Implement a moderate rough surface model for passive and active. Provide bi-static coefficient
 
-    Multiple scattering only for crosspol backscatter since it's assumed to be negligeable for co pol (passive??? to be implemented).
-    Use with care
+    Multiple scattering only for crosspol backscatter since it's assumed to be negligeable for co pol (passive??? to be
+    implemented). Use with care
 
 
     Args:
@@ -52,10 +55,11 @@ class IIEM_Fung02(IEM_Fung92):
         warning_handling: [Optional] Parameter that dictates how to handle wanring. Default is "print".
         series_truncation: [Optional] Number of iterations to use in the summation of roughness spectra.
         N_integral: [Optional] Number of streams to use in the integral for multiple scattering.
-        shadow_correction: [Optional] Use a shadow correction of the rough surface when dealing with significant surface roughness or
-            large scattering angles. Default is ``True``.
+        shadow_correction: [Optional] Use a shadow correction of the rough surface when dealing with significant
+            surface roughness or large scattering angles. Default is ``True``.
         compute_crosspol: [Optional] Compute the multiple scattering for cross-pol. Default is ``True``.
-        transition_fresnel: [Optional] Use transitionnal Fresnel coefficients define in Fung et al. (2004) Default is ``True``.
+        transition_fresnel: [Optional] Use transitionnal Fresnel coefficients define in Fung et al. (2004) Default is
+            ``True``.
     """
 
     optional_args = {
@@ -117,8 +121,8 @@ class IIEM_Fung02(IEM_Fung92):
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
         """Compute the diffuse reflection coefficients.
 
-        Coefficients are calculated for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is where the
-        beam is transmitted.
+        Coefficients are calculated for an array of incident, scattered and azimuth angles in medium 1. Medium 2 is
+        where the beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -143,7 +147,8 @@ class IIEM_Fung02(IEM_Fung92):
 
         # wavenumber for roughness spectra
         # k_w is 1d representation of W_n(ksx - kx, ksy - ky) eqn 4 Fung et al 2002
-        # k * np.sqrt((sin_s * cos_phi_s - sin_i * cos_phi_i) ** 2 + (sin_s * sin_phi_s - sin_i * sin_phi_i) ** 2)) # from ulaby code
+        # from ulaby code:
+        # k * np.sqrt((sin_s * cos_phi_s - sin_i * cos_phi_i) ** 2 + (sin_s * sin_phi_s - sin_i * sin_phi_i) ** 2))
         # phi_i = 0
         # phi_s = dphi = phi_s - 0
         # k_w with dphi assumimg phi_i = 0
@@ -237,8 +242,8 @@ class IIEM_Fung02(IEM_Fung92):
         return generic_ft_even_matrix(reflection_function, m_max, nsamples=256)
 
     def diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_t, mu_i, dphi, npol):
-        """Compute the transmission coefficients for the azimuthal mode m and for an array of incidence angles (given by their cosine)
-        in medium 1. Medium 2 is where the beam is transmitted.
+        """Compute the transmission coefficients for the azimuthal mode m and for an array of incidence angles (given by
+        their cosine) in medium 1. Medium 2 is where the beam is transmitted.
 
         :param eps_1: permittivity of the medium where the incident beam is propagating.
         :param eps_2: permittivity of the other medium

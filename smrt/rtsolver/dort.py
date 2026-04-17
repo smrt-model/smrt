@@ -1,7 +1,7 @@
 # coding: utf-8
 
-"""Provide the Discrete Ordinate and Eigenvalue Solver as a multi-stream solver of the radiative transfer model in active
-and passive mode.
+"""Provide the Discrete Ordinate and Eigenvalue Solver as a multi-stream solver of the radiative transfer model in
+active and passive mode.
 
 This solver is precise but less efficient than 2 or 6 flux solvers. Different flavours of DORT (or DISORT) exist in the
 literature depending on the mode (passive or active), the polarization capabilities, the density of the medium (sparse
@@ -117,20 +117,20 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             contribution of the lowest layers is neglegible. The optical depth is a good criteria to determine this
             limit. A value of about 6 is recommended. Use with care, especially values lower than 6.
         diagonalization_method: This value set the method for the diagonalization in the eigenvalue solver. The defaut
-            is "eig", it uses the scipy.linalg.eig function. The "schur" replaces the scipy.linalg.eig function by a schur
-            decomposition followed by a diagonalisation of the schur matrix. The "schur_forcedtriu" forces the schur matrix
-            to be upper triangular. The "half_rank_eig" is the fastest method but requires symmetry and energy
-            conservation which may fail with some EMModels and for some parameters. The "stamnes88" is another half rank
-            fast method.
+            is "eig", it uses the scipy.linalg.eig function. The "schur" replaces the scipy.linalg.eig function by a
+            schur decomposition followed by a diagonalisation of the schur matrix. The "schur_forcedtriu" forces the
+            schur matrix to be upper triangular. The "half_rank_eig" is the fastest method but requires symmetry and
+            energy conservation which may fail with some EMModels and for some parameters. The "stamnes88" is another
+            half rank fast method.
         diagonalization_cache: If "simple", cache the results of the diagonalization to avoid redundant computation.
             This can speed up significantly the computation when many layers have exactly the same scattering properties
             in a snowpack or across snowpacks of a sensitivity analysis where only one or few layers are changed at a
             time. The drawback is that it uses more memory as the simple cache is never emptied. LRU cache could be
             implemented in the future to limit memory usage while style keeping some efficiency. This feature is
             experimental, please report success and failure.
-        rayleigh_jeans_approximation: In passive mode, if True, use the Rayleigh-Jeans approximation for the Planck function.
-            This mode was used by default up to SMRT 1.5.1, but is not as precise as the full Planck function at higher
-            frequencies and low temperatures.
+        rayleigh_jeans_approximation: In passive mode, if True, use the Rayleigh-Jeans approximation for the Planck
+            function. This mode was used by default up to SMRT 1.5.1, but is not as precise as the full Planck function
+            at higher frequencies and low temperatures.
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the
@@ -605,10 +605,11 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
 
         if self.snowpack.substrate is None and optical_depth < 5:
             smrt_warn(
-                "DORT has detected that the snowpack is optically shallow (tau=%g) and no substrate has been set, meaning that the space "
-                "under the snowpack is 'empty' with snowpack shallow enough to affect the measured signal at the surface."
-                "This is usually not wanted and can produce wrong results. Either increase the thickness of the snowpack or set a substrate."
-                " If wanted, add a transparent substrate to supress this warning" % optical_depth
+                f"DORT has detected that the snowpack is optically shallow (tau={optical_depth:g}) and no substrate has"
+                "been set, meaning that the space under the snowpack is 'empty' with snowpack shallow enough to affect"
+                "the measured signal at the surface. This is usually not wanted and can produce wrong results. Either "
+                "increase the thickness of the snowpack or set a substrate. If wanted, add a transparent substrate to "
+                "supress this warning"
             )
 
         x = scipy.linalg.solve_banded((nband, nband), bBC, b, overwrite_ab=True, overwrite_b=True)
@@ -936,10 +937,14 @@ class EigenValueSolver(object):
 
             if self.normalization != "forced" and np.any(np.abs(self.norm_0 - 1.0) > 0.3):
                 print("norm=", norm)
-                raise SMRTError("""The re-normalization of the phase function exceeds the predefined threshold of 30%.
-This is likely because of a too large grain size or a bug in the phase function. It is recommended to check the grain size.
-You can also deactivate this check using normalization="forced" as an options of the dort solver. It is at last possible
-to disable this error raise and return NaN instead by adding the argument rtsolver_options=dict(error_handling='nan') to make_model).""")
+                raise SMRTError(
+                    "The re-normalization of the phase function exceeds the predefined threshold of 30%. "
+                    "This is likely because of a too large grain size or a bug in the phase function. It is"
+                    " recommended to check the grain size. You can also deactivate this check using "
+                    'normalization="forced" as an options of the dort solver. It is at last possible'
+                    "to disable this error raise and return NaN instead by adding the argument "
+                    "rtsolver_options=dict(error_handling='nan') to make_model)."
+                )
         else:
             if self.norm_m is None:
                 if self.norm_0 is None:  # be careful, this code is not re-entrant
@@ -1006,7 +1011,8 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
         #         print("pas ok")
         #         # print(m, T)
         #         # print(m, T[np.tril_indices(T.shape[0], k=-1)])
-        #         # print(m, np.max(np.abs(T[np.tril_indices_from(T, k=-1)])), np.all(T[np.tril_indices_from(T, k=-1)]==0))
+        #         # print(m, np.max(np.abs(T[np.tril_indices_from(T, k=-1)])),
+        #                   np.all(T[np.tril_indices_from(T, k=-1)]==0))
         #         # print("beta.imag=", beta.imag)
 
         #         beta, E = scipy.linalg.eig(T, overwrite_a=False)
@@ -1014,7 +1020,8 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
         #         iscomplex_beta = not np.allclose(beta.imag, 0, atol=0)
         #         iscomplex_E = not np.allclose(E.imag, 0, atol=1e-6)
 
-        #         print('new beta.img', m, iscomplex_beta, iscomplex_E, np.all(beta.imag==0), np.all(E.imag==0), beta.imag)
+        #         print('new beta.img', m, iscomplex_beta, iscomplex_E, np.all(beta.imag==0), np.all(E.imag==0),
+        #                   beta.imag)
         #         print('isnan', np.any(np.isnan(beta)), np.any(np.isnan(E)))
         #     else:
         #         print("ok")
@@ -1252,11 +1259,11 @@ reactivate it.
 
 - almost diagonal matrix. Such a matrix often arises in active mode when m_max is quite high. However it can
 also arises in passive mode or with low m_max. To solve this issue  you can try to activate the
-diagonalization_method="schur" option and if it does not work the more radical diagonalization_method="schur_forcedtriu".
-These options are experimental, please report your results (both success and failure).
-diagonalization_method="schur_forcedtriu" should become the default if success are reported. Alternatively you could
-reduce the m_max option progressively but high values of m_max give more accurate results in active mode (but tends to
-produce almost diagonal matrix).
+diagonalization_method="schur" option and if it does not work the more radical
+diagonalization_method="schur_forcedtriu". These options are experimental, please report your results (both success and
+failure). diagonalization_method="schur_forcedtriu" should become the default if success are reported. Alternatively you
+could reduce the m_max option progressively but high values of m_max give more accurate results in active mode (but
+tends to produce almost diagonal matrix).
 
 For mass simulations, exceptions may be annoying, to avoid raising exception and return NaN as a result instead is
 obtained by setting the option error_handling='nan'.

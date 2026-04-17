@@ -10,7 +10,8 @@ from ..core.layer import layer_properties
 
 @layer_properties("temperature")
 def water_permittivity_maetzler87(frequency, temperature):
-    """Calculate the complex water dielectric constant depending on the frequency and temperature based on Mätzler & Wegmuller (1987).
+    """Calculate the complex water dielectric constant depending on the frequency and temperature based on Mätzler &
+    Wegmuller (1987).
 
     Args:
         frequency: Frequency in Hz.
@@ -65,10 +66,10 @@ def water_permittivity_tiuri80(frequency, temperature):
         complex: Complex permittivity of water.
 
     References:
-        Tiuri, M. and Schultz, H., Theoretical and experimental studies of microwave radiation from a natural snow field. In Rango, A. , ed.
-        Microwave remote sensing of snowpack properties. Proceedings of a workshop ... Fort Collins, Colorado, May 20-22, 1980.
-        Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publication 2153.)
-        https://ntrs.nasa.gov/api/citations/19810010984/downloads/19810010984.pdf
+        Tiuri, M. and Schultz, H., Theoretical and experimental studies of microwave radiation from a natural snow
+        field. In Rango, A. , ed. Microwave remote sensing of snowpack properties. Proceedings of a workshop ... Fort
+        Collins, Colorado, May 20-22, 1980. Washington, DC, National Aeronautics and Space Center, 225-234.
+        (Conference Publication 2153.) https://ntrs.nasa.gov/api/citations/19810010984/downloads/19810010984.pdf
     """
     freqGHz = frequency / GHz
 

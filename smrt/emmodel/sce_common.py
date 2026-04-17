@@ -125,7 +125,8 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
 
         # Eeff = sum_eps / 2 \
         #    + 1 / (2 * grandA2) * (-3 * weighted_mean_eps
-        #                           + np.sqrt(4 * grandA2 * (3 - grandA2) * prod_eps + (sum_eps * grandA2 - 3 * weighted_mean_eps)**2))
+        #                           + np.sqrt(4 * grandA2 * (3 - grandA2) * prod_eps + (sum_eps * grandA2 - 3 *
+        #  weighted_mean_eps)**2))
 
         delta = 4 * grandA2 * (3 - grandA2) * prod_eps + (sum_eps * grandA2 - 3 * weighted_mean_eps) ** 2
 

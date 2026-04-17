@@ -1,5 +1,5 @@
-"""Implements the sampled autocorrelation function model. Use when no analytical form of the autocorrelation function exists but
-the values of the autocorrelation function (`acf`) are known at a series of `lag`.
+"""Implements the sampled autocorrelation function model. Use when no analytical form of the autocorrelation function
+exists but the values of the autocorrelation function (`acf`) are known at a series of `lag`.
 
 Args:
     frac_volume (float): Fractional volume.

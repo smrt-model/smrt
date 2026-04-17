@@ -160,7 +160,8 @@ def active(
         from smrt import sensor_list
         scatterometer = sensor_list.active(frequency=18e9, theta_inc=50)
         scatterometer = sensor_list.active(18e9, 50, 50, 0, "V", "V")
-        scatterometer = sensor_list.active([18e9,36.5e9], theta=50, theta_inc=50, polarization_inc=["V", "H"], polarization=["V", "H"])
+        scatterometer = sensor_list.active([18e9,36.5e9], theta=50, theta_inc=50, polarization_inc=["V", "H"],
+                                            polarization=["V", "H"])
     """
     # if polarization is None or polarization == '4P':
     #     polarization = ['VV', 'VH', 'HV', 'HH']
@@ -241,8 +242,8 @@ class Sensor(SensorBase):
             theta_deg: zenith angle in degrees at which the observation is made.
             phi_deg: azimuth angle at which the observation is made.
             polarization: List of single character (H or V).
-            channel_map: map channel names (keys) to configuration (values). A configuration is a dict with frequency, polarization and other
-                such parameters to be used by Result to select the results.
+            channel_map: map channel names (keys) to configuration (values). A configuration is a dict with frequency,
+                polarization and other such parameters to be used by Result to select the results.
             name: name of the sensor.
             wavelength: wavelength of the sensor. Can be set instead of the frequency.
         """

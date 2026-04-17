@@ -80,7 +80,8 @@ class NonScattering(IsotropicScatteringMixin):
         return extinction_matrix(self.ka, mu=mu, npol=npol)
 
     def effective_permittivity(self):
-        # very basic mixing formula. It is recommended to use either with frac_volume=0 or 1 a better mixings when available.
+        # very basic mixing formula. It is recommended to use either with frac_volume=0 or 1 a better mixings when
+        # available.
         # return self.e0 * (1 - self.frac_volume) + self.eps * self.frac_volume
 
         # change to polder von santen

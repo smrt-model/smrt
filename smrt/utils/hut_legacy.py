@@ -4,11 +4,13 @@
 
 To use this module, extra installations are needed:
 
-    * Gets HUT. Decompresses the archive somewhere on your disk.
-    * In the file snowemis_nlayers, changes the 6 occurrences of the "do" variable into "dos" because it causes a syntax error in Octave.
-    * Installs the oct2py module using :code:`pip install oct2py` or :code:`easy_install install oct2py`.
-    * Installs Octave version 3.6 or above.
-    * For convenience, sets the HUT_DIR environment variable to point to HUT path. This path can also be programmatically set with :py:func:`set_hut_path`.
+    - Gets HUT. Decompresses the archive somewhere on your disk.
+    - In the file snowemis_nlayers, changes the 6 occurrences of the "do" variable into "dos" because it causes a syntax
+      error in Octave.
+    - Installs the oct2py module using :code:`pip install oct2py` or :code:`easy_install install oct2py`.
+    - Installs Octave version 3.6 or above.
+    - For convenience, sets the HUT_DIR environment variable to point to HUT path. This path can also be
+      programmatically set with :py:func:`set_hut_path`.
 
 In case of problem, checks the instructions given in http://blink1073.github.io/oct2py/source/installation.html.
 
@@ -50,7 +52,8 @@ except KeyError:
 
 
 def run(sensor, snowpack, ke_option=0, grainsize_option=1, hut_path=None):
-    """Calls HUT for the snowpack and sensor configuration given as argument. Any microstructure model that defines the "radius" parameter is valid.
+    """Calls HUT for the snowpack and sensor configuration given as argument. Any microstructure model that defines the
+     "radius" parameter is valid.
 
     Args:
         sensor: Sensor configuration.

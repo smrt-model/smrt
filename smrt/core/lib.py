@@ -13,7 +13,8 @@ from smrt.core.optional_numba import numba
 
 
 def get(x, i, name=None):
-    """Return the i-th value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the value.
+    """Return the i-th value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the
+    value.
 
     Args:
         x: flexible array like object or scalar
@@ -26,7 +27,8 @@ def get(x, i, name=None):
     Returns:
         : element from x
     """
-    # function to take the i-eme value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the value.
+    # function to take the i-eme value in an array or dict of array. Can deal with scalar as well. In this case, it
+    # repeats the value.
 
     if isinstance(x, str):
         return x
@@ -85,7 +87,8 @@ def is_sequence(x):
 
 
 def class_specializer(domain: str, cls: Union[str, Type], **options) -> Type:
-    """Return a subclass of cls (imported from the domain if cls is a string) that use the provided "options" for __init__.
+    """Return a subclass of cls (imported from the domain if cls is a string) that use the provided "options" for
+    __init__.
 
     This is equivalent to functools.partial but for a class.
 
@@ -231,7 +234,8 @@ class smrt_diag(object):
             i, j = key
         except TypeError:
             raise IndexError(
-                "The index of a diag object must be a tuple with two indices. See smrt.core.lib for the rational of this diag object."
+                "The index of a diag object must be a tuple with two indices. See smrt.core.lib for the rational of"
+                " this diag object."
             )
         return self.diag[i] if i == j else 0
 
@@ -311,7 +315,8 @@ class smrt_matrix(object):
         """Compresses a matrix. This comprises several actions:
         1) select one mode, if relevant (dense5, and diagonal5).
         2) reduce the number of polarization from 3 to 2 if mode==0 and auto_reduce_npol=True.
-        3) convert the format of the matrix to compressed numpy, involving a change of the dimension order (pola and streams are merged).
+        3) convert the format of the matrix to compressed numpy, involving a change of the dimension order
+            (pola and streams are merged).
         """
         if self.mtype == "0":
             return np.float64(0.0)  # 0, but can be used as a numpy thing
@@ -408,7 +413,8 @@ class smrt_matrix(object):
             return np.moveaxis(
                 np.diagonal(np.diagonal(self.values, axis1=-2, axis2=-1)), -1, 0
             )  # diagonal in incidence angle and pola
-            # the moveaxis is necessary to put back the pola indice at the first position because diagonal move the diagonale "index" to the end of the array.
+            # the moveaxis is necessary to put back the pola indice at the first position because diagonal move the
+            # diagonale "index" to the end of the array.
 
     def to_dense(self):
         if self.mtype in ["dense5", "dense4"]:
@@ -513,7 +519,8 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
              [Puvp Puhp Puup]
 
     Args:
-        phase_function: must be a function taking dphi as input. It is assumed that phi is symmetrical (it is in cos(phi))
+        phase_function: must be a function taking dphi as input. It is assumed that phi is symmetrical (it is in
+            cos(phi))
         m_max: maximum Fourier decomposition mode needed
         nsamples: number of samples to use for the Fourier decomposition. If None, it is automatically computed.
     """
@@ -524,8 +531,9 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
 
     assert nsamples > 2 * m_max
 
-    # dphi must be evenly spaced from 0 to 2 * np.pi (but not including period), but we can use the symmetry of the phase function
-    # to reduce the computation to 0 to pi (including 0 and pi) and mirroring for pi to 2*pi (excluding both)
+    # dphi must be evenly spaced from 0 to 2 * np.pi (but not including period), but we can use the symmetry of the
+    # phase function to reduce the computation to 0 to pi (including 0 and pi) and mirroring for pi to 2*pi (excluding
+    # both)
 
     dphi = np.linspace(0, np.pi, int(nsamples // 2 + 1))
 
@@ -574,7 +582,8 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
 
         # For the even matrix:
         # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
-        # The sign for 0:2, 2 and 2, 0:2 have been double check with Rayleigh and Mazter 2006 formulation of the Rayeligh Matrix (p111-112)
+        # The sign for 0:2, 2 and 2, 0:2 have been double check with Rayleigh and Mazter 2006 formulation of the
+        # Rayeligh Matrix (p111-112)
         ft_even_p[0:2, 2, 1:] = ft_p[0:2, 2, 1 : m_max + 1].imag * delta
         ft_even_p[2, 0:2, 1:] = -ft_p[2, 0:2, 1 : m_max + 1].imag * delta
         ft_even_p[2, 2, 1:] = ft_p[2, 2, 1 : m_max + 1].real * delta

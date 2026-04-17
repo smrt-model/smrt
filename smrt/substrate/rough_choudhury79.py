@@ -45,7 +45,8 @@ class ChoudhuryReflectivity(Substrate):
         self.adjust(reflection_coefficients[1], reflection_coefficients[0], frequency, eps_1, mu1)
 
         if npol >= 3:
-            # don't modify the third compoment... this is an approximation, as the third component should be affected by the roughness...
+            # don't modify the third compoment... this is an approximation, as the third component should be affected by
+            # the roughness...
             # don't use this model for active mode
             pass
         if npol == 4:

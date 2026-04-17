@@ -7,8 +7,10 @@ The reflection is set to a value or a function of theta. Azimuthal symmetry is a
 Args:
     specular_reflection: Can be a scalar, a function, or a dictionary.
         - scalar: Uses the same reflection for all angles.
-        - function: Takes a single argument theta array (in radians) and returns the reflection as an array of the same size as theta.
-        - dictionary: Keys must be 'H' and 'V', and values are a scalar or a function, interpreted as for the non-polarized case.
+        - function: Takes a single argument theta array (in radians) and returns the reflection as an array of the same
+          size as theta.
+        - dictionary: Keys must be 'H' and 'V', and values are a scalar or a function, interpreted as for the
+          non-polarized case.
 
 Returns:
     Reflector: A reflector instance.
@@ -95,7 +97,8 @@ class Reflector(Substrate):
 
         if isinstance(specular_reflection, dict):
             raise SMRTError(
-                "The specular_reflection argument must be a scalar or a dict with the frequency and/or polarization as a key. If both, provide frequency and polarization as a tuple key"
+                "The specular_reflection argument must be a scalar or a dict with the frequency and/or polarization as "
+                "a key. If both, provide frequency and polarization as a tuple key"
             )
 
         if callable(specular_reflection):  # we have a function, call it and see what we get

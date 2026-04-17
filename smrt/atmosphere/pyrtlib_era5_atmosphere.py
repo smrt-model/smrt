@@ -1,7 +1,8 @@
 # coding: utf-8
 """A non-scattering atmosphere provided by PyRTLib for SMRT using ERA5 data as input
 
-This atmosphere is a special case using ERA5. Please refer to the general documentation `py:module::~smrt.atmosphere.pyrtlib_atmosphere`.
+This atmosphere is a special case using ERA5. Please refer to the general documentation
+`py:module::~smrt.atmosphere.pyrtlib_atmosphere`.
 
 """
 
@@ -88,7 +89,8 @@ class PyRTlibERA5Atmosphere(PyRTlibAtmosphereBase):
 
 
 class _ERA5Reanalysis_with_grib(ERA5Reanalysis):
-    """Temporary hack to retrieve ERA5 data in grib instead of netcdf which seems to be broken. The only disavantage is to require the dependency (cfgrib)"""
+    """Temporary hack to retrieve ERA5 data in grib instead of netcdf which seems to be broken. The only disavantage is
+    to require the dependency (cfgrib)"""
 
     @classmethod
     def read_data(cls, file: str, lonlat: tuple) -> pd.DataFrame:

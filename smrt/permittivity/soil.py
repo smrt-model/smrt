@@ -34,7 +34,8 @@ from smrt.core.layer import layer_properties
 
 @layer_properties("temperature", "moisture", "sand", "clay")
 def soil_permittivity_dobson85_peplinski95(frequency, temperature, moisture, sand, clay):
-    """Compute the soil dielectric constant using the Dobson et al. (1985) formulation adapted by Peplinski et al., (1995).
+    """Compute the soil dielectric constant using the Dobson et al. (1985) formulation adapted by Peplinski et al.,
+    (1995).
 
     History:
         - equation implemented by M. Sandells (~2016)
@@ -113,7 +114,8 @@ def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
     beta_prime = 1.2748 - 0.519 * sand - 0.152 * clay  # DB85 eq 30
     beta_second = 1.33797 - 0.603 * sand - 0.166 * clay  # DB85 eq 31
 
-    # original eq 32 DB85. Not used here because S has a different unit (permil->fraction) and interpretation (?) in DB85
+    # original eq 32 DB85. Not used here because S has a different unit (permil->fraction) and interpretation (?) in
+    # DB85
     # sigma_eff = -1.645 + 1.939 * rho_b - 0.02013 * sand + 0.01594 * clay  #
     # equation eq 8 given in Peplinski et al., 1995
     # See also Ulaby 2014, section 4.8.1, page 252
@@ -138,7 +140,8 @@ def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
 
 @layer_properties("temperature", "moisture", "sand", "clay", "dry_matter")
 def soil_permittivity_hut(frequency, temperature, moisture, sand, clay, dry_matter):
-    """Compute the soil dielectric constant using the HUT (Pulliainen et al., 1999; Lemmetyinen et al., 2010) formulation."""
+    """Compute the soil dielectric constant using the HUT (Pulliainen et al., 1999; Lemmetyinen et al., 2010)
+    formulation."""
     # Parameters for soil dielectric constant calculation with water
     ew_inf = 4.9
 

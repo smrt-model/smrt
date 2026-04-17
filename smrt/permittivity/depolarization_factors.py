@@ -1,4 +1,5 @@
-"""Provide formaluations for the depolarization factors used with the Polden van Santen or Maxwell Garnett mixing formulations."""
+"""Provide formaluations for the depolarization factors used with the Polden van Santen or Maxwell Garnett mixing
+formulations."""
 
 from typing import Optional
 
@@ -52,7 +53,8 @@ def depolarization_factors_spheroids(length_ratio: Optional[float] = None, **kwa
 
 
 def depolarization_factors_matzler96(frac_volume: float, **kwargs):
-    """Calculate depolarization factors with Mätzler (1996) for the Polden van Santen (Sihvola, 1999) permittivity model.
+    """Calculate depolarization factors with Mätzler (1996) for the Polden van Santen (Sihvola, 1999) permittivity
+    model.
 
     Args:
         frac_volume: fractional volume of ice.
@@ -76,7 +78,8 @@ def depolarization_factors_matzler96(frac_volume: float, **kwargs):
 
 
 def depolarization_factors_oblate_matzler98(frac_volume: float, **kwargs):
-    """Calculate depolarization factors with Mätzler (1998) for the Polden van Santen (Sihvola, 1999) permittivity model.
+    """Calculate depolarization factors with Mätzler (1998) for the Polden van Santen (Sihvola, 1999) permittivity
+    model.
 
     Args:
         frac_volume: fractional volume of ice.

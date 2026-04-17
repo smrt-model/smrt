@@ -1,7 +1,7 @@
 """Contains various utilities that work with/for SMRT.
 
-The wrappers to legacy snow radiative transfer models can be used to run DMRT-QMS (passive mode), HUT and MEMLS (passive mode).
-Other tools are listed below.
+The wrappers to legacy snow radiative transfer models can be used to run DMRT-QMS (passive mode), HUT and MEMLS
+(passive mode). Other tools are listed below.
 
 """
 

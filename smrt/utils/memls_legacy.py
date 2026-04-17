@@ -4,10 +4,12 @@
 
 To use this module, extra installations are needed:
 
-    * Downloads MEMLS from http://www.iapmw.unibe.ch/research/projects/snowtools/memls.html. Decompresses the archive somewhere on your disk.
-    * Installs the oct2py module using :code:`pip install oct2py` or :code:`easy_install install oct2py`.
-    * Installs Octave version 3.6 or above.
-    * For convenience, sets the MEMLS_DIR environment variable to point to MEMLS path. This path can also be programmatically set with :py:func:`set_memls_path`.
+    - Downloads MEMLS from http://www.iapmw.unibe.ch/research/projects/snowtools/memls.html. Decompresses the archive
+      somewhere on your disk.
+    - Installs the oct2py module using :code:`pip install oct2py` or :code:`easy_install install oct2py`.
+    - Installs Octave version 3.6 or above.
+    - For convenience, sets the MEMLS_DIR environment variable to point to MEMLS path. This path can also be
+      programmatically set with :py:func:`set_memls_path`.
 
 In case of problem, checks the instructions given in http://blink1073.github.io/oct2py/source/installation.html.
 
@@ -67,18 +69,24 @@ def run(
     memls_driver=None,
     snowpack_dimension=None,
 ):
-    """Calls MEMLS for the snowpack and sensor configuration given as argument. Any microstructure model that defines the "corr_length" parameter is valid, but it must be clear that MEMLS only considers exponential autocorrelation.
+    """Calls MEMLS for the snowpack and sensor configuration given as argument. Any microstructure model that defines
+    the "corr_length" parameter is valid, but it must be clear that MEMLS only considers exponential autocorrelation.
 
     :param snowpack: describe the snowpack.
     :param sensor: describe the sensor configuration.
-    :param scattering_choice: MEMLS proposes several formulation to compute scattering_function. scattering_choice=ABORN (equals 12) is the default
-        here and is recommended choice to compare with IBA. Note that some comments in memlsmain.m suggest to use
-        scattering_choice=MEMLS_RECOMMENDED (equals 11). Note also that the default grain type in memlsmain is graintype=1
-        corresponding to oblate spheroidal calculation of effective permittivity from the empirical representation of depolarization factors. To use a Polder-Van Santen representation of effective permittivity for small spheres, graintype=2 must be set in your local copy of MEMLS.
+    :param scattering_choice: MEMLS proposes several formulation to compute scattering_function. scattering_choice=ABORN
+        (equals 12) is the default here and is recommended choice to compare with IBA. Note that some comments in
+        memlsmain.m suggest to use scattering_choice=MEMLS_RECOMMENDED (equals 11). Note also that the default grain
+        type in memlsmain is graintype=1 corresponding to oblate spheroidal calculation of effective permittivity from
+        the empirical representation of depolarization factors. To use a Polder-Van Santen representation of effective
+        permittivity for small spheres, graintype=2 must be set in your local copy of MEMLS.
     :param atmosphere: describe the atmosphere. Only tbdown is used for the Tsky argument of memlsmain.
     :param memls_path: directory path to the memls Matlab scripts
-    :param memls_driver: matlab function to call to run memls. memlsmain.m is the default driver in the original MEMLS distribution for the passive case and amemlsmain.m for the active case.
-    :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of snowpack is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and the values are from 1 to the number of snowpacks.
+    :param memls_driver: matlab function to call to run memls. memlsmain.m is the default driver in the original MEMLS
+        distribution for the passive case and amemlsmain.m for the active case.
+    :param snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a list of
+        snowpack is provided. E.g. time, point, longitude, latitude. By default the dimension is called 'snowpack' and
+        the values are from 1 to the number of snowpacks.
 
 
     """
@@ -111,7 +119,9 @@ def run(
         print("Using MEMLS with substrate has not been tested. Provide feeback if it works (or not)")
         eps_1 = snowpack.layers[-1].permittivity(1, sensor.frequency)
         print(
-            "Warning: the permittivity of the ice in the last layer is used instead of the effective permittivity to compute the reflection of the subtrate. This is an approximation that needs to be changed. Please contact developer for any serious simulations with soil..."
+            "Warning: the permittivity of the ice in the last layer is used instead of the effective permittivity to "
+            "compute the reflection of the subtrate. This is an approximation that needs to be changed. Please contact "
+            "developer for any serious simulations with soil..."
         )
         m = snowpack.substrate.specular_reflection_matrix(sensor.frequency, eps_1, np.cos(sensor.theta), 2)
         ground_reflH = m.diagonal()[1::2]
@@ -124,7 +134,8 @@ def run(
 
         for ilay, lay in enumerate(reversed(snowpack.layers)):
             f.write(
-                f"{ilay + 1}, {lay.temperature:g}, {lay.liquid_water:g}, {lay.frac_volume * DENSITY_OF_ICE:g}, {lay.thickness * 100.0:g}, {lay.salinity:g}, {lay.microstructure.corr_length * 1000.0:g}\n"
+                f"{ilay + 1}, {lay.temperature:g}, {lay.liquid_water:g}, {lay.frac_volume * DENSITY_OF_ICE:g}, "
+                f"{lay.thickness * 100.0:g}, {lay.salinity:g}, {lay.microstructure.corr_length * 1000.0:g}\n"
             )
 
     # uncomment these lines if you need to check the input file content.
@@ -154,7 +165,8 @@ def run(
         coords = [("theta", sensor.theta_deg), ("polarization", ["V", "H"])]
 
     else:  # active
-        mean_slope = 1e3  # a high value to remove this contribution. But in the future should be taken from the substrate model, depending on the model...
+        mean_slope = 1e3  # a high value to remove this contribution. But in the future should be taken from the
+        # substrate model, depending on the model...
         res = [
             memlsfct(
                 sensor.frequency * 1e-9,
@@ -200,7 +212,8 @@ def memls_emmodel(sensor, layer, scattering_choice=ABORN, graintype=2):
 
     :param layer: describe the layer.
     :param sensor: describe the sensor configuration.
-    :param scattering_choice: MEMLS proposes several formulation to compute scattering_function. scattering_choice=ABORN (equals 12) is the defaut here and is recommended choice to compare with IBA.
+    :param scattering_choice: MEMLS proposes several formulation to compute scattering_function. scattering_choice=ABORN
+        (equals 12) is the defaut here and is recommended choice to compare with IBA.
     """
     res = octave.memlsscatt(
         sensor.frequency / 1e9,

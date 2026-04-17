@@ -34,8 +34,8 @@ def fresnel_coefficients_old(eps_1, eps_2, mu1):
 
 def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu, mu_medium="1", full_output=False):
     """Compute the reflection in two polarizations (H and V) for lossly media with the "classical Fresnel" based
-    on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
-    Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
+    on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between
+    absorbing media. Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
 
     The classical derivation does not respect energy conservation, especially the transmittivity.
     Don't use it. It is here for reference only.
@@ -99,8 +99,8 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu, mu_medium="1", fu
 
 def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu, mu_medium="1") -> tuple[complex, complex, float]:
     """Compute the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
-    on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
-    Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
+    on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between
+    absorbing media. Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
 
     The 'rigorous' derivation respects the energy conservation even for strongly loosly media.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
@@ -147,8 +147,8 @@ def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu, mu_medium="1") -> 
 @numba.jit(nopython=True, cache=True)
 def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium="1"):
     """Compute the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
-    on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
-    Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
+    on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between
+    absorbing media. Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
 
     The 'rigorous' derivation respects the energy conservation even for strongly loosly media.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
@@ -201,14 +201,15 @@ def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium
 
 def fresnel_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu, mu_medium="1"):
     """Compute the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
-    on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between absorbing media.
-    Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
+    on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between
+    absorbing media. Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
 
     The 'rigorous' derivation respects the energy conservation even for strongly loosly media.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
     reflection coefficient.
 
-    This function returns the FIELF and INTENSITY reflection and transmission coefficients and the cosine angle in the medium 2
+    This function returns the FIELF and INTENSITY reflection and transmission coefficients and the cosine angle in the
+    medium 2
 
     Args:
         eps_1: permittivity of medium 1.

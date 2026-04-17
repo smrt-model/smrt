@@ -62,25 +62,29 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         relative_tolerance: stop iterating when order[n] = relative_tolerance * order[0].
         n_max_stream: number of stream in the most refringent layer.
         m_max: number of mode (azimuth).
-        stream_mode: If set to "most_refringent" (the default) or "air", streams are calculated using the Gauss-Legendre polynomials and
-            then use Snell-law to prograpate the direction in the other layers. If set to "uniform_air", streams are calculated
-            uniformly in air and then according to Snells law.
-        phase_symmetrization: enforce phase function symmetry by replacing the phase function P by (P + P.T)/2 (simplified).
+        stream_mode: If set to "most_refringent" (the default) or "air", streams are calculated using the Gauss-Legendre
+            polynomials and then use Snell-law to prograpate the direction in the other layers. If set to "uniform_air",
+            streams are calculated uniformly in air and then according to Snells law.
+        phase_symmetrization: enforce phase function symmetry by replacing the phase function P by (P + P.T)/2
+            (simplified).
         error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
             If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
-            the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
-        process_coherent_layers: Adapt the layers thiner than the wavelegnth using the MEMLS method. The radiative transfer
-            theory is inadequate layers thiner than the wavelength and using DORT with thin layers is generally not recommended.
-            In some parcticular cases (such as ice lenses) where the thin layer is isolated between large layers, it is possible
-            to replace the thin layer by an equivalent reflective interface. This neglects scattering in the thin layer,
-            which is acceptable in most case, because the layer is thin. To use this option and more generally
-            to investigate ice lenses, it is recommended to read MEMLS documentation on this topic.
-        rayleigh_jeans_approximation: In passive mode, if True, use the Rayleigh-Jeans approximation for the Planck function.
-            This mode was used by default up to SMRT 1.5.1, but is not as precise as the full Planck function at higher
-            frequencies and low temperatures.
+            the error message is not accessible. This is only recommended for long simulations that sometimes produce an
+            error.
+        process_coherent_layers: Adapt the layers thiner than the wavelegnth using the MEMLS method. The radiative
+            transfer theory is inadequate layers thiner than the wavelength and using DORT with thin layers is generally
+            not recommended. In some parcticular cases (such as ice lenses) where the thin layer is isolated between
+            large layers, it is possible to replace the thin layer by an equivalent reflective interface. This neglects
+            scattering in the thin layer, which is acceptable in most case, because the layer is thin. To use this
+            option and more generally to investigate ice lenses, it is recommended to read MEMLS documentation on this
+            topic.
+        rayleigh_jeans_approximation: In passive mode, if True, use the Rayleigh-Jeans approximation for the Planck
+            function. This mode was used by default up to SMRT 1.5.1, but is not as precise as the full Planck function
+            at higher frequencies and low temperatures.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the
+    # caller (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "phi", "polarization"}
 
@@ -169,10 +173,10 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         # """Solve the radiative transfer equation using the adding doubling method
         # not to be called by the user
         #     """
-        #     :param incident_intensity: give either the intensity (array of size 2) at incident_angle (radar) or isotropic or a function
-        #             returning the intensity as a function of the cosine of the angle.
-        #     :param incident_angle: if None, the spectrum is considered isotropic, otherise the angle (in radian) given the direction of
-        #             the incident beam
+        #     :param incident_intensity: give either the intensity (array of size 2) at incident_angle (radar) or
+        #             isotropic or a function returning the intensity as a function of the cosine of the angle.
+        #     :param incident_angle: if None, the spectrum is considered isotropic, otherise the angle (in radian) given
+        #             the direction of the incident beam
         #     :param viewing_phi: viewing azimuth angle, the incident beam is at 0, so pi is the backscatter
         # """
 
@@ -321,9 +325,6 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
 
                 if max_intensity < tolerance:
                     break
-                # print(
-                #    f"Iteration {i}, max intensity={np.max(intensity_profile)}  mean intensity={np.mean(intensity_profile)}"
-                # )
             # substract the coherent contribution
             if self.sensor.mode == "A":
                 # for i in range(self.n_iteration_max):
@@ -474,7 +475,8 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         fullmu = np.concatenate((mu, -mu))
         phase = emmodel.ft_even_phase(mu_s=fullmu, mu_i=fullmu, npol=npol, m_max=self.m_max)
 
-        # apply the factor 2 * pi / 4 * pi. The former is the phi integration, the later is the SMRT convention of the phase function
+        # apply the factor 2 * pi / 4 * pi. The former is the phi integration, the later is the SMRT convention of the
+        # phase function
 
         full_weight = np.tile(np.repeat(weight, npol), 2)
 
@@ -544,7 +546,8 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
 
         ein_string = "pq, kq -> kp" if self.sensor.mode == "P" else "pq, kqi -> kpi"
 
-        # power_extinction = [extinction[l][np.newaxis, :, :]**np.arange(i_subinterface[l + 1] - i_subinterface[l], 0, -1, dtype=np.float64)[:, np.newaxis, np.newaxis] for l in range(len(extinction))]
+        # power_extinction = [extinction[l][np.newaxis, :, :]**np.arange(i_subinterface[l + 1] - i_subinterface[l], 0,
+        # -1, dtype=np.float64)[:, np.newaxis, np.newaxis] for l in range(len(extinction))]
 
         for l in range(n_layer):
             n = npol * len(mu[l])

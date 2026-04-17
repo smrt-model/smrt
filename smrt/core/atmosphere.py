@@ -54,8 +54,8 @@ class AtmosphereBase(object):
 
             case _:
                 raise SMRTError(
-                    "Attempt to add an incorrect object to an atmopshere. Only adding an atmosphere and a snowpack (in that order)"
-                    " is a valid operation."
+                    "Attempt to add an incorrect object to an atmopshere. Only adding an atmosphere and a snowpack"
+                    " (in that order) is a valid operation."
                 )
 
     def __iadd__(self, other):
@@ -142,7 +142,8 @@ def make_atmosphere_results(frequency, tb_down, tb_up, transmittance, coords=Non
         tb_up: Upwelling brightness temperature in K.
         transmittance: Transmittance of the atmosphere (between 0 and 1).
         coords (dict, optional): Coordinates for the output AtmosphereResult. Defaults to None.
-        rayleigh_jeans_approximation (bool, optional): Whether to use the Rayleigh-Jeans approximation. Defaults to False.
+        rayleigh_jeans_approximation (bool, optional): Whether to use the Rayleigh-Jeans approximation. Defaults to
+            False.
     """
     if rayleigh_jeans_approximation:
         intensity_down = tb_down

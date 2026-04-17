@@ -1,6 +1,7 @@
 """Provide the coherent flat pseudo-interface, as in MEMLS.
 
-This interface is obtained by collapsing one layer and two interfaces into a single interface. Scattering in the layer is neglected.
+This interface is obtained by collapsing one layer and two interfaces into a single interface. Scattering in the layer
+is neglected.
 """
 
 import numpy as np
@@ -69,8 +70,8 @@ class CoherentFlat(object):
     def specular_reflection_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """Compute the reflection coefficients.
 
-        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
-        beam is transmitted.
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is
+        where the beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.
@@ -103,8 +104,8 @@ class CoherentFlat(object):
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """Compute the transmission coefficients.
 
-        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is where the
-        beam is transmitted.
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is
+        where the beam is transmitted.
 
         Args:
             frequency: Frequency of the incident wave.

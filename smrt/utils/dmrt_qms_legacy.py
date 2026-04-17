@@ -4,10 +4,12 @@
 
 To use this module, extra installations are needed:
 
-    * Gets DMRT_QMS from http://web.eecs.umich.edu/~leutsang/Available%20Resources.html and extracts the model somewhere.
-    * Installs the oct2py module using :code:`pip install oct2py` or :code:`easy_install install oct2py`.
-    * Installs Octave version 3.6 or above.
-    * For convenience, sets the DMRT_QMS_DIR environment variable to point to DMRT-QMS path. This path can also be programmatically set with and use :py:func:`set_dmrt_qms_path` function.
+    - Gets DMRT_QMS from http://web.eecs.umich.edu/~leutsang/Available%20Resources.html and extracts the model
+      somewhere.
+    - Installs the oct2py module using :code:`pip install oct2py` or :code:`easy_install install oct2py`.
+    - Installs Octave version 3.6 or above.
+    - For convenience, sets the DMRT_QMS_DIR environment variable to point to DMRT-QMS path. This path can also be
+      programmatically set with and use :py:func:`set_dmrt_qms_path` function.
 
 In case of problem, checks the instructions given in http://blink1073.github.io/oct2py/source/installation.html.
 
@@ -55,8 +57,8 @@ except KeyError:
 
 
 def run(sensor, snowpack, dmrt_qms_path=None, snowpack_dimension=None, full_output=False):
-    """Calls DMRT-QMS for the snowpack and sensor configuration given as argument. The :py:mod:`~smrt.microstructure_model.sticky_hard_spheres` microstructure model
-    must be used.
+    """Calls DMRT-QMS for the snowpack and sensor configuration given as argument.
+    The :py:mod:`~smrt.microstructure_model.sticky_hard_spheres` microstructure model must be used.
 
     Args:
         sensor: Sensor configuration.

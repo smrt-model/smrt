@@ -4,14 +4,15 @@ A model in SMRT is composed of the electromagnetic scattering theory (:py:mod:`s
 the radiative transfer solver (:py:mod:`smrt.rtsolver`).
 
 The :py:mod:`smrt.emmodel` computes the scattering and absorption coefficients and the phase function of a layer.
-It is applied to each layer, and it is even possible to choose different emmodels for each layer (e.g., for a complex medium made of different materials: snow, soil, water, atmosphere, ...).
-The :py:mod:`smrt.rtsolver` propagates the incident or emitted energy through the layers, up to the surface, and eventually through the atmosphere.
+It is applied to each layer, and it is even possible to choose different emmodels for each layer (e.g., for a complex
+medium made of different materials: snow, soil, water, atmosphere, ...). The :py:mod:`smrt.rtsolver` propagates the
+incident or emitted energy through the layers, up to the surface, and eventually through the atmosphere.
 
 To build a model, use the :py:meth:`make_model` function with the type of emmodel and type of rtsolver as arguments.
-Then call the :py:meth:`Model.run` method of the model instance by specifying the sensor (:py:class:`smrt.core.sensor.Sensor`),
-snowpack (:py:class:`smrt.core.snowpack.Snowpack`) and optionally atmosphere (see :py:mod:`smrt.atmosphere`).
-The results are returned as a :py:class:`~smrt.core.result.Result` which can then been interrogated to retrieve brightness temperature,
-backscattering coefficient, and other information.
+Then call the :py:meth:`Model.run` method of the model instance by specifying the sensor
+(:py:class:`smrt.core.sensor.Sensor`), snowpack (:py:class:`smrt.core.snowpack.Snowpack`) and optionally atmosphere
+(see :py:mod:`smrt.atmosphere`). The results are returned as a :py:class:`~smrt.core.result.Result` which can then been
+interrogated to retrieve brightness temperature, backscattering coefficient, and other information.
 
 Example::
 
@@ -21,15 +22,15 @@ Example::
 
     print(result.TbV())
 
-The model can be run on a list of snowpacks or even more conveniently on a `pandas.Series` or `pandas.DataFrame` including snowpacks.
-The first advantage is that by setting parallel_computation=True, the :py:meth:`Model.run` method performs the simulation in parallel
-on all the available cores of your machine and even possibly remotely on a high performance cluster using dask.
-The second advantage is that the returned :py:class:`~smrt.core.result.Result` object contains all the simulations
-and provide an easier way to plot the results or compute statistics.
+The model can be run on a list of snowpacks or even more conveniently on a `pandas.Series` or `pandas.DataFrame`
+including snowpacks. The first advantage is that by setting parallel_computation=True, the :py:meth:`Model.run` method
+performs the simulation in parallel on all the available cores of your machine and even possibly remotely on a high
+performance cluster using dask. The second advantage is that the returned :py:class:`~smrt.core.result.Result` object
+contains all the simulations and provide an easier way to plot the results or compute statistics.
 
-If a list of snowpacks is provided, it is recommended to also set the snowpack_dimension argument. It takes the form of a tuple
-(list of snowpack_dimension values, dimension name). The name and values are used to define the coordinates in the
-:py:class:`~smrt.core.result.Result` object. This is useful with timeseries or sensitivity analysis for instance.
+If a list of snowpacks is provided, it is recommended to also set the snowpack_dimension argument. It takes the form of
+a tuple (list of snowpack_dimension values, dimension name). The name and values are used to define the coordinates in
+the :py:class:`~smrt.core.result.Result` object. This is useful with timeseries or sensitivity analysis for instance.
 
 Example::
 
@@ -85,7 +86,8 @@ The `res` variable is a `pandas.DataFrame` equal to df  +  the results at all se
 
 Most rtsolvers and some emmodels take arguments (usually optional but still useful) that can be specified in two ways in
 make_model. Either using the `rtsolver_options` and `emmodel_options` arguments of that function or using the functions
-:py:func:`make_rtsolver` and :py:func:`make_emmodel` to build a new class where the prescribed options are applied by default.
+:py:func:`make_rtsolver` and :py:func:`make_emmodel` to build a new class where the prescribed options are applied by
+default.
 
 Examples of usage::
 
@@ -223,8 +225,8 @@ def get_emmodel(emmodel):
 
 
 def make_emmodel_instance(emmodel, sensor, layer, **emmodel_options):
-    """Create a new emmodel instance based on the emmodel class or string. This function used to be called `make_emmodel`
-    but has been renamed from SMRT v1.4 and will soon be depreciated. It is recommended to use instead::
+    """Create a new emmodel instance based on the emmodel class or string. This function used to be called
+    `make_emmodel` but has been renamed from SMRT v1.4 and will soon be depreciated. It is recommended to use instead::
 
         em = make_emmodel(emmodel)(sensor, layer, **emmodel_options)
 
@@ -330,28 +332,32 @@ class Model(object):
                 Snowpack objects (Default value = 'snowpack')
             progressbar: if True, display a progress bar during
                 multi-snowpacks computation (Default value = False)
-            parallel_computation: if True (default), use the joblib library to run the simulations of many snowpacks in parallel.
-                Otherwise, the simulations are run sequentially, one after one. See 'runner' for a more advanced control on
-                parallel computations. Note for users seeking performances: numpy and scipy usually also perform low- level
-                parallel computations that may (inefficiently) interact with the high-level parallelism activated by
-                parallel_computation. For this reason joblib and other parallel runners try to desactivate numpy and scipy
-                low-level parallelism (see :py:func:`~smrt.core.lib.set_max_numerical_threads`) to maximize performances.
-                Conversely it means that when parallel_computation is False, the simulations are run sequentially, but numpy and
-                scipy parallelism is NOT disabled. If you really want to use a single core for the simulations, you must first
+            parallel_computation: if True (default), use the joblib library to run the simulations of many snowpacks in
+                parallel. Otherwise, the simulations are run sequentially, one after one. See 'runner' for a more
+                advanced control on parallel computations. Note for users seeking performances: numpy and scipy usually
+                also perform low- level parallel computations that may (inefficiently) interact with the high-level
+                parallelism activated by parallel_computation. For this reason joblib and other parallel runners try to
+                desactivate numpy and scipy low-level parallelism
+                (see :py:func:`~smrt.core.lib.set_max_numerical_threads`) to maximize performances. Conversely it means
+                that when parallel_computation is False, the simulations are run sequentially, but numpy and scipy
+                parallelism is NOT disabled. If you really want to use a single core for the simulations, you must first
                 call :py:func:`~smrt.core.lib.set_max_numerical_threads` with 1 as argument and then call Model.run with
                 parallel_computation=False. (Default value = False)
             runner: a 'runner' is a function (or more likely a class with a __call__ method) that takes a function and a
                 list/generator of simulations, executes the function on each simulation and returns a list of results.
                 'parallel_computation' allows to select between two default (basic) runners (sequential and joblib). Use
-                'runner' for more advanced parallel distributed computations. To develop a costum runner, see the implementation
-                of :py:class:`JoblibParallelRunner` for instance.
+                'runner' for more advanced parallel distributed computations. To develop a costum runner, see the
+                implementation of :py:class:`JoblibParallelRunner` for instance.
 
         Returns:
             result of the calculation(s) as a :py:class:`Results` instance
         """
         if atmosphere is not None:
-            raise DeprecationWarning("""The atmosphere argument of the run method is depreciated.
-Setting the 'atmosphere' through make_snowpack (and similar functions) or using medium = atmosphere + snowpack are now the recommended ways.""")
+            raise DeprecationWarning(
+                "The atmosphere argument of the run method is depreciated."
+                "Setting the 'atmosphere' through make_snowpack (and similar functions) or using medium = atmosphere "
+                "+ snowpack are now the recommended ways."
+            )
 
         if not (
             isinstance(sensor, SensorBase)
@@ -369,7 +375,8 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
             else:
                 runner = SequentialRunner(progressbar=progressbar)
 
-        #  run all the simulations (with atmosphere as long as it is not depreciated), the results is a flat list of results
+        #  run all the simulations (with atmosphere as long as it is not depreciated), the results is a flat list of
+        # results
         results = runner(self.run_single_simulation, ((simul, atmosphere) for simul in simulations))
         results = list(results)  # consume the generator if it is one
 
@@ -416,7 +423,8 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
                 snowpack = snowpack[snowpack_column]
             except KeyError:
                 raise SMRTError(
-                    f"the snowpack DataFrame has no column named '{snowpack_column}'. Check the snowpack_column argument."
+                    f"the snowpack DataFrame has no column named '{snowpack_column}'. "
+                    "Check the snowpack_column argument."
                 )
             assert isinstance(snowpack, pd.Series)
 
@@ -514,14 +522,16 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
             # check that layers do not define an emmodel attribute
             if not all(layer.emmodel is None for layer in snowpack.layers):
                 warnings.warn(
-                    "Some layers have an emmodel attribute that will be ignored since a list of emmodels is provided to the Model."
+                    "Some layers have an emmodel attribute that will be ignored since a list of emmodels is provided"
+                    " to the Model."
                 )
         elif isinstance(self.emmodel, Mapping):
             emmodel_list = (self.emmodel[layer.medium] for layer in snowpack.layers)
             # check that layers do not define an emmodel attribute
             if not all(layer.emmodel is None for layer in snowpack.layers):
                 warnings.warn(
-                    "Some layers have an emmodel attribute that will be ignored since a dict of emmodels is provided to the Model."
+                    "Some layers have an emmodel attribute that will be ignored since a dict of emmodels is provided to"
+                    " the Model."
                 )
         else:
             # the same model for all layers except if layer defines an emmodel attribute
@@ -569,8 +579,10 @@ Setting the 'atmosphere' through make_snowpack (and similar functions) or using 
                 if not getattr(self.rtsolver, "_reentrant", False):
                     raise SMRTError("This solver can not be used with an instance")
                 # no use the instance as it is.
-                # this instances has possible memory of the last solve... and this is INCOMPATIBLE with // computation for most solver)
-                # In the future this feature should be either removed or at least restricted when the // computation will be activate.
+                # this instances has possible memory of the last solve... and this is INCOMPATIBLE with // computation
+                # for most solver).
+                # In the future this feature should be either removed or at least restricted when the // computation
+                # will be activate.
                 rtsolver = self.rtsolver
 
             # run the rtsolver

@@ -11,8 +11,9 @@ from .water import water_permittivity_maetzler87
 
 @layer_properties("temperature", "liquid_water")
 def wetice_permittivity_bohren83(frequency, temperature, liquid_water):
-    """Calculate the dielectric constant of wet particules of ice using Maxwell Garnet equation using water as the background and
-    ice as the inclusions. As reported by Bohren and Huffman 1983 according to Ya Qi Jin (1993), eq 8-69, p282.
+    """Calculate the dielectric constant of wet particules of ice using Maxwell Garnet equation using water as the
+    background and ice as the inclusions. As reported by Bohren and Huffman 1983 according to Ya Qi Jin (1993), eq 8-69,
+    p282.
 
     Note:
         See also Chopra and Reddy (1986).
@@ -26,10 +27,11 @@ def wetice_permittivity_bohren83(frequency, temperature, liquid_water):
         Complex permittivity of pure ice.
 
     References:
-         Bohren, C. F., Huffman, D. R. (1983). Absorption and scattering of light by small particles. New York, Wiley-Interscience,
-         1983, 541 p.
+         Bohren, C. F., Huffman, D. R. (1983). Absorption and scattering of light by small particles. New York,
+         Wiley-Interscience, 1983, 541 p.
 
-         Chopra, K.L., Reddy, G.B. Optically selective coatings. Pramana - J Phys 27, 193–217 (1986). https://doi.org/10.1007/BF02846338
+         Chopra, K.L., Reddy, G.B. Optically selective coatings. Pramana - J Phys 27, 193–217 (1986).
+         https://doi.org/10.1007/BF02846338
 
          Jin, Y.Q., 1993. Electromagnetic scattering modelling for quantitative remote sensing. World Scientific.
     """

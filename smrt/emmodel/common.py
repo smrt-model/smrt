@@ -72,15 +72,17 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples):
              [Puvp Puhp Puup]
 
     Arg:
-        phase_function: must be a function taking dphi as input. It is assumed that phi is symmetrical (it is in cos(phi))
+        phase_function: must be a function taking dphi as input. It is assumed that phi is symmetrical (it is in
+            cos(phi))
         m_max: maximum Fourier decomposition mode needed
         nsamples: number of samples to use for the Fourier transform
 
     """
     assert nsamples > 2 * m_max
 
-    # dphi must be evenly spaced from 0 to 2 * np.pi (but not including period), but we can use the symmetry of the phase function
-    # to reduce the computation to 0 to pi (including 0 and pi) and mirroring for pi to 2*pi (excluding both)
+    # dphi must be evenly spaced from 0 to 2 * np.pi (but not including period), but we can use the symmetry of the
+    # phase function to reduce the computation to 0 to pi (including 0 and pi) and mirroring for pi to 2*pi
+    # (excluding both)
 
     dphi = np.linspace(0, np.pi, int(nsamples // 2 + 1))
 
@@ -104,8 +106,6 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples):
     # compute the Fourier Transform of the phase function along phi axis (axis=2)
     ft_p = np.fft.fft(p, axis=2)
 
-    # assert np.allclose(ft_p[:, :, 0, :, :], np.sum(p, axis=2)), f"Strange ... {ft_p[:, :, 0, :, :]} {np.sum(p, axis=2)}"
-
     ft_even_p = smrt_matrix.empty((npol, npol, m_max + 1, p.shape[-2], p.shape[-1]))
 
     # m=0 mode
@@ -122,7 +122,8 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples):
 
         # For the even matrix:
         # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
-        # The sign for 0:2, 2 and 2, 0:2 have been double check with Rayleigh and Mazter 2006 formulation of the Rayeligh Matrix (p111-112)
+        # The sign for 0:2, 2 and 2, 0:2 have been double check with Rayleigh and Mazter 2006 formulation of the
+        # Rayeligh Matrix (p111-112)
         ft_even_p[0:2, 2, 1:] = ft_p[0:2, 2, 1 : m_max + 1].imag * delta
         ft_even_p[2, 0:2, 1:] = -ft_p[2, 0:2, 1 : m_max + 1].imag * delta
         ft_even_p[2, 2, 1:] = ft_p[2, 2, 1 : m_max + 1].real * delta
@@ -153,8 +154,8 @@ def extinction_matrix(sigma_V, sigma_H=None, npol=2, mu=None):
 
 def rayleigh_scattering_matrix_and_angle_maetzler06(mu_s, mu_i, dphi, npol=2):
     """Compute the Rayleigh matrix and half scattering angle. Based on Mätzler 2006 book p111.
-    This version is relatively slow because it uses phase matrix rotations which is unnecessarily complex for the Rayleigh phase matrix
-    but would be of interest for other phase matrices.
+    This version is relatively slow because it uses phase matrix rotations which is unnecessarily complex for the
+    Rayleigh phase matrix but would be of interest for other phase matrices.
 
     """
     # cos and sin of scattering and incident angles in the main frame
@@ -260,8 +261,8 @@ rayleigh_scattering_matrix_and_angle = rayleigh_scattering_matrix_and_angle_tsan
 
 
 class AdjustableEffectivePermittivityMixin(object):
-    """Mixin that allows an EM model to have the effective permittivity model defined by the user instead of by the theory of the EM Model.
-    The EM model must declare a default effective permittivity model.
+    """Mixin that allows an EM model to have the effective permittivity model defined by the user instead of by the
+    theory of the EM Model. The EM model must declare a default effective permittivity model.
 
     """
 
@@ -370,7 +371,8 @@ class GenericFTPhaseMixin(object):
         6111-6117. Here, calculation of the phase matrix is based on the phase matrix in
         the 1-2 frame, which is then rotated according to the incident and scattering angles,
         as described in e.g. *Thermal Microwave Radiation: Applications for Remote Sensing, Mätzler (2006)*.
-        Fourier decomposition is then performed to separate the azimuthal dependency from the incidence angle dependency.
+        Fourier decomposition is then performed to separate the azimuthal dependency from the incidence angle
+        dependency.
 
         :param mu_s: 1-D array of cosine of viewing radiation stream angles (set by solver)
         :param mu_i: 1-D array of cosine of incident radiation stream angles (set by solver)

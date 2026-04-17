@@ -2,7 +2,8 @@
 
 """Compute scattering from Improved Born Approximation theory. This model allows for different
 microstructural models provided that the Fourier transform of the correlation function
-may be performed. All properties relate to a single layer. The absorption is calculated with the original formula in Mätzler 1998
+may be performed. All properties relate to a single layer. The absorption is calculated with the original formula in
+Mätzler 1998.
 
 """
 
