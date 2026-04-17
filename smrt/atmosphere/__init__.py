@@ -1,4 +1,5 @@
-"""Contains different options to represent the atmosphere, that is the upper boundary conditions of the radiation transfer equation.
+"""Contains different options to represent the atmosphere, that is the upper boundary conditions of the radiation
+transfer equation.
 
 Examples::
 

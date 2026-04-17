@@ -11,7 +11,8 @@ user_plugin_package = []
 
 
 def register_package(pkg):
-    """Register an external package having the same structure as the smrt package, to make available the modules as plugins.
+    """Register an external package having the same structure as the smrt package, to make available the modules as
+    plugins.
 
     This is useful for development of independent packages.
 
@@ -28,7 +29,8 @@ def register_package(pkg):
         importlib.import_module(pkg)
     except ImportError as e:
         raise SMRTError(
-            f"The package must be in the the sys.path list and must contain a __init__.py file (even empty). The import error is {str(e)}"
+            f"The package must be in the the sys.path list and must contain a __init__.py file (even empty)."
+            f" The import error is {str(e)}"
         )
 
     user_plugin_package.insert(0, pkg)

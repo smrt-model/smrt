@@ -19,7 +19,8 @@ salinity = (
     np.linspace(2.0, 10.0, l) * PSU
 )  # salinity profile ranging from salinity=2 at the top to salinity=10 at the bottom of the ice
 
-# create a multi-year sea ice column with assumption of spherical brine inclusions (brine_inclusion_shape="spheres"), and 10% porosity:
+# create a multi-year sea ice column with assumption of spherical brine inclusions (brine_inclusion_shape="spheres"),
+#  and 10% porosity:
 ice_type = "multiyear"  # first-year or multi-year sea ice
 porosity = 0.08  # ice porosity in fractions, [0..1]
 
@@ -28,19 +29,25 @@ ice_column = make_ice_column(
     thickness=thickness,
     temperature=temperature,
     microstructure_model="exponential",
-    brine_inclusion_shape="spheres",  # brine_inclusion_shape can be "spheres", "random_needles" or "mix_spheres_needles"
-    salinity=salinity,  # either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume fraction is calculated in the model; if none is given, ice is treated as fresh water ice
-    porosity=porosity,  # either density or 'porosity' should be set for sea ice. If porosity is given, density is calculated in the model. If none is given, ice is treated as having a porosity of 0% (no air inclusions)
+    # brine_inclusion_shape can be "spheres", "random_needles" or "mix_spheres_needles"
+    brine_inclusion_shape="spheres",
+    # either 'salinity' or 'brine_volume_fraction' should be given for sea ice; if salinity is given, brine volume
+    # fraction is calculated in the model; if none is given, ice is treated as fresh water ice
+    salinity=salinity,
+    # either density or 'porosity' should be set for sea ice. If porosity is given, density is calculated in the model.
+    # If none is given, ice is treated as having a porosity of 0% (no air inclusions)
+    porosity=porosity,
     corr_length=p_ex,
     add_water_substrate="ocean",  # see comment below
 )
 
-# add_water_substrate: adds an semi-infinite layer of water below the ice column. Possible arguments are True (default, looks for salinity or
-# brine volume fraction input to determine if a saline or fresh water layer is added), False (no water layer is added), 'ocean' (adds saline
-# water), 'fresh' (adds fresh water layer).
+# add_water_substrate: adds an semi-infinite layer of water below the ice column. Possible arguments are True (default,
+# looks for salinity or brine volume fraction input to determine if a saline or fresh water layer is added), False
+# (no water layer is added), 'ocean' (adds saline water), 'fresh' (adds fresh water layer).
 
 # Optional arguments for function make_ice_column() are 'water_temperature' (default = -1.8degC),
-#'water_salinity' (default = 32.) and 'water_depth' (default = 10m, i.e. infinitely thick for microwave radiation) of the water layer.
+#'water_salinity' (default = 32.) and 'water_depth' (default = 10m, i.e. infinitely thick for microwave radiation) of
+# the water layer.
 
 ################################################################################################
 
