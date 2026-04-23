@@ -800,7 +800,9 @@ def concat_results(result_list, coord):
         assert isinstance(coord, tuple)
         # different channel maps, it means we have different sensors. Merge de sensor maps.
         channel_map = {
-            ch: dict(**r.channel_map[ch], dim_name=dv) for r, dv in zip(result_list, dim_value) for ch in r.channel_map
+            ch: dict(**r.channel_map[ch], dim_name=dv)
+            for r, dv in zip(result_list, dim_value, strict=False)
+            for ch in r.channel_map
         }
     else:
         # all the channel maps are the same

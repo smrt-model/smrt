@@ -103,7 +103,7 @@ def channel_map_for_radar(frequency=None, polarization="HV", order="fp"):
         channel_name(freq_str, pola_inc, pola_refl): dict(
             frequency=freq, polarization_inc=pola_inc, polarization=pola_refl
         )
-        for freq_str, freq in zip(frequency_str, frequency)
+        for freq_str, freq in zip(frequency_str, frequency, strict=False)
         for pola_inc in polarization
         for pola_refl in polarization
     }

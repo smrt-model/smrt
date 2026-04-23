@@ -92,7 +92,7 @@ def test_equivalence_porosity_density(setup_seaice):
     )
 
     # Same, but giving the density instead:
-    density = [bulk_ice_density(temp, salt, porosity) for temp, salt in zip(temperature, salinity)]
+    density = [bulk_ice_density(temp, salt, porosity) for temp, salt in zip(temperature, salinity, strict=False)]
 
     ice_column2 = make_ice_column(
         ice_type,

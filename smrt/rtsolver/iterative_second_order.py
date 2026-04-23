@@ -463,7 +463,7 @@ class IterativeSecondOrder(RTSolverBase):
         P4 = phase_mu_int_mu[:, :, :, 0:n_stream, 0:n_mu_i]  # P(-mu_int, -mu_i)
 
         sum_a, sum_b = 0, 0
-        for mu, w, i in zip(mu_int, weight, range(n_stream)):
+        for mu, w, i in zip(mu_int, weight, range(n_stream), strict=False):
             # bound 1 of the integral
             # integral of mu (G.Picard thesis p.72)
 
@@ -522,7 +522,7 @@ class IterativeSecondOrder(RTSolverBase):
 
         sum_e = 0
         # sum_f = 0
-        for mu, w, i in zip(mu_int, weight, range(n_stream)):
+        for mu, w, i in zip(mu_int, weight, range(n_stream), strict=False):
             # bound 1 of the integral
             # integral of mu (G.Picard thesis p.72)
 
@@ -594,7 +594,7 @@ class IterativeSecondOrder(RTSolverBase):
 
         sum_c, sum_d = 0, 0
         for mu_ln, w_ln, i_ln, mu_lm, w_lm, i_lm in zip(
-            mu_int_ln, weight_ln, range(n_stream_ln), mu_int_lm, weight_lm, range(n_stream_lm)
+            mu_int_ln, weight_ln, range(n_stream_ln), mu_int_lm, weight_lm, range(n_stream_lm), strict=False
         ):
             # bound 1 of the integral
             # integral of mu (G.Picard thesis p.72)

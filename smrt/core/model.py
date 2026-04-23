@@ -492,7 +492,9 @@ class Model(object):
                 next(iter(sensor))
             )  # take the config of the first, assume all are the same.
             # we should check that all the configurations are the same...
-            simulations = (prepare_recursive(se, sensor_configurations, sp) for se, sp in zip(sensor, snowpack))
+            simulations = (
+                prepare_recursive(se, sensor_configurations, sp) for se, sp in zip(sensor, snowpack, strict=False)
+            )
             simulations = list(itertools.chain(*simulations))  # flatten
         else:
             # normal case
@@ -555,7 +557,9 @@ class Model(object):
         # take from the arguments unless it is defined in the layer
         emmodel_instances = [
             make_emmodel_instance(emmodel, sensor, layer, **emmodel_options)
-            for emmodel, emmodel_options, layer in zip(emmodel_list, emmodel_options_list, snowpack.layers)
+            for emmodel, emmodel_options, layer in zip(
+                emmodel_list, emmodel_options_list, snowpack.layers, strict=False
+            )
         ]
 
         return emmodel_instances
