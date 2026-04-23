@@ -106,7 +106,7 @@ def class_specializer(domain: str, cls: Union[str, Type], **options) -> Type:
     def __init__(self, *args, **other_options):
         cls.__init__(self, *args, **options, **other_options)
 
-    old_doc = getattr(cls, "__doc__")
+    old_doc = cls.__doc__
     if old_doc is None:
         old_doc = "No original documentation."
 

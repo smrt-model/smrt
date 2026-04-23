@@ -159,7 +159,7 @@ def run(
                 float(Tgnd),
                 scattering_choice,
             )
-            for thetad, reflH, reflV in zip(sensor.theta_deg, ground_reflH, ground_reflV)
+            for thetad, reflH, reflV in zip(sensor.theta_deg, ground_reflH, ground_reflV, strict=False)
         ]
         res = np.vstack(res)
         coords = [("theta", sensor.theta_deg), ("polarization", ["V", "H"])]
@@ -182,7 +182,7 @@ def run(
                 mean_slope,
                 0,
             )["sigma0"][0, :]
-            for thetad, reflH, reflV in zip(sensor.theta_inc_deg, ground_reflH, ground_reflV)
+            for thetad, reflH, reflV in zip(sensor.theta_inc_deg, ground_reflH, ground_reflV, strict=False)
         ]
 
         coords = [

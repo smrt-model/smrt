@@ -57,7 +57,7 @@ def compute_matrix_slab(
 
     M = None
     tau_snowpack = 0.0
-    for eps_2, temperature_, kd_ in zip(permittivity, temperature, kd):
+    for eps_2, temperature_, kd_ in zip(permittivity, temperature, kd, strict=False):
         L, (mu2, tau_layer) = forward_matrix_fulloutput(
             eps_1,
             eps_2,

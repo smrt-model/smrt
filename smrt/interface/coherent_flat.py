@@ -15,7 +15,7 @@ from smrt.core.lib import abs2, smrt_matrix
 def process_coherent_layers(snowpack, emmodel_list, effective_permittivity, sensor):
     wave_phase = [
         sensor.wavenumber * np.sqrt(eps_eff).real * lay.thickness
-        for lay, eps_eff in zip(snowpack.layers, effective_permittivity)
+        for lay, eps_eff in zip(snowpack.layers, effective_permittivity, strict=False)
     ]
 
     coherent_layers = np.array(wave_phase) < 3 * np.pi / 4

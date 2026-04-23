@@ -110,7 +110,7 @@ def polder_van_santen(
         return sum(
             (
                 mixing * polder_van_santen(frac_volume, e0=e0, eps=eps, inclusion_shape=shape)
-                for shape, mixing in zip(inclusion_shape, mixing_ratio)
+                for shape, mixing in zip(inclusion_shape, mixing_ratio, strict=False)
             )
         )
 

@@ -110,7 +110,7 @@ def validity_diagram(
     correlation_length += [getattr(i, "corr_length", np.nan) for i in interface]
     rms_height += [getattr(i, "roughness_rms", np.nan) for i in interface]
 
-    [print(f"rougness pair (rms, corr_length) plotted : {rms, lc}") for rms, lc in zip(rms_height, correlation_length)]
+    [print(f"rougness pair (rms, corr_length) plotted : {rms, lc}") for rms, lc in zip(rms_height, correlation_length, strict=False)]
 
     if sensor is not None:
         frequency = sensor.frequency

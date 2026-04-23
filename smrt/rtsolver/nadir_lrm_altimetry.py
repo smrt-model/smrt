@@ -401,7 +401,7 @@ class NadirLRMAltimetry(object):
         # 'interface' attenuation due to transmission. We neglect mu_i.
         transmission = [
             i.coherent_transmission_matrix(self.sensor.frequency, eps_1, eps_2, mu1=1.0, npol=2)[0, 0]
-            for i, eps_1, eps_2 in zip(self.snowpack.interfaces, np.insert(eps[:-1], 0, 1), eps)
+            for i, eps_1, eps_2 in zip(self.snowpack.interfaces, np.insert(eps[:-1], 0, 1), eps, strict=False)
         ]
         cum_transmission = np.cumprod(np.array(transmission) ** 2, axis=0)  # two-way transmission
 
@@ -436,7 +436,7 @@ class NadirLRMAltimetry(object):
                 if (self.compute_coherent_reflection) and hasattr(i, "roughness_rms")
                 else 0
             )
-            for i, eps_1, eps_2, mu in zip(self.snowpack.interfaces, eps_upper_interface, eps, mu_upper_interface)
+            for i, eps_1, eps_2, mu in zip(self.snowpack.interfaces, eps_upper_interface, eps, mu_upper_interface, strict=False)
         ]
 
         # note that the division by eps_1 takes into account the divergence of the upwelling stream due to refraction
