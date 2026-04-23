@@ -275,20 +275,20 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
         # create eigenvalue solvers
         eigenvalue_solver = [
             EigenValueSolver(
-                ke=self.emmodels[l].ke,
-                ks=self.emmodels[l].ks,
-                ft_even_phase_function=self.emmodels[l].ft_even_phase,
-                mu=self.streams.mu[l],
-                weight=self.streams.weight[l],
+                ke=self.emmodels[layer].ke,
+                ks=self.emmodels[layer].ks,
+                ft_even_phase_function=self.emmodels[layer].ft_even_phase,
+                mu=self.streams.mu[layer],
+                weight=self.streams.weight[layer],
                 m_max=m_max,
                 method=self.diagonalization_method,
                 normalization=self.phase_normalization
                 if self.phase_normalization != "auto"
-                else getattr(self.emmodels[l], "_respect_reciprocity_principle", True),
+                else getattr(self.emmodels[layer], "_respect_reciprocity_principle", True),
                 symmetrization=self.phase_symmetrization,
                 cache=self.diagonalization_cache,
             )
-            for l in range(len(self.emmodels))
+            for layer in range(len(self.emmodels))
         ]
 
         #
@@ -455,15 +455,15 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
         # used to estimate if the medium is deep enough
         optical_depth = 0
 
-        for l in range(0, nlayer):
-            nsl = streams.n[l]  # number of streams in layer l
+        for layer in range(0, nlayer):
+            nsl = streams.n[layer]  # number of streams in layer l
             nsl_npol = nsl * npol  # number of streams * npol in layer l
             nsl2_npol = 2 * nsl_npol  # number of eigenvalues in layer l (should be 2 * npol*n_stream)
             nslm1_npol = (
-                (streams.n[l - 1] * npol) if l > 0 else (streams.n_air * npol)
+                (streams.n[layer - 1] * npol) if layer > 0 else (streams.n_air * npol)
             )  # number of streams * npol in the layer l - 1 (lm1)
             # number of streams * npol in the layer l + 1 (lp1)
-            nslp1_npol = (streams.n[l + 1] * npol) if l < nlayer - 1 else None
+            nslp1_npol = (streams.n[layer + 1] * npol) if layer < nlayer - 1 else None
 
             # solve the eigenvalue problem for layer l
 
@@ -473,18 +473,18 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             if self.error_handling == "nan":
                 try:
                     # run in a try to catch the exception
-                    beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
+                    beta, Eu, Ed = eigenvalue_solver[layer].solve(m, compute_coherent_only)
                 except SMRTError:
                     return _reshape_output(np.full_like(intensity_down_m, np.nan).squeeze(), npol)
             else:
-                beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
+                beta, Eu, Ed = eigenvalue_solver[layer].solve(m, compute_coherent_only)
             assert Eu.shape[0] == npol * nsl
 
             # deduce the transmittance through the layers
             # positive beta, reference at the bottom
-            transt = smrt_diag(np.exp(-np.maximum(beta, 0) * self.snowpack.layers[l].thickness))
+            transt = smrt_diag(np.exp(-np.maximum(beta, 0) * self.snowpack.layers[layer].thickness))
             # negative beta, reference at the top
-            transb = smrt_diag(np.exp(np.minimum(beta, 0) * self.snowpack.layers[l].thickness))
+            transb = smrt_diag(np.exp(np.minimum(beta, 0) * self.snowpack.layers[layer].thickness))
 
             # where we have chosen
             # beta>0  : z(0)(l) = z(l)    # reference is at the bottom
@@ -492,49 +492,49 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             # so that the transmittance are < 1
 
             # few short-cut
-            il_topl = il_top[l]  # row of the top boundary condition for layer l
-            il_bottoml = il_bottom[l]  # row of the bottom boundary condition for layer l
-            j = jl[l]
+            il_topl = il_top[layer]  # row of the top boundary condition for layer l
+            il_bottoml = il_bottom[layer]  # row of the bottom boundary condition for layer l
+            j = jl[layer]
 
             # -------------------------------------------------------------------------------
             # Eq 17 & 19 TOP of layer l
-            if l == 0:
+            if layer == 0:
                 # save these matrix to compute the emerging intensity at the end
                 Eu_0 = Eu
                 transt_0 = transt
 
             # compute reflection coefficient between l and l - 1
-            Rtop_l = interfaces.reflection_top(l, m, compute_coherent_only)
+            Rtop_l = interfaces.reflection_top(layer, m, compute_coherent_only)
 
             # fill the matrix
             _todiag(bBC, il_topl, j, _matmul(Ed - _matmul(Rtop_l, Eu), transt))
 
-            if l < nlayer - 1:
-                Tbottom_lp1 = interfaces.transmission_bottom(l, m, compute_coherent_only)
+            if layer < nlayer - 1:
+                Tbottom_lp1 = interfaces.transmission_bottom(layer, m, compute_coherent_only)
                 # the size of Tbottom_lp1 can be the nsl_npol in general or nslp1_npol if only the specular is present
                 # and some streams are subject to total reflection.
                 if not is_equal_zero(Tbottom_lp1):
                     ns_npol_common_bottom = min(Tbottom_lp1.shape[0], nslp1_npol)
-                    _todiag(bBC, il_top[l + 1], j, -_matmul(Tbottom_lp1, Ed, transb)[:ns_npol_common_bottom, :])
+                    _todiag(bBC, il_top[layer + 1], j, -_matmul(Tbottom_lp1, Ed, transb)[:ns_npol_common_bottom, :])
 
             # fill the vector
-            if m == 0 and self.temperature is not None and self.temperature[l] > 0:
+            if m == 0 and self.temperature is not None and self.temperature[layer] > 0:
                 if is_equal_zero(Rtop_l):
                     b[il_topl : il_topl + nsl_npol, :] -= self.planck_function(
-                        self.temperature[l]
+                        self.temperature[layer]
                     )  # to be put at layer (l)
                 else:
                     b[il_topl : il_topl + nsl_npol, :] -= (
-                        (1.0 - _muleye(Rtop_l)) * self.planck_function(self.temperature[l])
+                        (1.0 - _muleye(Rtop_l)) * self.planck_function(self.temperature[layer])
                     )[:, np.newaxis]  # a mettre en (l)
                 # the muleye comes from the isotropic emission of the black body
 
-                if l < nlayer - 1 and self.temperature[l] > 0 and not is_equal_zero(Tbottom_lp1):
-                    b[il_top[l + 1] : il_top[l + 1] + ns_npol_common_bottom, :] += (
-                        _muleye(Tbottom_lp1) * self.planck_function(self.temperature[l])
+                if layer < nlayer - 1 and self.temperature[layer] > 0 and not is_equal_zero(Tbottom_lp1):
+                    b[il_top[layer + 1] : il_top[layer + 1] + ns_npol_common_bottom, :] += (
+                        _muleye(Tbottom_lp1) * self.planck_function(self.temperature[layer])
                     )[:ns_npol_common_bottom, np.newaxis]  # to be put at layer (l + 1)
 
-            if l == 0:  # Air-snow interface
+            if layer == 0:  # Air-snow interface
                 Tbottom_air_down = interfaces.transmission_bottom(-1, m, compute_coherent_only)
                 if not is_equal_zero(Tbottom_air_down):
                     ns_npol_common_bottom = min(Tbottom_air_down.shape[0], nsl_npol)  # see the comment on Tbottom_lp1
@@ -544,42 +544,42 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             # Eq 18 & 22 BOTTOM of layer l
 
             # compute reflection coefficient between l and l + 1
-            Rbottom_l = interfaces.reflection_bottom(l, m, compute_coherent_only)
+            Rbottom_l = interfaces.reflection_bottom(layer, m, compute_coherent_only)
 
             # fill the matrix
             _todiag(bBC, il_bottoml, j, _matmul(Eu - _matmul(Rbottom_l, Ed), transb))
 
-            if l > 0:
-                Ttop_lm1 = interfaces.transmission_top(l, m, compute_coherent_only)
+            if layer > 0:
+                Ttop_lm1 = interfaces.transmission_top(layer, m, compute_coherent_only)
                 if not is_equal_zero(Ttop_lm1):
                     ns_npol_common_top = min(Ttop_lm1.shape[0], nslm1_npol)  # see the comment on Tbottom_lp1
                     _todiag(
-                        bBC, il_bottom[l - 1], j, -_matmul(Ttop_lm1, Eu, transt)[:ns_npol_common_top, :]
+                        bBC, il_bottom[layer - 1], j, -_matmul(Ttop_lm1, Eu, transt)[:ns_npol_common_top, :]
                     )  # to be put at layer (l - 1)
 
             # fill the vector
-            if m == 0 and self.temperature is not None and self.temperature[l] > 0:
+            if m == 0 and self.temperature is not None and self.temperature[layer] > 0:
                 if is_equal_zero(Rbottom_l):
                     b[il_bottoml : il_bottoml + nsl_npol, :] -= self.planck_function(
-                        self.temperature[l]
+                        self.temperature[layer]
                     )  # to be put at layer (l)
                 else:
                     b[il_bottoml : il_bottoml + nsl_npol, :] -= (
-                        (1.0 - _muleye(Rbottom_l)) * self.planck_function(self.temperature[l])
+                        (1.0 - _muleye(Rbottom_l)) * self.planck_function(self.temperature[layer])
                     )[:, np.newaxis]  # to be put at layer (l)
-                if l > 0 and not is_equal_zero(Ttop_lm1):
-                    b[il_bottom[l - 1] : il_bottom[l - 1] + ns_npol_common_top, :] += (
-                        _muleye(Ttop_lm1) * self.planck_function(self.temperature[l])
+                if layer > 0 and not is_equal_zero(Ttop_lm1):
+                    b[il_bottom[layer - 1] : il_bottom[layer - 1] + ns_npol_common_top, :] += (
+                        _muleye(Ttop_lm1) * self.planck_function(self.temperature[layer])
                     )[:ns_npol_common_top, np.newaxis]  # to be put at layer (l - 1)
 
             if (
                 m == 0
-                and l == nlayer - 1
+                and layer == nlayer - 1
                 and self.snowpack.substrate is not None
                 and self.snowpack.substrate.temperature is not None
                 and self.temperature is not None
             ):
-                Tbottom_sub = interfaces.transmission_bottom(l, m, compute_coherent_only)
+                Tbottom_sub = interfaces.transmission_bottom(layer, m, compute_coherent_only)
                 ns_npol_common_bottom = min(Tbottom_sub.shape[0], nsl_npol)  # see the comment on Tbottom_lp1
                 if not is_equal_zero(Tbottom_sub):
                     b[il_bottoml : il_bottoml + ns_npol_common_bottom, :] += (
@@ -587,11 +587,11 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
                     )[:ns_npol_common_bottom, np.newaxis]  # to be put at layer  (l)
 
             # Finalize
-            optical_depth += np.min(np.abs(beta)) * self.snowpack.layers[l].thickness
+            optical_depth += np.min(np.abs(beta)) * self.snowpack.layers[layer].thickness
 
             if self.prune_deep_snowpack is not None and optical_depth > self.prune_deep_snowpack:
                 # prune the matrix and vector
-                nboundary = sum(streams.n[0 : l + 1]) * 2 * npol
+                nboundary = sum(streams.n[0 : layer + 1]) * 2 * npol
                 bBC = bBC[:, 0:nboundary]
                 b = b[0:nboundary, :]
 
@@ -615,9 +615,9 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
         x = scipy.linalg.solve_banded((nband, nband), bBC, b, overwrite_ab=True, overwrite_b=True)
 
         # #  ! calculate the intensity emerging from the snowpack
-        l = 0
-        j = jl[l]  # should be 0
-        nsl_npol = streams.n[l] * npol
+        layer = 0
+        j = jl[layer]  # should be 0
+        nsl_npol = streams.n[layer] * npol
         nsl2_npol = 2 * nsl_npol
         I1up_m = Eu_0 @ transt_0 @ x[j : j + nsl2_npol, :]
 
@@ -1317,66 +1317,70 @@ class InterfaceProperties(object):
         self.Tbottom_diff = dict()
         self.full_weight = dict()
 
-        for l in range(nlayer):
-            eps_lm1 = permittivity[l - 1] if l > 0 else 1
-            eps_l = permittivity[l]
-            eps_lp1 = permittivity[l + 1] if l < nlayer - 1 else None
+        for layer in range(nlayer):
+            eps_lm1 = permittivity[layer - 1] if layer > 0 else 1
+            eps_l = permittivity[layer]
+            eps_lp1 = permittivity[layer + 1] if layer < nlayer - 1 else None
 
             # compute reflection coefficient between layer l and l - 1  UP
             # snow-snow UP
-            self.Rtop_coh[l] = interfaces[l].specular_reflection_matrix(frequency, eps_l, eps_lm1, streams.mu[l], npol)
+            self.Rtop_coh[layer] = interfaces[layer].specular_reflection_matrix(
+                frequency, eps_l, eps_lm1, streams.mu[layer], npol
+            )
 
-            self.Rtop_diff[l] = (
-                interfaces[l].ft_even_diffuse_reflection_matrix(
-                    frequency, eps_l, eps_lm1, streams.mu[l], streams.mu[l], m_max, npol
+            self.Rtop_diff[layer] = (
+                interfaces[layer].ft_even_diffuse_reflection_matrix(
+                    frequency, eps_l, eps_lm1, streams.mu[layer], streams.mu[layer], m_max, npol
                 )
-                if hasattr(interfaces[l], "ft_even_diffuse_reflection_matrix")
+                if hasattr(interfaces[layer], "ft_even_diffuse_reflection_matrix")
                 else smrt_matrix(0)
             )
 
-            self.Rtop_diff[l] = normalize_diffuse_matrix(
-                self.Rtop_diff[l], streams.mu[l], streams.mu[l], streams.weight[l]
+            self.Rtop_diff[layer] = normalize_diffuse_matrix(
+                self.Rtop_diff[layer], streams.mu[layer], streams.mu[layer], streams.weight[layer]
             )
 
             # compute transmission coefficient between l and l - 1 UP
             # snow-snow or air UP
-            self.Ttop_coh[l] = interfaces[l].coherent_transmission_matrix(
-                frequency, eps_l, eps_lm1, streams.mu[l], npol
+            self.Ttop_coh[layer] = interfaces[layer].coherent_transmission_matrix(
+                frequency, eps_l, eps_lm1, streams.mu[layer], npol
             )
-            mu_t = streams.mu[l - 1] if l > 1 else streams.outmu
-            self.Ttop_diff[l] = (
-                interfaces[l].ft_even_diffuse_transmission_matrix(
-                    frequency, eps_l, eps_lm1, mu_t, streams.mu[l], m_max, npol
+            mu_t = streams.mu[layer - 1] if layer > 1 else streams.outmu
+            self.Ttop_diff[layer] = (
+                interfaces[layer].ft_even_diffuse_transmission_matrix(
+                    frequency, eps_l, eps_lm1, mu_t, streams.mu[layer], m_max, npol
                 )
                 * (eps_l.real / eps_lm1.real)
-                if hasattr(interfaces[l], "ft_even_diffuse_transmission_matrix")
+                if hasattr(interfaces[layer], "ft_even_diffuse_transmission_matrix")
                 else smrt_matrix(0)
             )
 
-            self.Ttop_diff[l] = normalize_diffuse_matrix(self.Ttop_diff[l], mu_t, streams.mu[l], streams.weight[l])
+            self.Ttop_diff[layer] = normalize_diffuse_matrix(
+                self.Ttop_diff[layer], mu_t, streams.mu[layer], streams.weight[layer]
+            )
 
             # compute transmission coefficient between l and l + 1  DOWN
-            if l < nlayer - 1:
+            if layer < nlayer - 1:
                 # snow-snow DOWN
-                self.Tbottom_coh[l] = interfaces[l + 1].coherent_transmission_matrix(
-                    frequency, eps_l, eps_lp1, streams.mu[l], npol
+                self.Tbottom_coh[layer] = interfaces[layer + 1].coherent_transmission_matrix(
+                    frequency, eps_l, eps_lp1, streams.mu[layer], npol
                 )
 
-                self.Tbottom_diff[l] = (
-                    interfaces[l + 1].ft_even_diffuse_transmission_matrix(
-                        frequency, eps_l, eps_lp1, streams.mu[l + 1], streams.mu[l], m_max, npol
+                self.Tbottom_diff[layer] = (
+                    interfaces[layer + 1].ft_even_diffuse_transmission_matrix(
+                        frequency, eps_l, eps_lp1, streams.mu[layer + 1], streams.mu[layer], m_max, npol
                     )
                     * (eps_l.real / eps_lp1.real)
-                    if hasattr(interfaces[l + 1], "ft_even_diffuse_transmission_matrix")
+                    if hasattr(interfaces[layer + 1], "ft_even_diffuse_transmission_matrix")
                     else smrt_matrix(0)
                 )
-                self.Tbottom_diff[l] = normalize_diffuse_matrix(
-                    self.Tbottom_diff[l], streams.mu[l + 1], streams.mu[l], streams.weight[l]
+                self.Tbottom_diff[layer] = normalize_diffuse_matrix(
+                    self.Tbottom_diff[layer], streams.mu[layer + 1], streams.mu[layer], streams.weight[layer]
                 )
 
             elif substrate is not None:
                 # sub-snow
-                self.Tbottom_coh[nlayer - 1] = substrate.emissivity_matrix(frequency, eps_l, streams.mu[l], npol)
+                self.Tbottom_coh[nlayer - 1] = substrate.emissivity_matrix(frequency, eps_l, streams.mu[layer], npol)
                 self.Tbottom_diff[nlayer - 1] = smrt_matrix(0)
             else:
                 # sub-snow
@@ -1384,40 +1388,42 @@ class InterfaceProperties(object):
                 self.Tbottom_diff[nlayer - 1] = smrt_matrix(0)
 
             # compute reflection coefficient between l and l + 1  DOWN
-            if l < nlayer - 1:
+            if layer < nlayer - 1:
                 # snow-snow DOWN
-                self.Rbottom_coh[l] = interfaces[l + 1].specular_reflection_matrix(
-                    frequency, eps_l, eps_lp1, streams.mu[l], npol
+                self.Rbottom_coh[layer] = interfaces[layer + 1].specular_reflection_matrix(
+                    frequency, eps_l, eps_lp1, streams.mu[layer], npol
                 )
-                self.Rbottom_diff[l] = (
-                    interfaces[l + 1].ft_even_diffuse_reflection_matrix(
-                        frequency, eps_l, eps_lp1, streams.mu[l], streams.mu[l], m_max, npol
+                self.Rbottom_diff[layer] = (
+                    interfaces[layer + 1].ft_even_diffuse_reflection_matrix(
+                        frequency, eps_l, eps_lp1, streams.mu[layer], streams.mu[layer], m_max, npol
                     )
-                    if hasattr(interfaces[l + 1], "ft_even_diffuse_reflection_matrix")
+                    if hasattr(interfaces[layer + 1], "ft_even_diffuse_reflection_matrix")
                     else smrt_matrix(0)
                 )
-                self.Rbottom_diff[l] = normalize_diffuse_matrix(
-                    self.Rbottom_diff[l], streams.mu[l], streams.mu[l], streams.weight[l]
+                self.Rbottom_diff[layer] = normalize_diffuse_matrix(
+                    self.Rbottom_diff[layer], streams.mu[layer], streams.mu[layer], streams.weight[layer]
                 )
 
             elif substrate is not None:
                 # snow-substrate
-                self.Rbottom_coh[l] = substrate.specular_reflection_matrix(frequency, eps_l, streams.mu[l], npol)
+                self.Rbottom_coh[layer] = substrate.specular_reflection_matrix(
+                    frequency, eps_l, streams.mu[layer], npol
+                )
 
-                self.Rbottom_diff[l] = (
+                self.Rbottom_diff[layer] = (
                     substrate.ft_even_diffuse_reflection_matrix(
-                        frequency, eps_l, streams.mu[l], streams.mu[l], m_max, npol
+                        frequency, eps_l, streams.mu[layer], streams.mu[layer], m_max, npol
                     )
                     if hasattr(substrate, "ft_even_diffuse_reflection_matrix")
                     else smrt_matrix(0)
                 )
-                self.Rbottom_diff[l] = normalize_diffuse_matrix(
-                    self.Rbottom_diff[l], streams.mu[l], streams.mu[l], streams.weight[l]
+                self.Rbottom_diff[layer] = normalize_diffuse_matrix(
+                    self.Rbottom_diff[layer], streams.mu[layer], streams.mu[layer], streams.weight[layer]
                 )
 
             else:
-                self.Rbottom_coh[l] = smrt_matrix(0)  # fully transparent substrate
-                self.Rbottom_diff[l] = smrt_matrix(0)
+                self.Rbottom_coh[layer] = smrt_matrix(0)  # fully transparent substrate
+                self.Rbottom_diff[layer] = smrt_matrix(0)
 
         # air-snow DOWN
         self.Tbottom_coh[-1] = interfaces[0].coherent_transmission_matrix(
@@ -1451,24 +1457,24 @@ class InterfaceProperties(object):
             self.Rbottom_diff[-1], streams.outmu, streams.outmu, streams.outweight
         )
 
-    def reflection_top(self, l, m, compute_coherent_only, **kwargs):
+    def reflection_top(self, layer, m, compute_coherent_only, **kwargs):
         return InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Rtop_coh[l], self.Rtop_diff[l], m, compute_coherent_only, **kwargs
+            self.Rtop_coh[layer], self.Rtop_diff[layer], m, compute_coherent_only, **kwargs
         )
 
-    def reflection_bottom(self, l, m, compute_coherent_only, **kwargs):
+    def reflection_bottom(self, layer, m, compute_coherent_only, **kwargs):
         return InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Rbottom_coh[l], self.Rbottom_diff[l], m, compute_coherent_only, **kwargs
+            self.Rbottom_coh[layer], self.Rbottom_diff[layer], m, compute_coherent_only, **kwargs
         )
 
-    def transmission_top(self, l, m, compute_coherent_only, **kwargs):
+    def transmission_top(self, layer, m, compute_coherent_only, **kwargs):
         return InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Ttop_coh[l], self.Ttop_diff[l], m, compute_coherent_only, **kwargs
+            self.Ttop_coh[layer], self.Ttop_diff[layer], m, compute_coherent_only, **kwargs
         )
 
-    def transmission_bottom(self, l, m, compute_coherent_only, **kwargs):
+    def transmission_bottom(self, layer, m, compute_coherent_only, **kwargs):
         return InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Tbottom_coh[l], self.Tbottom_diff[l], m, compute_coherent_only, **kwargs
+            self.Tbottom_coh[layer], self.Tbottom_diff[layer], m, compute_coherent_only, **kwargs
         )
 
     @staticmethod

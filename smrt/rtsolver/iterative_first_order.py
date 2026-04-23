@@ -143,7 +143,7 @@ class IterativeFirstOrder(RTSolverBase):
         mu0 = np.cos(sensor.theta)
 
         # solve with first order iterative solution
-        I = compute_intensity(
+        intensity = compute_intensity(
             snowpack, emmodels, sensor, snowpack.interfaces, substrate, self.effective_permittivity, mu0, npol
         )
 
@@ -157,11 +157,11 @@ class IterativeFirstOrder(RTSolverBase):
 
         # get total intensity from the three contributions
         # first index is the number of mu
-        total_I = I[0] + I[1] + I[2] + I[3]
+        total_I = intensity[0] + intensity[1] + intensity[2] + intensity[3]
 
         if self.return_contributions:
             # add total to the intensity array
-            intensity = np.array([total_I, I[0], I[1], I[2], I[3]])
+            intensity = np.array([total_I, intensity[0], intensity[1], intensity[2], intensity[3]])
             return make_result(
                 sensor,
                 intensity,
@@ -253,10 +253,10 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
     intensity_up[0] = I0_surface
 
     optical_depth = 0
-    for l in range(nlayer):
+    for layer in range(nlayer):
         # check scat albedo for validity of iterative solution
-        ke = emmodels[l]._ks + emmodels[l].ka
-        scat_albedo = emmodels[l]._ks / (ke)
+        ke = emmodels[layer]._ks + emmodels[layer].ka
+        scat_albedo = emmodels[layer]._ks / (ke)
         if scat_albedo > 0.5:
             smrt_warn(
                 f"Warning : scattering albedo ({np.round(scat_albedo, 2)}) might be too high"
@@ -265,22 +265,22 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
 
         # prepare matrix of interface
         # transmission matrix of the top layer to l-1
-        transmission_top = interface_l.transmission_top(l)
+        transmission_top = interface_l.transmission_top(layer)
 
         # transmission matrix of the bottom layer to l+1
-        transmission_bottom = interface_l.transmission_bottom(l)
+        transmission_bottom = interface_l.transmission_bottom(layer)
 
         # Reflection matrix of the bottom layer
-        reflection_bottom = interface_l.reflection_bottom(l)
+        reflection_bottom = interface_l.reflection_bottom(layer)
 
         # backscatter matrix of the bottom layer
-        backscatter_bottom = _get_np_matrix(interface_l.Rbottom_backscatter[l], npol, n)
+        backscatter_bottom = _get_np_matrix(interface_l.Rbottom_backscatter[layer], npol, n)
 
         # get phase function for array of mu and -mu
-        mus_sym = np.concatenate([-mus[l], mus[l]])
+        mus_sym = np.concatenate([-mus[layer], mus[layer]])
         # Note that the phase calculation is inefficiant as it calculates all combinations of (mus_sym, mus_sym).
         # TODO: Solving this issue would require to rewrite all the phase methods.
-        phases = emmodels[l].phase(mus_sym, mus_sym, dphi, npol).values
+        phases = emmodels[layer].phase(mus_sym, mus_sym, dphi, npol).values
 
         # 1/4pi normalization of the RT equation for SMRT
         # applied to phase here, interface and substrate already have the smrt_norm
@@ -294,13 +294,13 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
         P_Bi_Up = reshape_phase(phases[:, :, 0, n:, n:])  # P(mu, mu)
         P_Bi_Down = reshape_phase(phases[:, :, 0, 0:n, 0:n])  # P(-mu, -mu)
 
-        layer_optical_depth = ke * thickness[l]
+        layer_optical_depth = ke * thickness[layer]
         optical_depth += layer_optical_depth
 
         # convert to 3d array for computation of intensity
         # allow computation of incident angle
         # two way attenuation (ulaby et al 2014, eq: 11.2)
-        mus_l = mus[l][:, np.newaxis, np.newaxis]
+        mus_l = mus[layer][:, np.newaxis, np.newaxis]
         gammas2 = np.exp(-2 * layer_optical_depth / mus_l)
 
         """
@@ -323,7 +323,7 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
 
         I1_double_bounce = (
             transmission_top
-            @ (thickness[l] * gammas2 / mus_l * (P_Bi_Down @ reflection_bottom + reflection_bottom @ P_Bi_Up))
+            @ (thickness[layer] * gammas2 / mus_l * (P_Bi_Down @ reflection_bottom + reflection_bottom @ P_Bi_Up))
             @ I_l
         )
 
@@ -338,10 +338,10 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
         # add intensity
         intensity_up += I1
 
-        if l < nlayer - 1:
-            mus_l1 = mus[l + 1][:, np.newaxis, np.newaxis]
+        if layer < nlayer - 1:
+            mus_l1 = mus[layer + 1][:, np.newaxis, np.newaxis]
             refraction_factor_l = compute_refraction_factor(
-                effective_permittivity[l], effective_permittivity[l + 1], mus_l, mus_l1
+                effective_permittivity[layer], effective_permittivity[layer + 1], mus_l, mus_l1
             )
             # intensity in the layer transmitted downward for upper layer with one way attenuation
             I_l = transmission_bottom @ (gammas2 * refraction_factor_l * I_l)
@@ -441,7 +441,7 @@ class _InterfaceProperties(object):
         self.Tbottom_coh = dict()
         self.Tbottom_diff = dict()
         # compute refracted angle
-        self.mu = {l: snell_angle(1, permittivity[l], mu0) for l in range(nlayer)}
+        self.mu = {layer: snell_angle(1, permittivity[layer], mu0) for layer in range(nlayer)}
         self.mu[-1] = mu0
         self.npol = npol
         self.len_mu = len(mu0)
@@ -463,13 +463,13 @@ class _InterfaceProperties(object):
             else smrt_matrix(0)
         )
 
-        for l in range(nlayer):
+        for layer in range(nlayer):
             # define permittivity
             # #for permittivity, index 0 = air, length of permittivity is l+1
-            eps_lm1 = permittivity[l - 1] if l > 0 else 1
-            eps_l = permittivity[l]
-            if l < nlayer - 1:
-                eps_lp1 = permittivity[l + 1]
+            eps_lm1 = permittivity[layer - 1] if layer > 0 else 1
+            eps_l = permittivity[layer]
+            if layer < nlayer - 1:
+                eps_lp1 = permittivity[layer + 1]
             else:
                 eps_lp1 = None
 
@@ -481,57 +481,59 @@ class _InterfaceProperties(object):
             #     else smrt_matrix(0)
             # )
 
-            self.Ttop_coh[l] = interfaces[l].coherent_transmission_matrix(frequency, eps_l, eps_lm1, self.mu[l], npol)
+            self.Ttop_coh[layer] = interfaces[layer].coherent_transmission_matrix(
+                frequency, eps_l, eps_lm1, self.mu[layer], npol
+            )
 
-            if l < nlayer - 1:
+            if layer < nlayer - 1:
                 # set up interfaces
                 # snow - snow
                 # Upward
-                self.Rbottom_coh[l] = interfaces[l + 1].specular_reflection_matrix(
-                    frequency, eps_l, eps_lp1, self.mu[l], npol
+                self.Rbottom_coh[layer] = interfaces[layer + 1].specular_reflection_matrix(
+                    frequency, eps_l, eps_lp1, self.mu[layer], npol
                 )
 
                 # other than flat interface
-                self.Rbottom_backscatter[l] = interfaces[l + 1].diffuse_reflection_matrix(
-                    frequency, eps_l, eps_lp1, self.mu[l], self.mu[l], dphi, npol
+                self.Rbottom_backscatter[layer] = interfaces[layer + 1].diffuse_reflection_matrix(
+                    frequency, eps_l, eps_lp1, self.mu[layer], self.mu[layer], dphi, npol
                 )
 
-                self.Tbottom_coh[l] = interfaces[l + 1].coherent_transmission_matrix(
-                    frequency, eps_l, eps_lp1, self.mu[l], npol
+                self.Tbottom_coh[layer] = interfaces[layer + 1].coherent_transmission_matrix(
+                    frequency, eps_l, eps_lp1, self.mu[layer], npol
                 )
-                self.Tbottom_diff[l] = (
-                    interfaces[l + 1].diffuse_transmission_matrix(
-                        frequency, eps_l, eps_lm1, self.mu[l + 1], self.mu[l], 0, npol
+                self.Tbottom_diff[layer] = (
+                    interfaces[layer + 1].diffuse_transmission_matrix(
+                        frequency, eps_l, eps_lm1, self.mu[layer + 1], self.mu[layer], 0, npol
                     )
-                    if hasattr(interfaces[l + 1], "diffuse_transmission_matrix") * (eps_l.real / eps_lm1.real)
+                    if hasattr(interfaces[layer + 1], "diffuse_transmission_matrix") * (eps_l.real / eps_lm1.real)
                     else smrt_matrix(0)
                 )
 
             elif substrate is not None:
-                self.Rbottom_coh[l] = substrate.specular_reflection_matrix(frequency, eps_l, self.mu[l], npol)
+                self.Rbottom_coh[layer] = substrate.specular_reflection_matrix(frequency, eps_l, self.mu[layer], npol)
 
-                self.Rbottom_backscatter[l] = (
-                    substrate.diffuse_reflection_matrix(frequency, eps_l, self.mu[l], self.mu[l], dphi, npol)
+                self.Rbottom_backscatter[layer] = (
+                    substrate.diffuse_reflection_matrix(frequency, eps_l, self.mu[layer], self.mu[layer], dphi, npol)
                     if hasattr(substrate, "diffuse_reflection_matrix")
                     else smrt_matrix(0)
                 )
 
                 # sub-snow
-                self.Tbottom_coh[l] = smrt_matrix(0)
-                self.Tbottom_diff[l] = smrt_matrix(0)
+                self.Tbottom_coh[layer] = smrt_matrix(0)
+                self.Tbottom_diff[layer] = smrt_matrix(0)
 
             else:
                 # fully transparent substrate
-                self.Rbottom_coh[l] = smrt_matrix(0)
-                self.Rbottom_backscatter[l] = smrt_matrix(0)
-                self.Tbottom_coh[l] = smrt_matrix(0)
-                self.Tbottom_diff[l] = smrt_matrix(0)
+                self.Rbottom_coh[layer] = smrt_matrix(0)
+                self.Rbottom_backscatter[layer] = smrt_matrix(0)
+                self.Tbottom_coh[layer] = smrt_matrix(0)
+                self.Tbottom_diff[layer] = smrt_matrix(0)
 
-    def reflection_bottom(self, l):
-        return _get_np_matrix(self.Rbottom_coh[l], self.npol, self.len_mu)
+    def reflection_bottom(self, layer):
+        return _get_np_matrix(self.Rbottom_coh[layer], self.npol, self.len_mu)
 
-    def transmission_top(self, l):
-        return _get_np_matrix(self.Ttop_coh[l], self.npol, self.len_mu)
+    def transmission_top(self, layer):
+        return _get_np_matrix(self.Ttop_coh[layer], self.npol, self.len_mu)
 
-    def transmission_bottom(self, l):
-        return _get_np_matrix(self.Tbottom_coh[l], self.npol, self.len_mu)
+    def transmission_bottom(self, layer):
+        return _get_np_matrix(self.Tbottom_coh[layer], self.npol, self.len_mu)

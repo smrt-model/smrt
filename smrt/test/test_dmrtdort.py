@@ -20,12 +20,12 @@ from smrt.substrate.reflector import make_reflector
 @pytest.fixture
 def setup_snowpack():
     # prepare inputs
-    l = 2
+    layer = 2
 
-    nl = l // 2  # // Forces integer division
+    nl = layer // 2  # // Forces integer division
     thickness = np.array([0.1, 0.1] * nl)
     thickness[-1] = 1000  # last one is semi-infinit
-    radius = np.array([2e-4] * l)
+    radius = np.array([2e-4] * layer)
     temperature = np.array([250.0, 250.0] * nl)
     density = [200, 400] * nl
     stickiness = [0.1, 0.1] * nl

@@ -9,14 +9,14 @@ from smrt import PSU, make_ice_column, make_model, make_snowpack, sensor_list
 # from smrt.inputs.make_medium import make_ice_column
 
 # prepare inputs
-l = 9  # 9 ice layers
-thickness = np.array([1.5 / l] * l)  # ice is 1.5m thick
-p_ex = np.array([1.0e-3] * (l))  # correlation length
+n_layer = 9  # 9 ice layers
+thickness = np.array([1.5 / n_layer] * n_layer)  # ice is 1.5m thick
+p_ex = np.array([1.0e-3] * (n_layer))  # correlation length
 temperature = np.linspace(
-    273.15 - 20.0, 273.15 - 1.8, l
+    273.15 - 20.0, 273.15 - 1.8, n_layer
 )  # temperature gradient in the ice from -20 deg C at top to freezing temperature of water at bottom (-1.8 deg C)
 salinity = (
-    np.linspace(2.0, 10.0, l) * PSU
+    np.linspace(2.0, 10.0, n_layer) * PSU
 )  # salinity profile ranging from salinity=2 at the top to salinity=10 at the bottom of the ice
 
 # create a multi-year sea ice column with assumption of spherical brine inclusions (brine_inclusion_shape="spheres"),
