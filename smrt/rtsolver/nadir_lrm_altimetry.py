@@ -436,7 +436,9 @@ class NadirLRMAltimetry(object):
                 if (self.compute_coherent_reflection) and hasattr(i, "roughness_rms")
                 else 0
             )
-            for i, eps_1, eps_2, mu in zip(self.snowpack.interfaces, eps_upper_interface, eps, mu_upper_interface, strict=False)
+            for i, eps_1, eps_2, mu in zip(
+                self.snowpack.interfaces, eps_upper_interface, eps, mu_upper_interface, strict=False
+            )
         ]
 
         # note that the division by eps_1 takes into account the divergence of the upwelling stream due to refraction
