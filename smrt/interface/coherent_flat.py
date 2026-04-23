@@ -28,24 +28,24 @@ def process_coherent_layers(snowpack, emmodel_list, effective_permittivity, sens
 
         # print("process_coherent_layers (in dev, use for testing only) # coherent layers:", np.sum(coherent_layers))
 
-        for l in np.flatnonzero(coherent_layers[:-1])[
+        for layer in np.flatnonzero(coherent_layers[:-1])[
             ::-1
         ]:  # reverse the processing to safely delete the snowpack layer and interface
-            print("coherent layer:", l)
-            if coherent_layers[l - 1]:
+            print("coherent layer:", layer)
+            if coherent_layers[layer - 1]:
                 raise SMRTError("Two sucessive layers are coherent, this is not yet supported")
             # create a coherent interface
             coherent_interface = CoherentFlat(
-                snowpack.interfaces[l : l + 2],
-                snowpack.layers[l],
-                effective_permittivity[l],
+                snowpack.interfaces[layer : layer + 2],
+                snowpack.layers[layer],
+                effective_permittivity[layer],
             )
             # set the next interface to coherent
-            snowpack.interfaces[l + 1] = coherent_interface
+            snowpack.interfaces[layer + 1] = coherent_interface
             # delete the layer to be deleted
-            snowpack.delete_layer(l)  # delete layer and interface l
-            emmodel_list.pop(l)
-            effective_permittivity = np.delete(effective_permittivity, l)
+            snowpack.delete_layer(layer)  # delete layer and interface l
+            emmodel_list.pop(layer)
+            effective_permittivity = np.delete(effective_permittivity, layer)
 
     return snowpack, emmodel_list, effective_permittivity
 

@@ -41,10 +41,10 @@ def test_compare_geometrical_optics():
 @pytest.mark.parametrize("interface", [(GeometricalOptics), (GeometricalOpticsBackscatter)])
 def test_parameters_geometrical_optics_and_backscatter(interface):
     s = 2.8e-2
-    l = 7.5e-2
+    corr_length = 7.5e-2
 
-    go_mss = interface(mean_square_slope=2 * s**2 / l**2)
-    go_rms_corr = interface(roughness_rms=s, corr_length=l)
+    go_mss = interface(mean_square_slope=2 * s**2 / corr_length**2)
+    go_rms_corr = interface(roughness_rms=s, corr_length=corr_length)
 
     m_mss = get_diffuse_reflection(go_mss)
     m_rms_corr = get_diffuse_reflection(go_rms_corr)

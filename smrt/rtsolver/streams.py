@@ -106,7 +106,7 @@ def compute_stream_gaussian(n_max_stream, permittivity, mode="most_refringent"):
     mu[real_reflection] = np.sqrt(1 - relsin[real_reflection] ** 2)
 
     # calculate the number of streams per layer
-    streams.mu = [mu[l, real_reflection[l, :]] for l in range(nlayer)]
+    streams.mu = [mu[layer, real_reflection[layer, :]] for layer in range(nlayer)]
     streams.n = np.sum(real_reflection, axis=1)
 
     assert all(np.size(n) for n in streams.n)
@@ -197,7 +197,7 @@ def compute_stream_uniform(n_max_stream, permittivity):
     mu2[real_reflection] = np.sqrt(1 - relsin[real_reflection] ** 2)
 
     # assemble the two sets
-    streams.mu = [np.hstack((mu1[l], mu2[l, real_reflection[l, :]])) for l in range(nlayer)]
+    streams.mu = [np.hstack((mu1[layer], mu2[layer, real_reflection[layer, :]])) for layer in range(nlayer)]
     # calculate the number of streams per layer
     streams.n = n_max_stream + np.sum(real_reflection, axis=1)
 
@@ -239,10 +239,10 @@ def compute_outweight(outmu):
 
 def compute_weight(mu):
     weight = [np.empty_like(m) for m in mu]
-    for l in range(len(mu)):
-        weight[l][0] = 1 - 0.5 * (mu[l][0] + mu[l][1])
-        weight[l][-1] = np.abs(0.5 * (mu[l][-2] + mu[l][-1]))
-        weight[l][1:-1] = np.abs(0.5 * (mu[l][0:-2] - mu[l][2:]))
+    for layer in range(len(mu)):
+        weight[layer][0] = 1 - 0.5 * (mu[layer][0] + mu[layer][1])
+        weight[layer][-1] = np.abs(0.5 * (mu[layer][-2] + mu[layer][-1]))
+        weight[layer][1:-1] = np.abs(0.5 * (mu[layer][0:-2] - mu[layer][2:]))
     return weight
 
 

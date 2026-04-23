@@ -411,21 +411,29 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         coherent_transmission_bottom = dict()
 
         kwargs = dict(auto_reduce_npol=False)
-        for l in range(0, len(streams.mu)):
+        for layer in range(0, len(streams.mu)):
             for m in range(m_max + 1):
-                reflection_top[m][l] = interfaces.reflection_top(l, m=m, compute_coherent_only=False, **kwargs)
-                transmission_top[m][l] = interfaces.transmission_top(l, m=m, compute_coherent_only=False, **kwargs)
-            coherent_reflection_top[l] = interfaces.reflection_top(l, m=0, compute_coherent_only=True, **kwargs)
-            coherent_transmission_top[l] = interfaces.transmission_top(l, m=0, compute_coherent_only=True, **kwargs)
-        for l in range(-1, len(streams.mu)):
-            for m in range(m_max + 1):
-                reflection_bottom[m][l] = interfaces.reflection_bottom(l, m=m, compute_coherent_only=False, **kwargs)
-                transmission_bottom[m][l] = interfaces.transmission_bottom(
-                    l, m=m, compute_coherent_only=False, **kwargs
+                reflection_top[m][layer] = interfaces.reflection_top(layer, m=m, compute_coherent_only=False, **kwargs)
+                transmission_top[m][layer] = interfaces.transmission_top(
+                    layer, m=m, compute_coherent_only=False, **kwargs
                 )
-            coherent_reflection_bottom[l] = interfaces.reflection_bottom(l, m=0, compute_coherent_only=True, **kwargs)
-            coherent_transmission_bottom[l] = interfaces.transmission_bottom(
-                l, m=0, compute_coherent_only=True, **kwargs
+            coherent_reflection_top[layer] = interfaces.reflection_top(layer, m=0, compute_coherent_only=True, **kwargs)
+            coherent_transmission_top[layer] = interfaces.transmission_top(
+                layer, m=0, compute_coherent_only=True, **kwargs
+            )
+        for layer in range(-1, len(streams.mu)):
+            for m in range(m_max + 1):
+                reflection_bottom[m][layer] = interfaces.reflection_bottom(
+                    layer, m=m, compute_coherent_only=False, **kwargs
+                )
+                transmission_bottom[m][layer] = interfaces.transmission_bottom(
+                    layer, m=m, compute_coherent_only=False, **kwargs
+                )
+            coherent_reflection_bottom[layer] = interfaces.reflection_bottom(
+                layer, m=0, compute_coherent_only=True, **kwargs
+            )
+            coherent_transmission_bottom[layer] = interfaces.transmission_bottom(
+                layer, m=0, compute_coherent_only=True, **kwargs
             )
 
         return (
@@ -446,12 +454,12 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         n_sublayer = []
         source = []
 
-        for l in range(len(self.emmodels)):
+        for layer in range(len(self.emmodels)):
             n, e, wp, s = self.prepare_layer_properties(
-                self.snowpack.layers[l],
-                self.emmodels[l],
-                self.streams.mu[l],
-                self.streams.weight[l],
+                self.snowpack.layers[layer],
+                self.emmodels[layer],
+                self.streams.mu[layer],
+                self.streams.weight[layer],
                 m_max,
             )
 
@@ -549,8 +557,8 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         # power_extinction = [extinction[l][np.newaxis, :, :]**np.arange(i_subinterface[l + 1] - i_subinterface[l], 0,
         # -1, dtype=np.float64)[:, np.newaxis, np.newaxis] for l in range(len(extinction))]
 
-        for l in range(n_layer):
-            n = npol * len(mu[l])
+        for layer in range(n_layer):
+            n = npol * len(mu[layer])
 
             # angle and pola
             p_up = slice(0, n)
@@ -558,11 +566,11 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
             q = slice(0, 2 * n)
 
             # layer slice
-            i_top = i_subinterface[l]
-            i_bottom = i_subinterface[l + 1] - 1
+            i_top = i_subinterface[layer]
+            i_bottom = i_subinterface[layer + 1] - 1
 
             new_intensity[i_top, p_dn] = _matmul(
-                reflection_top[l], intensity[i_top, p_up]
+                reflection_top[layer], intensity[i_top, p_up]
             )  # reflect intensity coming up
 
             if transmitted_intensity is not None:
@@ -572,17 +580,17 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
             # compute the contribution of scattering of the previous order intensity, which is now a source
             s = np.einsum(
                 ein_string,
-                weighted_phase[l][p_dn, q],
+                weighted_phase[layer][p_dn, q],
                 mean_intensity[i_top:i_bottom, q],
                 optimize=True,
             )
 
             if order == 0:
-                s += source[l]
+                s += source[layer]
 
-            s *= 1 - extinction[l]
+            s *= 1 - extinction[layer]
 
-            series_downwelling(new_intensity[i_top : i_bottom + 1, p_dn], extinction[l], s)
+            series_downwelling(new_intensity[i_top : i_bottom + 1, p_dn], extinction[layer], s)
 
             # for k in range(i_top, i_bottom):
             #     # compute intensity in all the sublayers
@@ -590,15 +598,15 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
             #     # eq 66 (adapted for downward)
             # assert k + 1 == i_bottom
 
-            transmitted_intensity = _matmul(transmission_bottom[l], new_intensity[i_bottom, p_dn])
+            transmitted_intensity = _matmul(transmission_bottom[layer], new_intensity[i_bottom, p_dn])
 
         assert i_bottom + 1 == len(new_intensity)
 
         transmitted_intensity = None
 
         # compute the upwelling intensity
-        for l in range(n_layer - 1, -1, -1):
-            n = npol * len(mu[l])
+        for layer in range(n_layer - 1, -1, -1):
+            n = npol * len(mu[layer])
 
             # angle and pola
             p_up = slice(0, n)
@@ -606,10 +614,10 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
             q = slice(0, 2 * n)
 
             # layer slice
-            i_top = i_subinterface[l]
-            i_bottom = i_subinterface[l + 1] - 1
+            i_top = i_subinterface[layer]
+            i_bottom = i_subinterface[layer + 1] - 1
 
-            new_intensity[i_bottom, p_up] = _matmul(reflection_bottom[l], intensity[i_bottom, p_dn])
+            new_intensity[i_bottom, p_up] = _matmul(reflection_bottom[layer], intensity[i_bottom, p_dn])
             # reflect intensity coming down at the bottom of the layer
 
             if transmitted_intensity is not None:
@@ -618,25 +626,25 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
 
             s = np.einsum(
                 ein_string,
-                weighted_phase[l][p_up, q],
+                weighted_phase[layer][p_up, q],
                 mean_intensity[i_top:i_bottom, q],
                 optimize=True,
             )
 
             if order == 0:
-                s += source[l]
+                s += source[layer]
 
-            s *= 1 - extinction[l]
+            s *= 1 - extinction[layer]
             assert len(s) == i_bottom - 1 - i_top + 1
 
             # for k in range(i_bottom - 1, i_top - 1, -1):
             #     new_intensity[k, p_up] = new_intensity[k + 1, p_up] * extinction[l] + s[k - i_top]
             # assert k == i_top
 
-            series_upwelling(new_intensity[i_top : i_bottom + 1, p_up], extinction[l], s)
+            series_upwelling(new_intensity[i_top : i_bottom + 1, p_up], extinction[layer], s)
             # eq 66 in Lenoble
 
-            transmitted_intensity = _matmul(transmission_top[l], new_intensity[i_top, p_up])
+            transmitted_intensity = _matmul(transmission_top[layer], new_intensity[i_top, p_up])
 
         assert i_top == 0
         # compute the final transmission
