@@ -9,10 +9,7 @@ advantage of being fully written in Python, synonym of easy installation and com
 
 PyRTLib is licensed under the GPL-3.0 License, and it must be installed independently of SMRT.
 
-In general pip install smrt[pyrtlib] may work. HOWEVER, as of March 2025, the latest version of PyRTLib is incompatible
-with recent numpy versions and reading era5 in netcdf format (not the default) may fail. It is required  to install
-PyRTLib separately using pip install git+https://github.com/ghislainp/pyrtlib/tree/migrate_numpy2 until a new official
-release of PyRTLib is made available by the authors.
+In general pip install smrt[pyrtlib] works.
 
 PyRTlib allows to simulate and calculate radiometric parameters and estimating propogation parameters needed by SMRT
 using meteorological data as input. Some meteorological datasets are built-in in PyRTlib and others can be download and
