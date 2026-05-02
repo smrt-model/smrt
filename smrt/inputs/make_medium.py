@@ -172,8 +172,9 @@ def make_snowpack(
             for a semi-infinite layer. Any layer with zero thickness is removed.
         microstructure_model: Microstructure model to use (e.g. sticky_hard_spheres or independent_sphere or
             exponential).
-        surface: Type of surface interface, flat/fresnel is the default. If surface and interface are both set,
-            the interface must be a constant referring to all the "internal" interfaces.
+        surface: Type of topmost/surface interface (flat/fresnel is the default). If surface and interface arguments
+            are both set, the interface must be a constant and is interpreted as all the "internal" interfaces (except
+            the surface).
         interface: Type of interface, flat/fresnel is the default. It is usually a string for the interfaces
             without parameters (e.g. Flat or Transparent) or is created with `make_interface` in more complex cases.
             Interface can be a constant or a list. In the latter case, its length must be the same as the number of
