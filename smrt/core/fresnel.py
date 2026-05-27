@@ -55,6 +55,7 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu, mu_medium="1", fu
 
     # incident wavenumber
     n1 = np.sqrt(eps_1)
+    n2 = np.sqrt(eps_2)
 
     if mu_medium == "1":
         kiz2 = n1.real**2 * (1 - mu**2)  # this the square of kiz = n1 * sin(theta)
@@ -72,11 +73,9 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu, mu_medium="1", fu
 
     rv = (eps_2 * kyi - eps_1 * kyt) / (eps_2 * kyi + eps_1 * kyt)  # Eq 32
 
-    mu2 = -kyt.real / np.sqrt(eps_2).real  # by definition of kyt
+    mu2 = -kyt.real / n2.real  # by definition of kyt
 
     if full_output:
-        n2 = np.sqrt(eps_2)
-
         th = 2 * kyi / (kyi + kyt)  # Eq 31
 
         tv = 2 * n1 * n2 * kyi / (eps_2 * kyi + eps_1 * kyt)  # Eq 33
@@ -127,6 +126,7 @@ def fresnel_coefficients_maezawa09_rigorous(eps_1, eps_2, mu, mu_medium="1") -> 
         kiz2 = 1 - mu**2  # this the square of kiz = sin(theta0)
     else:
         raise SMRTError("mu_medium must be either '1' or 'void'")
+
     kyi = -np.sqrt(eps_1 - kiz2, dtype=np.complex128)  # Eq 8 for i
 
     ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
