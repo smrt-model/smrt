@@ -254,10 +254,9 @@ class Sensor(SensorBase):
                 smrt_warn("Sensor requires either frequency or wavelength argument, not both")
 
             self.frequency = np.asarray(frequency).squeeze() if isinstance(frequency, Sequence) else frequency
-            self.wavelength = C_SPEED / self.frequency
         elif wavelength is not None:
-            self.wavelength = np.asarray(wavelength).squeeze() if isinstance(wavelength, Sequence) else wavelength
-            self.frequency = C_SPEED / self.wavelength
+            wl = np.asarray(wavelength).squeeze() if isinstance(wavelength, Sequence) else wavelength
+            self.frequency = C_SPEED / wl
         else:
             raise SMRTError("Either frequency or wavelength is required")
 
@@ -303,7 +302,11 @@ class Sensor(SensorBase):
 
     @property
     def wavenumber(self):
-        return 2 * np.pi / self.wavelength
+        return (2 * np.pi / C_SPEED) * self.frequency
+
+    @property
+    def wavelength(self):
+        return C_SPEED / self.frequency
 
     @property
     def mode(self):
