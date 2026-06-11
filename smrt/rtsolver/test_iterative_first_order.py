@@ -3,13 +3,14 @@ import warnings
 import numpy as np
 import pytest
 
-from smrt import make_model, make_snowpack, make_soil, sensor_list
+from smrt import make_model, make_snowpack, sensor_list
 from smrt.core.error import SMRTWarning
 from smrt.core.fresnel import snell_angle
 from smrt.core.model import Model
 from smrt.core.sensor import active
 from smrt.emmodel.iba import IBA
 from smrt.emmodel.nonscattering import NonScattering
+from smrt.inputs.make_soil import make_soil_substrate
 from smrt.interface.transparent import Transparent
 from smrt.rtsolver.iterative_first_order import IterativeFirstOrder
 
@@ -143,11 +144,15 @@ def test_all_substrate():
     corr_length = [8e-5]  # 80 microns
 
     substrates = [
-        make_soil("flat", complex(10, 0.005), temperature=265),
-        make_soil("geometrical_optics_backscatter", complex(2, 0.005), mean_square_slope=0.02, temperature=265),
-        make_soil("geometrical_optics", complex(5, 0.005), mean_square_slope=0.2, temperature=265),
-        make_soil("iem_fung92", complex(5, 0.005), roughness_rms=0.0001, corr_length=0.005, temperature=265),
-        make_soil("iem_fung92_brogioni10", complex(5, 0.005), roughness_rms=0.001, corr_length=0.005, temperature=265),
+        make_soil_substrate("flat", complex(10, 0.005), temperature=265),
+        make_soil_substrate(
+            "geometrical_optics_backscatter", complex(2, 0.005), mean_square_slope=0.02, temperature=265
+        ),
+        make_soil_substrate("geometrical_optics", complex(5, 0.005), mean_square_slope=0.2, temperature=265),
+        make_soil_substrate("iem_fung92", complex(5, 0.005), roughness_rms=0.0001, corr_length=0.005, temperature=265),
+        make_soil_substrate(
+            "iem_fung92_brogioni10", complex(5, 0.005), roughness_rms=0.001, corr_length=0.005, temperature=265
+        ),
     ]
 
     for substrate in substrates:

@@ -150,7 +150,7 @@ class Layer(object):
             # the chosen approach is based on the decorator required_layer_properties. See below. It allows the
             # permittivity model to be called with the layer argument, but the initial permittivity_model function
             # never heard about layers
-            return self.permittivity_model[i](frequency, layer_to_inject=self)
+            return self.permittivity_model[i](frequency, _properties_to_inject=self)
 
         else:  # assume it is a constant, independent of the frequency.
             return self.permittivity_model[i]
@@ -287,23 +287,26 @@ def layer_properties(*required_arguments, optional_arguments=None):
 
     def wrapper(f):
         @wraps(f)
-        def newf(*args, layer_to_inject=None, **kwargs):
-            if layer_to_inject is not None:
+        def newf(*args, _properties_to_inject=None, **kwargs):
+            if _properties_to_inject is not None:
                 args = list(args)  # make it mutable
-                assert isinstance(layer_to_inject, Layer)  # this is not stricly required
+                # assert isinstance(_properties_to_inject, Layer)  # this is not stricly required
 
                 for ra in required_arguments:
-                    if hasattr(layer_to_inject, ra):
+                    if hasattr(_properties_to_inject, ra):
                         kwargs[ra] = getattr(
-                            layer_to_inject, ra
+                            _properties_to_inject, ra
                         )  # add the layer's attributes as named arguments (avoid problems)
                     else:
-                        raise Exception(f"The layer must have the '{ra}' attribute to call the function {f!s} ")
+                        raise Exception(
+                            f"The {_properties_to_inject.__class__.__name__} must have the '{ra}' attribute to call"
+                            f" the function {f!s} "
+                        )
                 if optional_arguments:
                     for ra in optional_arguments:
-                        if hasattr(layer_to_inject, ra):
+                        if hasattr(_properties_to_inject, ra):
                             kwargs[ra] = getattr(
-                                layer_to_inject, ra
+                                _properties_to_inject, ra
                             )  # add the layer's over the eventual default arguments
             return f(*args, **kwargs)
 

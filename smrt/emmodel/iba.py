@@ -115,7 +115,7 @@ become a default in the future.""")
         # Calculate depolarization factors and iba_coefficient
         if getattr(layer, "depolarization_factors", None) is not None:
             if callable(layer.depolarization_factors):
-                self.depol_xyz = layer.depolarization_factors(layer_to_inject=layer)
+                self.depol_xyz = layer.depolarization_factors(_properties_to_inject=layer)
             else:
                 self.depol_xyz = layer.depolarization_factors
         else:

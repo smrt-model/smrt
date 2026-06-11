@@ -1,9 +1,10 @@
 """Implement a transparent interface (no reflection). Useful mainly for unit tests."""
 
+from smrt.core.interface import Interface
 from smrt.core.lib import len_atleast_1d, smrt_matrix
 
 
-class Transparent(object):
+class Transparent(Interface):
     args = []
     optional_args = {}
 

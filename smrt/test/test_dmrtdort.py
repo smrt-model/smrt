@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 # local import
-from smrt import make_model, make_snowpack, make_soil
+from smrt import make_model, make_snowpack, make_soil_substrate
 from smrt.core.error import SMRTWarning
 from smrt.inputs.make_medium import make_transparent_volume
 from smrt.inputs.sensor_list import active, amsre, passive
@@ -84,7 +84,7 @@ def test_less_refringent_bottom_layer():
         density=[290.0, 250.0],
         radius=50e-6,
         stickiness=0.2,
-        substrate=make_soil("transparent", 1, 270),
+        substrate=make_soil_substrate("transparent", 1, 270),
     )
     # this test fails with some version of scipy if not using the schur method
     m = make_model("dmrt_qcacp_shortrange", "dort", rtsolver_options=dict(diagonalization_method="schur_forcedtriu"))

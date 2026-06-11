@@ -48,14 +48,14 @@ from smrt.core.globalconstants import (
     PSU,
 )
 from smrt.core.interface import make_interface
-from smrt.core.layer import Layer, get_microstructure_model
+from smrt.core.layer import Layer, get_microstructure_model, layer_properties
 from smrt.core.plugin import import_class
 from smrt.core.snowpack import Snowpack
-from smrt.permittivity import permittivity_function
 from smrt.permittivity.brine import brine_volume_cox83_lepparanta88
 from smrt.permittivity.ice import (
     ice_permittivity_maetzler06,
 )  # default pure ice permittivity model
+from smrt.permittivity.permittivity_utils import permittivity_function
 from smrt.permittivity.saline_ice import saline_ice_permittivity_pvs_mixing
 from smrt.permittivity.saline_water import (
     brine_permittivity_stogryn85,
@@ -506,6 +506,7 @@ def make_ice_column(
         wp = water_parameters(ice_type, **kwargs)
 
         # create a permittivity_function that depends only on frequency and temperature by setting other arguments
+        @layer_properties("temperature")
         def permittivity_model(frequency, temperature):
             return wp.water_permittivity_model(frequency, temperature, wp.water_salinity)
 

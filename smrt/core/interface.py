@@ -90,7 +90,7 @@ class SubstrateBase(object):
 
     """
 
-    def __init__(self, temperature=None, permittivity_model=None):
+    def __init__(self, temperature=None, permittivity_model=None, **kwargs):
         """Build the substrate at the base of the snowpack.
 
         Args:
@@ -119,6 +119,11 @@ class SubstrateBase(object):
         else:
             self.permittivity_model = permittivity_model
 
+        # add kwargs as attributes of the substrate. This is useful for the permittivity model that can use these
+        # attributes as arguments
+        for k in kwargs:
+            setattr(self, k, kwargs[k])
+
     def permittivity(self, frequency):
         """Compute the permittivity for the given frequency using permittivity_model. This method returns None when no
         permittivity model is available. This must be handled by the calling code and interpreted suitably.
@@ -132,7 +137,7 @@ class SubstrateBase(object):
                 "This substrate is not suitable with RT solvers that require a permittivity."
             )
 
-        return self.permittivity_model(frequency, temperature=self.temperature)
+        return self.permittivity_model(frequency, _properties_to_inject=self)
 
     def __add__(self, other):
         raise SMRTError(
@@ -224,8 +229,10 @@ def substrate_from_interface(interface_cls):
 # define the Substrate class that is to be derived for object that are not build from Interface
 class Substrate(SubstrateBase, Interface):
     def __init__(self, temperature=None, permittivity_model=None, **kwargs):
-        SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model)
+        SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model, **kwargs)
         Interface.__init__(self, **kwargs)
+        print("substrate dict:", self.__dict__)
+        print("kwargs:", kwargs)
 
 
 def get_substrate_model(substrate_model):

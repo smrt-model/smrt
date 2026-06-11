@@ -3,9 +3,9 @@
 import numpy as np
 import pytest
 
-from smrt import make_model, make_snowpack, make_soil, sensor
+from smrt import make_model, make_snowpack, sensor
 from smrt.core.globalconstants import PERMITTIVITY_OF_FREE_SPACE
-from smrt.inputs.make_soil import make_soil_column
+from smrt.inputs.make_soil import make_soil_column, make_soil_substrate
 
 #
 # Ghi: rapid hack, should be splitted in different functions
@@ -43,7 +43,9 @@ def run_model(snowpack):
     return res
 
 
-@pytest.mark.parametrize("soil_permittivity_model", ["dobson85_peplinski95", "dobson85_original"])
+@pytest.mark.parametrize(
+    "soil_permittivity_model", ["soil_permittivity_dobson85_peplinski95", "soil_permittivity_dobson85_original"]
+)
 def test_soil_wegmuller_dobson85(soil_permittivity_model):
     # prepare inputs
 
@@ -55,7 +57,7 @@ def test_soil_wegmuller_dobson85(soil_permittivity_model):
     moisture = 0.2
     roughness_rms = 1e-2
 
-    substrate = make_soil(
+    substrate = make_soil_substrate(
         "soil_wegmuller",
         soil_permittivity_model,
         soiltemperature,
@@ -70,25 +72,27 @@ def test_soil_wegmuller_dobson85(soil_permittivity_model):
     res = run_model(snowpack)
 
     print(res.TbV(), res.TbH())
-    if soil_permittivity_model == "dobson85_peplinski95":
+    if soil_permittivity_model == "soil_permittivity_dobson85_peplinski95":
         assert abs(res.TbV() - 262.5735899023818) < 1e-4
         assert abs(res.TbH() - 255.85856778263752) < 1e-4
         # note value from DMRTML Fortran running in the same conditions:
         # H=255.88187817295605 V=262.60345275739024
-    elif soil_permittivity_model == "dobson85_original":
+    elif soil_permittivity_model == "soil_permittivity_dobson85_original":
         assert abs(res.TbV() - 262.56816517455616) < 1e-4
         assert abs(res.TbH() - 255.8528128244208) < 1e-4
     else:
         raise ValueError("Unexpected soil_permittivity_model")
 
 
-def test_soil_wegmuller_montpetit2008():
+def test_soil_wegmuller_montpetit08():
     # prepare inputs
 
     soiltemperature = 270
     roughness_rms = 1e-2
 
-    substrate = make_soil("soil_wegmuller", "montpetit2008", soiltemperature, roughness_rms=roughness_rms)
+    substrate = make_soil_substrate(
+        "soil_wegmuller", "soil_permittivity_montpetit08", soiltemperature, roughness_rms=roughness_rms
+    )
     snowpack = prepare_snowpack(substrate)
 
     res = run_model(snowpack)
@@ -134,7 +138,7 @@ def test_soil_bedrock():
     # Test that make_soil works with bedrock permittivity models (granite)
     soiltemperature = 270
     # Using a bedrock model by its short name
-    substrate = make_soil("flat", "granite_hartlieb16", temperature=soiltemperature)
+    substrate = make_soil_substrate("flat", "bedrock_permittivity_granite_hartlieb16", temperature=soiltemperature)
     eps = substrate.permittivity_model(1.41e9, soiltemperature)
     assert np.isclose(eps, 5.45 + 0.038j)
 
@@ -143,7 +147,9 @@ def test_soil_bedrock_complex():
     # Test that make_soil works with bedrock permittivity models (frozen bedrock with conductivity)
     soiltemperature = 270
     freq = 1.41e9
-    substrate = make_soil("flat", "frozen_bedrock_tulaczyk20", temperature=soiltemperature)
+    substrate = make_soil_substrate(
+        "flat", "bedrock_permittivity_frozen_bedrock_tulaczyk20", temperature=soiltemperature
+    )
     eps = substrate.permittivity_model(freq, soiltemperature)
 
     expected = 2.7 + 1j * (0.0002 / (2 * np.pi * freq * PERMITTIVITY_OF_FREE_SPACE))

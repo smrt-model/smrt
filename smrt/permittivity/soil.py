@@ -85,6 +85,15 @@ def soil_permittivity_dobson85_peplinski95(frequency, temperature, moisture, san
 
 @layer_properties("temperature", "moisture", "sand", "clay")
 def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
+    raise SMRTError(
+        "The model labelled 'dobson85' in SMRT was using dobson85 modified peplinski95. "
+        "To avoid this misleading name, the new recommended name is 'soil_permittivity_dobson85_peplinski95'. "
+        "In addition, the original dobson85 model is now available under the name 'dobson85_original'."
+    )
+
+
+@layer_properties("temperature", "moisture", "sand", "clay")
+def soil_permittivity_dobson85_original(frequency, temperature, moisture, sand, clay):
     """Compute the soil dielectric constant using the Dobson et al., (1985) formulation (original).
 
     It is not recommended to use this function, please use soil_permittivity_dobson85_peplinski95 instead.

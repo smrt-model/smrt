@@ -282,7 +282,7 @@ class AdjustableEffectivePermittivityMixin(object):
         args = dict(e0=self.e0, eps=self.eps, frequency=self.frequency)
         args = {k: v for k, v in args.items() if k in signature}  # filter the arguments needed by the function
 
-        eps = type(self).effective_permittivity_model(layer_to_inject=self.layer, **args)
+        eps = type(self).effective_permittivity_model(_properties_to_inject=self.layer, **args)
         if eps.imag < -1e-10:
             print(eps)
             raise SMRTError("the imaginary part of the permittivity must be positive, by convention, in SMRT")

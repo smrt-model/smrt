@@ -9,7 +9,7 @@ from smrt.permittivity.water import water_permittivity
 def test_make_rough_choudhury():
     make_soil(
         "rough_choudhury79",
-        "dobson85_peplinski95",
+        "soil_permittivity_dobson85_peplinski95",
         275,
         moisture=0.9,
         sand=0.2,
@@ -22,7 +22,7 @@ def test_make_rough_choudhury():
 def test_rough_choudhury_reflection():
     s = make_soil(
         "rough_choudhury79",
-        "dobson85_peplinski95",
+        "soil_permittivity_dobson85_peplinski95",
         275,
         moisture=0.9,
         sand=0.2,
@@ -43,7 +43,7 @@ def test_raises_ksigma_warning():
     with pytest.raises(Warning):
         s = make_soil(
             "rough_choudhury79",
-            "dobson85_peplinski95",
+            "soil_permittivity_dobson85_peplinski95",
             275,
             moisture=0.9,
             sand=0.2,

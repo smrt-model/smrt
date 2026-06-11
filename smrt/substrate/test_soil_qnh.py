@@ -8,7 +8,7 @@ from smrt.inputs.make_soil import make_soil
 def soil_setup():
     s = make_soil(
         "soil_qnh",
-        "dobson85_peplinski95",
+        "soil_permittivity_dobson85_peplinski95",
         275,
         moisture=0.9,
         sand=0.2,
@@ -29,7 +29,7 @@ def soil_setup():
 def test_make_soil_qnh():
     make_soil(
         "soil_qnh",
-        "dobson85_peplinski95",
+        "soil_permittivity_dobson85_peplinski95",
         275,
         moisture=0.9,
         sand=0.2,
@@ -43,7 +43,16 @@ def test_make_soil_qnh():
 
 
 def test_make_soil_qnh_params():
-    make_soil("soil_qnh", "dobson85_peplinski95", 275, moisture=0.9, sand=0.2, clay=0.3, drymatter=1100, H=0.65)
+    make_soil(
+        "soil_qnh",
+        "soil_permittivity_dobson85_peplinski95",
+        275,
+        moisture=0.9,
+        sand=0.2,
+        clay=0.3,
+        drymatter=1100,
+        H=0.65,
+    )
 
 
 def test_soil_qnh_reflection(soil_setup):
