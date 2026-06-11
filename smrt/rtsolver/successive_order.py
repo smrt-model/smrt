@@ -28,7 +28,6 @@ References:
 """
 
 # Stdlib import
-from collections import defaultdict
 
 import numba
 
@@ -38,7 +37,6 @@ import numpy as np
 # local import
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.rtsolver.dort import (
-    InterfaceProperties,
     _matmul,
     symmetrize_phase_matrix,
 )  # TODO: move these objects in a generic place
@@ -47,6 +45,7 @@ from smrt.rtsolver.rtsolver_utils import (
     DiscreteOrdinatesMixin,
     PlanckMixin,
     RTSolverBase,
+    compute_interface_properties,
 )
 
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers
@@ -199,16 +198,17 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         #
         # compute interface reflection and transmittance properties
         # prepare the angle of the incident angles requested by the user
-        (
-            reflection_top,
-            reflection_bottom,
-            transmission_top,
-            transmission_bottom,
-            coherent_reflection_top,
-            coherent_reflection_bottom,
-            coherent_transmission_top,
-            coherent_transmission_bottom,
-        ) = self.prepare_interfaces(self.streams, m_max)
+
+        interfaces = compute_interface_properties(
+            self.sensor.frequency,
+            self.snowpack.interfaces,
+            self.snowpack.substrate,
+            self.effective_permittivity,
+            self.streams,
+            m_max,
+            npol,
+            auto_reduce_npol=False,
+        )
 
         # print(f"{n_sublayer=}")
         # add one sub-interface more than sublayer in each layer
@@ -262,10 +262,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
                     extinction,
                     source,
                     nophase,  # no scattering
-                    coherent_reflection_top,
-                    coherent_reflection_bottom,
-                    coherent_transmission_top,
-                    coherent_transmission_bottom,
+                    interfaces.sel(mode=0, coherent_only=True),
                     incident_intensity_0,
                 )
                 coherent_intensity_up[..., i] = i_up[0:n]
@@ -309,10 +306,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
                     extinction,
                     source,
                     weighted_phase[m],
-                    reflection_top[m],
-                    reflection_bottom[m],
-                    transmission_top[m],
-                    transmission_bottom[m],
+                    interfaces.sel(mode=m),
                     incident_intensity,
                 )
                 intensity_up_m[..., i] = i_up[0:n]
@@ -387,65 +381,6 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         intensity_up = np.append(intensity_up, np.expand_dims(total_intensity_up, -1), axis=-1)
 
         return outmu, intensity_up
-
-    def prepare_interfaces(self, streams, m_max):
-        npol = 3 if self.sensor.mode == "A" else 2
-
-        interfaces = InterfaceProperties(
-            self.sensor.frequency,
-            self.snowpack.interfaces,
-            self.snowpack.substrate,
-            self.effective_permittivity,
-            streams,
-            m_max,
-            npol,
-        )
-        reflection_top = defaultdict(dict)
-        reflection_bottom = defaultdict(dict)
-        transmission_top = defaultdict(dict)
-        transmission_bottom = defaultdict(dict)
-
-        coherent_reflection_top = dict()
-        coherent_reflection_bottom = dict()
-        coherent_transmission_top = dict()
-        coherent_transmission_bottom = dict()
-
-        kwargs = dict(auto_reduce_npol=False)
-        for layer in range(0, len(streams.mu)):
-            for m in range(m_max + 1):
-                reflection_top[m][layer] = interfaces.reflection_top(layer, m=m, compute_coherent_only=False, **kwargs)
-                transmission_top[m][layer] = interfaces.transmission_top(
-                    layer, m=m, compute_coherent_only=False, **kwargs
-                )
-            coherent_reflection_top[layer] = interfaces.reflection_top(layer, m=0, compute_coherent_only=True, **kwargs)
-            coherent_transmission_top[layer] = interfaces.transmission_top(
-                layer, m=0, compute_coherent_only=True, **kwargs
-            )
-        for layer in range(-1, len(streams.mu)):
-            for m in range(m_max + 1):
-                reflection_bottom[m][layer] = interfaces.reflection_bottom(
-                    layer, m=m, compute_coherent_only=False, **kwargs
-                )
-                transmission_bottom[m][layer] = interfaces.transmission_bottom(
-                    layer, m=m, compute_coherent_only=False, **kwargs
-                )
-            coherent_reflection_bottom[layer] = interfaces.reflection_bottom(
-                layer, m=0, compute_coherent_only=True, **kwargs
-            )
-            coherent_transmission_bottom[layer] = interfaces.transmission_bottom(
-                layer, m=0, compute_coherent_only=True, **kwargs
-            )
-
-        return (
-            reflection_top,
-            reflection_bottom,
-            transmission_top,
-            transmission_bottom,
-            coherent_reflection_top,
-            coherent_reflection_bottom,
-            coherent_transmission_top,
-            coherent_transmission_bottom,
-        )
 
     def prepare_snowpack_properties(self, m_max):
         """Args:"""
@@ -530,10 +465,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         extinction,
         source,
         weighted_phase,
-        reflection_top,
-        reflection_bottom,
-        transmission_top,
-        transmission_bottom,
+        interfaces,
         incident_intensity=None,
     ) -> np.ndarray:
         npol = 3 if self.sensor.mode == "A" else 2
@@ -542,7 +474,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         new_intensity = np.zeros_like(intensity)
 
         if (order == 0) and (incident_intensity is not None):
-            transmitted_intensity = _matmul(transmission_bottom[-1], incident_intensity)
+            transmitted_intensity = _matmul(interfaces.transmission_bottom(-1), incident_intensity)
         else:
             transmitted_intensity = None
 
@@ -570,7 +502,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
             i_bottom = i_subinterface[layer + 1] - 1
 
             new_intensity[i_top, p_dn] = _matmul(
-                reflection_top[layer], intensity[i_top, p_up]
+                interfaces.reflection_top(layer), intensity[i_top, p_up]
             )  # reflect intensity coming up
 
             if transmitted_intensity is not None:
@@ -598,7 +530,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
             #     # eq 66 (adapted for downward)
             # assert k + 1 == i_bottom
 
-            transmitted_intensity = _matmul(transmission_bottom[layer], new_intensity[i_bottom, p_dn])
+            transmitted_intensity = _matmul(interfaces.transmission_bottom(layer), new_intensity[i_bottom, p_dn])
 
         assert i_bottom + 1 == len(new_intensity)
 
@@ -617,7 +549,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
             i_top = i_subinterface[layer]
             i_bottom = i_subinterface[layer + 1] - 1
 
-            new_intensity[i_bottom, p_up] = _matmul(reflection_bottom[layer], intensity[i_bottom, p_dn])
+            new_intensity[i_bottom, p_up] = _matmul(interfaces.reflection_bottom(layer), intensity[i_bottom, p_dn])
             # reflect intensity coming down at the bottom of the layer
 
             if transmitted_intensity is not None:
@@ -644,16 +576,16 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
             series_upwelling(new_intensity[i_top : i_bottom + 1, p_up], extinction[layer], s)
             # eq 66 in Lenoble
 
-            transmitted_intensity = _matmul(transmission_top[layer], new_intensity[i_top, p_up])
+            transmitted_intensity = _matmul(interfaces.transmission_top(layer), new_intensity[i_top, p_up])
 
         assert i_top == 0
         # compute the final transmission
-        emerging_intensity = _matmul(transmission_top[0], new_intensity[i_top, p_up])
+        emerging_intensity = _matmul(interfaces.transmission_top(0), new_intensity[i_top, p_up])
 
         # print(f"{np.all(emerging_intensity==0)=} {np.max(emerging_intensity)=} {np.min(emerging_intensity)=}")
         if (incident_intensity is not None) and (order == 0):
             n = len(incident_intensity)
-            emerging_intensity[:n] += _matmul(reflection_bottom[-1], incident_intensity)
+            emerging_intensity[:n] += _matmul(interfaces.reflection_bottom(-1), incident_intensity)
 
         return new_intensity, emerging_intensity
 
