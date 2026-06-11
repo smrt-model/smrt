@@ -272,7 +272,7 @@ def make_microstructure_model(modelname_or_class, **kwargs):
     return cls(kwargs)  # sent as an array as need by the constructor.
 
 
-def layer_properties(*required_arguments, optional_arguments=None, **kwargs):
+def layer_properties(*required_arguments, optional_arguments=None):
     """This decorator is used for the permittivity functions (or any other functions) to inject layer's attributes as
     arguments.
 

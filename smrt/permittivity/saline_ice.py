@@ -66,7 +66,7 @@ def impure_ice_permittivity_maetzler06(frequency, temperature, salinity):
 @layer_properties(
     "temperature",
     "brine_volume_fraction",
-    optional=(
+    optional_arguments=(
         "brine_inclusion_shape",
         "brine_mixing_ratio",
         "ice_permittivity_model",
