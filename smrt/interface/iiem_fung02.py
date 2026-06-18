@@ -13,7 +13,7 @@ Notes:
 
 Usage:
     Basic usage with default settings:
-        >>> soil = make_soil('iiem_fung2002', complex(2, 0.01), roughness_rms=0.001, corr_length=0.02,
+        >>> soil = make_soil_substrate('iiem_fung2002', complex(2, 0.01), roughness_rms=0.001, corr_length=0.02,
         temperature=265)
 
 Credit:
