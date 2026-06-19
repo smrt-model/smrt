@@ -103,7 +103,7 @@ class IterativeFirstOrder(RTSolverBase):
         self.error_handling = error_handling
         self.return_contributions = return_contributions
 
-    def solve(self, snowpack, emmodels, sensor, atmosphere=None):
+    def solve(self, snowpack, emmodels, sensor, atmosphere=None, parallel_computation=None):
         """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:

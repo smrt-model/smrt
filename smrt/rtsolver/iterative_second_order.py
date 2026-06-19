@@ -142,7 +142,7 @@ class IterativeSecondOrder(RTSolverBase):
         self.m_max = m_max
         self.compute_scattering_interlayer = compute_scattering_interlayer
 
-    def solve(self, snowpack, emmodels, sensor, atmosphere=None):
+    def solve(self, snowpack, emmodels, sensor, atmosphere=None, parallel_computation=None):
         """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:

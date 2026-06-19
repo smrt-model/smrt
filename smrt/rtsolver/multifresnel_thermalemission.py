@@ -73,7 +73,7 @@ class MultiFresnelThermalEmission(object):
         # self.process_coherent_layers = process_coherent_layers
         self.prune_deep_snowpack = prune_deep_snowpack
 
-    def solve(self, snowpack, emmodels, sensor, atmosphere=None):
+    def solve(self, snowpack, emmodels, sensor, atmosphere=None, parallel_computation=None):
         """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:

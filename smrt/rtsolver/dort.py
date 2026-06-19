@@ -185,7 +185,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             if len(self.sensor.phi) > 1:
                 raise SMRTError("phi as an array must be implemented")
 
-    def solve(self, snowpack, emmodels, sensor, atmosphere=None):
+    def solve(self, snowpack, emmodels, sensor, atmosphere=None, parallel_computation=None):
         """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:

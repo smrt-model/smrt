@@ -31,6 +31,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 	- in nadir_lrm_altimetry oversampling argument becomes oversampling_time.
 	- Snowpack.copy is depreciated, it is replaced by shallow_copy.
 	- align how substrate permittivities work on layer permittivities, by using the decorator "layer_properties".
+	- improve parallel_computation to select between outer and inner parallelism (above the rtsolver or inside)
 
 ### Bug
 	- Solve a bug when no snowpack and DMRT_QCA_ShortRange is used due to incompatible microstructure

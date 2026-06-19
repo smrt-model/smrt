@@ -313,9 +313,9 @@ class Model(object):
         snowpack,
         atmosphere=None,
         snowpack_dimension=None,
-        snowpack_column="snowpack",
-        progressbar=False,
-        parallel_computation=True,
+        snowpack_column: str = "snowpack",
+        progressbar: bool = False,
+        parallel_computation: str | None = "outer",
         runner=None,
     ):
         """Run the model for the given sensor configuration and returns the results.
@@ -332,22 +332,24 @@ class Model(object):
                 Snowpack objects (Default value = 'snowpack')
             progressbar: if True, display a progress bar during
                 multi-snowpacks computation (Default value = False)
-            parallel_computation: if True (default), use the joblib library to run the simulations of many snowpacks in
-                parallel. Otherwise, the simulations are run sequentially, one after one. See 'runner' for a more
-                advanced control on parallel computations. Note for users seeking performances: numpy and scipy usually
-                also perform low- level parallel computations that may (inefficiently) interact with the high-level
-                parallelism activated by parallel_computation. For this reason joblib and other parallel runners try to
-                desactivate numpy and scipy low-level parallelism
+            parallel_computation: if "auto" (default), the "outer" mode is used if the number of simulations is greater
+                than 1, otherwise the "inner" mode is used. If "outer", use the joblib library to run the simulations
+                over all snowpacks and sensor configurations in parallel. If "inner", the parallelism is delegated
+                inside the rtsolver (if it supports it). If None, the simulations are run sequentially, one after one.
+                See 'runner' for a more advanced control on parallel computations. Note for users seeking performances:
+                numpy and scipy usually also perform low- level parallel computations that may (inefficiently) interact
+                with the high-level parallelism activated by parallel_computation. For this reason joblib and other
+                parallel runners try to desactivate numpy and scipy low-level parallelism
                 (see :py:func:`~smrt.core.lib.set_max_numerical_threads`) to maximize performances. Conversely it means
                 that when parallel_computation is False, the simulations are run sequentially, but numpy and scipy
-                parallelism is NOT disabled. If you really want to use a single core for the simulations, you must first
+                parallelism is activated. If you really want to use a single core for the simulations, you must first
                 call :py:func:`~smrt.core.lib.set_max_numerical_threads` with 1 as argument and then call Model.run with
                 parallel_computation=False. (Default value = False)
             runner: a 'runner' is a function (or more likely a class with a __call__ method) that takes a function and a
                 list/generator of simulations, executes the function on each simulation and returns a list of results.
-                'parallel_computation' allows to select between two default (basic) runners (sequential and joblib). Use
-                'runner' for more advanced parallel distributed computations. To develop a costum runner, see the
-                implementation of :py:class:`JoblibParallelRunner` for instance.
+                If a runner is provided, parallel_computation is ignored. The runner can be used to implement advanced
+                parallel distributed computations. To develop a costum runner, follow the implementation of
+                :py:class:`JoblibParallelRunner` for instance.
 
         Returns:
             result of the calculation(s) as a :py:class:`Results` instance
@@ -370,14 +372,24 @@ class Model(object):
 
         # determine the runner
         if runner is None:
-            if parallel_computation:
+            if parallel_computation == "auto":
+                # check if we have more than one simulation to run without consuming the whole generator
+                simulations_iter = iter(simulations)
+                head = list(itertools.islice(simulations_iter, 2))  # get the first two elements of the generator
+                simulations = itertools.chain(head, simulations_iter)  # rebuild the generator with the head
+                # chose outer if we have more than one simulation, otherwise inner
+                parallel_computation = "outer" if len(head) > 1 else "inner"
+
+            if (parallel_computation == "outer") or (parallel_computation is True):  # True for legacy reasons
                 runner = JoblibParallelRunner(progressbar=progressbar)
             else:
                 runner = SequentialRunner(progressbar=progressbar)
 
         #  run all the simulations (with atmosphere as long as it is not depreciated), the results is a flat list of
         # results
-        results = runner(self.run_single_simulation, ((simul, atmosphere) for simul in simulations))
+        results = runner(
+            self.run_single_simulation, ((simul, atmosphere, parallel_computation) for simul in simulations)
+        )
         results = list(results)  # consume the generator if it is one
 
         # reshape the results with successive concatenations
@@ -564,12 +576,13 @@ class Model(object):
 
         return emmodel_instances
 
-    def run_single_simulation(self, simulation, atmosphere):
+    def run_single_simulation(self, simulation, atmosphere, parallel_computation):
         """Run a single simulation.
 
         Args:
             simulation: a tuple (sensor, snowpack)
             atmosphere: atmosphere information
+            parallel_computation: the parallel computation mode
         """
         sensor, snowpack = simulation
 
@@ -590,7 +603,13 @@ class Model(object):
                 rtsolver = self.rtsolver
 
             # run the rtsolver
-            result = rtsolver.solve(snowpack, emmodel_instances, sensor, snowpack.atmosphere or atmosphere)
+            result = rtsolver.solve(
+                snowpack,
+                emmodel_instances,
+                sensor,
+                snowpack.atmosphere or atmosphere,
+                parallel_computation=parallel_computation,
+            )
 
             return result
 
