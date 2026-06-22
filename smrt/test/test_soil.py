@@ -139,7 +139,7 @@ def test_soil_bedrock():
     soiltemperature = 270
     # Using a bedrock model by its short name
     substrate = make_soil_substrate("flat", "bedrock_permittivity_granite_hartlieb16", temperature=soiltemperature)
-    eps = substrate.permittivity_model(1.41e9, soiltemperature)
+    eps = substrate.permittivity_model(1.41e9)
     assert np.isclose(eps, 5.45 + 0.038j)
 
 
@@ -150,7 +150,7 @@ def test_soil_bedrock_complex():
     substrate = make_soil_substrate(
         "flat", "bedrock_permittivity_frozen_bedrock_tulaczyk20", temperature=soiltemperature
     )
-    eps = substrate.permittivity_model(freq, soiltemperature)
+    eps = substrate.permittivity_model(freq)
 
     expected = 2.7 + 1j * (0.0002 / (2 * np.pi * freq * PERMITTIVITY_OF_FREE_SPACE))
     assert np.isclose(eps, expected)
