@@ -310,6 +310,8 @@ def layer_properties(*required_arguments, optional_arguments=None):
                             )  # add the layer's over the eventual default arguments
             return f(*args, **kwargs)
 
+        newf.required_arguments = required_arguments
+        newf.optional_arguments = optional_arguments or {}
         return newf
 
     return wrapper

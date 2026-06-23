@@ -7,6 +7,7 @@ rather than the class constructor.
 """
 
 import inspect
+import itertools
 import numbers
 
 from smrt.core import lib
@@ -107,22 +108,35 @@ class SubstrateBase(object):
         self.temperature = temperature
         # this is a function, so it automatically becomes a method of substrate
 
-        if permittivity_model is not None and not callable(permittivity_model):
-            if not isinstance(permittivity_model, numbers.Number):
-                raise SMRTError("permittivity_model must be either a function or a numerical value.")
+        if callable(permittivity_model):
+            kwargs = dict(kwargs)
+            kwargs.setdefault("temperature", temperature)
+            # we have a callable function and it is very likely defined with the @layer_properties decorator.
+            # This means that it has required_arguments and optional_arguments
+            # -> transfer these arguments from kwargs to the substrate instance
+            for arg in getattr(permittivity_model, "required_arguments", []):
+                if arg in kwargs:
+                    setattr(self, arg, kwargs.get(arg))
+                else:
+                    raise SMRTError(f"Parameter {arg} must be specified")
 
+            for arg, default in getattr(permittivity_model, "optional_arguments", {}).items():
+                setattr(self, arg, kwargs.get(arg, default))
+
+            self.permittivity_model = permittivity_model
+
+        elif isinstance(permittivity_model, numbers.Number):
             # make a function that returns the constant value
             def const_permittivity_model(frequency, _private_permittivity_value=permittivity_model, **kwargs):
                 return _private_permittivity_value
 
             self.permittivity_model = const_permittivity_model
+        elif permittivity_model is None:
+            self.permittivity_model = None
         else:
-            self.permittivity_model = permittivity_model
-
-        # add kwargs as attributes of the substrate. This is useful for the permittivity model that can use these
-        # attributes as arguments
-        for k in kwargs:
-            setattr(self, k, kwargs[k])
+            raise SMRTError(
+                "permittivity_model must be either a function or a numerical value (or None in some cases)."
+            )
 
     def permittivity(self, frequency):
         """Compute the permittivity for the given frequency using permittivity_model. This method returns None when no
@@ -161,13 +175,11 @@ def substrate_from_interface(interface_cls):
 
     def decorator(cls):
         def __init__(self, temperature=None, permittivity_model=None, **kwargs):
-            SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model)
+            SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model, **kwargs)
             # create an interface instance
             self.interface_inst = interface_cls(**kwargs)
             # transfer the interface_instance's args and optional args here
-            for k in self.interface_inst.args:
-                setattr(self, k, getattr(self.interface_inst, k))
-            for k in self.interface_inst.optional_args:
+            for k in itertools.chain(self.interface_inst.args, self.interface_inst.optional_args):
                 setattr(self, k, getattr(self.interface_inst, k))
 
         def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):

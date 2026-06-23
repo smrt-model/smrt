@@ -123,6 +123,7 @@ def make_soil_column(
     interface=None,
     substrate=None,
     atmosphere=None,
+    add_soil_substrate=False,
     **kwargs,
 ) -> Snowpack:
     """Build a multi-layered soil column. Each parameter can be an array, list or a constant value.
@@ -144,13 +145,30 @@ def make_soil_column(
         parameters (e.g. Flat or Transparent) or is created with :py:func:`~smrt.core.interface.make_interface` in more
         complex cases. Interface can be a constant or a list. In the latter case, its length must be the same as the
         number of layers, and interface[0] refers to the surface interface.
-    :param substrate: if add_water_substrate is False, the substrate can be prescribed with this argument.
+    :param add_soil_substrate: If True adds a substrate with Flat interface made of the same soil as the last layer.
+    :param substrate: if add_soil_substrate is False, the substrate can be prescribed with this argument.
 
     All the other optional arguments are passed for each layer to the function
     :py:func:`~smrt.inputs.make_medium.make_ice_layer`. The documentation of this function describes in detail the
     parameters used/required depending on ice_type.
 
     """
+
+    if add_soil_substrate:
+        if substrate is not None:
+            raise SMRTError("add_soil_substrate is True but substrate is also set. This is ambiguous.")
+
+        substrate = make_soil_substrate(
+            "flat",
+            soil_permittivity_model=soil_permittivity_model,
+            temperature=temperature,
+            moisture=moisture,
+            sand=sand,
+            clay=clay,
+            dry_matter=clay,
+            **kwargs,
+        )
+
     sp = Snowpack(
         substrate=substrate, atmosphere=atmosphere
     )  # ??????????????????????????????????????????????????????????????????????????
