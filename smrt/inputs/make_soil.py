@@ -38,6 +38,7 @@ from smrt.core import lib
 
 # local import
 from smrt.core.error import SMRTError
+from smrt.core.globalconstants import FREEZING_POINT
 from smrt.core.interface import Substrate, get_substrate_model, make_interface
 from smrt.core.layer import Layer, get_microstructure_model
 from smrt.core.snowpack import Snowpack
@@ -51,15 +52,15 @@ def make_soil(
     **kwargs,
 ) -> Substrate:
     DeprecationWarning(
-        "make_soil is deprecated and will be removed in future versions. Please use make_soil_substrate instead."
+        "make_soil is deprecated and will be removed in future versions. Please use make_soil_substrate instead. The "
     )
     return make_soil_substrate(*args, **kwargs)
 
 
 def make_soil_substrate(
     substrate_model,
-    permittivity_model,
-    temperature,
+    permittivity_model=None,
+    temperature=FREEZING_POINT,
     moisture=None,
     sand=None,
     clay=None,
@@ -77,7 +78,8 @@ def make_soil_substrate(
         substrate_model: Name of substrate model, can be a class or a string. e.g. fresnel, wegmuller...
         permittivity_model: Permittivity model to use. Can be a name (soil: "hut_epss", "dobson85_peplinski95",
             "montpetit2008"; bedrock: "granite_hartlieb16", "frozen_bedrock_tulaczyk20", ...), a function of frequency
-            and temperature or a complex value.
+            and temperature or a complex value.  If None, the default is
+            :py:func:`~smrt.permittivity.soil.soil_permittivity_dobson85_peplinski95`.
         temperature: Temperature of the soil/bedrock.
         moisture: Soil moisture in m^3 m^-3 to compute the permittivity. This parameter is used depending on the
             permittivity_model.
@@ -97,7 +99,7 @@ def make_soil_substrate(
         bottom = substrate.make('Wegmuller', permittivity_model='soil', roughness_rms=0.25, moisture=0.25)
     """
     # process the permittivity_model argument
-    permittivity_model = get_permittivity_function(permittivity_model)
+    permittivity_model = get_permittivity_function(permittivity_model) or soil_permittivity_dobson85_peplinski95
 
     # process the substrate_model argument
     if not isinstance(substrate_model, type):
@@ -111,8 +113,8 @@ def make_soil_substrate(
 
 def make_soil_column(
     thickness,
-    temperature,
-    soil_permittivity_model,
+    soil_permittivity_model=None,
+    temperature=FREEZING_POINT,
     moisture=None,
     sand=None,
     clay=None,
@@ -127,9 +129,9 @@ def make_soil_column(
 
     :param thickness: thicknesses of the layers in meter (from top to bottom). The last layer thickness can be
         "numpy.inf" for a semi-infinite layer. Any layer with zero thickness is removed.
-    :param temperature: temperature of soil in K.
     :param soil_permittivity_model: Permittivity model to use. Can be a name, a function of
             frequency and temperature or a complex value.
+    :param temperature: temperature of soil in K.
     :param moisture: Soil moisture in m^3 m^-3 to compute the permittivity. This parameter is used depending on the
         permittivity_model.
     :param sand: Soil relative sand content. This parameter is used or not depending on the permittivity_model.
@@ -174,9 +176,9 @@ def make_soil_column(
         if dz <= 0:
             continue
         layer = make_soil_layer(
-            soil_permittivity_model,
-            dz,
+            layer_thickness=dz,
             temperature=lib.get(temperature, i),
+            soil_permittivity_model=soil_permittivity_model,
             moisture=lib.get(moisture, i),
             sand=lib.get(sand, i),
             clay=lib.get(clay, i),
@@ -198,9 +200,9 @@ def make_soil_column(
 
 
 def make_soil_layer(
-    soil_permittivity_model,
     layer_thickness,
-    temperature,
+    soil_permittivity_model=None,
+    temperature=FREEZING_POINT,
     moisture=None,
     sand=None,
     clay=None,
@@ -210,9 +212,9 @@ def make_soil_layer(
     """Make a soil layer with given geophysical parameters
 
     Args:
+        layer_thickness: Thickness of ice layer in m.
         soil_permittivity_model: Permittivity model to use (see :py:mod:`~smrt.permittivity.soil`).  If None, the
             default is :py:func:`~smrt.permittivity.soil.soil_permittivity_dobson85_peplinski95`.
-        layer_thickness: Thickness of ice layer in m.
         temperature: Temperature of layer in K.
         moisture: Soil moisture in m^3 m^-3 to compute the permittivity. This parameter is used depending on the
             permittivity_model.

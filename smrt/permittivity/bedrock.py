@@ -15,7 +15,7 @@ References:
 Example::
 
     from smrt.inputs.make_bedrock import make_bedrock
-    bedrock = make_bedrock("flat", "granite_hartlieb16", temperature=270)
+    bedrock = make_soil_substrate("flat", "granite_hartlieb16", temperature=270)
 
 """
 
