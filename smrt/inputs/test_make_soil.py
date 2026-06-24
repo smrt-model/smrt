@@ -56,8 +56,9 @@ def test_make_soil_column_with_substrate(soil_parameters):
         add_soil_substrate=True,
     )
 
-    assert len(soil_column.layers) == 3
-    assert isinstance(soil_column.layers[-1].interface, Flat)
+    assert len(soil_column.layers) == 2
+    print(soil_column.interfaces[-1].__class__)
+    assert isinstance(soil_column.substrate, Flat)
 
 
 def test_make_soil_column_all_zero_thickness(soil_parameters):
