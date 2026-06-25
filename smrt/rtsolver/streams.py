@@ -28,6 +28,90 @@ class Streams(object):
     # n_substrate: int = 0
     n_air: int = 0
 
+    def up_down_cosine(self, layer: int) -> np.ndarray:
+        """Return the mu for both directions (up and down) for a given layer.
+
+        Args:
+            layer: layer index
+
+        Returns:
+            np.ndarray: The mu values for both directions.
+        """
+
+        return np.concatenate([self.mu[layer], -self.mu[layer]])
+
+    def extended_weights(self, layer: int, npol: int) -> np.ndarray:
+        """Return the weights for both directions (up and down) for a given layer, repeated npol times.
+
+        Args:
+            layer: layer index
+            npol: number of polarizations
+
+        Returns:
+            np.ndarray: The weights for both directions, repeated npol times.
+        """
+        return np.repeat(self.weight[layer], npol)
+
+    def extended_cosine(self, layer: int, npol: int) -> np.ndarray:
+        """Return the cosine values for both directions (up and down) for a given layer, repeated npol times.
+
+        Args:
+            layer: layer index
+            npol: number of polarizations
+
+        Returns:
+            np.ndarray: The cosine values for both directions, repeated npol times.
+        """
+        return np.repeat(self.mu[layer], npol)
+
+    def layer_streams(self, layer: int) -> "LayerStreams":
+        """Return the streams for a given layer.
+
+        Args:
+            layer: layer index
+
+        Returns:
+            LayerStreams: The streams for the specified layer.
+        """
+        return LayerStreams(mu=self.mu[layer], weight=self.weight[layer])
+
+
+@dataclass
+class LayerStreams:
+    mu: np.ndarray
+    weight: np.ndarray
+
+    def up_down_cosine(self) -> np.ndarray:
+        """Return the mu for both directions (up and down) for a given layer.
+
+        Returns:
+            np.ndarray: The mu values for both directions.
+        """
+
+        return np.concatenate([self.mu, -self.mu])
+
+    def extended_weights(self, npol: int) -> np.ndarray:
+        """Return the weights for both directions (up and down) for a given layer, repeated npol times.
+
+        Args:
+            npol: number of polarizations
+
+        Returns:
+            np.ndarray: The weights for both directions, repeated npol times.
+        """
+        return np.repeat(self.weight, npol)
+
+    def extended_cosine(self, npol: int) -> np.ndarray:
+        """Return the cosine values for both directions (up and down) for a given layer, repeated npol times.
+
+        Args:
+            npol: number of polarizations
+
+        Returns:
+            np.ndarray: The cosine values for both directions, repeated npol times.
+        """
+        return np.repeat(self.mu, npol)
+
 
 def compute_stream(n_max_stream, permittivity, mode="most_refringent") -> Streams:
     # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent
