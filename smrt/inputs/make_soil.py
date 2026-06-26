@@ -161,12 +161,12 @@ def make_soil_column(
         substrate = make_soil_substrate(
             "flat",
             soil_permittivity_model=soil_permittivity_model,
-            temperature=temperature,
-            moisture=moisture,
-            sand=sand,
-            clay=clay,
-            dry_matter=clay,
-            **kwargs,
+            temperature=lib.get(temperature, -1),
+            moisture=lib.get(moisture, -1),
+            sand=lib.get(sand, -1),
+            clay=lib.get(clay, -1),
+            dry_matter=lib.get(dry_matter, -1),
+            **lib.get(kwargs, -1),
         )
 
     sp = Snowpack(
