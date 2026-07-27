@@ -2,7 +2,7 @@
 Sensitivity analysis
 #########################
 
-**Goal**: - run sensitivity analysis to show the impact of a given parameter on the SMRT output
+**Goal**: run sensitivity analysis to show the impact of a given parameter on the SMRT output
 
 **Learning**:
 
@@ -26,6 +26,7 @@ powerful way to conduct sensitivity analysis.
 In the following, we show these different approaches to conduct sensitivity studies.
 
 Sensitivity with a list of snowpack
+===================================
 
 First import the necessary libraries and prepare the sensor and model configuration:
 
@@ -41,7 +42,7 @@ First import the necessary libraries and prepare the sensor and model configurat
     from smrt import make_model, make_snowpack, sensor_list
 
 
-The key idea is to build a list of snowpack or a DataFrame. E.g. we want to test the sensitivity of TB’s to the radius.
+The key idea is to build a list of snowpacks. Here we will test the sensitivity of TB to the radius.
 We first build a list of snowpack with different radius.
 
 .. code:: ipython3
@@ -77,8 +78,7 @@ In simple cases, it is easier to use “list comprehension”, a nice python fea
 
     #run!
 
-Now we have a list of snowpacks, we want to call the model for each snowpack. Here, results is a list of `Results` o
-bjects and a loop is again necessary to extract the TB for each snowpack  and plot it. This works but approach is not
+Now we have a list of snowpacks, we want to call the model for each snowpack. Here, results is a list of `Results` objects and a loop is again necessary to extract the TB for each snowpack  and plot it. This works but this approach is not
 recommended.
 
 .. code:: ipython3
@@ -119,21 +119,22 @@ The simulations are run in parallel by default, so the computation time is much 
 It is possible to disable parallel computation by setting `parallel_computation=False`. It is sometimes easier when
 debugging, the error messages are clearer without parallel computation.
 
-  .. code:: ipython3
+.. code:: ipython3
 
     results = model.run(sensor, snowpack, snowpack_dimension=('radius', radius), parallel_computation=False)
 
 
-It is also possible to save the result siumations to disk:
+It is also possible to save the simulation result to disk:
 
 .. code:: ipython3
 
     results.save("radius-sensitivity.nc")
 
-and later read the results, and get a `Result` object as if the simulations were just run:
+And later read the results, and get a `Result` object as if the simulations were just run:
+
+.. code:: ipython3
 
     from smrt import open_result
-
     results = open_result("radius-sensitivity.nc")
 
 
@@ -159,8 +160,8 @@ pandas.DataFrame:
 
     results
 
-The key step is to add a column named "snowpack" in the DataFrame that contains the `Snowpack`` objects.
-While `pandas.DataFrame`` is mainly used with numerical values, it is possible to add any kind of object into the
+The key step is to add a column named "snowpack" in the DataFrame that contains the `Snowpack` objects.
+While `pandas.DataFrame` is mainly used with numerical values, it is possible to add any kind of object into the
 columns.
 
 This approach is particularly useful when using pandas to read a database of sites, and build the snowpacks directly
