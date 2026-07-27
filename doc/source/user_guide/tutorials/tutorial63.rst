@@ -14,8 +14,6 @@ by the user using the :py:func:`~smrt.make_atmosphere` function. The RTsolver ca
 the downwelling radiation, 2) the upwelling radiation, and 3) the transmittance of the layer. This information is used
 by the RTsolver to compute the brightness temperature or the backscatter at the sensor level.
 
-Note there is no implementation of the Faraday rotation in the ionosphere currently.
-
 Simple atmosphere
 =================
 
@@ -112,6 +110,8 @@ https://doi.org/10.5194/gmd-17-2053-2024, 2024.
 Tip: `simple_isotropic_atmosphere` is also useful to compute the reflectivity of a snowpack. Compare two simulations,
 one without atmosphere and one with atmosphere with only `tb_down=1` K (that is `tp_up=0` and `transmittance=1`).
 The difference in brightness temperature is the reflectivity of the snowpack.
+
+**Note:** there is no implementation of the Faraday rotation in the ionosphere currently.
 
 Recap:
 ======
