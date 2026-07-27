@@ -1,11 +1,8 @@
-###########################
-The atmosphere contribution
-###########################
+##############################
+Contribution of the atmosphere
+##############################
 
-Introduction
-============
-
-**Goal**: - Add atmosphere to snowpack
+**Goal**: add an atmosphere to a snowpack
 
 The upper boundary limit of the snowpack is called "atmosphere" in SMRT. It represents a single non-scattering layer
 with absorption and emission only. This is convenient to model a simple atmosphere over the snowpack, however, more
@@ -17,7 +14,7 @@ by the user using the :py:func:`~smrt.make_atmosphere` function. The RTsolver ca
 the downwelling radiation, 2) the upwelling radiation, and 3) the transmittance of the layer. This information is used
 by the RTsolver to compute the brightness temperature or the backscatter at the sensor level.
 
-Note there is not implementation of the Faraday rotation in the ionosphere currently.
+Note there is no implementation of the Faraday rotation in the ionosphere currently.
 
 Simple atmosphere
 =================
@@ -27,11 +24,13 @@ It can be configured as follows:
 
 .. code:: ipython3
 
-    # Import statements
     import numpy as np
-    from smrt import make_atmosphere, make_snowpack, make_model  # Core model functionality
+    from smrt import make_atmosphere, make_snowpack, make_model
 
-    atmos = make_atmosphere("simple_isotropic_atmosphere", tb_down=25., tb_up=22., transmittance=0.90)
+    atmos = make_atmosphere("simple_isotropic_atmosphere",
+                            tb_down=25.,
+                            tb_up=22.,
+                            transmittance=0.90)
 
     # make a snowpack
     sp = make_snowpack(thickness, microstruture, ..., atmosphere=atmos)
@@ -43,16 +42,14 @@ the atmosphere and the snowpack.
 
 .. code:: ipython3
 
-    # Import statements
-    import numpy as np
-    from smrt import make_atmosphere, make_snowpack, make_model  # Core model functionality
-
-    # make a snowpack
+    # make a snowpack and an atmosphere
     sp = make_snowpack(thickness, microstruture, ...)
+    atmos = make_atmosphere("simple_isotropic_atmosphere",
+                            tb_down=30.,
+                            tb_up=27.,
+                            transmittance=0.90)
 
-    atmos = make_atmosphere("simple_isotropic_atmosphere", tb_down=30., tb_up=27., transmittance=0.90)
-
-    # now add the atmosphere
+    # combine both objects
     sp = atmos + sp
 
 Note that the addition operator is not commutative here, the atmosphere object must come first, the snowpack second.
@@ -85,16 +82,17 @@ independently of SMRT using:
 
     pip install smrt[pyrtlib]
 
+
 PyRTlib performs computation using either a climatological profile, or the profile from ERA5 for a given location and
- day and time. ERA5 files are downloaded automatic and cached, optimizing the time of repetitive computations.
+day and time. ERA5 files are downloaded automatic and cached, optimizing the time of repetitive computations.
 
 A typical simulation with the climatology includes:
 
 .. code:: ipython3
 
-    from smrt import make_atmosphere
-
-    atmos = make_atmosphere('pyrtlib_climatology_atmosphere', profile='Subarctic Summer', absorption_model = 'R20')
+    atmos = make_atmosphere('pyrtlib_climatology_atmosphere',
+                            profile='Subarctic Summer',
+                            absorption_model = 'R20')
 
 
 while a simulation using ERA5 profiles would include:
@@ -108,19 +106,18 @@ while a simulation using ERA5 profiles would include:
 
 Note that `R20` designates the Rosenkranz model from 2000. Refer to the Larosa et al. 2024  publication: Larosa, S.,
 Cimini, D., Gallucci, D., Nilo, S. T., and Romano, F.: PyRTlib: an educational Python-based library for  non-scattering
- atmospheric microwave radiative transfer computations, Geosci. Model Dev., 17, 2053–2076,
+atmospheric microwave radiative transfer computations, Geosci. Model Dev., 17, 2053–2076,
 https://doi.org/10.5194/gmd-17-2053-2024, 2024.
 
+Tip: `simple_isotropic_atmosphere` is also useful to compute the reflectivity of a snowpack. Compare two simulations,
+one without atmosphere and one with atmosphere with only `tb_down=1` K (that is `tp_up=0` and `transmittance=1`).
+The difference in brightness temperature is the reflectivity of the snowpack.
 
 Recap:
 ======
 
-- Atmosphere model are for passive microwave use only
-
+- Atmosphere modelq are for passive microwave use only
 - Use `make_atmosphere` to create an atmosphere object, then add the snowpack to it with `sp = atmos + sp`
   or in `make_snowpack`.
 - `make_atmosphere("pyrtlib_era5_atmosphere", ...)` is the most advanced way currently available to perform
   an atmospheric computation in SMRT.
-- Tip: `simple_isotropic_atmosphere` is also useful to compute the reflectivity of a snowpack, just compare two simulations
-  one without atmosphere and one with atmosphere with only tb_down=1K (that is tp_up=0 and transmittance=1).
-  The difference in brightness temperature is the reflectivity of the snowpack.
