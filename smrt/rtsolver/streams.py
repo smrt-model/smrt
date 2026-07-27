@@ -28,10 +28,94 @@ class Streams(object):
     # n_substrate: int = 0
     n_air: int = 0
 
+    def up_down_cosine(self, layer: int) -> np.ndarray:
+        """Return the mu for both directions (up and down) for a given layer.
+
+        Args:
+            layer: layer index
+
+        Returns:
+            np.ndarray: The mu values for both directions.
+        """
+
+        return np.concatenate([self.mu[layer], -self.mu[layer]])
+
+    def extended_weights(self, layer: int, npol: int) -> np.ndarray:
+        """Return the weights for both directions (up and down) for a given layer, repeated npol times.
+
+        Args:
+            layer: layer index
+            npol: number of polarizations
+
+        Returns:
+            np.ndarray: The weights for both directions, repeated npol times.
+        """
+        return np.repeat(self.weight[layer], npol)
+
+    def extended_cosine(self, layer: int, npol: int) -> np.ndarray:
+        """Return the cosine values for both directions (up and down) for a given layer, repeated npol times.
+
+        Args:
+            layer: layer index
+            npol: number of polarizations
+
+        Returns:
+            np.ndarray: The cosine values for both directions, repeated npol times.
+        """
+        return np.repeat(self.mu[layer], npol)
+
+    def layer_streams(self, layer: int) -> "LayerStreams":
+        """Return the streams for a given layer.
+
+        Args:
+            layer: layer index
+
+        Returns:
+            LayerStreams: The streams for the specified layer.
+        """
+        return LayerStreams(mu=self.mu[layer], weight=self.weight[layer])
+
+
+@dataclass
+class LayerStreams:
+    mu: np.ndarray
+    weight: np.ndarray
+
+    def up_down_cosine(self) -> np.ndarray:
+        """Return the mu for both directions (up and down) for a given layer.
+
+        Returns:
+            np.ndarray: The mu values for both directions.
+        """
+
+        return np.concatenate([self.mu, -self.mu])
+
+    def extended_weights(self, npol: int) -> np.ndarray:
+        """Return the weights for both directions (up and down) for a given layer, repeated npol times.
+
+        Args:
+            npol: number of polarizations
+
+        Returns:
+            np.ndarray: The weights for both directions, repeated npol times.
+        """
+        return np.repeat(self.weight, npol)
+
+    def extended_cosine(self, npol: int) -> np.ndarray:
+        """Return the cosine values for both directions (up and down) for a given layer, repeated npol times.
+
+        Args:
+            npol: number of polarizations
+
+        Returns:
+            np.ndarray: The cosine values for both directions, repeated npol times.
+        """
+        return np.repeat(self.mu, npol)
+
 
 def compute_stream(n_max_stream, permittivity, mode="most_refringent") -> Streams:
-    # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent layer and
-    # use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
+    # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent
+    # layer and use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
 
     #     :param n_max_stream: number of stream
     #     :param permittivity: permittivity of each layer
@@ -50,8 +134,8 @@ def compute_stream(n_max_stream, permittivity, mode="most_refringent") -> Stream
 
 
 def compute_stream_gaussian(n_max_stream, permittivity, mode="most_refringent"):
-    # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent layer and
-    # use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
+    # """Compute the optimal angles of each layer. Use for this a Gauss-Legendre quadrature for the most refringent
+    # layer and use Snell-law to prograpate the direction in the other layers takig care of the total reflection.
 
     #     :param n_max_stream: number of stream
     #     :param permittivity: permittivity of each layer
@@ -106,7 +190,7 @@ def compute_stream_gaussian(n_max_stream, permittivity, mode="most_refringent"):
     mu[real_reflection] = np.sqrt(1 - relsin[real_reflection] ** 2)
 
     # calculate the number of streams per layer
-    streams.mu = [mu[l, real_reflection[l, :]] for l in range(nlayer)]
+    streams.mu = [mu[layer, real_reflection[layer, :]] for layer in range(nlayer)]
     streams.n = np.sum(real_reflection, axis=1)
 
     assert all(np.size(n) for n in streams.n)
@@ -140,9 +224,10 @@ def compute_stream_gaussian(n_max_stream, permittivity, mode="most_refringent"):
 
 
 def compute_stream_uniform(n_max_stream, permittivity):
-    # """Compute the angles of each layer. Use a regular step in angle in the air, then deduce the angles in the other layers
-    # using Snell-law. Then, in the most refringent layer, add regular stream up to close to 0, and then propagate back this second
-    # set of angles in the other layers using Snell-law and accounting for the total reflections
+    # """Compute the angles of each layer. Use a regular step in angle in the air, then deduce the angles in the other
+    # layers using Snell-law. Then, in the most refringent layer, add regular stream up to close to 0, and then
+    # propagate back this second set of angles in the other layers using Snell-law and accounting for the total
+    # reflections
 
     #     :param n_max_stream: number of stream
     #     :param permittivity: permittivity of each layer
@@ -196,7 +281,7 @@ def compute_stream_uniform(n_max_stream, permittivity):
     mu2[real_reflection] = np.sqrt(1 - relsin[real_reflection] ** 2)
 
     # assemble the two sets
-    streams.mu = [np.hstack((mu1[l], mu2[l, real_reflection[l, :]])) for l in range(nlayer)]
+    streams.mu = [np.hstack((mu1[layer], mu2[layer, real_reflection[layer, :]])) for layer in range(nlayer)]
     # calculate the number of streams per layer
     streams.n = n_max_stream + np.sum(real_reflection, axis=1)
 
@@ -213,13 +298,11 @@ def compute_stream_uniform(n_max_stream, permittivity):
 
 
 def gauss_legendre_quadrature(n):
-    """
-    Return the gauss-legendre roots and weight, only the positive roots are return in descending order.
+    """Return the gauss-legendre roots and weight, only the positive roots are return in descending order.
 
     Args:
         n: number of (positive) points in the quadrature. Must be larger than 2
     """
-
     assert n >= 2
 
     mu, weight = cached_roots_legendre(2 * n)
@@ -240,10 +323,10 @@ def compute_outweight(outmu):
 
 def compute_weight(mu):
     weight = [np.empty_like(m) for m in mu]
-    for l in range(len(mu)):
-        weight[l][0] = 1 - 0.5 * (mu[l][0] + mu[l][1])
-        weight[l][-1] = np.abs(0.5 * (mu[l][-2] + mu[l][-1]))
-        weight[l][1:-1] = np.abs(0.5 * (mu[l][0:-2] - mu[l][2:]))
+    for layer in range(len(mu)):
+        weight[layer][0] = 1 - 0.5 * (mu[layer][0] + mu[layer][1])
+        weight[layer][-1] = np.abs(0.5 * (mu[layer][-2] + mu[layer][-1]))
+        weight[layer][1:-1] = np.abs(0.5 * (mu[layer][0:-2] - mu[layer][2:]))
     return weight
 
 

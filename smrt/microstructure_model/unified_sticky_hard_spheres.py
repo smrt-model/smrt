@@ -1,8 +1,8 @@
 # coding: utf-8
 
-"""
-Implements the monodisperse sticky hard sphere model of the microstructure. This microstructure uses unified parameters as defined by
-G. Picard, H. Löwe, F. Domine, L. Arnaud, F. Larue, V. Favier, E. Le Meur, E. Lefebvre, J. Savarino, A. Royer, The snow microstructural control on microwave scattering, AGU Advances.
+"""Implements the monodisperse sticky hard sphere model of the microstructure. This microstructure uses unified
+parameters as defined by G. Picard, H. Löwe, F. Domine, L. Arnaud, F. Larue, V. Favier, E. Le Meur, E. Lefebvre,
+J. Savarino, A. Royer, The snow microstructural control on microwave scattering, AGU Advances.
 
 Args:
     frac_volume (float): Fractional volume.
@@ -32,7 +32,7 @@ class UnifiedStickyHardSpheres(UnifiedAutocorrelation):
         # t must check the condition t * f (1-f) < 1 + 2*f  which seems to be always valid...
 
     def basic_check(self):
-        """check consistency between the parameters"""
+        """Check consistency between the parameters"""
         pass
 
     # No analytical function exists
@@ -49,7 +49,6 @@ class UnifiedStickyHardSpheres(UnifiedAutocorrelation):
         (float).
 
         """
-
         # TODO LH:
         # * get solution for t directly from method compute_t
         # (this would include a check if the combination of stickiness
@@ -85,8 +84,9 @@ class UnifiedStickyHardSpheres(UnifiedAutocorrelation):
         Phi_tsang_vol = 1.0 / vd  # Ghislain says: after simple math, vint sqrt_vint_X2 simplifies
 
         # auxiliary quantities Eq 31, LP2015
-        A_tsang_vol = (phi_2 / (1 - phi_2) * ((1 - self.t * phi_2 + 3 * phi_2 / (1 - phi_2)) * Phi_tsang_vol +
-                                              (3 - self.t * (1 - phi_2)) * Psi_tsang_vol) + np.cos(X) / sqrt_vint)  # fmt: skip
+        A_tsang_vol = (phi_2 / (1 - phi_2) * \
+                       ((1 - self.t * phi_2 + 3 * phi_2 / (1 - phi_2)) * Phi_tsang_vol +
+                       (3 - self.t * (1 - phi_2)) * Psi_tsang_vol) + np.cos(X) / sqrt_vint)  # fmt: skip
         B_tsang_vol = phi_2 / (1 - phi_2) * X * Phi_tsang_vol + np.sin(X) / sqrt_vint
 
         # structure factor Eq 31, LP2015
@@ -97,7 +97,8 @@ class UnifiedStickyHardSpheres(UnifiedAutocorrelation):
 
         # set limit value at k=0 manually, Eq. 33, LP2015
         # zerok = np.isclose(X, 0)
-        # Ctilde[zerok] = (n * vd**2 / (phi_2 / (1-phi_2) * ((1 - t*phi_2 + 3 * phi_2 / (1 - phi_2)) + (3 - t * (1 - phi_2))) + 1)**2)
+        # Ctilde[zerok] = (n * vd**2 / (phi_2 / (1-phi_2) * ((1 - t*phi_2 + 3 * phi_2 / (1 - phi_2)) +
+        # (3 - t * (1 - phi_2))) + 1)**2)
         Ctilde[zerok] = phi_2 * vd / (phi_2 / (1 - phi_2) * (
             (1 - self.t * phi_2 + 3 * phi_2 / (1 - phi_2)) + (3 - self.t * (1 - phi_2))) + 1)**2  # fmt: skip
 

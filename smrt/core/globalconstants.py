@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-This module defines global constants used throughout the model are defined here and imported as needed.
+"""This module defines global constants used throughout the model are defined here and imported as needed.
 The constants are:
 
 =====================   ===============================   =================================================

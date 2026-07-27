@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements the empirical soil model presented in Wegmuller and Maetzler 1999.
+"""Implements the empirical soil model presented in Wegmuller and Maetzler 1999.
 
 This model is often used in microwave radiometry. It is not suitable for the active mode.
 
@@ -48,7 +47,8 @@ class SoilWegmuller(Substrate):
         self.adjust(reflection_coefficients[1], reflection_coefficients[0], frequency, eps_1, mu1)
 
         if npol >= 3:
-            # don't modify the third compoment... this is an approximation, as the third component should be affected by the roughness...
+            # don't modify the third compoment... this is an approximation, as the third component should be affected by
+            # the roughness...
             # don't use this model for active mode
             pass
         if npol == 4:

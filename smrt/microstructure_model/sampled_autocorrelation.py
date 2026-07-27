@@ -1,5 +1,5 @@
-"""Implements the sampled autocorrelation function model. Use when no analytical form of the autocorrelation function exists but
-the values of the autocorrelation function (`acf`) are known at a series of `lag`.
+"""Implements the sampled autocorrelation function model. Use when no analytical form of the autocorrelation function
+exists but the values of the autocorrelation function (`acf`) are known at a series of `lag`.
 
 Args:
     frac_volume (float): Fractional volume.
@@ -33,15 +33,15 @@ class SampledAutocorrelation(Autocorrelation):
         return self.frac_volume * (1.0 - self.frac_volume)
 
     def basic_check(self):
-        """check consistency between the parameters"""
+        """Check consistency between the parameters"""
         pass
 
     def compute_ssa(self):
-        """compute the ssa according to Debye 1957. See also Maetzler 2002 Eq. 11"""
+        """Compute the ssa according to Debye 1957. See also Maetzler 2002 Eq. 11"""
         pass
 
     def autocorrelation_function(self, r):
-        """compute the real space autocorrelation function by interpolation of requested values from known values"""
+        """Compute the real space autocorrelation function by interpolation of requested values from known values"""
         if r[-1] > self.lag[-1]:
             warnings.warn("Warning: Autocorrelation function is computed out of range of known values")
 

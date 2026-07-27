@@ -1,13 +1,13 @@
 # coding: utf-8
 
-"""
-This module implements the base class for all the substrate models.
+"""This module implements the base class for all the substrate models.
 To create a substrate, it is recommended to use help functions such as :py:func:`~smrt.inputs.make_soil.make_soil`
 rather than the class constructor.
 
 """
 
 import inspect
+import itertools
 import numbers
 
 from smrt.core import lib
@@ -16,8 +16,7 @@ from smrt.core.plugin import import_class
 
 
 def make_interface(inst_class_or_modulename, broadcast=True, **kwargs):
-    """
-    Return an instance corresponding to the interface model with the provided arguments.
+    """Return an instance corresponding to the interface model with the provided arguments.
 
     This function imports the interface module if necessary and
     returns an instance of the interface class with the provided arguments in \\**kwargs.
@@ -27,7 +26,6 @@ def make_interface(inst_class_or_modulename, broadcast=True, **kwargs):
         broadcast:  (Default value = True)
         **kwargs:
     """
-
     # import the module
     if inst_class_or_modulename is None:
         from ..interface.flat import (
@@ -57,8 +55,7 @@ def make_interface(inst_class_or_modulename, broadcast=True, **kwargs):
 
 
 class Interface(object):
-    """
-    Abstract class for interface between layer and substrate at the bottom of the snowpack.
+    """Abstract class for interface between layer and substrate at the bottom of the snowpack.
     It provides argument handling.
 
     """
@@ -67,15 +64,13 @@ class Interface(object):
     optional_args = {}
 
     def __init__(self, **kwargs):
-        """
-        Build the interface.
+        """Build the interface.
 
         Args:
             **kwargs: parameters such as roughness_rms, corr_length, Q, N, etc are required or optional depending on the
                 model. See the documentation of the model.
 
         """
-
         # super().__init__()  # must not be call. This interfers with substrate_from_interface presumably
 
         for arg in self.args:
@@ -89,15 +84,15 @@ class Interface(object):
 
 
 class SubstrateBase(object):
-    """
-    Abstract class for substrate at the bottom of the snowpack.
-    It provides calculation of the permittivity constant for soil case. Argument handline is delegated to the instance of the interface
+    """Abstract class for substrate at the bottom of the snowpack.
+
+    It provides calculation of the permittivity constant for soil case. Argument handline is delegated to the instance
+    of the interface.
 
     """
 
-    def __init__(self, temperature=None, permittivity_model=None):
-        """
-        Build the substrate at the base of the snowpack.
+    def __init__(self, temperature=None, permittivity_model=None, **kwargs):
+        """Build the substrate at the base of the snowpack.
 
         Args:
             temperature: temperature of the base of the snowpack. Can be the effective temperature if the substrate is
@@ -108,40 +103,55 @@ class SubstrateBase(object):
                 required or optional depending on the model. See the document of the model.
 
         """
-
         # super().__init__()  # must not be call. This interfers with substrate_from_interface presumably
 
         self.temperature = temperature
         # this is a function, so it automatically becomes a method of substrate
 
-        if permittivity_model is not None and not callable(permittivity_model):
-            if not isinstance(permittivity_model, numbers.Number):
-                raise SMRTError("permittivity_model must be either a function or a numerical value.")
+        if callable(permittivity_model):
+            kwargs = dict(kwargs)
+            kwargs.setdefault("temperature", temperature)
+            # we have a callable function and it is very likely defined with the @layer_properties decorator.
+            # This means that it has required_arguments and optional_arguments
+            # -> transfer these arguments from kwargs to the substrate instance
+            for arg in getattr(permittivity_model, "required_arguments", []):
+                if arg in kwargs:
+                    setattr(self, arg, kwargs.get(arg))
+                else:
+                    raise SMRTError(f"Parameter {arg} must be specified")
 
+            for arg, default in getattr(permittivity_model, "optional_arguments", {}).items():
+                setattr(self, arg, kwargs.get(arg, default))
+
+            self.permittivity_model = permittivity_model
+
+        elif isinstance(permittivity_model, numbers.Number):
             # make a function that returns the constant value
             def const_permittivity_model(frequency, _private_permittivity_value=permittivity_model, **kwargs):
                 return _private_permittivity_value
 
             self.permittivity_model = const_permittivity_model
+        elif permittivity_model is None:
+            self.permittivity_model = None
         else:
-            self.permittivity_model = permittivity_model
+            raise SMRTError(
+                "permittivity_model must be either a function or a numerical value (or None in some cases)."
+            )
 
     def permittivity(self, frequency):
-        """
-        Compute the permittivity for the given frequency using permittivity_model. This method returns None when no permittivity model is
-        available. This must be handled by the calling code and interpreted suitably.
+        """Compute the permittivity for the given frequency using permittivity_model. This method returns None when no
+        permittivity model is available. This must be handled by the calling code and interpreted suitably.
 
         Args:
             frequency: frenquency in Hz
         """
-
         if self.permittivity_model is None:
             raise SMRTError(
                 "No permittivity_model have been given to the substrate. "
                 "This substrate is not suitable with RT solvers that require a permittivity."
             )
 
-        return self.permittivity_model(frequency, temperature=self.temperature)
+        return self.permittivity_model(frequency, _properties_to_inject=self)
 
     def __add__(self, other):
         raise SMRTError(
@@ -157,8 +167,7 @@ class SubstrateBase(object):
 
 
 def substrate_from_interface(interface_cls):
-    """
-    Decorator to transform an interface class into a substrate class with automatic method
+    """Decorator to transform an interface class into a substrate class with automatic method
 
     Args:
         interface_cls:
@@ -166,13 +175,11 @@ def substrate_from_interface(interface_cls):
 
     def decorator(cls):
         def __init__(self, temperature=None, permittivity_model=None, **kwargs):
-            SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model)
+            SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model, **kwargs)
             # create an interface instance
             self.interface_inst = interface_cls(**kwargs)
             # transfer the interface_instance's args and optional args here
-            for k in self.interface_inst.args:
-                setattr(self, k, getattr(self.interface_inst, k))
-            for k in self.interface_inst.optional_args:
+            for k in itertools.chain(self.interface_inst.args, self.interface_inst.optional_args):
                 setattr(self, k, getattr(self.interface_inst, k))
 
         def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
@@ -220,6 +227,10 @@ def substrate_from_interface(interface_cls):
         auto_add(ft_even_diffuse_reflection_matrix, "ft_even_diffuse_reflection_matrix")
         auto_add(diffuse_reflection_matrix, "diffuse_reflection_matrix")
 
+        # does not work due to metaclass conflicts
+        # parents = [o in cls.mro() for o in interface_cls.mro() if o not in [interface_cls, object, Interface]]
+        # newcls = type(cls.__name__, tuple(parents) + (SubstrateBase,), attributes)
+
         newcls = type(cls.__name__, (SubstrateBase,), attributes)
         newcls.__doc__ = cls.__doc__
         return newcls
@@ -230,13 +241,14 @@ def substrate_from_interface(interface_cls):
 # define the Substrate class that is to be derived for object that are not build from Interface
 class Substrate(SubstrateBase, Interface):
     def __init__(self, temperature=None, permittivity_model=None, **kwargs):
-        SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model)
+        SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model, **kwargs)
         Interface.__init__(self, **kwargs)
+        print("substrate dict:", self.__dict__)
+        print("kwargs:", kwargs)
 
 
 def get_substrate_model(substrate_model):
-    """
-    Return the class corresponding to the substrate model called name.
+    """Return the class corresponding to the substrate model called name.
 
     Args:
         substrate_model:
@@ -244,5 +256,4 @@ def get_substrate_model(substrate_model):
     Returns:
         This function imports the correct module if possible and returns the class
     """
-
     return import_class("substrate", substrate_model)

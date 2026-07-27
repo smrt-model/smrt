@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-This module defines the SensitivityStudy class. It is used to easily conduct sensitivity studies. **This class may be
+"""This module defines the SensitivityStudy class. It is used to easily conduct sensitivity studies. **This class may be
 depreciated in the future**. A more modern alternative is to use a pandas.DataFrame of snowpacks.
 
 Example::
@@ -34,8 +33,7 @@ class SensitivityStudy(object):
 
 
 def sensitivity_study(name, values, snowpacks):
-    """
-    Create a sensitivity study
+    """Create a sensitivity study
 
     Args:
         name: name of the variable to investigate
@@ -45,7 +43,6 @@ def sensitivity_study(name, values, snowpacks):
     Returns:
         An instance of SensitivityStudy
     """
-
     if callable(snowpacks):
         snowpacks = [snowpacks(value) for value in values]
 

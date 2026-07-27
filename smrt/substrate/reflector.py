@@ -1,15 +1,16 @@
 # coding: utf-8
 
-"""
-Implements a reflective boundary condition with prescribed reflection coefficient in the specular direction.
+"""Implements a reflective boundary condition with prescribed reflection coefficient in the specular direction.
 
 The reflection is set to a value or a function of theta. Azimuthal symmetry is assumed (no dependence on phi).
 
 Args:
     specular_reflection: Can be a scalar, a function, or a dictionary.
         - scalar: Uses the same reflection for all angles.
-        - function: Takes a single argument theta array (in radians) and returns the reflection as an array of the same size as theta.
-        - dictionary: Keys must be 'H' and 'V', and values are a scalar or a function, interpreted as for the non-polarized case.
+        - function: Takes a single argument theta array (in radians) and returns the reflection as an array of the same
+          size as theta.
+        - dictionary: Keys must be 'H' and 'V', and values are a scalar or a function, interpreted as for the
+          non-polarized case.
 
 Returns:
     Reflector: A reflector instance.
@@ -43,7 +44,6 @@ from smrt.core.lib import smrt_matrix
 
 def make_reflector(temperature=None, specular_reflection=None):
     """Construct a reflector or absorber instance."""
-
     # create the instance
     return Reflector(temperature=temperature, specular_reflection=specular_reflection)
 
@@ -97,7 +97,8 @@ class Reflector(Substrate):
 
         if isinstance(specular_reflection, dict):
             raise SMRTError(
-                "The specular_reflection argument must be a scalar or a dict with the frequency and/or polarization as a key. If both, provide frequency and polarization as a tuple key"
+                "The specular_reflection argument must be a scalar or a dict with the frequency and/or polarization as "
+                "a key. If both, provide frequency and polarization as a tuple key"
             )
 
         if callable(specular_reflection):  # we have a function, call it and see what we get

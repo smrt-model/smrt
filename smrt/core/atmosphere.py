@@ -3,6 +3,8 @@ from dataclasses import dataclass
 import numpy as np
 import xarray as xr
 
+from smrt.core.lib import inverse_planck_function, planck_function
+
 from .error import SMRTError
 from .snowpack import Snowpack
 
@@ -13,12 +15,11 @@ from .snowpack import Snowpack
 class AtmosphereBase(object):
     # has no special properties yet, we just use the type.
 
-    def run(self, frequency, costheta, npol):
+    def run(self, frequency, costheta, npol, rayleigh_jeans_approximation=False):
         raise NotImplementedError("The run method must be implemented in subclasses.")
 
     def __add__(self, other):
-        """
-        Return a new snowpack made by setting the atmosphere.
+        """Return a new snowpack made by setting the atmosphere.
 
         Args:
             other: The snowpack to add.
@@ -29,7 +30,6 @@ class AtmosphereBase(object):
         Raises:
             SMRTError: If the other object is not a Snowpack.
         """
-
         match other:
             case AtmosphereBase():
                 # adding two atmospheres results in stacking them
@@ -54,8 +54,8 @@ class AtmosphereBase(object):
 
             case _:
                 raise SMRTError(
-                    "Attempt to add an incorrect object to an atmopshere. Only adding an atmosphere and a snowpack (in that order)"
-                    " is a valid operation."
+                    "Attempt to add an incorrect object to an atmopshere. Only adding an atmosphere and a snowpack"
+                    " (in that order) is a valid operation."
                 )
 
     def __iadd__(self, other):
@@ -75,17 +75,19 @@ class AtmosphereStack(AtmosphereBase):
         """
         self.atmospheres = atmospheres
 
-    def run(self, frequency, costheta, npol):
-        res0 = self.atmospheres[0].run(frequency, costheta, npol)
+    def run(self, frequency, costheta, npol, rayleigh_jeans_approximation=False):
+        res0 = self.atmospheres[0].run(
+            frequency, costheta, npol, rayleigh_jeans_approximation=rayleigh_jeans_approximation
+        )
 
         if len(self.atmospheres) == 1:
             return res0
 
         for atmos in self.atmospheres[1:]:
-            res = atmos.run(frequency, costheta, npol)
+            res = atmos.run(frequency, costheta, npol, rayleigh_jeans_approximation=rayleigh_jeans_approximation)
 
-            res0.tb_down = res0.tb_down * res.transmittance + res.tb_down
-            res0.tb_up = res0.tb_up + res0.transmittance * res.tb_up
+            res0.intensity_down = res0.intensity_down * res.transmittance + res.intensity_down
+            res0.intensity_up = res0.intensity_up + res0.transmittance * res.intensity_up
             res0.transmittance = res0.transmittance * res.transmittance
 
         return res0
@@ -97,18 +99,64 @@ class AtmosphereStack(AtmosphereBase):
 
 @dataclass
 class AtmosphereResult:
-    tb_down: np.ndarray
-    tb_up: np.ndarray
+    intensity_down: np.ndarray
+    intensity_up: np.ndarray
     transmittance: np.ndarray
+    frequency: float
     coords: dict = None
+    rayleigh_jeans_approximation: bool = False
 
     def save(self, filename, netcdf_engine=None):
-        ds = xr.Dataset(
-            {
-                "tb_down": (self.coords, self.tb_down),
-                "tb_up": (self.coords, self.tb_up),
-                "transmittance": (self.coords, self.transmittance),
-            },
-            coords=self.coords,
-        )
+        ds = {
+            "transmittance": (self.coords, self.transmittance),
+            "intensity_down": (self.coords, self.intensity_down),
+            "intensity_up": (self.coords, self.intensity_up),
+        }
+
+        ds = xr.Dataset(ds, coords=self.coords)
         ds.to_netcdf(filename, engine=netcdf_engine)
+
+    @property
+    def tb_down(self):
+        if self.rayleigh_jeans_approximation:
+            return self.intensity_down
+        else:
+            return inverse_planck_function(self.frequency, self.intensity_down)
+
+    @property
+    def tb_up(self):
+        if self.rayleigh_jeans_approximation:
+            return self.intensity_up
+        else:
+            return inverse_planck_function(self.frequency, self.intensity_up)
+
+
+def make_atmosphere_results(frequency, tb_down, tb_up, transmittance, coords=None, rayleigh_jeans_approximation=False):
+    """Make an AtmosphereResult given the downwelling and upwelling brightness temperatures
+    and the transmittance. The Rayleigh-Jeans approximation can be used to
+    directly use the brightness temperature as intensity.
+
+    Args:
+        frequency: Frequency in Hz.
+        tb_down: Downwelling brightness temperature in K.
+        tb_up: Upwelling brightness temperature in K.
+        transmittance: Transmittance of the atmosphere (between 0 and 1).
+        coords (dict, optional): Coordinates for the output AtmosphereResult. Defaults to None.
+        rayleigh_jeans_approximation (bool, optional): Whether to use the Rayleigh-Jeans approximation. Defaults to
+            False.
+    """
+    if rayleigh_jeans_approximation:
+        intensity_down = tb_down
+        intensity_up = tb_up
+    else:
+        intensity_down = planck_function(frequency, tb_down)
+        intensity_up = planck_function(frequency, tb_up)
+
+    return AtmosphereResult(
+        frequency=frequency,
+        intensity_down=intensity_down,
+        intensity_up=intensity_up,
+        transmittance=transmittance,
+        coords=coords,
+        rayleigh_jeans_approximation=rayleigh_jeans_approximation,
+    )

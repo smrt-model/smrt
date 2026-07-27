@@ -99,7 +99,7 @@ class FakeRTSolver(object):
     def __init__(self, x=0):
         self.x = x
 
-    def solve(self, *args):
+    def solve(self, *args, parallel_computation=None):
         return PassiveResult(xr.DataArray(self.x))
 
 

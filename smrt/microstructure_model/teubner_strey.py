@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements the Teubner Strey model of the microstructure.
+"""Implements the Teubner Strey model of the microstructure.
 
 Args:
     frac_volume (float): Fractional volume.
@@ -29,7 +28,7 @@ class TeubnerStrey(Autocorrelation):
         return self.frac_volume * (1.0 - self.frac_volume)
 
     def basic_check(self):
-        """check consistency between the parameters"""
+        """Check consistency between the parameters"""
         pass
 
     def compute_ssa(self):
@@ -38,8 +37,7 @@ class TeubnerStrey(Autocorrelation):
         raise NotImplementedError("to be implemented")
 
     def autocorrelation_function(self, r):
-        """compute the real space autocorrelation function for the Teubner Strey model"""
-
+        """Compute the real space autocorrelation function for the Teubner Strey model"""
         acf = np.exp(-r / self.corr_length) * np.sinc(2 * r / self.repeat_distance)
 
         return self.corr_func_at_origin * acf
@@ -50,7 +48,6 @@ class TeubnerStrey(Autocorrelation):
         (float).
 
         """
-
         X = (k * self.corr_length) ** 2
         Y = (2 * np.pi * self.corr_length / self.repeat_distance) ** 2
         ft_acf_normalized = 8 * np.pi * self.corr_length**3 / ((1 + Y) ** 2 + 2 * (1 - Y) * X + X**2)

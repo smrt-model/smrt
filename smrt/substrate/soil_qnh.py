@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements the QNH soil model proposed by Wang, 1983.
+"""Implements the QNH soil model proposed by Wang, 1983.
 
 This model is for the passive mode and is not suitable for the active mode.
 
@@ -56,7 +55,8 @@ class SoilQNH(Substrate):
         self.adjust(reflection_coefficients[1], reflection_coefficients[0], mu1)
 
         if npol >= 3:
-            # don't modify the third compoment... this is an approximation, as the third component should be affected by the roughness...
+            # don't modify the third compoment... this is an approximation, as the third component should be affected by
+            # the roughness...
             # don't use this model for active mode
             pass
         if npol == 4:

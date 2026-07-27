@@ -2,7 +2,7 @@
 Tutorials
 ####################################
 
-This section develops the most frequent use cases of SMRT. Tutorials will be added progressively.
+This section develops the most frequent use cases of SMRT.
 
 For more tutorials and notebook versions please refer to `tutorials <https://github.com/smrt-model/tutorials>`_
 

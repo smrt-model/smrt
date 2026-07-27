@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Implements the Gaussian Random field model of the microstructure.
+"""Implements the Gaussian Random field model of the microstructure.
 
 Args:
     frac_volume (float): Fractional volume.
@@ -42,7 +41,7 @@ class GaussianRandomField(Autocorrelation):
         return 4.0 * (1 - self.frac_volume) / SSA_tilde
 
     def basic_check(self):
-        """check consistency between the parameters"""
+        """Check consistency between the parameters"""
         pass
 
     def compute_ssa(self):
@@ -51,7 +50,7 @@ class GaussianRandomField(Autocorrelation):
         raise Exception("to be implemented")
 
     def autocorrelation_function(self, r):
-        """compute the real space autocorrelation function for the Gaussian random field model"""
+        """Compute the real space autocorrelation function for the Gaussian random field model"""
         # compute the cut-level parameter beta
         beta = np.sqrt(2) * erfinv(2 * (1 - self.frac_volume) - 1)
 

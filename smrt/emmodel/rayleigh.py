@@ -56,7 +56,6 @@ class Rayleigh(IsotropicScatteringMixin):
         # the Ulaby equations.
 
         """
-
         if npol is None:
             npol = 2 if m_max == 0 else 3
 
@@ -227,7 +226,6 @@ class Rayleigh(IsotropicScatteringMixin):
         :returns: thephase matrix
 
         """
-
         assert mu_s is mu_i  # temporary hack, to be propagated
         mu = mu_i
 

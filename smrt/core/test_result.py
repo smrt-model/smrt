@@ -158,6 +158,14 @@ def test_concat_results_other_data():
     assert allresult.other_data["ks"].dims == ("dim0", "layer")
 
 
+def test_ks():
+    np.testing.assert_allclose(res_example.ks(), res_example.other_data["ks"])
+
+
+def test_ka():
+    np.testing.assert_allclose(res_example.ka(), res_example.other_data["ka"])
+
+
 def test_single_scattering_albedo():
     ssalb = res_example.single_scattering_albedo()
 

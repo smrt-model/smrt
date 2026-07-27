@@ -19,7 +19,8 @@ class Prescribed_KsKaEps(Rayleigh):
     """ """
 
     def __init__(self, sensor, layer):
-        # super().__init__()  # must not be called. Todo: write a generic RayleighBase object with phase function methods only
+        # super().__init__()  # must not be called. Todo: write a generic RayleighBase object with phase function
+        # methods only
 
         self._effective_permittivity = layer.effective_permittivity
 

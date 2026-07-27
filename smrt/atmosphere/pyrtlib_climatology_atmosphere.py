@@ -1,7 +1,8 @@
 # coding: utf-8
 """A non-scattering atmosphere provided by PyRTLib for SMRT using climatology data as input
 
-This atmosphere is a special case using climatology. Please refer to the general documentation `py:module::~smrt.atmosphere.pyrtlib_atmosphere`.
+This atmosphere is a special case using climatology. Please refer to the general documentation
+`py:module::~smrt.atmosphere.pyrtlib_atmosphere`.
 
 """
 
@@ -28,7 +29,8 @@ class PyRTlibClimatologyAtmosphere(PyRTlibAtmosphereBase):
                     break
             else:
                 raise SMRTError(
-                    f"The requested atmospheric profile '{profile}' isn't among the available profiles: {', '.join(atmp.atm_profiles().values())}"
+                    f"The requested atmospheric profile '{profile}' isn't among the available profiles:"
+                    f" {', '.join(atmp.atm_profiles().values())}"
                 )
 
         self.z, self.p, d, self.t, md = atmp.gl_atm(profile)

@@ -9,16 +9,31 @@ repos:
       args: [ --fix ]
     - id: ruff-check
       args: ["--select", "I", --fix]
+      types_or: [python, pyi, jupyter, toml]
     # Run the formatter.
     - id: ruff-format
+      types_or: [python, pyi, jupyter, toml]
 
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0  # this is optional, use `pre-commit autoupdate` to get the latest rev!
-    hooks:
-    -   id: trailing-whitespace
-    -   id: end-of-file-fixer
-    -   id: check-toml
-    -   id: check-yaml
-    -   id: check-added-large-files
-    -   id: check-merge-conflict
-    -   id: check-docstring-first
+
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v6.0.0  # this is optional, use `pre-commit autoupdate` to get the latest rev!
+  hooks:
+    - id: trailing-whitespace
+    - id: end-of-file-fixer
+    - id: mixed-line-ending
+    - id: check-toml
+    - id: check-yaml
+    - id: check-added-large-files
+    - id: check-merge-conflict
+    - id: check-case-conflict
+    - id: check-ast
+    - id: check-illegal-windows-names
+    - id: check-merge-conflict
+
+- repo: local
+  hooks:
+    - id: commit-msg
+      name: Check commit message imperative mood
+      entry: ./scripts/check-commit-msg.sh
+      language: script
+      stages: [commit-msg]

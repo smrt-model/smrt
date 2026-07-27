@@ -6,7 +6,7 @@ from smrt.inputs.make_soil import make_soil
 def test_soil_wegmuller_reflection():
     s = make_soil(
         "soil_wegmuller",
-        "dobson85_peplinski95",
+        "soil_permittivity_dobson85_peplinski95",
         275,
         moisture=0.9,
         sand=0.2,

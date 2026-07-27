@@ -17,7 +17,7 @@ classifiers = [
 ]
 dependencies = [
     "numpy>=2,<3",
-    "pandas>=2.1.0,<3",
+    "pandas>=2.1.0,<4",
     "scipy>=1,<2",
     "xarray>=2024",
     "numba>=0.58,<1",
@@ -30,7 +30,7 @@ pyrtlib = ["scikit-learn", "bs4", "netCDF4", "requests", "cdsapi", "cfgrib", "py
 gsw = ["gsw"]
 
 [dependency-groups]
-dev = ["pytest", "ruff", "sphinx_rtd_theme", "Sphinx>=1.6", "pre-commit", "pip-audit"]
+dev = ["pytest", "pytest-cov", "ruff", "sphinx_rtd_theme", "Sphinx>=1.6", "pre-commit", "pip-audit"]
 benchmark = ["asv"]
 
 
@@ -52,11 +52,17 @@ build-backend = "setuptools.build_meta"
 packages = ['smrt']
 
 [tool.ruff]
+lint.select = ["E","F"]
 line-length = 120
 target-version = "py310"
 lint.ignore = ["E741"]
 lint.pydocstyle.convention = "google"
 extend-exclude = ["attic"]
+exclude= ["benchmarks"]
+
+[tool.ruff.pydocstyle]
+convention = "google"
+
 
 [tool.setuptools_scm]
 

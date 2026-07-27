@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Compute scattering from Improved Born Approximation theory as described in Mätzler 1998 and Mätzler and Wiesman 1999,
+"""Compute scattering from Improved Born Approximation theory as described in Mätzler 1998 and Mätzler and Wiesman 1999,
 except the absorption coefficient which is computed with Polden von Staten formulation instead of the Eq 24 in Mätzler
 1998. See iba_original.py for a fully conforming IBA version. This model allows for different microstructural models
 provided that the Fourier transform of the correlation function may be performed. All properties relate to a single
@@ -35,26 +34,24 @@ from .common import (
 )
 
 #
-# For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
-# initialisation and precomputation can be done in the prepare method that is called only once for each layer whereas
-# phase, ke and effective_permittivity can be called several times.
+# For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same
+# arguments as here initialisation and precomputation can be done in the prepare method that is called only once for
+# each layer whereas phase, ke and effective_permittivity can be called several times.
 #
 
 
 def derived_IBA(effective_permittivity_model=polder_van_santen):
-    """return a new IBA model with variant from the default IBA.
+    """Return a new IBA model with variant from the default IBA.
 
     :param effective_permittivity_model: permittivity mixing formula.
 
     :returns: a new class inheriting from IBA but with patched methods
     """
-
     return derived_EMModel(IBA, effective_permittivity_model)
 
 
 class IBA(AdjustableEffectivePermittivityMixin, IsotropicScatteringMixin, GenericFTPhaseMixin):
-    """
-    Improved Born Approximation electromagnetic model class.
+    """Improved Born Approximation electromagnetic model class.
 
     As with all electromagnetic modules, this class is used to create an electromagnetic
     object that holds information about the effective permittivity, extinction coefficient and
@@ -66,8 +63,9 @@ class IBA(AdjustableEffectivePermittivityMixin, IsotropicScatteringMixin, Generi
     Args:
         sensor: Object containing sensor characteristics.
         layer: Object containing snow layer characteristics (single layer).
-        dense_snow_correction: Set how snow denser than half the ice density (i.e. fractional volume larger than 0.5) is handled.
-            "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air. The default is None.
+        dense_snow_correction: Set how snow denser than half the ice density (i.e. fractional volume larger than 0.5) is
+            handled. "auto" means that snow is modeled as air bubble in ice instead of ice spheres in air.
+            The default is None.
 
     Example:
         This class is not normally accessed directly by the user, but forms part of the
@@ -117,7 +115,7 @@ become a default in the future.""")
         # Calculate depolarization factors and iba_coefficient
         if getattr(layer, "depolarization_factors", None) is not None:
             if callable(layer.depolarization_factors):
-                self.depol_xyz = layer.depolarization_factors(layer_to_inject=layer)
+                self.depol_xyz = layer.depolarization_factors(_properties_to_inject=layer)
             else:
                 self.depol_xyz = layer.depolarization_factors
         else:
@@ -134,11 +132,13 @@ become a default in the future.""")
 
         if not (self._ks >= 0):
             print(
-                f"ks, the scattering coefficient has an invalid value '{self._ks:g}' in layer nb '{getattr(layer, 'number', 0)}'"
+                f"ks, the scattering coefficient has an invalid value '{self._ks:g}' in layer"
+                f" nb '{getattr(layer, 'number', 0)}'"
             )
 
     def compute_iba_coeff(self):
-        """Calculate angular independent IBA coefficient: used in both scattering coefficient and phase function calculations
+        """Calculate angular independent IBA coefficient: used in both scattering coefficient and phase function
+        calculations
 
         .. note::
 
@@ -155,7 +155,6 @@ become a default in the future.""")
         Uses layer effective permittivity.
 
         """
-
         apparent_permittivity = self._effective_permittivity * (1 - self.depol_xyz) + self.e0 * self.depol_xyz
         y2 = (1.0 / 3.0) * np.sum(
             np.absolute(apparent_permittivity / (apparent_permittivity + (self.eps - self.e0) * self.depol_xyz)) ** 2.0
@@ -174,7 +173,6 @@ become a default in the future.""")
         Returns:
             float: Scattering coefficient.
         """
-
         k = 6  # number of samples. This should be adaptative depending on the size/wavelength
         mu = np.linspace(1, -1, 2**k + 1)
         y = self.ks_integrand(mu)
@@ -192,7 +190,8 @@ become a default in the future.""")
             \\Theta= \\theta
 
 
-        Scattering coefficient is determined by integration over the scattering angle(0 to \\pi): param mu: cosine of the scattering angle(single angle)
+        Scattering coefficient is determined by integration over the scattering angle(0 to \\pi): param mu: cosine of
+        the scattering angle(single angle)
 
         .. math::
 
@@ -201,7 +200,6 @@ become a default in the future.""")
         The integration is performed outside this method.
 
         """
-
         # Set up scattering geometry for 1-2 frame
         # Choose incident zenith angle to be 0 so scattering angle = scattering zenith angle (use mhu)
         # phi in the 1-2 frame for calculation of p11 is pi
@@ -257,10 +255,10 @@ become a default in the future.""")
         Note:
             This may not be suitable for high density material.
         """
-
         # after several go and back, the situation is now clear:
         # MEMLS uses the formulation in IBA98 paper. In SMRT this formulation is available in iba_original.py
-        # here we use Polden von Staten which is known to be better and accommodate the full range of density/frac_volume
+        # here we use Polden von Staten which is known to be better and accommodate the full range of
+        # density/frac_volume.
         # PvS is also now recommended by Christian Matzler and has been implemented in MEMLS modified for sea-ice.
         # This is therefore the default in SMRT. The fully MEMLS compatible IBA is in iba_original.py
 
@@ -271,7 +269,8 @@ class IBA_MM(IBA):
     # Undocumented: this is test code for comparison with MEMLS, and may be removed from later versions.
 
     def __init__(self, sensor, layer):
-        # Gives all IBA parameters. Some need to be recalculated (effective permittivity, scattering and absorption coefficients):
+        # Gives all IBA parameters. Some need to be recalculated (effective permittivity, scattering and absorption
+        # coefficients):
         IBA.__init__(self, sensor, layer)
 
         self._effective_permittivity = polder_van_santen(self.frac_volume, e0=1, eps=3.185)
@@ -296,7 +295,8 @@ class IBA_MM(IBA):
             ft_corr_fn = self.microstructure.ft_autocorrelation_function(k_diff)
         else:
             raise SMRTError(
-                "Fourier Transform of this microstructure model has not been defined, or there is a problem with its calculation"
+                "Fourier Transform of this microstructure model has not been defined, or there is a problem with its "
+                "calculation"
             )
 
         # MEMLS phase function has mean of H and V polarisation angle. Eqn 17c of Matzler and Wiesmann 1999.

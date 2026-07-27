@@ -18,9 +18,9 @@ from .common import AdjustableEffectivePermittivityMixins, derived_EMModel
 from .sce_common import SCEBase
 
 #
-# For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same arguments as here
-# initialisation and precomputation can be done in the prepare method that is called only once for each layer whereas
-# phase, ke and effective_permittivity can be called several times.
+# For developers: all emmodel must implement the `effective_permittivity`, `ke` and `phase` functions with the same
+# arguments as here initialisation and precomputation can be done in the prepare method that is called only once for
+# each layer whereas phase, ke and effective_permittivity can be called several times.
 #
 
 
@@ -33,14 +33,11 @@ def derived_SymSCETK21_ShortRange(effective_permittivity_model):
     Returns:
         class: A new class inheriting from SymSCE_ShortRange but with patched methods.
     """
-
     return derived_EMModel(SymSCETK21_ShortRange, effective_permittivity_model)
 
 
 class SymSCETK21_ShortRange(AdjustableEffectivePermittivityMixins, SCEBase):
-    """
-    To be documented.
-    """
+    """To be documented."""
 
     # default effective_permittivity_model is polder_van_santen according to the SymSCE theory
     effective_permittivity_model = staticmethod(polder_van_santen)

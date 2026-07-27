@@ -1,5 +1,4 @@
-"""
-Provide the Successive Order Solver as a multi-stream solver of the radiative transfer model based on Lenoble et al.
+"""Provide the Successive Order Solver as a multi-stream solver of the radiative transfer model based on Lenoble et al.
 2007 and Greenwald et al. 2005, with some adaptation using SMRT DORT code.
 
 The main interests of this solver are:
@@ -29,7 +28,6 @@ References:
 """
 
 # Stdlib import
-from collections import defaultdict
 
 import numba
 
@@ -39,7 +37,6 @@ import numpy as np
 # local import
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.rtsolver.dort import (
-    InterfaceProperties,
     _matmul,
     symmetrize_phase_matrix,
 )  # TODO: move these objects in a generic place
@@ -48,14 +45,14 @@ from smrt.rtsolver.rtsolver_utils import (
     DiscreteOrdinatesMixin,
     PlanckMixin,
     RTSolverBase,
+    compute_interface_properties,
 )
 
 # Lazy import: from smrt.interface.coherent_flat import process_coherent_layers
 
 
 class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, RTSolverBase):
-    """
-    Implement the Successive Order solver.
+    """Implement the Successive Order solver.
 
     Args:
         n_iteration_max: maximum number of computed orders. Setting a value of e.g. 2 only computes first and second
@@ -64,25 +61,29 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         relative_tolerance: stop iterating when order[n] = relative_tolerance * order[0].
         n_max_stream: number of stream in the most refringent layer.
         m_max: number of mode (azimuth).
-        stream_mode: If set to "most_refringent" (the default) or "air", streams are calculated using the Gauss-Legendre polynomials and
-            then use Snell-law to prograpate the direction in the other layers. If set to "uniform_air", streams are calculated
-            uniformly in air and then according to Snells law.
-        phase_symmetrization: enforce phase function symmetry by replacing the phase function P by (P + P.T)/2 (simplified).
+        stream_mode: If set to "most_refringent" (the default) or "air", streams are calculated using the Gauss-Legendre
+            polynomials and then use Snell-law to prograpate the direction in the other layers. If set to "uniform_air",
+            streams are calculated uniformly in air and then according to Snells law.
+        phase_symmetrization: enforce phase function symmetry by replacing the phase function P by (P + P.T)/2
+            (simplified).
         error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
             If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
-            the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
-        process_coherent_layers: Adapt the layers thiner than the wavelegnth using the MEMLS method. The radiative transfer
-            theory is inadequate layers thiner than the wavelength and using DORT with thin layers is generally not recommended.
-            In some parcticular cases (such as ice lenses) where the thin layer is isolated between large layers, it is possible
-            to replace the thin layer by an equivalent reflective interface. This neglects scattering in the thin layer,
-            which is acceptable in most case, because the layer is thin. To use this option and more generally
-            to investigate ice lenses, it is recommended to read MEMLS documentation on this topic.
-        rayleigh_jeans_approximation: In passive mode, if True, use the Rayleigh-Jeans approximation for the Planck function.
-            This mode was used by default up to SMRT 1.5.1, but is not as precise as the full Planck function at higher
-            frequencies and low temperatures.
+            the error message is not accessible. This is only recommended for long simulations that sometimes produce an
+            error.
+        process_coherent_layers: Adapt the layers thiner than the wavelegnth using the MEMLS method. The radiative
+            transfer theory is inadequate layers thiner than the wavelength and using DORT with thin layers is generally
+            not recommended. In some parcticular cases (such as ice lenses) where the thin layer is isolated between
+            large layers, it is possible to replace the thin layer by an equivalent reflective interface. This neglects
+            scattering in the thin layer, which is acceptable in most case, because the layer is thin. To use this
+            option and more generally to investigate ice lenses, it is recommended to read MEMLS documentation on this
+            topic.
+        rayleigh_jeans_approximation: In passive mode, if True, use the Rayleigh-Jeans approximation for the Planck
+            function. This mode was used by default up to SMRT 1.5.1, but is not as precise as the full Planck function
+            at higher frequencies and low temperatures.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the
+    # caller (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {"theta_inc", "polarization_inc", "theta", "phi", "polarization"}
 
@@ -137,7 +138,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
             if len(self.sensor.phi) > 1:
                 raise SMRTError("phi as an array must be implemented")
 
-    def solve(self, snowpack, emmodels, sensor, atmosphere=None):
+    def solve(self, snowpack, emmodels, sensor, atmosphere=None, parallel_computation=None):
         """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
@@ -149,7 +150,6 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         Returns:
             result: Result object, :py:mod:`smrt.core.result.Result`.
         """
-
         self.init_solve(snowpack, emmodels, sensor, atmosphere)
 
         self.process_coherent_layers()  # must be before prepare_streams
@@ -172,10 +172,10 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         # """Solve the radiative transfer equation using the adding doubling method
         # not to be called by the user
         #     """
-        #     :param incident_intensity: give either the intensity (array of size 2) at incident_angle (radar) or isotropic or a function
-        #             returning the intensity as a function of the cosine of the angle.
-        #     :param incident_angle: if None, the spectrum is considered isotropic, otherise the angle (in radian) given the direction of
-        #             the incident beam
+        #     :param incident_intensity: give either the intensity (array of size 2) at incident_angle (radar) or
+        #             isotropic or a function returning the intensity as a function of the cosine of the angle.
+        #     :param incident_angle: if None, the spectrum is considered isotropic, otherise the angle (in radian) given
+        #             the direction of the incident beam
         #     :param viewing_phi: viewing azimuth angle, the incident beam is at 0, so pi is the backscatter
         # """
 
@@ -187,7 +187,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
 
         # prepare the atmosphere
         self.atmosphere_result = (
-            self.atmosphere.run(self.sensor.frequency, self.streams.outmu, npol)
+            self.atmosphere.run(self.sensor.frequency, self.streams.outmu, npol, self.rayleigh_jeans_approximation)
             if self.atmosphere is not None
             else None
         )
@@ -198,16 +198,17 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         #
         # compute interface reflection and transmittance properties
         # prepare the angle of the incident angles requested by the user
-        (
-            reflection_top,
-            reflection_bottom,
-            transmission_top,
-            transmission_bottom,
-            coherent_reflection_top,
-            coherent_reflection_bottom,
-            coherent_transmission_top,
-            coherent_transmission_bottom,
-        ) = self.prepare_interfaces(self.streams, m_max)
+
+        interfaces = compute_interface_properties(
+            self.sensor.frequency,
+            self.snowpack.interfaces,
+            self.snowpack.substrate,
+            self.effective_permittivity,
+            self.streams,
+            m_max,
+            npol,
+            auto_reduce_npol=False,
+        )
 
         # print(f"{n_sublayer=}")
         # add one sub-interface more than sublayer in each layer
@@ -261,10 +262,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
                     extinction,
                     source,
                     nophase,  # no scattering
-                    coherent_reflection_top,
-                    coherent_reflection_bottom,
-                    coherent_transmission_top,
-                    coherent_transmission_bottom,
+                    interfaces.sel(mode=0, coherent_only=True),
                     incident_intensity_0,
                 )
                 coherent_intensity_up[..., i] = i_up[0:n]
@@ -308,10 +306,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
                     extinction,
                     source,
                     weighted_phase[m],
-                    reflection_top[m],
-                    reflection_bottom[m],
-                    transmission_top[m],
-                    transmission_bottom[m],
+                    interfaces.sel(mode=m),
                     incident_intensity,
                 )
                 intensity_up_m[..., i] = i_up[0:n]
@@ -324,9 +319,6 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
 
                 if max_intensity < tolerance:
                     break
-                # print(
-                #    f"Iteration {i}, max intensity={np.max(intensity_profile)}  mean intensity={np.mean(intensity_profile)}"
-                # )
             # substract the coherent contribution
             if self.sensor.mode == "A":
                 # for i in range(self.n_iteration_max):
@@ -364,10 +356,8 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
 
         if self.sensor.mode == "P":
             if self.atmosphere_result is not None:
-                intensity_up = (
-                    self.planck_function(self.atmosphere_result.tb_up)
-                    + self.atmosphere_result.transmittance * intensity_up
-                )
+                intensity_up = self.atmosphere_result.intensity_up + self.atmosphere_result.transmittance * intensity_up
+
             total_intensity_up = np.sum(intensity_up, axis=-1)
             total_intensity_up = self.inverse_planck_function(total_intensity_up)
             intensity_up = self.inverse_planck_function(intensity_up)
@@ -392,72 +382,19 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
 
         return outmu, intensity_up
 
-    def prepare_interfaces(self, streams, m_max):
-        npol = 3 if self.sensor.mode == "A" else 2
-
-        interfaces = InterfaceProperties(
-            self.sensor.frequency,
-            self.snowpack.interfaces,
-            self.snowpack.substrate,
-            self.effective_permittivity,
-            streams,
-            m_max,
-            npol,
-        )
-        reflection_top = defaultdict(dict)
-        reflection_bottom = defaultdict(dict)
-        transmission_top = defaultdict(dict)
-        transmission_bottom = defaultdict(dict)
-
-        coherent_reflection_top = dict()
-        coherent_reflection_bottom = dict()
-        coherent_transmission_top = dict()
-        coherent_transmission_bottom = dict()
-
-        kwargs = dict(auto_reduce_npol=False)
-        for l in range(0, len(streams.mu)):
-            for m in range(m_max + 1):
-                reflection_top[m][l] = interfaces.reflection_top(l, m=m, compute_coherent_only=False, **kwargs)
-                transmission_top[m][l] = interfaces.transmission_top(l, m=m, compute_coherent_only=False, **kwargs)
-            coherent_reflection_top[l] = interfaces.reflection_top(l, m=0, compute_coherent_only=True, **kwargs)
-            coherent_transmission_top[l] = interfaces.transmission_top(l, m=0, compute_coherent_only=True, **kwargs)
-        for l in range(-1, len(streams.mu)):
-            for m in range(m_max + 1):
-                reflection_bottom[m][l] = interfaces.reflection_bottom(l, m=m, compute_coherent_only=False, **kwargs)
-                transmission_bottom[m][l] = interfaces.transmission_bottom(
-                    l, m=m, compute_coherent_only=False, **kwargs
-                )
-            coherent_reflection_bottom[l] = interfaces.reflection_bottom(l, m=0, compute_coherent_only=True, **kwargs)
-            coherent_transmission_bottom[l] = interfaces.transmission_bottom(
-                l, m=0, compute_coherent_only=True, **kwargs
-            )
-
-        return (
-            reflection_top,
-            reflection_bottom,
-            transmission_top,
-            transmission_bottom,
-            coherent_reflection_top,
-            coherent_reflection_bottom,
-            coherent_transmission_top,
-            coherent_transmission_bottom,
-        )
-
     def prepare_snowpack_properties(self, m_max):
-        """
-        Args:
-        """
+        """Args:"""
         extinction = []
         weighted_phase = list_of_empty_list(m_max + 1)
         n_sublayer = []
         source = []
 
-        for l in range(len(self.emmodels)):
+        for layer in range(len(self.emmodels)):
             n, e, wp, s = self.prepare_layer_properties(
-                self.snowpack.layers[l],
-                self.emmodels[l],
-                self.streams.mu[l],
-                self.streams.weight[l],
+                self.snowpack.layers[layer],
+                self.emmodels[layer],
+                self.streams.mu[layer],
+                self.streams.weight[layer],
                 m_max,
             )
 
@@ -481,7 +418,8 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         fullmu = np.concatenate((mu, -mu))
         phase = emmodel.ft_even_phase(mu_s=fullmu, mu_i=fullmu, npol=npol, m_max=self.m_max)
 
-        # apply the factor 2 * pi / 4 * pi. The former is the phi integration, the later is the SMRT convention of the phase function
+        # apply the factor 2 * pi / 4 * pi. The former is the phi integration, the later is the SMRT convention of the
+        # phase function
 
         full_weight = np.tile(np.repeat(weight, npol), 2)
 
@@ -527,10 +465,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         extinction,
         source,
         weighted_phase,
-        reflection_top,
-        reflection_bottom,
-        transmission_top,
-        transmission_bottom,
+        interfaces,
         incident_intensity=None,
     ) -> np.ndarray:
         npol = 3 if self.sensor.mode == "A" else 2
@@ -539,7 +474,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
         new_intensity = np.zeros_like(intensity)
 
         if (order == 0) and (incident_intensity is not None):
-            transmitted_intensity = _matmul(transmission_bottom[-1], incident_intensity)
+            transmitted_intensity = _matmul(interfaces.transmission_bottom(-1), incident_intensity)
         else:
             transmitted_intensity = None
 
@@ -551,10 +486,11 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
 
         ein_string = "pq, kq -> kp" if self.sensor.mode == "P" else "pq, kqi -> kpi"
 
-        # power_extinction = [extinction[l][np.newaxis, :, :]**np.arange(i_subinterface[l + 1] - i_subinterface[l], 0, -1, dtype=np.float64)[:, np.newaxis, np.newaxis] for l in range(len(extinction))]
+        # power_extinction = [extinction[l][np.newaxis, :, :]**np.arange(i_subinterface[l + 1] - i_subinterface[l], 0,
+        # -1, dtype=np.float64)[:, np.newaxis, np.newaxis] for l in range(len(extinction))]
 
-        for l in range(n_layer):
-            n = npol * len(mu[l])
+        for layer in range(n_layer):
+            n = npol * len(mu[layer])
 
             # angle and pola
             p_up = slice(0, n)
@@ -562,11 +498,11 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
             q = slice(0, 2 * n)
 
             # layer slice
-            i_top = i_subinterface[l]
-            i_bottom = i_subinterface[l + 1] - 1
+            i_top = i_subinterface[layer]
+            i_bottom = i_subinterface[layer + 1] - 1
 
             new_intensity[i_top, p_dn] = _matmul(
-                reflection_top[l], intensity[i_top, p_up]
+                interfaces.reflection_top(layer), intensity[i_top, p_up]
             )  # reflect intensity coming up
 
             if transmitted_intensity is not None:
@@ -576,17 +512,17 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
             # compute the contribution of scattering of the previous order intensity, which is now a source
             s = np.einsum(
                 ein_string,
-                weighted_phase[l][p_dn, q],
+                weighted_phase[layer][p_dn, q],
                 mean_intensity[i_top:i_bottom, q],
                 optimize=True,
             )
 
             if order == 0:
-                s += source[l]
+                s += source[layer]
 
-            s *= 1 - extinction[l]
+            s *= 1 - extinction[layer]
 
-            series_downwelling(new_intensity[i_top : i_bottom + 1, p_dn], extinction[l], s)
+            series_downwelling(new_intensity[i_top : i_bottom + 1, p_dn], extinction[layer], s)
 
             # for k in range(i_top, i_bottom):
             #     # compute intensity in all the sublayers
@@ -594,15 +530,15 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
             #     # eq 66 (adapted for downward)
             # assert k + 1 == i_bottom
 
-            transmitted_intensity = _matmul(transmission_bottom[l], new_intensity[i_bottom, p_dn])
+            transmitted_intensity = _matmul(interfaces.transmission_bottom(layer), new_intensity[i_bottom, p_dn])
 
         assert i_bottom + 1 == len(new_intensity)
 
         transmitted_intensity = None
 
         # compute the upwelling intensity
-        for l in range(n_layer - 1, -1, -1):
-            n = npol * len(mu[l])
+        for layer in range(n_layer - 1, -1, -1):
+            n = npol * len(mu[layer])
 
             # angle and pola
             p_up = slice(0, n)
@@ -610,10 +546,10 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
             q = slice(0, 2 * n)
 
             # layer slice
-            i_top = i_subinterface[l]
-            i_bottom = i_subinterface[l + 1] - 1
+            i_top = i_subinterface[layer]
+            i_bottom = i_subinterface[layer + 1] - 1
 
-            new_intensity[i_bottom, p_up] = _matmul(reflection_bottom[l], intensity[i_bottom, p_dn])
+            new_intensity[i_bottom, p_up] = _matmul(interfaces.reflection_bottom(layer), intensity[i_bottom, p_dn])
             # reflect intensity coming down at the bottom of the layer
 
             if transmitted_intensity is not None:
@@ -622,34 +558,34 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
 
             s = np.einsum(
                 ein_string,
-                weighted_phase[l][p_up, q],
+                weighted_phase[layer][p_up, q],
                 mean_intensity[i_top:i_bottom, q],
                 optimize=True,
             )
 
             if order == 0:
-                s += source[l]
+                s += source[layer]
 
-            s *= 1 - extinction[l]
+            s *= 1 - extinction[layer]
             assert len(s) == i_bottom - 1 - i_top + 1
 
             # for k in range(i_bottom - 1, i_top - 1, -1):
             #     new_intensity[k, p_up] = new_intensity[k + 1, p_up] * extinction[l] + s[k - i_top]
             # assert k == i_top
 
-            series_upwelling(new_intensity[i_top : i_bottom + 1, p_up], extinction[l], s)
+            series_upwelling(new_intensity[i_top : i_bottom + 1, p_up], extinction[layer], s)
             # eq 66 in Lenoble
 
-            transmitted_intensity = _matmul(transmission_top[l], new_intensity[i_top, p_up])
+            transmitted_intensity = _matmul(interfaces.transmission_top(layer), new_intensity[i_top, p_up])
 
         assert i_top == 0
         # compute the final transmission
-        emerging_intensity = _matmul(transmission_top[0], new_intensity[i_top, p_up])
+        emerging_intensity = _matmul(interfaces.transmission_top(0), new_intensity[i_top, p_up])
 
         # print(f"{np.all(emerging_intensity==0)=} {np.max(emerging_intensity)=} {np.min(emerging_intensity)=}")
         if (incident_intensity is not None) and (order == 0):
             n = len(incident_intensity)
-            emerging_intensity[:n] += _matmul(reflection_bottom[-1], incident_intensity)
+            emerging_intensity[:n] += _matmul(interfaces.reflection_bottom(-1), incident_intensity)
 
         return new_intensity, emerging_intensity
 

@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Provide the iterative first-order radiative transfer solver.
+"""Provide the iterative first-order radiative transfer solver.
 
 This module implements a first-order iterative solution for the radiative transfer equation
 to calculate backscatter coefficients. The solver computes both zeroth and first-order
@@ -15,7 +14,8 @@ Key Features:
 
 Backscatter Components:
     Zeroth Order:
-        order0_backscatter: Backscatter from the surface, interfaces, and substrate after attenuation through the snowpack.
+        order0_backscatter: Backscatter from the surface, interfaces, and substrate after attenuation through the
+            snowpack.
         Volume Scattering is only included through its contribution to extinction.
         (Reference: Ulaby et al. 2014, first term of Eq. 11.74)
 
@@ -24,7 +24,8 @@ Backscatter Components:
         Calculate three main contributions (Ulaby et al. 2014, Eqs. 11.75 and 11.62):
             - order1_direct_backscatter: Single volume backscatter upwards by the layer.
             - order1_double_bounce: Single volume scattering and single reflection by the interfaces and the substrate.
-            - order1_reflected_backscatter: Single volume backscatter and double specular reflection by the interfaces and the substrate.
+            - order1_reflected_backscatter: Single volume backscatter and double specular reflection by the interfaces
+              and the substrate.
 
 Usage:
     Basic usage with default settings and iba emmodel:
@@ -38,21 +39,22 @@ Usage:
 
 Note:
     - This solver is designed for backscatter calculations only.
-    - Single scattering albedo should be < 0.5 for reliable results. Can compare to dort to estimate unaccounted scattering.
+    - Single scattering albedo should be < 0.5 for reliable results. Can compare to dort to estimate unaccounted
+      scattering.
     - Multiple scattering effects are not accounted for in first-order approximation.
     - For higher scattering albedos, a second-order solution is required.
 
 References:
     Ulaby, F. T., et al. (2014). Microwave radar and radiometric remote sensing. Chapter 11.
 
-    Tsang, L., Pan, J., Liang, D., Li, Z., Cline, D. W., & Tan, Y. (2007). Modeling Active Microwave Remote Sensing of Snow
-    Using Dense Media Radiative Transfer (DMRT) Theory With Multiple-Scattering Effects. IEEE Transactions on Geoscience and
-    Remote Sensing, 45(4), 990–1004. https://doi.org/10.1109/tgrs.2006.888854
+    Tsang, L., Pan, J., Liang, D., Li, Z., Cline, D. W., & Tan, Y. (2007). Modeling Active Microwave Remote Sensing of
+    Snow Using Dense Media Radiative Transfer (DMRT) Theory With Multiple-Scattering Effects. IEEE Transactions on
+    Geoscience and Remote Sensing, 45(4), 990–1004. https://doi.org/10.1109/tgrs.2006.888854
 
-    Tan, S., Chang, W., Tsang, L., Lemmetyinen, J., & Proksch, M. (2015). Modeling Both Active and Passive Microwave Remote
-    Sensing of Snow Using Dense Media Radiative Transfer (DMRT) Theory With Multiple Scattering and Backscattering
-    Enhancement. IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, 8(9), 4418–4430.
-    https://doi.org/10.1109/jstars.2015.2469290
+    Tan, S., Chang, W., Tsang, L., Lemmetyinen, J., & Proksch, M. (2015). Modeling Both Active and Passive Microwave
+    Remote Sensing of Snow Using Dense Media Radiative Transfer (DMRT) Theory With Multiple Scattering and
+    Backscattering Enhancement. IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, 8(9),
+    4418–4430. https://doi.org/10.1109/jstars.2015.2469290
 """
 
 
@@ -70,8 +72,7 @@ from smrt.rtsolver.rtsolver_utils import RTSolverBase, prepare_kskaeps_profile_i
 
 
 class IterativeFirstOrder(RTSolverBase):
-    """
-    Implement the iterative radiative transfer solver using first-order approximation.
+    """Implement the iterative radiative transfer solver using first-order approximation.
 
     This solver computes the zeroth and first-order terms of the iterative solution
     for the radiative transfer equation. It provides efficient backscatter calculations
@@ -80,15 +81,19 @@ class IterativeFirstOrder(RTSolverBase):
     Args:
         error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
             If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
-            the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
+            the error message is not accessible. This is only recommended for long simulations that sometimes produce an
+            error.
 
         return_contributions: If False (default), returns only total backscatter.
             If True, returns individual contributions:
                 - 'total': Sum of all contributions.
-                - 'order0_backscatter': Backscatter from the surface, interfaces, and substrate after attenuation through the snowpack.
+                - 'order0_backscatter': Backscatter from the surface, interfaces, and substrate after attenuation
+                  through the snowpack.
                 - 'order1_direct_backscatter': Single volume backscatter upwards by the layer.
-                - 'order1_double_bounce': Single volume scattering and single reflection by the interfaces and the substrate.
-                - 'order1_reflected_backscatter': Single volume backscatter and double specular reflection by the interfaces and the substrate.
+                - 'order1_double_bounce': Single volume scattering and single reflection by the interfaces and the
+                  substrate.
+                - 'order1_reflected_backscatter': Single volume backscatter and double specular reflection by the
+                  interfaces and the substrate.
     """
 
     # Dimensions that this solver can handle directly:
@@ -98,9 +103,8 @@ class IterativeFirstOrder(RTSolverBase):
         self.error_handling = error_handling
         self.return_contributions = return_contributions
 
-    def solve(self, snowpack, emmodels, sensor, atmosphere=None):
-        """
-        Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
+    def solve(self, snowpack, emmodels, sensor, atmosphere=None, parallel_computation=None):
+        """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
             snowpack: Snowpack object.
@@ -139,7 +143,7 @@ class IterativeFirstOrder(RTSolverBase):
         mu0 = np.cos(sensor.theta)
 
         # solve with first order iterative solution
-        I = compute_intensity(
+        intensity = compute_intensity(
             snowpack, emmodels, sensor, snowpack.interfaces, substrate, self.effective_permittivity, mu0, npol
         )
 
@@ -153,11 +157,11 @@ class IterativeFirstOrder(RTSolverBase):
 
         # get total intensity from the three contributions
         # first index is the number of mu
-        total_I = I[0] + I[1] + I[2] + I[3]
+        total_I = intensity[0] + intensity[1] + intensity[2] + intensity[3]
 
         if self.return_contributions:
             # add total to the intensity array
-            intensity = np.array([total_I, I[0], I[1], I[2], I[3]])
+            intensity = np.array([total_I, intensity[0], intensity[1], intensity[2], intensity[3]])
             return make_result(
                 sensor,
                 intensity,
@@ -249,10 +253,10 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
     intensity_up[0] = I0_surface
 
     optical_depth = 0
-    for l in range(nlayer):
+    for layer in range(nlayer):
         # check scat albedo for validity of iterative solution
-        ke = emmodels[l]._ks + emmodels[l].ka
-        scat_albedo = emmodels[l]._ks / (ke)
+        ke = emmodels[layer]._ks + emmodels[layer].ka
+        scat_albedo = emmodels[layer]._ks / (ke)
         if scat_albedo > 0.5:
             smrt_warn(
                 f"Warning : scattering albedo ({np.round(scat_albedo, 2)}) might be too high"
@@ -261,22 +265,22 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
 
         # prepare matrix of interface
         # transmission matrix of the top layer to l-1
-        transmission_top = interface_l.transmission_top(l)
+        transmission_top = interface_l.transmission_top(layer)
 
         # transmission matrix of the bottom layer to l+1
-        transmission_bottom = interface_l.transmission_bottom(l)
+        transmission_bottom = interface_l.transmission_bottom(layer)
 
         # Reflection matrix of the bottom layer
-        reflection_bottom = interface_l.reflection_bottom(l)
+        reflection_bottom = interface_l.reflection_bottom(layer)
 
         # backscatter matrix of the bottom layer
-        backscatter_bottom = _get_np_matrix(interface_l.Rbottom_backscatter[l], npol, n)
+        backscatter_bottom = _get_np_matrix(interface_l.Rbottom_backscatter[layer], npol, n)
 
         # get phase function for array of mu and -mu
-        mus_sym = np.concatenate([-mus[l], mus[l]])
+        mus_sym = np.concatenate([-mus[layer], mus[layer]])
         # Note that the phase calculation is inefficiant as it calculates all combinations of (mus_sym, mus_sym).
         # TODO: Solving this issue would require to rewrite all the phase methods.
-        phases = emmodels[l].phase(mus_sym, mus_sym, dphi, npol).values
+        phases = emmodels[layer].phase(mus_sym, mus_sym, dphi, npol).values
 
         # 1/4pi normalization of the RT equation for SMRT
         # applied to phase here, interface and substrate already have the smrt_norm
@@ -290,13 +294,13 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
         P_Bi_Up = reshape_phase(phases[:, :, 0, n:, n:])  # P(mu, mu)
         P_Bi_Down = reshape_phase(phases[:, :, 0, 0:n, 0:n])  # P(-mu, -mu)
 
-        layer_optical_depth = ke * thickness[l]
+        layer_optical_depth = ke * thickness[layer]
         optical_depth += layer_optical_depth
 
         # convert to 3d array for computation of intensity
         # allow computation of incident angle
         # two way attenuation (ulaby et al 2014, eq: 11.2)
-        mus_l = mus[l][:, np.newaxis, np.newaxis]
+        mus_l = mus[layer][:, np.newaxis, np.newaxis]
         gammas2 = np.exp(-2 * layer_optical_depth / mus_l)
 
         """
@@ -317,26 +321,37 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
         """
         I1_backscatter = transmission_top @ ((1 - gammas2) / (2 * ke) * P_Up) @ I_l
 
-        I1_double_bounce = transmission_top @ (thickness[l] * gammas2 / mus_l * (P_Bi_Down @ reflection_bottom + reflection_bottom @ P_Bi_Up)) @ I_l  # fmt: skip
+        I1_double_bounce = (
+            transmission_top
+            @ (thickness[layer] * gammas2 / mus_l * (P_Bi_Down @ reflection_bottom + reflection_bottom @ P_Bi_Up))
+            @ I_l
+        )
 
-        I1_reflected_backscatter = transmission_top @ (((1 - gammas2) / (2 * ke) * gammas2) * (reflection_bottom @ P_Down @ reflection_bottom)) @ I_l  # fmt: skip
+        I1_reflected_backscatter = (
+            transmission_top
+            @ (((1 - gammas2) / (2 * ke) * gammas2) * (reflection_bottom @ P_Down @ reflection_bottom))
+            @ I_l
+        )
 
         # shape of intensity (incident angle, first order contribution, npo, npol)
         I1 = np.array([I0, I1_backscatter, I1_double_bounce, I1_reflected_backscatter]).reshape(4, n, npol, npol)
         # add intensity
         intensity_up += I1
 
-        if l < nlayer - 1:
-            mus_l1 = mus[l + 1][:, np.newaxis, np.newaxis]
+        if layer < nlayer - 1:
+            mus_l1 = mus[layer + 1][:, np.newaxis, np.newaxis]
             refraction_factor_l = compute_refraction_factor(
-                effective_permittivity[l], effective_permittivity[l + 1], mus_l, mus_l1
+                effective_permittivity[layer], effective_permittivity[layer + 1], mus_l, mus_l1
             )
             # intensity in the layer transmitted downward for upper layer with one way attenuation
             I_l = transmission_bottom @ (gammas2 * refraction_factor_l * I_l)
 
     if substrate is None and optical_depth < 5:
         smrt_warn(
-            f"The solver has detected that the snowpack is optically shallow (tau={optical_depth:g}) and no substrate has been set, meaning that the space under the snowpack is vaccum and that the snowpack is shallow enough to affect the signal measured at the surface. This is usually not wanted. Either increase the thickness of the snowpack or set a substrate. If wanted, add a transparent substrate to supress this warning"
+            f"The solver has detected that the snowpack is optically shallow (tau={optical_depth:g}) and no substrate"
+            " has been set, meaning that the space under the snowpack is vaccum and that the snowpack is shallow enough"
+            "to affect the signal measured at the surface. This is usually not wanted. Either increase the thickness "
+            "of the snowpack or set a substrate. If wanted, add a transparent substrate to supress this warning"
         )
 
     return intensity_up
@@ -426,7 +441,7 @@ class _InterfaceProperties(object):
         self.Tbottom_coh = dict()
         self.Tbottom_diff = dict()
         # compute refracted angle
-        self.mu = {l: snell_angle(1, permittivity[l], mu0) for l in range(nlayer)}
+        self.mu = {layer: snell_angle(1, permittivity[layer], mu0) for layer in range(nlayer)}
         self.mu[-1] = mu0
         self.npol = npol
         self.len_mu = len(mu0)
@@ -448,13 +463,13 @@ class _InterfaceProperties(object):
             else smrt_matrix(0)
         )
 
-        for l in range(nlayer):
+        for layer in range(nlayer):
             # define permittivity
             # #for permittivity, index 0 = air, length of permittivity is l+1
-            eps_lm1 = permittivity[l - 1] if l > 0 else 1
-            eps_l = permittivity[l]
-            if l < nlayer - 1:
-                eps_lp1 = permittivity[l + 1]
+            eps_lm1 = permittivity[layer - 1] if layer > 0 else 1
+            eps_l = permittivity[layer]
+            if layer < nlayer - 1:
+                eps_lp1 = permittivity[layer + 1]
             else:
                 eps_lp1 = None
 
@@ -466,57 +481,59 @@ class _InterfaceProperties(object):
             #     else smrt_matrix(0)
             # )
 
-            self.Ttop_coh[l] = interfaces[l].coherent_transmission_matrix(frequency, eps_l, eps_lm1, self.mu[l], npol)
+            self.Ttop_coh[layer] = interfaces[layer].coherent_transmission_matrix(
+                frequency, eps_l, eps_lm1, self.mu[layer], npol
+            )
 
-            if l < nlayer - 1:
+            if layer < nlayer - 1:
                 # set up interfaces
                 # snow - snow
                 # Upward
-                self.Rbottom_coh[l] = interfaces[l + 1].specular_reflection_matrix(
-                    frequency, eps_l, eps_lp1, self.mu[l], npol
+                self.Rbottom_coh[layer] = interfaces[layer + 1].specular_reflection_matrix(
+                    frequency, eps_l, eps_lp1, self.mu[layer], npol
                 )
 
                 # other than flat interface
-                self.Rbottom_backscatter[l] = interfaces[l + 1].diffuse_reflection_matrix(
-                    frequency, eps_l, eps_lp1, self.mu[l], self.mu[l], dphi, npol
+                self.Rbottom_backscatter[layer] = interfaces[layer + 1].diffuse_reflection_matrix(
+                    frequency, eps_l, eps_lp1, self.mu[layer], self.mu[layer], dphi, npol
                 )
 
-                self.Tbottom_coh[l] = interfaces[l + 1].coherent_transmission_matrix(
-                    frequency, eps_l, eps_lp1, self.mu[l], npol
+                self.Tbottom_coh[layer] = interfaces[layer + 1].coherent_transmission_matrix(
+                    frequency, eps_l, eps_lp1, self.mu[layer], npol
                 )
-                self.Tbottom_diff[l] = (
-                    interfaces[l + 1].diffuse_transmission_matrix(
-                        frequency, eps_l, eps_lm1, self.mu[l + 1], self.mu[l], 0, npol
+                self.Tbottom_diff[layer] = (
+                    interfaces[layer + 1].diffuse_transmission_matrix(
+                        frequency, eps_l, eps_lm1, self.mu[layer + 1], self.mu[layer], 0, npol
                     )
-                    if hasattr(interfaces[l + 1], "diffuse_transmission_matrix") * (eps_l.real / eps_lm1.real)
+                    if hasattr(interfaces[layer + 1], "diffuse_transmission_matrix") * (eps_l.real / eps_lm1.real)
                     else smrt_matrix(0)
                 )
 
             elif substrate is not None:
-                self.Rbottom_coh[l] = substrate.specular_reflection_matrix(frequency, eps_l, self.mu[l], npol)
+                self.Rbottom_coh[layer] = substrate.specular_reflection_matrix(frequency, eps_l, self.mu[layer], npol)
 
-                self.Rbottom_backscatter[l] = (
-                    substrate.diffuse_reflection_matrix(frequency, eps_l, self.mu[l], self.mu[l], dphi, npol)
+                self.Rbottom_backscatter[layer] = (
+                    substrate.diffuse_reflection_matrix(frequency, eps_l, self.mu[layer], self.mu[layer], dphi, npol)
                     if hasattr(substrate, "diffuse_reflection_matrix")
                     else smrt_matrix(0)
                 )
 
                 # sub-snow
-                self.Tbottom_coh[l] = smrt_matrix(0)
-                self.Tbottom_diff[l] = smrt_matrix(0)
+                self.Tbottom_coh[layer] = smrt_matrix(0)
+                self.Tbottom_diff[layer] = smrt_matrix(0)
 
             else:
                 # fully transparent substrate
-                self.Rbottom_coh[l] = smrt_matrix(0)
-                self.Rbottom_backscatter[l] = smrt_matrix(0)
-                self.Tbottom_coh[l] = smrt_matrix(0)
-                self.Tbottom_diff[l] = smrt_matrix(0)
+                self.Rbottom_coh[layer] = smrt_matrix(0)
+                self.Rbottom_backscatter[layer] = smrt_matrix(0)
+                self.Tbottom_coh[layer] = smrt_matrix(0)
+                self.Tbottom_diff[layer] = smrt_matrix(0)
 
-    def reflection_bottom(self, l):
-        return _get_np_matrix(self.Rbottom_coh[l], self.npol, self.len_mu)
+    def reflection_bottom(self, layer):
+        return _get_np_matrix(self.Rbottom_coh[layer], self.npol, self.len_mu)
 
-    def transmission_top(self, l):
-        return _get_np_matrix(self.Ttop_coh[l], self.npol, self.len_mu)
+    def transmission_top(self, layer):
+        return _get_np_matrix(self.Ttop_coh[layer], self.npol, self.len_mu)
 
-    def transmission_bottom(self, l):
-        return _get_np_matrix(self.Tbottom_coh[l], self.npol, self.len_mu)
+    def transmission_bottom(self, layer):
+        return _get_np_matrix(self.Tbottom_coh[layer], self.npol, self.len_mu)

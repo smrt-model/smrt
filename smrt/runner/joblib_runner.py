@@ -1,5 +1,5 @@
-"""This module implements a joblib runner tp execute smrt simulations in parallel. It is used by default if parallel_computation=True
-in py:func:`~smrt.core.model.make_model` function.
+"""This module implements a joblib runner tp execute smrt simulations in parallel. It is used by default if
+parallel_computation=True in py:func:`~smrt.core.model.make_model` function.
 
 Example::
     # Basic usage:
@@ -13,13 +13,10 @@ Example::
 
 
 class JoblibParallelRunner(object):
-    """
-    Run the simulations on the local machine on all the cores, using the joblib library for parallelism.
-    """
+    """Run the simulations on the local machine on all the cores, using the joblib library for parallelism."""
 
     def __init__(self, progressbar, backend="loky", n_jobs=None, max_numerical_threads=1):
-        """
-        Build a joblib parallel runner.
+        """Build a joblib parallel runner.
 
         Joblib is a lightweight library for embarasingly parallel task.
 
@@ -27,8 +24,8 @@ class JoblibParallelRunner(object):
         progressbar: show a progress bar if True
             backend: see joblib documentation. The default 'loky' is the recommended backend.
             n_jobs (int): see joblib documentation. The default is to use all the cores.
-            max_numerical_threads: :py:func:`~smrt.core.lib.set_max_numerical_threads`. The default avoid mixing different
-                parallelism techniques.
+            max_numerical_threads: :py:func:`~smrt.core.lib.set_max_numerical_threads`. The default avoid mixing
+                different parallelism techniques.
 
         """
         from joblib import cpu_count  # should become a lazy import in the future
@@ -46,8 +43,7 @@ class JoblibParallelRunner(object):
         #     lib.set_max_numerical_threads(max_numerical_threads)
 
     def __call__(self, function, argument_list):
-        """
-        Run the function on all the argument_list in parallel.
+        """Run the function on all the argument_list in parallel.
 
         Args:
             function: function to run on each argument
@@ -56,7 +52,6 @@ class JoblibParallelRunner(object):
         Returns:
             list: list of results from the function
         """
-
         from joblib import Parallel, delayed  # should become a lazy import in the future
 
         if self.progressbar:

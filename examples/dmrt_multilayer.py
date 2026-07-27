@@ -7,14 +7,14 @@ from smrt import make_model, make_snowpack, sensor_list
 
 # prepare inputs
 
-l = 2
+length = 2
 n_max_stream = 64
 
-nl = l // 2  # // Forces integer division
+nl = length // 2  # // Forces integer division
 thickness = np.array([0.1, 0.1] * nl)
 thickness[-1] = 100  # last one is semi-infinit
-radius = np.array([2e-4] * l)
-p_ex = np.array([5e-5] * l)
+radius = np.array([2e-4] * length)
+p_ex = np.array([5e-5] * length)
 temperature = np.array([250.0, 250.0] * nl)
 density = [200, 400] * nl
 stickiness = [0.1, 0.1] * nl

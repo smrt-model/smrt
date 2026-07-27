@@ -28,7 +28,6 @@ class DaskParallelRunner(object):
             client (str or Client): The url or a dask client object.
             chunk (int): Size of the chunk to transmit to the runner.
         """
-
         super().__init__()
 
         if isinstance(client, str):

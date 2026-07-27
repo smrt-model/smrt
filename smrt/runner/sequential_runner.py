@@ -15,19 +15,18 @@ Examples::
 
 
 class SequentialRunner(object):
-    """
-    Run the simulations sequentially on a single (local) core. This is the most simple way to run smrt simulations, but
-    the efficiency is poor.
+    """Run the simulations sequentially on a single (local) core. This is the most simple way to run smrt simulations,
+    but the efficiency is poor.
 
     """
 
     def __init__(self, progressbar, max_numerical_threads=1):
-        """
-        Build a sequential runner
+        """Build a sequential runner
 
         Args:
           progressbar: show a progress bar if True.
-          max_numerical_threads: see :py:func:`~smrt.core.lib.set_max_numerical_threads`. The default avoid mixing different
+          max_numerical_threads: see :py:func:`~smrt.core.lib.set_max_numerical_threads`. The default avoid mixing
+            different
 
         """
         self.progressbar = progressbar

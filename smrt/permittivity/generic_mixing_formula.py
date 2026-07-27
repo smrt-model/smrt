@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Provide functions that are not tied to a particular electromagnetic model
+"""Provide functions that are not tied to a particular electromagnetic model
 and are available to be imported by any electromagnetic model.
 
 Note:
@@ -40,8 +39,7 @@ def polder_van_santen(
     inclusion_shape: Optional[str | Sequence | Mapping] = None,
     mixing_ratio: Optional[int] = None,
 ):
-    """
-    Calculate the effective permittivity of snow by solution of quadratic Polder Van Santen equation for spherical
+    """Calculate the effective permittivity of snow by solution of quadratic Polder Van Santen equation for spherical
     or random needle inclusions only, potentially a mixing of these shapes (Sihvola, 1999).
 
     Note:
@@ -52,15 +50,17 @@ def polder_van_santen(
         frac_volume: Fractional volume of inclusions.
         e0: Permittivity of background (default is 1).
         eps: Permittivity of scattering material (default is 3.185 to compare with MEMLS)
-        depolarization_factors: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into account here.
+        depolarization_factors: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into
+            account here.
         length_ratio: Length_ratio. Used to estimate depolarization factors when they are not given.
-        inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape, or a list/tuple/dict of strings
-            for mixture of shapes. So far, we have the following shapes: "spheres" and "random_needles" (i.e. randomly-oriented elongated
-            ellipsoidal inclusions). If the argument is a dict, the keys are the shapes and the values are the mixing ratio. If it is
-            a list, the mixing_ratio argument is required.
-        mixing_ratio: The mixing ratio of the shapes. This is only relevant when inclusion_shape is a list/tuple. Mixing ratio must
-            be a sequence with length len(inclusion_shape)-1. The mixing ratio of the last shapes is deduced as the sum of the ratios
-            must equal to 1.
+        inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape, or a
+            list/tuple/dict of strings for mixture of shapes. So far, we have the following shapes: "spheres" and
+            "random_needles" (i.e. randomly-oriented elongated ellipsoidal inclusions). If the argument is a dict, the
+            keys are the shapes and the values are the mixing ratio. If it is a list, the mixing_ratio argument is
+            required.
+        mixing_ratio: The mixing ratio of the shapes. This is only relevant when inclusion_shape is a list/tuple. Mixing
+            ratio must be a sequence with length len(inclusion_shape)-1. The mixing ratio of the last shapes is deduced
+            as the sum of the ratios must equal to 1.
 
     Returns:
         Effective permittivity
@@ -70,12 +70,14 @@ def polder_van_santen(
         >>> effective_permittivity = polder_van_santen(frac_volume, e0, eps)
 
         for a mixture of 30% spheres and 70% needles
-        >>> effective_permittivity = polder_van_santen(frac_volume, e0, eps, inclusion_shape={"spheres": 0.3, "random_needles": 0.7})
+        >>> effective_permittivity = polder_van_santen(frac_volume, e0, eps, inclusion_shape={"spheres": 0.3,
+                "random_needles": 0.7})
 
         or
-        >>> effective_permittivity = polder_van_santen(frac_volume, e0, eps, inclusion_shape=("spheres", "random_needles"), mixing_ratio=0.3)
+        >>> effective_permittivity = polder_van_santen(frac_volume, e0, eps, inclusion_shape=("spheres",
+                "random_needles"), mixing_ratio=0.3)
 
-    todo:
+    Todo:
         Extend Polder Van Santen model to account for ellipsoidal inclusions
 
     References:
@@ -83,7 +85,6 @@ def polder_van_santen(
         http://www.ebook.de/de/product/21470462/a_sihvola_electromagnetic_mixing_formulas_and_applications.html
 
     """
-
     # first deal with the case inclusion_shape is a dict or a Sequence
     if inclusion_shape is not None and not isinstance(inclusion_shape, str):
         # then it is a sequence or dict
@@ -109,7 +110,7 @@ def polder_van_santen(
         return sum(
             (
                 mixing * polder_van_santen(frac_volume, e0=e0, eps=eps, inclusion_shape=shape)
-                for shape, mixing in zip(inclusion_shape, mixing_ratio)
+                for shape, mixing in zip(inclusion_shape, mixing_ratio, strict=False)
             )
         )
 
@@ -122,8 +123,11 @@ def polder_van_santen(
         b_quad = eps - 2 * e0 - 3.0 * frac_volume * (eps - e0)
         c_quad = -eps * e0
 
-    # Polder and Van Santen model, modified by de Loor (according to Shokr (1998) simplified by Hoekstra and Capillino (1971))
-    # Solution of quadratic equation arising from eqn (18) in Shokr (1998): 'Field Observations and Model Calculations of Dielectric Properties of Arctic Sea Ice in the Microwave C-Band', IEEE.
+    # Polder and Van Santen model, modified by de Loor (according to Shokr (1998) simplified by Hoekstra and Capillino
+    # (1971))
+    # Solution of quadratic equation arising from eqn (18) in Shokr (1998):
+    # 'Field Observations and Model Calculations of Dielectric Properties of Arctic Sea Ice in the Microwave C-Band',
+    # IEEE.
     elif inclusion_shape == "random_needles":
         a_quad = 1.0
         b_quad = eps - e0 - 5.0 / 3.0 * frac_volume * (eps - e0)
@@ -149,36 +153,36 @@ def general_polder_van_santen(
     length_ratio: Optional[float] = None,
     inclusion_shape: Optional[str] = None,
 ):
-    """
-    Calculate the effective permittivity of snow by solution of quadratic Polder Van Santen equation.
+    """Calculate the effective permittivity of snow by solution of quadratic Polder Van Santen equation.
 
     Note:
         For spherical or random needle inclusions only, potentially a mixing of these shapes (Sihvola, 1999).
-        See :py:func:`~smrt.permittivity.generic_mixing_formula.polder_van_santen` for an alternative function (faster but
-        specific to some shapes).
+        See :py:func:`~smrt.permittivity.generic_mixing_formula.polder_van_santen` for an alternative function (faster
+        but specific to some shapes).
 
     Args:
         frac_volume: Fractional volume of inclusions.
         e0: Permittivity of background (default is 1).
         eps: Permittivity of scattering material (default is 3.185 to compare with MEMLS).
-        depolarization_factors: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into account here.
+        depolarization_factors: [Optional] Depolarization factors, spherical isotropy is default. It is not taken into
+            account here.
         length_ratio: Length_ratio. Used to estimate depolarization factors when they are not given.
-        inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape, or a list/tuple/dict of strings
-            for mixture of shapes. So far, we have the following shapes: "spheres" and "random_needles" (i.e. randomly-oriented elongated
-            ellipsoidal inclusions). If the argument is a dict, the keys are the shapes and the values are the mixing ratio. If it is a
-            list, the mixing_ratio argument is required.
-        mixing_ratio: The mixing ratio of the shapes. This is only relevant when inclusion_shape is a list/tuple. Mixing ratio must be
-            a sequence with length len(inclusion_shape)-1. The mixing ratio of the last shapes is deduced as the sum of the ratios must
-            equal to 1.
+        inclusion_shape: Assumption for shape(s) of brine inclusions. Can be a string for single shape, or a
+            list/tuple/dict of strings for mixture of shapes. So far, we have the following shapes: "spheres" and
+            "random_needles" (i.e. randomly-oriented elongated ellipsoidal inclusions). If the argument is a dict, the
+            keys are the shapes and the values are the mixing ratio. If it is a list, the mixing_ratio argument is
+            required.
+        mixing_ratio: The mixing ratio of the shapes. This is only relevant when inclusion_shape is a list/tuple. Mixing
+            ratio must be a sequence with length len(inclusion_shape)-1. The mixing ratio of the last shapes is deduced
+            as the sum of the ratios must equal to 1.
 
     Returns:
         Effective permittivity.
 
-    References
+    References:
         Sihvola, A.: Electromagnetic Mixing Formulas and Applications, 1999, INSTITUTION OF ENGINEERING & T
         http://www.ebook.de/de/product/21470462/a_sihvola_electromagnetic_mixing_formulas_and_applications.html
     """
-
     depol_xyz = _get_depolarization_factors(depolarization_factors, inclusion_shape, frac_volume, length_ratio)
 
     def pvs_equation(x):
@@ -201,8 +205,7 @@ bruggeman = polder_van_santen
 
 
 def polder_van_santen_three_spherical_components(f1, f2, eps0, eps1, eps2):
-    """
-    Calculate effective permittivity using Polder and van Santen with three components assuming spherical inclusions.
+    """Calculate effective permittivity using Polder and van Santen with three components assuming spherical inclusions.
 
     Args:
         f1: fractional volume of component 1.
@@ -214,7 +217,7 @@ def polder_van_santen_three_spherical_components(f1, f2, eps0, eps1, eps2):
     Returns:
         Effective permittivity.
 
-    References
+    References:
         Sihvola, A.: Electromagnetic Mixing Formulas and Applications, 1999, INSTITUTION OF ENGINEERING & T
         http://www.ebook.de/de/product/21470462/a_sihvola_electromagnetic_mixing_formulas_and_applications.html
     """
@@ -247,8 +250,7 @@ def polder_van_santen_three_spherical_components(f1, f2, eps0, eps1, eps2):
 
 
 def polder_van_santen_three_components(f1, f2, eps0, eps1, eps2, A1, A2):
-    """
-    Calculate effective permittivity using Polder and van Santen with three components
+    """Calculate effective permittivity using Polder and van Santen with three components
 
     Args:
         f1: fractional volume of component 1.
@@ -262,7 +264,7 @@ def polder_van_santen_three_components(f1, f2, eps0, eps1, eps2, A1, A2):
     Returns:
         Effective permittivity.
 
-    References
+    References:
         Sihvola, A.: Electromagnetic Mixing Formulas and Applications, 1999, INSTITUTION OF ENGINEERING & T
         http://www.ebook.de/de/product/21470462/a_sihvola_electromagnetic_mixing_formulas_and_applications.html
     """
@@ -309,8 +311,7 @@ def maxwell_garnett(
     inclusion_shape=None,
     length_ratio=None,
 ):
-    """
-    Calculate effective permittivity using Maxwell-Garnett equation.
+    """Calculate effective permittivity using Maxwell-Garnett equation.
 
     Args:
         frac_volume: Fractional volume of snow.
@@ -337,7 +338,6 @@ def maxwell_garnett(
         #If accessed from elsewhere, use absolute import
         from smrt.emmodel.commonfunc import maxwell_garnett
     """
-
     assert np.all(frac_volume <= 1)
 
     if inclusion_shape is not None and inclusion_shape != "spheres":
@@ -359,8 +359,7 @@ def maxwell_garnett(
 
 @layer_properties("frac_volume")
 def maxwell_garnett_for_spheres(frac_volume, e0, eps):
-    """
-    Calculate effective permittivity using Maxwell-Garnett equation assuming spherical inclusion.
+    """Calculate effective permittivity using Maxwell-Garnett equation assuming spherical inclusion.
 
     Note:
         This function is essentially an optimized version of py:func:`maxwell_garnett`.
@@ -373,7 +372,6 @@ def maxwell_garnett_for_spheres(frac_volume, e0, eps):
     Returns:
         Effective permittivity.
     """
-
     Cplus = eps + 2 * e0
     Cminus = (eps - e0) * frac_volume
 
@@ -388,10 +386,8 @@ def _get_depolarization_factors(
     frac_volume: float,
     length_ratio: float,
 ):
-    """
-    Process the parameter ``depolarizatio_factors`` and depending on its type compute the value of the depolarizationfactors.
-    """
-
+    """Process the parameter ``depolarizatio_factors`` and depending on its type compute the value of the depolarization
+    factors."""
     if depolarization_factors is None:
         depol_xyz = depolarization_factors_spheroids(
             inclusion_shape=inclusion_shape,

@@ -2,19 +2,71 @@
 Intensive calculations
 ################################
 
-Goal:
+**Goal**: - Understand how to run SMRT on a large number of snowpacks in parallel from a single machine to a HPC //
 
-::
+SMRT runs in parallel by default, without any additional configuration, but understanding how this works and how this
+can be adjusted is useful for intensive calculations. SMRT has several mechanisms to perform parallel computation, and
+they are controled by two arguments of the :py:func:`~smrt.core.Model.run()` function: `parallel_computation` and
+`runner`.
 
-   Use a HPC cluster to run SMRT in //
+By default, `parallel_computation` is set to `auto`. It is the most convenient option for single machine parallelism.
+In this mode SMRT first determines how simulations need to be run, that is the product of the number of snowpacks and
+sensors configurations to run. If more than one simulation, it selects the `outer` mode which loops over all the
+simulations in parallel. The parallelism is handled by the joblib library in separate processes. By default, joblib uses
+ all the available cores on the machine to run the simulations in parallel. If there is only one simulation to run
+ (1 snowpack and 1 sensor configuration), SMRT selects the `inner` mode which delegates the role of parallelism
+to the selected RT solver. Most RTsolvers in SMRT are not parallelized at this stage, but some are, and more will be.
 
-Learning:
+It is also possible to set `parallel_computation` to `outer` or `inner` explicitly. In the `outer` mode,
+as mentioned above joblib is used to run each snowpack and sensor configuration in parallel, and this is likely not
+efficient if only one simulation is needed. This is why `outer` has no real benefit over the default `auto`.
+On the other hand, one may want to set `parallel_computation` to `inner` explicitly, even for many simulations,
+if the snowpacks are huge and the RTSolver is using a lot of memory. In such case, the outer parallelism
+may cause memory overflow as it starts many RTSolver in parallel, each taking a lot of memory. The inner mode runs
+the simulations sequentially, minizing the memory usage, but let the RTSolver performs some internal tasks in parallel.
+This is likely less efficient (in speed) than the `outer` mode, but it is safer in terms of memory usage and may
+ better fit for some HPC clusters that limit the memory usage per core.
 
-This tutorial will help you use the following modules
+More advanced parallelism settings are controled by the `runner` argument. A runner in SMRT is an object that takes a
+list of simulations (list of snowpack and sensor) and run them using some parallelism mechanisms. It is used in
+`Model.run` to effectively run the simulations.`. There are several options::
+    - `:py:func:~smrt.runner.job_lib.JobLibParallelRunner` is the default runner used by `parallel_computation` in
+       outer mode. It uses the joblib library has mentioned earlier. User who want to limit the number of processes or
+       control the backend (see joblib documentation) can set
+        `runner=JoblibParallelRunner(n_jobs=4, backend='threading')` instead of using `parallel_computation`.
+    - `:py:func:~smrt.runner.dask_runner.DaskParallelRunner` uses the well-known Dask library for performance
+        computing on cluster. The interest over joblib is to use many nodes on a cluster.
+        In such case, it is possible (and recommended) to use `parallel_computation='inner'` to leverage parallelism on
+        the RTSolver level (on multi-cores), while letting Dask handle the parallelism on the snowpack/sensor level
+        (with nodes).
+    - `:py:func:~smrt.runner.celery_runner.CeleryParallelRunner` uses the Celery library, a relatively lightweight
+        and robust library for distributed computing. However it has not been tested extensively in SMRT.
+    - `:py:func:~smrt.runner.multiprocessing_runner.MultiprocessinglRunner` uses the Pyhton standard library.
+        It has not been tested extensively in SMRT, but may be useful when joblib is not available.
+    - `:py:func:~smrt.runner.sequential_runner.SequentialRunner` runs the simulations sequentially without any
+        parallelism, useful for debugging only or when installing joblib is problematic.
 
-::
+A last control on parallelism in SMRT is performed internally and concerns the RT solvers that leverage LAPACK and
+similar libraries. These library are often multi-threaded, and this will use all the available cores on the machine
+for their specific tasks. There is benefit to use this multi-threading if there is only one simulation to run, but
+otherwise it may overload the machine and slow down the computations. For this reason, some runners (such as joblib)
+try to disable the LAPACK multi-threading when there are more than one snowpack or sensor configuration to run.
+Conversely, if there is only one simulation to run, it is likely that the numerical libraries will use all the available
+cores on the machine for their specific tasks. For user who want to completely disable the multi-threading
+of the numerical libraries, it is possible to use `:py:func:smrt.core.lib.set_max_numerical_threads`.
 
-   dask_runner
+
+
+
+
+
+
+
+
+
+This remaining of this tutorial will help you use parallel computation settings and for the most advanced users
+ use a `runner` such as the `dask_runner`.
+
 
 .. code:: ipython3
 
@@ -31,7 +83,7 @@ This tutorial will help you use the following modules
     %load_ext autoreload
     %autoreload 2
 
-We create large snowpack to evaluate the computational cost of snowpacks
+We create large snowpack to evaluate the computational cost of many snowpacks
 with many layers
 
 .. code:: ipython3
@@ -80,7 +132,7 @@ with many layers
 Parallel computation on your machine
 ====================================
 
-the easiest way to accelerate simulations is to use all the cpus and
+The easiest way to accelerate simulations is to use all the cpus and
 cores on your machine. Just add “parallel_computation=True” when running
 the model.
 

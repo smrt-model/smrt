@@ -1,7 +1,6 @@
 """This module implements various soil dielectric constant models.
 
 References:
-
     - Dobson, M. C., Ulaby, F. T., Hallikainen, M. T., & El-Rayes, M. A. (1985).
       Microwave dielectric behavior of wet soil—Part II: Dielectric mixing models.
       IEEE Transactions on Geoscience and Remote Sensing, GE-23(1), 35–46.
@@ -35,7 +34,8 @@ from smrt.core.layer import layer_properties
 
 @layer_properties("temperature", "moisture", "sand", "clay")
 def soil_permittivity_dobson85_peplinski95(frequency, temperature, moisture, sand, clay):
-    """Compute the soil dielectric constant using the Dobson et al. (1985) formulation adapted by Peplinski et al., (1995).
+    """Compute the soil dielectric constant using the Dobson et al. (1985) formulation adapted by Peplinski et al.,
+    (1995).
 
     History:
         - equation implemented by M. Sandells (~2016)
@@ -43,7 +43,6 @@ def soil_permittivity_dobson85_peplinski95(frequency, temperature, moisture, san
         - added references and equation number by M. Leduc-Leballeur and G. Picard (2026)
 
     References:
-
     - Dobson, M. C., Ulaby, F. T., Hallikainen, M. T., & El-Rayes, M. A. (1985).
       Microwave dielectric behavior of wet soil—Part II: Dielectric mixing models.
       IEEE Transactions on Geoscience and Remote Sensing, GE-23(1), 35–46.
@@ -54,7 +53,6 @@ def soil_permittivity_dobson85_peplinski95(frequency, temperature, moisture, san
     - A. Stogryn, "Equations for calculating the dielectric constant of saline water," IEEE Trans. Microwave Theory
       Tech., vol. MTT-19, pp. 733-736, 1971.
     """
-
     e_0 = PERMITTIVITY_OF_FREE_SPACE
     e_w_inf = 4.9
     e_s = 4.7
@@ -87,6 +85,15 @@ def soil_permittivity_dobson85_peplinski95(frequency, temperature, moisture, san
 
 @layer_properties("temperature", "moisture", "sand", "clay")
 def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
+    raise SMRTError(
+        "The model labelled 'dobson85' in SMRT was using dobson85 modified peplinski95. "
+        "To avoid this misleading name, the new recommended name is 'soil_permittivity_dobson85_peplinski95'. "
+        "In addition, the original dobson85 model is now available under the name 'dobson85_original'."
+    )
+
+
+@layer_properties("temperature", "moisture", "sand", "clay")
+def soil_permittivity_dobson85_original(frequency, temperature, moisture, sand, clay):
     """Compute the soil dielectric constant using the Dobson et al., (1985) formulation (original).
 
     It is not recommended to use this function, please use soil_permittivity_dobson85_peplinski95 instead.
@@ -95,7 +102,6 @@ def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
         - added by M. Leduc-Leballeur and G. Picard (2026)
 
     References:
-
     - Dobson, M. C., Ulaby, F. T., Hallikainen, M. T., & El-Rayes, M. A. (1985).
       Microwave dielectric behavior of wet soil—Part II: Dielectric mixing models.
       IEEE Transactions on Geoscience and Remote Sensing, GE-23(1), 35–46.
@@ -106,7 +112,6 @@ def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
     - A. Stogryn, "Equations for calculating the dielectric constant of saline water," IEEE Trans. Microwave Theory
       Tech., vol. MTT-19, pp. 733-736, 1971.
     """
-
     e_0 = PERMITTIVITY_OF_FREE_SPACE
     e_w_inf = 4.9
     e_s = 4.7
@@ -118,7 +123,8 @@ def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
     beta_prime = 1.2748 - 0.519 * sand - 0.152 * clay  # DB85 eq 30
     beta_second = 1.33797 - 0.603 * sand - 0.166 * clay  # DB85 eq 31
 
-    # original eq 32 DB85. Not used here because S has a different unit (permil->fraction) and interpretation (?) in DB85
+    # original eq 32 DB85. Not used here because S has a different unit (permil->fraction) and interpretation (?) in
+    # DB85
     # sigma_eff = -1.645 + 1.939 * rho_b - 0.02013 * sand + 0.01594 * clay  #
     # equation eq 8 given in Peplinski et al., 1995
     # See also Ulaby 2014, section 4.8.1, page 252
@@ -143,7 +149,8 @@ def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
 
 @layer_properties("temperature", "moisture", "sand", "clay", "dry_matter")
 def soil_permittivity_hut(frequency, temperature, moisture, sand, clay, dry_matter):
-    """Compute the soil dielectric constant using the HUT (Pulliainen et al., 1999; Lemmetyinen et al., 2010) formulation."""
+    """Compute the soil dielectric constant using the HUT (Pulliainen et al., 1999; Lemmetyinen et al., 2010)
+    formulation."""
     # Parameters for soil dielectric constant calculation with water
     ew_inf = 4.9
 
@@ -175,8 +182,7 @@ def soil_permittivity_hut(frequency, temperature, moisture, sand, clay, dry_matt
 
 @layer_properties("temperature")
 def soil_permittivity_montpetit08(frequency, temperature):
-    """
-    Computes the soil dielectric constant using the Montpetit et al. (2018) formulation.
+    """Computes the soil dielectric constant using the Montpetit et al. (2018) formulation.
 
     The formulation is only valid for below-freezing point temperature.
 

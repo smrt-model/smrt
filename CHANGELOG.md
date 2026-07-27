@@ -18,6 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 		within a snowpacks or across snowpacks. Experimental.
 	- add atmosphere objects together now results in an atmosphere stack
 	- allow to use a string where permittivity_module function are expected. Import is automatic.
+	- add method Result.ks() and Result.ka().
+	- add method __repr__ to provide a printable representation of results. Useful to show the results in notebooks.
+	- add make_slush function in make_medium
 
 ### Changed
 	- the full planck function is now used in DORT and other solvers for passive mode calculations. This should slightly improve the brightness temperature at high frequencies and low temperatures. Rayleigh Jeans approximations can be enable to recover the previous behavior.
@@ -27,6 +30,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 	- the documentation is refactored.
 	- in nadir_lrm_altimetry oversampling argument becomes oversampling_time.
 	- Snowpack.copy is depreciated, it is replaced by shallow_copy.
+	- align how substrate permittivities work on layer permittivities, by using the decorator "layer_properties".
+	- improve parallel_computation to select between outer and inner parallelism (above the rtsolver or inside)
 
 ### Bug
 	- Solve a bug when no snowpack and DMRT_QCA_ShortRange is used due to incompatible microstructure

@@ -1,24 +1,26 @@
 # coding: utf-8
 
-"""
-This module defines the Result class to hold the results of RT Solver calculations.
+"""This module defines the Result class to hold the results of RT Solver calculations.
 
-This class provides several functions to access to the Stokes Vector and Muller matrix in a simple way. Most notable ones are :py:meth:`Result.TbV` and :py:meth:`Result.TbH`
-for the passive mode calculations and :py:meth:`Result.sigmaHH` and :py:meth:`Result.sigmaVV`. :py:meth:`Result.to_dataframe` is also
-very convenient for the sensors with a channel map (all specific satellite sensors have such a map,
-only generic sensors as :py:meth:`smrt.sensor_list.active` and :py:meth:`smrt.sensor_list.passive` does not provide a map by default).
+This class provides several functions to access to the Stokes Vector and Muller matrix in a simple way. Most notable
+ones are :py:meth:`Result.TbV` and :py:meth:`Result.TbH`
+for the passive mode calculations and :py:meth:`Result.sigmaHH` and :py:meth:`Result.sigmaVV`.
+:py:meth:`Result.to_dataframe` is also very convenient for the sensors with a channel map (all specific satellite
+sensors have such a map, only generic sensors as :py:meth:`smrt.sensor_list.active` and
+:py:meth:`smrt.sensor_list.passive` does not provide a map by default).
 
-In addition, the RT Solver stores some information in Result.other_data. Currently this includes the effective_permittivity,
-ks and ka for each layer. The data are accessed directly with e.g. result.other_data['ks'].
+In addition, the RT Solver stores some information in Result.other_data. Currently this includes the
+effective_permittivity, ks and ka for each layer. The data are accessed directly with e.g. result.other_data['ks'].
 
-To save results of calculations in a file, simply use the pickle module or other serialization schemes. We may provide a unified and
-inter-operable solution in the future.
+To save results of calculations in a file, simply use the pickle module or other serialization schemes. We may provide a
+unified and inter-operable solution in the future.
 
-Under the hood, :py:class:`Result` uses xarray module which provides multi-dimensional array with explicit, named, dimensions. Here the
-common dimensions are frequency, polarization, polarization_inc, theta_inc, theta, and phi. They are created by the RT Solver. The interest
-of using named dimension is that slice of the xarray (i.e. results) can be selected based on the dimension name whereas with numpy the order
-of the dimensions matters. Because this is very convenient, users may be interested in adding other dimensions specific to their context such
-as time, longitude, latitude, points, ... To do so, :py:meth:`smrt.core.model.Model.run` accepts a list of snowpack and optionally
+Under the hood, :py:class:`Result` uses xarray module which provides multi-dimensional array with explicit, named,
+dimensions. Here the common dimensions are frequency, polarization, polarization_inc, theta_inc, theta, and phi. They
+are created by the RT Solver. The interest of using named dimension is that slice of the xarray (i.e. results) can be
+selected based on the dimension name whereas with numpy the order of the dimensions matters. Because this is very
+convenient, users may be interested in adding other dimensions specific to their context such as time, longitude,
+latitude, points, ... To do so, :py:meth:`smrt.core.model.Model.run` accepts a list of snowpack and optionally
 the parameter `snowpack_dimension` is used to specify the name and values of the new dimension to build.
 
 Example::
@@ -28,9 +30,9 @@ Example::
 
     res = model.run(sensor, snowpacks, snowpack_dimension=('time', times))
 
-The `res` variable is a :py:class:`Result` instance, so that for all the methods of this class that can be called, they will return a timeseries.
-For instance result.TbV(theta=53) returns a time-series of brightness temperature at V polarization and 53° incidence angle and the following code
-plots this timeseries::
+The `res` variable is a :py:class:`Result` instance, so that for all the methods of this class that can be called, they
+will return a timeseries. For instance result.TbV(theta=53) returns a time-series of brightness temperature at
+V polarization and 53° incidence angle and the following code plots this timeseries::
 
     plot(times, result.TbV(theta=53))
 
@@ -48,8 +50,7 @@ from smrt.utils import dB
 
 
 def open_result(filename):
-    """
-    Read a result save to disk. See :py:meth:`Result.save` method.
+    """Read a result save to disk. See :py:meth:`Result.save` method.
 
     Args:
         filename: path to the file to read.
@@ -76,15 +77,13 @@ def open_result(filename):
 
 
 def make_result(sensor, *args, **kwargs):
-    """
-    Create an active or passive result object according to the mode.
+    """Create an active or passive result object according to the mode.
 
     Args:
         sensor: the sensor object used to create the result.
         \\*args: arguments to be passed to the Result constructor.
         \\**kwargs: keyword arguments to be passed to the Result constructor.
     """
-
     if sensor.mode == "A":
         return ActiveResult(*args, channel_map=sensor.channel_map, **kwargs)
     else:
@@ -92,16 +91,12 @@ def make_result(sensor, *args, **kwargs):
 
 
 class Result(object):
-    """
-    Contain the results of a/many computations and provides convenience functions to access these results.
-    """
+    """Contain the results of a/many computations and provides convenience functions to access these results."""
 
     def __init__(self, radiance, coords=None, channel_map=None, other_data={}, mother_df=None):
-        """
-        Build results array with the given radiance array (numpy array or xarray) and dimensions if numpy array is
+        """Build results array with the given radiance array (numpy array or xarray) and dimensions if numpy array is
         given.
         """
-
         super().__init__()
 
         if isinstance(radiance, xr.DataArray):
@@ -127,8 +122,7 @@ class Result(object):
 
     @property
     def coords(self):
-        """
-        Return the coordinates of the result (theta, frequency, ...).
+        """Return the coordinates of the result (theta, frequency, ...).
 
         Note that the coordinates are also result attribute, so result.frequency works (and so on for all the
         coordinates).
@@ -142,8 +136,7 @@ class Result(object):
             raise AttributeError(f"AttributeError: '{type(self)}' object has no attribute '{attr}'")
 
     def save(self, filename, netcdf_engine=None):
-        """
-        Save a result to disk.
+        """Save a result to disk.
 
         Under the hood, this is a netCDF file produced by xarray (http://xarray.pydata.org/en/stable/io.html).
 
@@ -157,8 +150,7 @@ class Result(object):
         raise NotImplementedError("must be implemented in a subclass")
 
     def return_as_dataframe(self, name, channel_axis=None, **kwargs):
-        """
-        Return the results as a dataframe
+        """Return the results as a dataframe
 
         Args:
             name: name of the dataframe
@@ -208,7 +200,8 @@ class Result(object):
 
         if self.mother_df is not None:
             if channel_axis == "column":
-                # join without alignment. We assume both have the same order. In principle this is the case with model.py
+                # join without alignment. We assume both have the same order.
+                # In principle this is the case with model.py
                 df = df.reset_index(drop=True).join(self.mother_df.reset_index(drop=True))
                 df.index = self.mother_df.index
             elif channel_axis is None:
@@ -237,25 +230,20 @@ class Result(object):
 
                 df = df.reset_index().join(mother_df, on=name).set_index(df.index.names)
 
-            # silently ignore the case with channel_axis='index'. It is not clear what should be done but most probably nothing.
-            # for this reason, we don't any raise exception or warning.
-
-            # warnings("running a model with a pandas DataFrame snowpack (or Series) and calling to_dataframe with channel_axis='index' "
-            #             "is ambiguous / not implemented. The result is returned without joining with the snowpack DataFrame.")
+            # silently ignore the case with channel_axis='index'. It is not clear what should be done but most probably
+            # nothing. for this reason, we don't any raise exception or warning.
 
         return df
 
     def to_series(self, **kwargs):
-        """
-        Return the result as a series with the channels defined in the sensor as index.
+        """Return the result as a series with the channels defined in the sensor as index.
 
         This requires that the sensor has declared a channel list.
         """
         return self.return_as_dataframe("out", channel_axis="column", **kwargs).iloc[0]
 
     def optical_depth(self):
-        """
-        Return the optical depth of each layer tau = ke * thickness, where ke = ka + ks calculated for each layer.
+        """Return the optical depth of each layer tau = ke * thickness, where ke = ka + ks calculated for each layer.
 
         This is useful to assess the e-folding depth (aka penetration depth), neglecting the layer transmittance.
 
@@ -271,43 +259,56 @@ class Result(object):
         return (ke * self.other_data["thickness"]).rename("optical_depth")
 
     def single_scattering_albedo(self):
-        """
-        Return the single scattering albedo of each layer: ssalb = ks / ke.
+        """Return the single scattering albedo of each layer: ssalb = ks / ke.
 
         Single scattering albedo is useful to assess if multiple scattering is significant (e.g. if ssalb > 0.2). Note
         that ks and ke are averaged over the angle used for the calculation, use this single scattering albedo value
         with care.
         """
-
         if "ke" not in self.other_data or "ks" not in self.other_data:
             raise SMRTError("single_scattering_albedo requires that the RT solver provides ke and ks.")
 
         return (self.other_data["ks"] / self.other_data["ke"]).rename("single_scattering_albedo")
 
     def single_scattering_albedo_using_absorption(self):
-        """
-        Return the single scattering albedo of each layer using the equation ssalb = ks / (ks + ka).
+        """Return the single scattering albedo of each layer using the equation ssalb = ks / (ks + ka).
 
         Single scattering albedo is useful to assess if multiple scattering is significant (e.g. if ssalb > 0.2).
 
         This function uses absorption coefficient which may give different results compared to using the extinction
         coefficient if the energy conservation is not respected by the EM model (which is often the case unfortunately!)
         """
-
         if "ka" not in self.other_data or "ks" not in self.other_data:
             raise SMRTError("single_scattering_albedo requires that the RT solver provides ka and ks.")
 
         return self.other_data["ks"] / (self.other_data["ka"] + self.other_data["ks"])
+
+    def ks(self):
+        """Return the scattering coefficient ks of each layer.
+
+        This is useful to assess the importance of scattering in the medium.
+        """
+        if "ks" not in self.other_data:
+            raise SMRTError("This method requires that the selected RTsolver provides ks.")
+
+        return self.other_data["ks"]
+
+    def ka(self):
+        """Return the absorption coefficient ka of each layer.
+
+        This is useful to assess the importance of scattering in the medium.
+        """
+        if "ka" not in self.other_data:
+            raise SMRTError("This method requires that the select RTsolver provides ka.")
+
+        return self.other_data["ka"]
 
 
 class PassiveResult(Result):
     mode = "P"
 
     def sel_data(self, channel=None, **kwargs):
-        """
-        Select data as xarray.DataArray.sel, and in addition by channel if a channel_map is defined.
-
-        """
+        """Select data as xarray.DataArray.sel, and in addition by channel if a channel_map is defined."""
         # ffilter the variables of channel_map[channel] that are effectively in self.data.dims
         # and apply them to the selector sel in addition to kwargs
 
@@ -317,8 +318,7 @@ class PassiveResult(Result):
         return self.data.sel(drop=True, **kwargs)
 
     def Tb(self, channel=None, **kwargs):
-        """
-        Return brightness temperature.
+        """Return brightness temperature.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V'). See xarray slicing
         with sel method. It is also possible to select by channel if the sensor has a channel_map.
@@ -329,17 +329,14 @@ class PassiveResult(Result):
         return _strongsqueeze(self.sel_data(channel=channel, **kwargs).rename("Tb"))
 
     def Tb_as_dataframe(self, channel_axis=None, **kwargs):
-        """
-        Return brightness temperature as a pandas.DataFrame.
+        """Return brightness temperature as a pandas.DataFrame.
 
         See :py:meth:`PassiveResult`.to_dataframe
         """
-
         return self.to_dataframe(channel_axis=None, **kwargs)
 
     def to_dataframe(self, channel_axis="auto", **kwargs):
-        """
-        Return brightness temperature as a pandas.DataFrame.
+        """Return brightness temperature as a pandas.DataFrame.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V'). See xarray slicing
         with sel method (to document). In addition channel_axis controls the format of the output. If set to None, the
@@ -360,8 +357,7 @@ class PassiveResult(Result):
         return super().return_as_dataframe(name="Tb", channel_axis=channel_axis, **kwargs)
 
     def TbV(self, **kwargs):
-        """
-        Return V polarization.
+        """Return V polarization.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method.
@@ -372,8 +368,7 @@ class PassiveResult(Result):
         return _strongsqueeze(self.data.sel(polarization="V", **kwargs).rename("TbV"))
 
     def TbH(self, **kwargs):
-        """
-        Return H polarization.
+        """Return H polarization.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method.
@@ -384,8 +379,7 @@ class PassiveResult(Result):
         return _strongsqueeze(self.data.sel(polarization="H", **kwargs).rename("TbH"))
 
     def polarization_ratio(self, ratio="H_V", **kwargs):
-        """
-        Return polarization ratio.
+        """Return polarization ratio.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method.
@@ -401,8 +395,8 @@ class PassiveResult(Result):
         )
 
     def Tb_quasiV(self, **kwargs):
-        """
-        Return quasi vertical polarization as provided by microwave sounders (e.g. AMSU-B, MSH, some channels on AMSU-A...).
+        """Return quasi vertical polarization as provided by microwave sounders (e.g. AMSU-B, MSH, some channels on
+        AMSU-A...).
 
         Tb_quasiV = TbV * cos^2(theta) + TbH * sin^2(theta)
 
@@ -413,8 +407,7 @@ class PassiveResult(Result):
         return self.TbV(**kwargs) * np.cos(theta) ** 2 + self.TbH(**kwargs) * np.sin(theta) ** 2
 
     def Tb_quasiH(self, **kwargs):
-        """
-        Return quasi horizontal polarization as provided by microwave sounders (e.g. ATMS, some channels on AMSU-A).
+        """Return quasi horizontal polarization as provided by microwave sounders (e.g. ATMS, some channels on AMSU-A).
 
         Tb_quasiH = TbH * cos^2(theta) + TbV * sin^2(theta)
 
@@ -424,13 +417,15 @@ class PassiveResult(Result):
         theta = np.deg2rad(self.data.theta)
         return self.TbH(**kwargs) * np.cos(theta) ** 2 + self.TbV(**kwargs) * np.sin(theta) ** 2
 
+    def __repr__(self):
+        return f"PassiveResult: TbV={self.TbV()}, TbH={self.TbH()}"
+
 
 class ActiveResult(Result):
     mode = "A"
 
     def sel_data(self, channel=None, return_backscatter=False, **kwargs):
-        """
-        Select data as xarray.DataArray.sel, and in addition by channel if a channel_map is defined.
+        """Select data as xarray.DataArray.sel, and in addition by channel if a channel_map is defined.
 
         Args:
             channel: channel to select
@@ -444,7 +439,6 @@ class ActiveResult(Result):
         Returns:
             : selected data
         """
-
         # this function allows selection as xarray.DataArray.sel and in addition by channel if a channel_map is defined.
 
         # ffilter the variables of channel_map[channel] that are effectively in self.data.dims
@@ -494,8 +488,7 @@ class ActiveResult(Result):
             return x
 
     def sigma(self, channel=None, name="sigma", **kwargs):
-        """
-        Return backscattering coefficient in natural values.
+        """Return backscattering coefficient in natural values.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V'). See xarray slicing
         with sel method (to document). It is also posisble to select by channel if the sensor has a channel_map.
@@ -505,12 +498,10 @@ class ActiveResult(Result):
             name: name inserted in the returned DataArray
             \\**kwargs: any parameter to slice the results.
         """
-
         return _strongsqueeze(self.sel_data(channel=channel, return_backscatter="natural", **kwargs).rename(name))
 
     def sigma_dB(self, name="sigma_dB", channel=None, **kwargs):
-        """
-        Return backscattering coefficient in dB.
+        """Return backscattering coefficient in dB.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9,
         polarization_inc='V', polarization='V'). See xarray slicing with sel method (to document)
@@ -520,12 +511,10 @@ class ActiveResult(Result):
             channel: channel to select
             \\**kwargs: any parameter to slice the results.
         """
-
         return _strongsqueeze(self.sel_data(channel=channel, return_backscatter="dB", **kwargs).rename(name))
 
     def sigma_as_dataframe(self, channel_axis=None, **kwargs):
-        """
-        Return backscattering coefficient as a pandas.DataFrame.
+        """Return backscattering coefficient as a pandas.DataFrame.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V'). See xarray slicing
         with sel method (to document). In addition channel_axis controls the format of the output. If set to None, the
@@ -541,7 +530,6 @@ class ActiveResult(Result):
             channel_axis: controls whether to use the sensor channel or not and if yes, as a column or index.
             **kwargs: any parameter to slice the results.
         """
-
         return super().return_as_dataframe(
             name="sigma",
             channel_axis=channel_axis,
@@ -550,14 +538,11 @@ class ActiveResult(Result):
         )
 
     def sigma_dB_as_dataframe(self, channel_axis=None, **kwargs):
-        """
-        See :py:meth:`ActiveResult`.to_dataframe
-        """
+        """See :py:meth:`ActiveResult`.to_dataframe"""
         return self.to_dataframe(channel_axis=channel_axis, **kwargs)
 
     def to_dataframe(self, channel_axis=None, **kwargs):
-        """
-        Return backscattering coefficient in dB as a pandas.DataFrame.
+        """Return backscattering coefficient in dB as a pandas.DataFrame.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9 or polarization='V'). See xarray slicing
         with sel method (to document). In addition channel_axis controls the format of the output. If set to None, the
@@ -580,8 +565,7 @@ class ActiveResult(Result):
         return super().return_as_dataframe(name="sigma", channel_axis=channel_axis, return_backscatter="dB", **kwargs)
 
     def to_series(self, **kwargs):
-        """
-        Return backscattering coefficients in dB as a series with the channels defined in the sensor as index.
+        """Return backscattering coefficients in dB as a series with the channels defined in the sensor as index.
 
         This requires that the sensor has declared a channel list.
 
@@ -591,8 +575,7 @@ class ActiveResult(Result):
         return super().to_series(return_backscatter="dB", **kwargs)
 
     def sigmaVV(self, name="sigmaVV", **kwargs):
-        """
-        Return VV backscattering coefficient.
+        """Return VV backscattering coefficient.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
@@ -601,12 +584,10 @@ class ActiveResult(Result):
             name: name inserted in the returned DataArray
             \\**kwargs: any parameter to slice the results.
         """
-
         return self.sigma(polarization_inc="V", polarization="V", name=name, **kwargs)
 
     def sigmaVV_dB(self, name="sigmaVV_dB", **kwargs):
-        """
-        Return VV backscattering coefficient in dB.
+        """Return VV backscattering coefficient in dB.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
@@ -618,8 +599,7 @@ class ActiveResult(Result):
         return dB(self.sigmaVV(name=name, **kwargs))
 
     def sigmaHH(self, name="sigmaHH", **kwargs):
-        """
-        Return HH backscattering coefficient.
+        """Return HH backscattering coefficient.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method.
@@ -631,8 +611,7 @@ class ActiveResult(Result):
         return self.sigma(polarization_inc="H", polarization="H", name=name, **kwargs)
 
     def sigmaHH_dB(self, name="sigmaHH_dB", **kwargs):
-        """
-        Return HH backscattering coefficient in dB.
+        """Return HH backscattering coefficient in dB.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method.
@@ -644,15 +623,13 @@ class ActiveResult(Result):
         return dB(self.sigmaHH(name=name, **kwargs))
 
     def sigmaHV(self, name="sigmaHV", **kwargs):
-        """
-        Return HV backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
+        """Return HV backscattering coefficient. Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method (to document)
         """
         return self.sigma(polarization_inc="H", polarization="V", name=name, **kwargs)
 
     def sigmaHV_dB(self, name="sigmaHV_dB", **kwargs):
-        """
-        Return HV backscattering coefficient in dB.
+        """Return HV backscattering coefficient in dB.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method.
@@ -664,8 +641,7 @@ class ActiveResult(Result):
         return dB(self.sigmaHV(name=name, **kwargs))
 
     def sigmaVH(self, name="sigmaVH", **kwargs):
-        """
-        Return VH backscattering coefficient.
+        """Return VH backscattering coefficient.
 
         Any parameter can be added to slice the results (e.g. frequency=37e9).
         See xarray slicing with sel method.
@@ -695,18 +671,23 @@ class ActiveResult(Result):
     #    #for x, data in self.data.groupby(variable):
     #    #    yield Result(data)
 
+    def __repr__(self):
+        return (
+            "ActiveResult:"
+            f"sigmaVV={self.sigmaVV_dB()} dB, "
+            f"sigmaHH={self.sigmaHH_dB()} dB, "
+            f"sigmaHV={self.sigmaHV_dB()} dB"
+        )
+
 
 class AltimetryResult(ActiveResult):
     def delay_doppler_map(self, name="delay_doppler_map", **kwargs):
-        """
-        Return the delay Doppler map
-        """
+        """Return the delay Doppler map"""
         assert "doppler_frequency" in self.data.dims
         return self.sigma(name=name, **kwargs)
 
     def waveform(self, name="waveform", **kwargs):
-        """
-        Return the waveform.
+        """Return the waveform.
 
         For simulations with return_contributions, this function returns the total only by default. Use explicit
         contribution="all"" to get all the contributions or contribution='...' to access each contribution.
@@ -715,7 +696,6 @@ class AltimetryResult(ActiveResult):
             name: name inserted in the returned DataArray
             **kwargs: any dimension to select. See xarray.DataArray.sel.
         """
-
         if "contribution" in kwargs:
             if kwargs["contribution"] == "all":
                 del kwargs["contribution"]
@@ -731,9 +711,7 @@ class AltimetryResult(ActiveResult):
         return wf
 
     def contributions(self):
-        """
-        Return the list of the contribution dimension. Raise an exception if the contribution does not exist.
-        """
+        """Return the list of the contribution dimension. Raise an exception if the contribution does not exist."""
         return self.data.contribution.values
 
 
@@ -788,9 +766,8 @@ class AltimetryResult(ActiveResult):
 
 
 def concat_results(result_list, coord):
-    """
-    Concatenate several results from :py:meth:`smrt.core.model.Model.run` (of type :py:class:`Result`) into a single result
-    (of type :py:class:`Result`).
+    """Concatenate several results from :py:meth:`smrt.core.model.Model.run` (of type :py:class:`Result`) into a single
+    result (of type :py:class:`Result`).
 
     This extends the number of dimension in the xarray hold by the instance. The new dimension
     is specified with coord
@@ -803,7 +780,6 @@ def concat_results(result_list, coord):
     Returns:
         :py:class:`Result` instance
     """
-
     if isinstance(coord, tuple):
         dim_name, dim_value = coord
 
@@ -824,7 +800,9 @@ def concat_results(result_list, coord):
         assert isinstance(coord, tuple)
         # different channel maps, it means we have different sensors. Merge de sensor maps.
         channel_map = {
-            ch: dict(**r.channel_map[ch], dim_name=dv) for r, dv in zip(result_list, dim_value) for ch in r.channel_map
+            ch: dict(**r.channel_map[ch], dim_name=dv)
+            for r, dv in zip(result_list, dim_value, strict=False)
+            for ch in r.channel_map
         }
     else:
         # all the channel maps are the same

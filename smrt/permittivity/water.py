@@ -1,7 +1,5 @@
 # coding: utf-8
-"""
-Provide equations to compute the effective permittivity of water.
-"""
+"""Provide equations to compute the effective permittivity of water."""
 
 import numpy as np
 
@@ -12,8 +10,8 @@ from ..core.layer import layer_properties
 
 @layer_properties("temperature")
 def water_permittivity_maetzler87(frequency, temperature):
-    """
-    Calculate the complex water dielectric constant depending on the frequency and temperature based on Mätzler & Wegmuller (1987).
+    """Calculate the complex water dielectric constant depending on the frequency and temperature based on Mätzler &
+    Wegmuller (1987).
 
     Args:
         frequency: Frequency in Hz.
@@ -55,8 +53,7 @@ water_permittivity = water_permittivity_maetzler87
 
 @layer_properties("temperature")
 def water_permittivity_tiuri80(frequency, temperature):
-    """
-    Calculate the complex water dielectric constant reported by Tiuri and Schultz (1980).
+    """Calculate the complex water dielectric constant reported by Tiuri and Schultz (1980).
 
     Args:
         frequency: Frequency in Hz.
@@ -69,10 +66,10 @@ def water_permittivity_tiuri80(frequency, temperature):
         complex: Complex permittivity of water.
 
     References:
-        Tiuri, M. and Schultz, H., Theoretical and experimental studies of microwave radiation from a natural snow field. In Rango, A. , ed.
-        Microwave remote sensing of snowpack properties. Proceedings of a workshop ... Fort Collins, Colorado, May 20-22, 1980.
-        Washington, DC, National Aeronautics and Space Center, 225-234. (Conference Publication 2153.)
-        https://ntrs.nasa.gov/api/citations/19810010984/downloads/19810010984.pdf
+        Tiuri, M. and Schultz, H., Theoretical and experimental studies of microwave radiation from a natural snow
+        field. In Rango, A. , ed. Microwave remote sensing of snowpack properties. Proceedings of a workshop ... Fort
+        Collins, Colorado, May 20-22, 1980. Washington, DC, National Aeronautics and Space Center, 225-234.
+        (Conference Publication 2153.) https://ntrs.nasa.gov/api/citations/19810010984/downloads/19810010984.pdf
     """
     freqGHz = frequency / GHz
 
@@ -95,20 +92,17 @@ def water_permittivity_tiuri80(frequency, temperature):
 
 
 def water_permittivity_turner16(frequency, temperature):
-    """
-    Calculate the complex water dielectric constant depending on the frequency and temperature based on Turner et al.
+    """Calculate the complex water dielectric constant depending on the frequency and temperature based on Turner et al.
     (2016).
 
     Args:
         frequency: Frequency in Hz. temperature: Temperature in K.
 
     References:
-
     Turner, D. D., Kneifel, S., & Cadeddu, M. P. (2016). An Improved Liquid Water Absorption Model at Microwave
     Frequencies for Supercooled Liquid Water Clouds. Journal of Atmospheric and Oceanic Technology, 33(1), 33–44.
     https://doi.org/10.1175/jtech-d-15-0074.1
     """
-
     # TKC coefficients
     a1 = 8.111e1
     b1 = 4.434e-03

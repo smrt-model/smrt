@@ -12,8 +12,7 @@ colors = {"kirchoff": "#87CEEB", "IEM": "#FF6F61", "SPM": "#32CD32", "SSA": "#FF
 def validity_diagram(
     sensor=None, snowpack=None, interface=None, rms_height=None, correlation_length=None, frequency=None, ax=None
 ):
-    """
-    Plots a validity diagram for the rough surface model (assuming a Gaussian surface) with the roughness of the
+    """Plots a validity diagram for the rough surface model (assuming a Gaussian surface) with the roughness of the
     snowpack (and/or the interface, or provides RMS and correlation values).
 
     Args:
@@ -28,7 +27,6 @@ def validity_diagram(
     Returns:
         None.
     """
-
     if ax is None:
         plt.figure()
         ax = plt.gca()
@@ -112,7 +110,10 @@ def validity_diagram(
     correlation_length += [getattr(i, "corr_length", np.nan) for i in interface]
     rms_height += [getattr(i, "roughness_rms", np.nan) for i in interface]
 
-    [print(f"rougness pair (rms, corr_length) plotted : {rms, lc}") for rms, lc in zip(rms_height, correlation_length)]
+    [
+        print(f"rougness pair (rms, corr_length) plotted : {rms, lc}")
+        for rms, lc in zip(rms_height, correlation_length, strict=False)
+    ]
 
     if sensor is not None:
         frequency = sensor.frequency

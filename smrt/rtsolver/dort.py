@@ -1,8 +1,7 @@
 # coding: utf-8
 
-"""
-Provide the Discrete Ordinate and Eigenvalue Solver as a multi-stream solver of the radiative transfer model in active
-and passive mode.
+"""Provide the Discrete Ordinate and Eigenvalue Solver as a multi-stream solver of the radiative transfer model in
+active and passive mode.
 
 This solver is precise but less efficient than 2 or 6 flux solvers. Different flavours of DORT (or DISORT) exist in the
 literature depending on the mode (passive or active), the polarization capabilities, the density of the medium (sparse
@@ -21,17 +20,17 @@ Note:
     The DORT solver is very robust in passive mode but may raise exception in active mode due to a matrix
     diagonalisation problem. The exception provides detailed information on how to address this issue. Two new
     diagonalisation approaches were added in January 2024. They are activated by setting the `diagonalization_method`
-    optional argument (see :py:mod:`smrt.core.make_model`). The first method (``diagonalization_method='shur'``)
-    replaces the scipy.linalg.eig function by a shur decomposition followed by a diagonalisation of the shur matrix.
-    While scipy.linalg.eig performs such a shur decomposition internally in any case, it seems that explicitly calling
-    the shur decomposition beforehand improves the stability. Nevertheless to really solve the problem, the second
-    method (``diagonalization_method='shur_forcedtriu'``) consists in removing the 2x2 and 3x3 blocks from the shur
-    matrix, i.e. forcing the shur matrix to be upper triangular (triu in numpy jargon = zeroing the lower part of this
+    optional argument (see :py:mod:`smrt.core.make_model`). The first method (``diagonalization_method='schur'``)
+    replaces the scipy.linalg.eig function by a schur decomposition followed by a diagonalisation of the schur matrix.
+    While scipy.linalg.eig performs such a schur decomposition internally in any case, it seems that explicitly calling
+    the schur decomposition beforehand improves the stability. Nevertheless to really solve the problem, the second
+    method (``diagonalization_method='schur_forcedtriu'``) consists in removing the 2x2 and 3x3 blocks from the schur
+    matrix, i.e. forcing the schur matrix to be upper triangular (triu in numpy jargon = zeroing the lower part of this
     matrix). This problem is due to the structure of the matrix to be diagonalized and the formulation of the DORT
     method in the polarimetric configuration. The eigenvalues come by triplets and can be very close to each other for
     the three H, V, U Stokes components when scattering is becoming small (or equiv. the azimuth mode 'm' is large). As
     a consequence of the Gershgorin theorem, this results in slightly complex eigenvalues (i.e. eigenvalues with very
-    small imaginary part) that comes from 2x2 or 3x3 blocks in the shur decomposition. This would not be a problem if
+    small imaginary part) that comes from 2x2 or 3x3 blocks in the schur decomposition. This would not be a problem if
     the eigenvectors were correctly estimated, but this is not the case. It is indeed difficult to find the correct
     orientation of eigenvectors associated to very close eigenvalues. To overcome the problem, the solution is to remove
     the 2x2 and 3x3 blocks. In principle, it would be safer to check that these blocks are nearly diagonal but this is
@@ -77,12 +76,12 @@ from smrt.rtsolver.rtsolver_utils import (
     DiscreteOrdinatesMixin,
     PlanckMixin,
     RTSolverBase,
+    compute_interface_properties,
 )
 
 
 class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin):
-    """
-    Implement the Discrete Ordinate and Eigenvalue Solver.
+    """Implement the Discrete Ordinate and Eigenvalue Solver.
 
     Args:
         n_max_stream: number of stream in the most refringent layer.
@@ -119,20 +118,20 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             contribution of the lowest layers is neglegible. The optical depth is a good criteria to determine this
             limit. A value of about 6 is recommended. Use with care, especially values lower than 6.
         diagonalization_method: This value set the method for the diagonalization in the eigenvalue solver. The defaut
-            is "eig", it uses the scipy.linalg.eig function. The "shur" replaces the scipy.linalg.eig function by a shur
-            decomposition followed by a diagonalisation of the shur matrix. The "shur_forcedtriu" forces the shur matrix
-            to be upper triangular. The "half_rank_eig" is the fastest method but requires symmetry and energy
-            conservation which may fail with some EMModels and for some parameters. The "stamnes88" is another half rank
-            fast method.
+            is "eig", it uses the scipy.linalg.eig function. The "schur" replaces the scipy.linalg.eig function by a
+            schur decomposition followed by a diagonalisation of the schur matrix. The "schur_forcedtriu" forces the
+            schur matrix to be upper triangular. The "half_rank_eig" is the fastest method but requires symmetry and
+            energy conservation which may fail with some EMModels and for some parameters. The "stamnes88" is another
+            half rank fast method.
         diagonalization_cache: If "simple", cache the results of the diagonalization to avoid redundant computation.
             This can speed up significantly the computation when many layers have exactly the same scattering properties
             in a snowpack or across snowpacks of a sensitivity analysis where only one or few layers are changed at a
             time. The drawback is that it uses more memory as the simple cache is never emptied. LRU cache could be
             implemented in the future to limit memory usage while style keeping some efficiency. This feature is
             experimental, please report success and failure.
-        rayleigh_jeans_approximation: In passive mode, if True, use the Rayleigh-Jeans approximation for the Planck function.
-            This mode was used by default up to SMRT 1.5.1, but is not as precise as the full Planck function at higher
-            frequencies and low temperatures.
+        rayleigh_jeans_approximation: In passive mode, if True, use the Rayleigh-Jeans approximation for the Planck
+            function. This mode was used by default up to SMRT 1.5.1, but is not as precise as the full Planck function
+            at higher frequencies and low temperatures.
     """
 
     # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the
@@ -155,7 +154,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
         error_handling="exception",
         process_coherent_layers=False,
         prune_deep_snowpack=None,
-        diagonalization_method="eig",
+        diagonalization_method="schur_forcedtriu",
         diagonalization_cache=False,
         rayleigh_jeans_approximation=False,
     ):
@@ -186,7 +185,7 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             if len(self.sensor.phi) > 1:
                 raise SMRTError("phi as an array must be implemented")
 
-    def solve(self, snowpack, emmodels, sensor, atmosphere=None):
+    def solve(self, snowpack, emmodels, sensor, atmosphere=None, parallel_computation=None):
         """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
@@ -198,7 +197,6 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
         Returns:
             result: Result object.
         """
-
         self.init_solve(snowpack, emmodels, sensor, atmosphere)
 
         self.process_coherent_layers()  # must be before prepare_streams
@@ -209,32 +207,6 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
 
         m_max = self.m_max if self.sensor.mode == "A" else 0
 
-        # solve the RT equation
-        outmu, intensity = self.dort(m_max=m_max)
-
-        # interpolate to the requested streams
-        intensity = self.interpolate_intensity(outmu, intensity)
-
-        return self.make_result(outmu, intensity)
-
-    def dort(self, m_max=0, special_return=False):
-        """Solve the radiative transfer equation using the DORT method.
-
-        This is a low-level implementation of the discrete-ordinate and eigenvalue solver.
-        It is not intended to be called directly by end users; use :meth:`solve` instead.
-
-        Args:
-            m_max (int): Maximum azimuthal mode to compute (0 for passive mode).
-            special_return (bool or str): If set to a truthy value or to specific debug flags
-                (for example ``'bBC'``), the method may return internal debug structures
-                instead of the usual output.
-
-        Returns:
-            tuple: ``(outmu, intensity_up)`` where ``outmu`` is the array of outgoing cosines
-            and ``intensity_up`` contains the upwelling intensities (shape depends on sensor mode).
-        """
-        # """
-
         if self.sensor.mode == "P":
             npol = 2
         elif self.sensor.mode == "A":
@@ -242,25 +214,9 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
         else:
             raise NotImplementedError()
 
-        # prepare the atmosphere
-
-        self.atmosphere_result = (
-            self.atmosphere.run(self.sensor.frequency, self.streams.outmu, npol)
-            if self.atmosphere is not None
-            else None
-        )
-
-        #
-        # compute the incident intensity array depending on the sensor
-
-        intensity_0, intensity_higher, incident_streams = (
-            self.prepare_incident_intensity()
-        )  # TODO Ghi: make an iterator
-
-        #
         # compute interface reflection and transmittance properties
 
-        interfaces = InterfaceProperties(
+        interfaces = compute_interface_properties(
             self.sensor.frequency,
             self.snowpack.interfaces,
             self.snowpack.substrate,
@@ -269,159 +225,55 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             m_max,
             npol,
         )
-        #
+
         # create eigenvalue solvers
         eigenvalue_solver = [
             EigenValueSolver(
-                ke=self.emmodels[l].ke,
-                ks=self.emmodels[l].ks,
-                ft_even_phase_function=self.emmodels[l].ft_even_phase,
-                mu=self.streams.mu[l],
-                weight=self.streams.weight[l],
+                ke=self.emmodels[layer].ke,
+                ks=self.emmodels[layer].ks,
+                ft_even_phase_function=self.emmodels[layer].ft_even_phase,
+                mu=self.streams.mu[layer],
+                weight=self.streams.weight[layer],
                 m_max=m_max,
                 method=self.diagonalization_method,
                 normalization=self.phase_normalization
                 if self.phase_normalization != "auto"
-                else getattr(self.emmodels[l], "_respect_reciprocity_principle", True),
+                else getattr(self.emmodels[layer], "_respect_reciprocity_principle", True),
                 symmetrization=self.phase_symmetrization,
                 cache=self.diagonalization_cache,
             )
-            for l in range(len(self.emmodels))
+            for layer in range(len(self.emmodels))
         ]
 
-        #
-        # compute the outgoing intensity for each mode
-        #
-        if self.sensor.mode == "P":
-            intensity_up = np.zeros((npol, self.streams.n_air))
-        elif self.sensor.mode == "A":
-            intensity_up = np.zeros((npol, self.streams.n_air, npol, len(incident_streams)))
-            # compute the coherent contribution
-            coherent_intensity_up_0 = self.dort_modem_banded(
-                0,
-                self.streams,
-                eigenvalue_solver,
-                interfaces,
-                intensity_0,
-                compute_coherent_only=True,
-            )
-        else:
-            raise RuntimeError("unknow sensor mode")
+        compute_modem = partial(
+            self.dort_modem_banded,
+            eigenvalue_solver=eigenvalue_solver,
+            interfaces=interfaces,
+        )
 
-        for m in range(0, m_max + 1):
-            intensity_down_m = intensity_0 if m == 0 else intensity_higher
+        # solve the RT equation for each mode
+        outmu, intensity = self.sum_modes(compute_modem=compute_modem, m_max=m_max)
 
-            # compute the upwelling intensity for mode m
-            intensity_up_m = self.dort_modem_banded(
-                m,
-                self.streams,
-                eigenvalue_solver,
-                interfaces,
-                intensity_down_m,
-                special_return=special_return,
-            )
+        # interpolate to the requested streams
+        intensity = self.interpolate_intensity(outmu, intensity)
 
-            if special_return:  # debuging
-                return intensity_up_m
-
-            if self.sensor.mode == "A":
-                # substrate the coherent contribution
-                intensity_up_m[0:2, :, 0:2, :] -= coherent_intensity_up_0 * (1 + float(m > 0))
-
-            self.add_intensity_mode(intensity_up, intensity_up_m, m)
-
-            # TODO: implement a convergence test if we want to avoid long computation
-            # when self.m_max is too high for the phase function.
-
-        if self.sensor.mode == "P":
-            if self.atmosphere_result is not None:
-                intensity_up = (
-                    self.planck_function(self.atmosphere_result.tb_up)
-                    + self.atmosphere_result.transmittance * intensity_up
-                )
-            intensity_up = self.inverse_planck_function(intensity_up)  # convert back to brightness temperature
-            outmu = self.streams.outmu
-        elif self.sensor.mode == "A":
-            # compress to get only the backscatter
-            backscatter_intensity_up = np.empty((npol, npol, len(incident_streams)))
-            for j, i in enumerate(incident_streams):
-                # the j-th column vector contains the stream i, with angle mu[i]
-                # at the same time, convert the dimension to pola, pola, incidence
-                backscatter_intensity_up[:, :, j] = intensity_up[:, i, :, j]
-
-            outmu = self.streams.outmu[incident_streams]
-            intensity_up = backscatter_intensity_up
-        else:
-            raise NotImplementedError()
-
-        return outmu, intensity_up
-
-    def prepare_incident_intensity(self):
-        if self.sensor.mode == "A":
-            # send a direct beam
-
-            # incident angle at a given angle
-            # use interpolation to get the based effective angle
-
-            #
-            # delta(x) = 1/2pi + 1/pi*sum_{n=1}{infinty} cos(nx)
-            #
-
-            incident_streams = self.prepare_incident_streams()
-
-            intensity_0 = np.zeros((2 * self.streams.n_air, 2 * len(incident_streams)))
-            intensity_higher = np.zeros((3 * self.streams.n_air, 3 * len(incident_streams)))
-            # 2 and 3 are for the polarizations
-
-            j0 = 0
-            j_higher = 0
-            for i in incident_streams:
-                power = 1.0 / (2 * np.pi * self.streams.outweight[i])
-                for ipol in [0, 1]:
-                    intensity_0[2 * i + ipol, j0] = power
-                    j0 += 1
-                for ipol in [0, 1, 2]:
-                    intensity_higher[3 * i + ipol, j_higher] = 2 * power
-                    j_higher += 1
-
-        elif self.sensor.mode == "P":
-            npol = 2
-            incident_streams = []
-
-            if self.atmosphere_result is not None:
-                # incident radiation is a function of frequency and incidence angle
-                # assume azimuthally symmetric
-                intensity_0 = self.planck_function(self.atmosphere_result.tb_down)
-                assert intensity_0.shape == (npol, self.streams.n_air)
-                # convert pola, theta to (theta, pola) and add batch dimension
-                intensity_0 = np.swapaxes(intensity_0, 0, 1).flatten()[:, np.newaxis]
-                intensity_higher = np.zeros_like(intensity_0)
-            else:
-                intensity_0 = np.zeros((npol * self.streams.n_air, 1))
-                intensity_higher = intensity_0
-                intensity_0.flags.writeable = False  # make immutable
-                intensity_higher.flags.writeable = False  # make immutable
-        else:
-            raise SMRTError("Unknow sensor mode")
-
-        return intensity_0, intensity_higher, incident_streams
+        return self.make_result(outmu, intensity)
 
     def dort_modem_banded(
         self,
-        m,
+        mode,
         streams,
         eigenvalue_solver,
         interfaces,
-        intensity_down_m,
-        compute_coherent_only=False,
-        special_return=False,
+        intensity_down,
+        coherent_only=False,
     ):
         # Index convention
         # for phase, Ke, and R matrix pola must be the fast index, then stream, then +-
         # order of the boundary condition in row: layer, equation, stream+/stream-, pola
         # order of the boundary condition in column: layer, -/+, etc
 
-        npol = 2 if m == 0 else 3
+        npol = 2 if mode == 0 else 3
 
         # indexes of the columns
         jl = 2 * (np.cumsum(streams.n) - streams.n) * npol
@@ -447,8 +299,8 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
         bBC = np.zeros((2 * nband + 1, nboundary))  # we use banded Boundary condition matrix
 
         # rhs vector size
-        assert len(intensity_down_m.shape) == 2
-        nvector = intensity_down_m.shape[1]
+        assert len(intensity_down.shape) == 2
+        nvector = intensity_down.shape[1]
         b = np.zeros((nboundary, nvector))
 
         nlayer = len(eigenvalue_solver)
@@ -456,15 +308,15 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
         # used to estimate if the medium is deep enough
         optical_depth = 0
 
-        for l in range(0, nlayer):
-            nsl = streams.n[l]  # number of streams in layer l
+        for layer in range(0, nlayer):
+            nsl = streams.n[layer]  # number of streams in layer l
             nsl_npol = nsl * npol  # number of streams * npol in layer l
             nsl2_npol = 2 * nsl_npol  # number of eigenvalues in layer l (should be 2 * npol*n_stream)
             nslm1_npol = (
-                (streams.n[l - 1] * npol) if l > 0 else (streams.n_air * npol)
+                (streams.n[layer - 1] * npol) if layer > 0 else (streams.n_air * npol)
             )  # number of streams * npol in the layer l - 1 (lm1)
             # number of streams * npol in the layer l + 1 (lp1)
-            nslp1_npol = (streams.n[l + 1] * npol) if l < nlayer - 1 else None
+            nslp1_npol = (streams.n[layer + 1] * npol) if layer < nlayer - 1 else None
 
             # solve the eigenvalue problem for layer l
 
@@ -474,18 +326,18 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             if self.error_handling == "nan":
                 try:
                     # run in a try to catch the exception
-                    beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
+                    beta, Eu, Ed = eigenvalue_solver[layer].solve(mode, coherent_only)
                 except SMRTError:
-                    return _reshape_output(np.full_like(intensity_down_m, np.nan).squeeze(), npol)
+                    return _reshape_output(np.full_like(intensity_down, np.nan).squeeze(), npol)
             else:
-                beta, Eu, Ed = eigenvalue_solver[l].solve(m, compute_coherent_only)
+                beta, Eu, Ed = eigenvalue_solver[layer].solve(mode, coherent_only)
             assert Eu.shape[0] == npol * nsl
 
             # deduce the transmittance through the layers
             # positive beta, reference at the bottom
-            transt = smrt_diag(np.exp(-np.maximum(beta, 0) * self.snowpack.layers[l].thickness))
+            transt = smrt_diag(np.exp(-np.maximum(beta, 0) * self.snowpack.layers[layer].thickness))
             # negative beta, reference at the top
-            transb = smrt_diag(np.exp(np.minimum(beta, 0) * self.snowpack.layers[l].thickness))
+            transb = smrt_diag(np.exp(np.minimum(beta, 0) * self.snowpack.layers[layer].thickness))
 
             # where we have chosen
             # beta>0  : z(0)(l) = z(l)    # reference is at the bottom
@@ -493,94 +345,94 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
             # so that the transmittance are < 1
 
             # few short-cut
-            il_topl = il_top[l]  # row of the top boundary condition for layer l
-            il_bottoml = il_bottom[l]  # row of the bottom boundary condition for layer l
-            j = jl[l]
+            il_topl = il_top[layer]  # row of the top boundary condition for layer l
+            il_bottoml = il_bottom[layer]  # row of the bottom boundary condition for layer l
+            j = jl[layer]
 
             # -------------------------------------------------------------------------------
             # Eq 17 & 19 TOP of layer l
-            if l == 0:
+            if layer == 0:
                 # save these matrix to compute the emerging intensity at the end
                 Eu_0 = Eu
                 transt_0 = transt
 
             # compute reflection coefficient between l and l - 1
-            Rtop_l = interfaces.reflection_top(l, m, compute_coherent_only)
+            Rtop_l = interfaces.reflection_top(layer, mode, coherent_only)
 
             # fill the matrix
             _todiag(bBC, il_topl, j, _matmul(Ed - _matmul(Rtop_l, Eu), transt))
 
-            if l < nlayer - 1:
-                Tbottom_lp1 = interfaces.transmission_bottom(l, m, compute_coherent_only)
+            if layer < nlayer - 1:
+                Tbottom_lp1 = interfaces.transmission_bottom(layer, mode, coherent_only)
                 # the size of Tbottom_lp1 can be the nsl_npol in general or nslp1_npol if only the specular is present
                 # and some streams are subject to total reflection.
                 if not is_equal_zero(Tbottom_lp1):
                     ns_npol_common_bottom = min(Tbottom_lp1.shape[0], nslp1_npol)
-                    _todiag(bBC, il_top[l + 1], j, -_matmul(Tbottom_lp1, Ed, transb)[:ns_npol_common_bottom, :])
+                    _todiag(bBC, il_top[layer + 1], j, -_matmul(Tbottom_lp1, Ed, transb)[:ns_npol_common_bottom, :])
 
             # fill the vector
-            if m == 0 and self.temperature is not None and self.temperature[l] > 0:
+            if mode == 0 and self.temperature is not None and self.temperature[layer] > 0:
                 if is_equal_zero(Rtop_l):
                     b[il_topl : il_topl + nsl_npol, :] -= self.planck_function(
-                        self.temperature[l]
+                        self.temperature[layer]
                     )  # to be put at layer (l)
                 else:
                     b[il_topl : il_topl + nsl_npol, :] -= (
-                        (1.0 - _muleye(Rtop_l)) * self.planck_function(self.temperature[l])
+                        (1.0 - _muleye(Rtop_l)) * self.planck_function(self.temperature[layer])
                     )[:, np.newaxis]  # a mettre en (l)
                 # the muleye comes from the isotropic emission of the black body
 
-                if l < nlayer - 1 and self.temperature[l] > 0 and not is_equal_zero(Tbottom_lp1):
-                    b[il_top[l + 1] : il_top[l + 1] + ns_npol_common_bottom, :] += (
-                        _muleye(Tbottom_lp1) * self.planck_function(self.temperature[l])
+                if layer < nlayer - 1 and self.temperature[layer] > 0 and not is_equal_zero(Tbottom_lp1):
+                    b[il_top[layer + 1] : il_top[layer + 1] + ns_npol_common_bottom, :] += (
+                        _muleye(Tbottom_lp1) * self.planck_function(self.temperature[layer])
                     )[:ns_npol_common_bottom, np.newaxis]  # to be put at layer (l + 1)
 
-            if l == 0:  # Air-snow interface
-                Tbottom_air_down = interfaces.transmission_bottom(-1, m, compute_coherent_only)
+            if layer == 0:  # Air-snow interface
+                Tbottom_air_down = interfaces.transmission_bottom(-1, mode, coherent_only)
                 if not is_equal_zero(Tbottom_air_down):
                     ns_npol_common_bottom = min(Tbottom_air_down.shape[0], nsl_npol)  # see the comment on Tbottom_lp1
-                    b[il_topl : il_topl + ns_npol_common_bottom, :] += _matmul(Tbottom_air_down, intensity_down_m)
+                    b[il_topl : il_topl + ns_npol_common_bottom, :] += _matmul(Tbottom_air_down, intensity_down)
 
             # -------------------------------------------------------------------------------
             # Eq 18 & 22 BOTTOM of layer l
 
             # compute reflection coefficient between l and l + 1
-            Rbottom_l = interfaces.reflection_bottom(l, m, compute_coherent_only)
+            Rbottom_l = interfaces.reflection_bottom(layer, mode, coherent_only)
 
             # fill the matrix
             _todiag(bBC, il_bottoml, j, _matmul(Eu - _matmul(Rbottom_l, Ed), transb))
 
-            if l > 0:
-                Ttop_lm1 = interfaces.transmission_top(l, m, compute_coherent_only)
+            if layer > 0:
+                Ttop_lm1 = interfaces.transmission_top(layer, mode, coherent_only)
                 if not is_equal_zero(Ttop_lm1):
                     ns_npol_common_top = min(Ttop_lm1.shape[0], nslm1_npol)  # see the comment on Tbottom_lp1
                     _todiag(
-                        bBC, il_bottom[l - 1], j, -_matmul(Ttop_lm1, Eu, transt)[:ns_npol_common_top, :]
+                        bBC, il_bottom[layer - 1], j, -_matmul(Ttop_lm1, Eu, transt)[:ns_npol_common_top, :]
                     )  # to be put at layer (l - 1)
 
             # fill the vector
-            if m == 0 and self.temperature is not None and self.temperature[l] > 0:
+            if mode == 0 and self.temperature is not None and self.temperature[layer] > 0:
                 if is_equal_zero(Rbottom_l):
                     b[il_bottoml : il_bottoml + nsl_npol, :] -= self.planck_function(
-                        self.temperature[l]
+                        self.temperature[layer]
                     )  # to be put at layer (l)
                 else:
                     b[il_bottoml : il_bottoml + nsl_npol, :] -= (
-                        (1.0 - _muleye(Rbottom_l)) * self.planck_function(self.temperature[l])
+                        (1.0 - _muleye(Rbottom_l)) * self.planck_function(self.temperature[layer])
                     )[:, np.newaxis]  # to be put at layer (l)
-                if l > 0 and not is_equal_zero(Ttop_lm1):
-                    b[il_bottom[l - 1] : il_bottom[l - 1] + ns_npol_common_top, :] += (
-                        _muleye(Ttop_lm1) * self.planck_function(self.temperature[l])
+                if layer > 0 and not is_equal_zero(Ttop_lm1):
+                    b[il_bottom[layer - 1] : il_bottom[layer - 1] + ns_npol_common_top, :] += (
+                        _muleye(Ttop_lm1) * self.planck_function(self.temperature[layer])
                     )[:ns_npol_common_top, np.newaxis]  # to be put at layer (l - 1)
 
             if (
-                m == 0
-                and l == nlayer - 1
+                mode == 0
+                and layer == nlayer - 1
                 and self.snowpack.substrate is not None
                 and self.snowpack.substrate.temperature is not None
                 and self.temperature is not None
             ):
-                Tbottom_sub = interfaces.transmission_bottom(l, m, compute_coherent_only)
+                Tbottom_sub = interfaces.transmission_bottom(layer, mode, coherent_only)
                 ns_npol_common_bottom = min(Tbottom_sub.shape[0], nsl_npol)  # see the comment on Tbottom_lp1
                 if not is_equal_zero(Tbottom_sub):
                     b[il_bottoml : il_bottoml + ns_npol_common_bottom, :] += (
@@ -588,11 +440,11 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
                     )[:ns_npol_common_bottom, np.newaxis]  # to be put at layer  (l)
 
             # Finalize
-            optical_depth += np.min(np.abs(beta)) * self.snowpack.layers[l].thickness
+            optical_depth += np.min(np.abs(beta)) * self.snowpack.layers[layer].thickness
 
             if self.prune_deep_snowpack is not None and optical_depth > self.prune_deep_snowpack:
                 # prune the matrix and vector
-                nboundary = sum(streams.n[0 : l + 1]) * 2 * npol
+                nboundary = sum(streams.n[0 : layer + 1]) * 2 * npol
                 bBC = bBC[:, 0:nboundary]
                 b = b[0:nboundary, :]
 
@@ -601,33 +453,34 @@ class DORT(RTSolverBase, CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin
         # -------------------------------------------------------------------------------
         #   solve the boundary system BCx=b
 
-        if special_return == "bBC":
-            return bBC, b
+        # if special_return == "bBC":
+        #    return bBC, b
 
         if self.snowpack.substrate is None and optical_depth < 5:
             smrt_warn(
-                "DORT has detected that the snowpack is optically shallow (tau=%g) and no substrate has been set, meaning that the space "
-                "under the snowpack is 'empty' with snowpack shallow enough to affect the measured signal at the surface."
-                "This is usually not wanted and can produce wrong results. Either increase the thickness of the snowpack or set a substrate."
-                " If wanted, add a transparent substrate to supress this warning" % optical_depth
+                f"DORT has detected that the snowpack is optically shallow (tau={optical_depth:g}) and no substrate has"
+                "been set, meaning that the space under the snowpack is 'empty' with snowpack shallow enough to affect"
+                "the measured signal at the surface. This is usually not wanted and can produce wrong results. Either "
+                "increase the thickness of the snowpack or set a substrate. If wanted, add a transparent substrate to "
+                "supress this warning"
             )
 
         x = scipy.linalg.solve_banded((nband, nband), bBC, b, overwrite_ab=True, overwrite_b=True)
 
         # #  ! calculate the intensity emerging from the snowpack
-        l = 0
-        j = jl[l]  # should be 0
-        nsl_npol = streams.n[l] * npol
+        layer = 0
+        j = jl[layer]  # should be 0
+        nsl_npol = streams.n[layer] * npol
         nsl2_npol = 2 * nsl_npol
         I1up_m = Eu_0 @ transt_0 @ x[j : j + nsl2_npol, :]
 
-        if m == 0 and self.temperature is not None and self.temperature[0] > 0:
+        if mode == 0 and self.temperature is not None and self.temperature[0] > 0:
             I1up_m += self.planck_function(self.temperature[0])  # just under the interface
 
-        Rbottom_air_down = interfaces.reflection_bottom(-1, m, compute_coherent_only)
-        Ttop_0 = interfaces.transmission_top(0, m, compute_coherent_only)  # snow-air
+        Rbottom_air_down = interfaces.reflection_bottom(-1, mode, coherent_only)
+        Ttop_0 = interfaces.transmission_top(0, mode, coherent_only)  # snow-air
 
-        I0up_m = _matmul(Rbottom_air_down, intensity_down_m) + _matmul(Ttop_0, I1up_m)[0 : streams.n_air * npol, :]
+        I0up_m = _matmul(Rbottom_air_down, intensity_down) + _matmul(Ttop_0, I1up_m)[0 : streams.n_air * npol, :]
 
         I0up_m = np.array(I0up_m).squeeze()
 
@@ -667,7 +520,6 @@ def _muleye(x):
         ndarray: If ``x`` is ``smrt_diag``, returns its diagonal as 1D array. If ``x`` is a scalar,
         returns at least a 1D array with that value. If ``x`` is a 2D array, returns the row-wise sum.
     """
-
     if isinstance(x, smrt_diag):
         return x.diagonal()
     elif (is_zero_scalar(x)) or (len(x.shape) == 0):
@@ -692,7 +544,6 @@ def _matmul(a, b, *args):
     Returns:
         The result of the chained multiplication.
     """
-
     if args:
         b = _matmul(b, *args)
     if np.isscalar(a) or np.isscalar(b):
@@ -714,7 +565,6 @@ def _todiag(bmat, oi, oj, dmat):
         oj (int): Column offset where the block should be placed.
         dmat (ndarray): Dense matrix block to insert.
     """
-
     u = (bmat.shape[0] - 1) // 2
 
     n, m = dmat.shape
@@ -778,8 +628,8 @@ class EigenValueSolver(object):
             normalization (str or bool): Phase-function normalization option (e.g. ``'auto'``, ``'forced'``,
                 or ``False``).
             symmetrization (bool): If True, enforce phase-function symmetry.
-            method (str): Diagonalization method. Supported values: ``'eig'``, ``'shur'``,
-                ``'shur_forcedtriu'``, ``'half_rank_eig'``, ``'stamnes88'``.
+            method (str): Diagonalization method. Supported values: ``'eig'``, ``'schur'``,
+                ``'schur_forcedtriu'``, ``'half_rank_eig'``, ``'stamnes88'``.
             cache (bool): If True, cache diagonalization results to avoid recomputation.
 
         """
@@ -808,10 +658,10 @@ class EigenValueSolver(object):
         match self.method:
             case "eig":
                 self.diagonalize_function = self.diagonalize_eig
-            case "shur":
-                self.diagonalize_function = partial(self.diagonalize_shur, force_triu=False)
-            case "shur_forcedtriu":
-                self.diagonalize_function = partial(self.diagonalize_shur, force_triu=True)
+            case "schur":
+                self.diagonalize_function = partial(self.diagonalize_schur, force_triu=False)
+            case "schur_forcedtriu":
+                self.diagonalize_function = partial(self.diagonalize_schur, force_triu=True)
             case "half_rank_eig":
                 self.compute_half_rank_phase = True
                 self.diagonalize_function = self.diagonalize_half_rank_eig
@@ -840,15 +690,15 @@ class EigenValueSolver(object):
 
         return self._ft_even_phase
 
-    def solve(self, m, compute_coherent_only, debug_A=False):
+    def solve(self, m, coherent_only, debug_A=False):
         raise RuntimeError(
             "This method is the entry point and it must be set to one of the solve function at initialization"
         )
 
-    def solve_generic(self, m, compute_coherent_only, debug_A=False):
+    def solve_generic(self, m, coherent_only, debug_A=False):
         # solve the homogeneous equation for a single layer and return eignen values and eigen vectors
         # :param m: mode
-        # :param compute_coherent_only
+        # :param coherent_only
         # :returns: beta, E, Q
         #
 
@@ -856,8 +706,8 @@ class EigenValueSolver(object):
         # 1/(4*pi) * int_{phi=0}^{2*pi} cos(m phi)*cos(n phi) dphi
         # note that equation A7 and A8 in Picard et al. 2018 has an error, it does not show this coefficient.
 
-        # calculate the A matrix. Eq (12),  or 0 if compute_coherent_only
-        if compute_coherent_only:
+        # calculate the A matrix. Eq (12),  or 0 if coherent_only
+        if coherent_only:
             return self.return_no_scattering(m)
 
         A = self.compute_ft_even_phase().compress(mode=m, auto_reduce_npol=True)
@@ -940,10 +790,14 @@ class EigenValueSolver(object):
 
             if self.normalization != "forced" and np.any(np.abs(self.norm_0 - 1.0) > 0.3):
                 print("norm=", norm)
-                raise SMRTError("""The re-normalization of the phase function exceeds the predefined threshold of 30%.
-This is likely because of a too large grain size or a bug in the phase function. It is recommended to check the grain size.
-You can also deactivate this check using normalization="forced" as an options of the dort solver. It is at last possible
-to disable this error raise and return NaN instead by adding the argument rtsolver_options=dict(error_handling='nan') to make_model).""")
+                raise SMRTError(
+                    "The re-normalization of the phase function exceeds the predefined threshold of 30%. "
+                    "This is likely because of a too large grain size or a bug in the phase function. It is"
+                    " recommended to check the grain size. You can also deactivate this check using "
+                    'normalization="forced" as an options of the dort solver. It is at last possible'
+                    "to disable this error raise and return NaN instead by adding the argument "
+                    "rtsolver_options=dict(error_handling='nan') to make_model)."
+                )
         else:
             if self.norm_m is None:
                 if self.norm_0 is None:  # be careful, this code is not re-entrant
@@ -977,19 +831,19 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
 
         return self.validate_eigen(beta, Eu, Ed, m)
 
-    def diagonalize_shur(self, m, A, force_triu=False):
-        # diagonalise the matrix. Eq (13) using Shur decomposition. This avoids some instabilities with the direct eig
+    def diagonalize_schur(self, m, A, force_triu=False):
+        # diagonalise the matrix. Eq (13) using schur decomposition. This avoids some instabilities with the direct eig
         # function
         # in addition it is possible to remove the 2x2 or 3x3 blocks that occurs when eigenvalues are close
-        # forcing the lower triangular part of the shur matrix to zero solves this problem but is radical
+        # forcing the lower triangular part of the schur matrix to zero solves this problem but is radical
         # a better algorithm would first check that the 2x2 nd 3x3 blocks are nearly diagional (values are very small)
-
         try:
             T, Z = scipy.linalg.schur(A)
         except scipy.linalg.LinAlgError:
             raise SMRTError("Schur decomposition failed.\n" + self.diagonalization_error_message())
         try:
             if force_triu:
+                # Zero out strictly lower triangular values
                 T[np.tril_indices(T.shape[0], k=-1)] = 0
 
             beta, E = scipy.linalg.eig(T, overwrite_a=True)
@@ -1010,7 +864,8 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
         #         print("pas ok")
         #         # print(m, T)
         #         # print(m, T[np.tril_indices(T.shape[0], k=-1)])
-        #         # print(m, np.max(np.abs(T[np.tril_indices_from(T, k=-1)])), np.all(T[np.tril_indices_from(T, k=-1)]==0))
+        #         # print(m, np.max(np.abs(T[np.tril_indices_from(T, k=-1)])),
+        #                   np.all(T[np.tril_indices_from(T, k=-1)]==0))
         #         # print("beta.imag=", beta.imag)
 
         #         beta, E = scipy.linalg.eig(T, overwrite_a=False)
@@ -1018,7 +873,8 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
         #         iscomplex_beta = not np.allclose(beta.imag, 0, atol=0)
         #         iscomplex_E = not np.allclose(E.imag, 0, atol=1e-6)
 
-        #         print('new beta.img', m, iscomplex_beta, iscomplex_E, np.all(beta.imag==0), np.all(E.imag==0), beta.imag)
+        #         print('new beta.img', m, iscomplex_beta, iscomplex_E, np.all(beta.imag==0), np.all(E.imag==0),
+        #                   beta.imag)
         #         print('isnan', np.any(np.isnan(beta)), np.any(np.isnan(E)))
         #     else:
         #         print("ok")
@@ -1104,10 +960,10 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
 
         return self.validate_eigen(beta, Eu, Ed, m)
 
-    def solve_stamnes88(self, m, compute_coherent_only, debug_A=False):
+    def solve_stamnes88(self, m, coherent_only, debug_A=False):
         # solve the homogeneous equation for a single layer and return eignen values and eigen vectors
         # :param m: mode
-        # :param compute_coherent_only
+        # :param coherent_only
         # :returns: beta, E, Q
         #
         smrt_warn("The stamnes88 solver is not fully validated. Use for debugging only.")
@@ -1124,8 +980,8 @@ to disable this error raise and return NaN instead by adding the argument rtsolv
         # compute inv_mu
         inv_mu = np.repeat(1 / self.mu, npol)
 
-        # calculate the A matrix. Eq (12),  or 0 if compute_coherent_only
-        if compute_coherent_only:
+        # calculate the A matrix. Eq (12),  or 0 if coherent_only
+        if coherent_only:
             return self.return_no_scattering(m)
 
         phase = self.compute_ft_even_phase().compress(mode=m, auto_reduce_npol=True)
@@ -1256,11 +1112,11 @@ reactivate it.
 
 - almost diagonal matrix. Such a matrix often arises in active mode when m_max is quite high. However it can
 also arises in passive mode or with low m_max. To solve this issue  you can try to activate the
-diagonalization_method="shur" option and if it does not work the more radical diagonalization_method="shur_forcedtriu".
-These options are experimental, please report your results (both success and failure).
-diagonalization_method="shur_forcedtriu" should become the default if success are reported. Alternatively you could
-reduce the m_max option progressively but high values of m_max give more accurate results in active mode (but tends to
-produce almost diagonal matrix).
+diagonalization_method="schur" option and if it does not work the more radical
+diagonalization_method="schur_forcedtriu". These options are experimental, please report your results (both success and
+failure). diagonalization_method="schur_forcedtriu" should become the default if success are reported. Alternatively you
+could reduce the m_max option progressively but high values of m_max give more accurate results in active mode (but
+tends to produce almost diagonal matrix).
 
 For mass simulations, exceptions may be annoying, to avoid raising exception and return NaN as a result instead is
 obtained by setting the option error_handling='nan'.
@@ -1296,209 +1152,3 @@ def symmetrize_phase_matrix(A, m):
 
 if numba:
     symmetrize_phase_matrix = numba.jit(symmetrize_phase_matrix)
-
-
-class InterfaceProperties(object):
-    def __init__(self, frequency, interfaces, substrate, permittivity, streams, m_max, npol):
-        self.streams = streams
-
-        nlayer = len(interfaces)
-
-        self.Rtop_coh = dict()
-        self.Rtop_diff = dict()
-        self.Ttop_coh = dict()
-        self.Ttop_diff = dict()
-        self.Rbottom_coh = dict()
-        self.Rbottom_diff = dict()
-        self.Tbottom_coh = dict()
-        self.Tbottom_diff = dict()
-        self.full_weight = dict()
-
-        for l in range(nlayer):
-            eps_lm1 = permittivity[l - 1] if l > 0 else 1
-            eps_l = permittivity[l]
-            eps_lp1 = permittivity[l + 1] if l < nlayer - 1 else None
-
-            # compute reflection coefficient between layer l and l - 1  UP
-            # snow-snow UP
-            self.Rtop_coh[l] = interfaces[l].specular_reflection_matrix(frequency, eps_l, eps_lm1, streams.mu[l], npol)
-
-            self.Rtop_diff[l] = (
-                interfaces[l].ft_even_diffuse_reflection_matrix(
-                    frequency, eps_l, eps_lm1, streams.mu[l], streams.mu[l], m_max, npol
-                )
-                if hasattr(interfaces[l], "ft_even_diffuse_reflection_matrix")
-                else smrt_matrix(0)
-            )
-
-            self.Rtop_diff[l] = normalize_diffuse_matrix(
-                self.Rtop_diff[l], streams.mu[l], streams.mu[l], streams.weight[l]
-            )
-
-            # compute transmission coefficient between l and l - 1 UP
-            # snow-snow or air UP
-            self.Ttop_coh[l] = interfaces[l].coherent_transmission_matrix(
-                frequency, eps_l, eps_lm1, streams.mu[l], npol
-            )
-            mu_t = streams.mu[l - 1] if l > 1 else streams.outmu
-            self.Ttop_diff[l] = (
-                interfaces[l].ft_even_diffuse_transmission_matrix(
-                    frequency, eps_l, eps_lm1, mu_t, streams.mu[l], m_max, npol
-                )
-                * (eps_l.real / eps_lm1.real)
-                if hasattr(interfaces[l], "ft_even_diffuse_transmission_matrix")
-                else smrt_matrix(0)
-            )
-
-            self.Ttop_diff[l] = normalize_diffuse_matrix(self.Ttop_diff[l], mu_t, streams.mu[l], streams.weight[l])
-
-            # compute transmission coefficient between l and l + 1  DOWN
-            if l < nlayer - 1:
-                # snow-snow DOWN
-                self.Tbottom_coh[l] = interfaces[l + 1].coherent_transmission_matrix(
-                    frequency, eps_l, eps_lp1, streams.mu[l], npol
-                )
-
-                self.Tbottom_diff[l] = (
-                    interfaces[l + 1].ft_even_diffuse_transmission_matrix(
-                        frequency, eps_l, eps_lp1, streams.mu[l + 1], streams.mu[l], m_max, npol
-                    )
-                    * (eps_l.real / eps_lp1.real)
-                    if hasattr(interfaces[l + 1], "ft_even_diffuse_transmission_matrix")
-                    else smrt_matrix(0)
-                )
-                self.Tbottom_diff[l] = normalize_diffuse_matrix(
-                    self.Tbottom_diff[l], streams.mu[l + 1], streams.mu[l], streams.weight[l]
-                )
-
-            elif substrate is not None:
-                # sub-snow
-                self.Tbottom_coh[nlayer - 1] = substrate.emissivity_matrix(frequency, eps_l, streams.mu[l], npol)
-                self.Tbottom_diff[nlayer - 1] = smrt_matrix(0)
-            else:
-                # sub-snow
-                self.Tbottom_coh[nlayer - 1] = smrt_matrix(0)
-                self.Tbottom_diff[nlayer - 1] = smrt_matrix(0)
-
-            # compute reflection coefficient between l and l + 1  DOWN
-            if l < nlayer - 1:
-                # snow-snow DOWN
-                self.Rbottom_coh[l] = interfaces[l + 1].specular_reflection_matrix(
-                    frequency, eps_l, eps_lp1, streams.mu[l], npol
-                )
-                self.Rbottom_diff[l] = (
-                    interfaces[l + 1].ft_even_diffuse_reflection_matrix(
-                        frequency, eps_l, eps_lp1, streams.mu[l], streams.mu[l], m_max, npol
-                    )
-                    if hasattr(interfaces[l + 1], "ft_even_diffuse_reflection_matrix")
-                    else smrt_matrix(0)
-                )
-                self.Rbottom_diff[l] = normalize_diffuse_matrix(
-                    self.Rbottom_diff[l], streams.mu[l], streams.mu[l], streams.weight[l]
-                )
-
-            elif substrate is not None:
-                # snow-substrate
-                self.Rbottom_coh[l] = substrate.specular_reflection_matrix(frequency, eps_l, streams.mu[l], npol)
-
-                self.Rbottom_diff[l] = (
-                    substrate.ft_even_diffuse_reflection_matrix(
-                        frequency, eps_l, streams.mu[l], streams.mu[l], m_max, npol
-                    )
-                    if hasattr(substrate, "ft_even_diffuse_reflection_matrix")
-                    else smrt_matrix(0)
-                )
-                self.Rbottom_diff[l] = normalize_diffuse_matrix(
-                    self.Rbottom_diff[l], streams.mu[l], streams.mu[l], streams.weight[l]
-                )
-
-            else:
-                self.Rbottom_coh[l] = smrt_matrix(0)  # fully transparent substrate
-                self.Rbottom_diff[l] = smrt_matrix(0)
-
-        # air-snow DOWN
-        self.Tbottom_coh[-1] = interfaces[0].coherent_transmission_matrix(
-            frequency, 1, permittivity[0], streams.outmu, npol
-        )
-
-        self.Tbottom_diff[-1] = (
-            interfaces[0].ft_even_diffuse_transmission_matrix(
-                frequency, 1, permittivity[0], streams.mu[0], streams.outmu, m_max, npol
-            )
-            / permittivity[0].real
-            if hasattr(interfaces[0], "ft_even_diffuse_transmission_matrix")
-            else smrt_matrix(0)
-        )
-        self.Tbottom_diff[-1] = normalize_diffuse_matrix(
-            self.Tbottom_diff[-1], streams.mu[0], streams.outmu, streams.outweight
-        )
-
-        # air-snow DOWN
-        self.Rbottom_coh[-1] = interfaces[0].specular_reflection_matrix(
-            frequency, 1, permittivity[0], streams.outmu, npol
-        )
-        self.Rbottom_diff[-1] = (
-            interfaces[0].ft_even_diffuse_reflection_matrix(
-                frequency, 1, permittivity[0], streams.outmu, streams.outmu, m_max, npol
-            )
-            if hasattr(interfaces[0], "ft_even_diffuse_reflection_matrix")
-            else smrt_matrix(0)
-        )
-        self.Rbottom_diff[-1] = normalize_diffuse_matrix(
-            self.Rbottom_diff[-1], streams.outmu, streams.outmu, streams.outweight
-        )
-
-    def reflection_top(self, l, m, compute_coherent_only, **kwargs):
-        return InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Rtop_coh[l], self.Rtop_diff[l], m, compute_coherent_only, **kwargs
-        )
-
-    def reflection_bottom(self, l, m, compute_coherent_only, **kwargs):
-        return InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Rbottom_coh[l], self.Rbottom_diff[l], m, compute_coherent_only, **kwargs
-        )
-
-    def transmission_top(self, l, m, compute_coherent_only, **kwargs):
-        return InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Ttop_coh[l], self.Ttop_diff[l], m, compute_coherent_only, **kwargs
-        )
-
-    def transmission_bottom(self, l, m, compute_coherent_only, **kwargs):
-        return InterfaceProperties.combine_coherent_diffuse_matrix(
-            self.Tbottom_coh[l], self.Tbottom_diff[l], m, compute_coherent_only, **kwargs
-        )
-
-    @staticmethod
-    def combine_coherent_diffuse_matrix(coh, diff, m, compute_coherent_only, compress=True, auto_reduce_npol=True):
-        mat_coh = coh.compress(mode=m, auto_reduce_npol=auto_reduce_npol) if compress else coh
-
-        if (not compute_coherent_only) and (not is_equal_zero(diff)):
-            # the coef comes from the integration of \int dphi' cos(m (phi-phi')) cos(n phi')
-            # m=n=0 --> 2*np.pi
-            # m=n > 1 --> np.pi
-            if m == 0:
-                coef = 2 * np.pi
-                # npol = 2
-            else:
-                coef = np.pi  # the factor 2*np.pi comes from the integration of \int dphi
-                # npol = 3
-
-            mat_diff = diff.compress(mode=m, auto_reduce_npol=auto_reduce_npol) if compress else diff
-            return coef * mat_diff + mat_coh
-        else:
-            return mat_coh
-
-
-def normalize_diffuse_matrix(mat, mu_st, mu_i, weights):
-    if is_equal_zero(mat):
-        return mat
-
-    if mat.mtype == "dense5":
-        mat *= mu_i * weights  # the last dimension
-        mat /= mu_st[:, np.newaxis]  # before the last dimension
-    elif mat.mtype == "diagonal5":
-        if mu_i is mu_st:
-            mat *= weights
-        else:
-            mat *= mu_i * weights / mu_st  # the last dimension
-    return mat

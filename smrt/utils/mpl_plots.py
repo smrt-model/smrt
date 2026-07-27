@@ -18,7 +18,7 @@ def plot_snowpack(sp, show_vars=None, show_shade=False, ax=None):
     xmax = 1.5 * depth[-1]
 
     ax.plot((0, 100 * xmax), (0, 0), "0.5")
-    for lay, z in zip(sp.layers, -depth):
+    for lay, z in zip(sp.layers, -depth, strict=False):
         if show_shade:
             ax.fill_between((0, 100 * xmax), [z] * 2, [z + lay.thickness] * 2, color="#55a9ff", alpha=lay.frac_volume)
         else:
@@ -58,7 +58,7 @@ def plot_streams(sp, emmodel, sensor, ilayer=None, ax=None):
         xs = [x0 - np.median(sp.layer_thicknesses) * np.tan(theta0), x0]
         mask = [not np.isfinite(xs[0]), False]
 
-    for lay, mu in zip(sp.layers, cosine.data.values.flat[1:]):
+    for lay, mu in zip(sp.layers, cosine.data.values.flat[1:], strict=False):
         x_stream = np.tan(np.arccos(mu)) * lay.thickness
         if np.isfinite(x_stream):
             xs.append(xs[-1] + x_stream)

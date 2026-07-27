@@ -1,17 +1,20 @@
 import os
 from collections.abc import Sequence
+from functools import lru_cache
 from typing import Type, Union
 
 import numpy as np
 import pandas as pd
+from scipy.special import roots_legendre
 
 from smrt.core.error import SMRTError
+from smrt.core.globalconstants import BOLTZMANN_CONSTANT, C_SPEED, PLANCK_CONSTANT
 from smrt.core.optional_numba import numba
 
 
 def get(x, i, name=None):
-    """
-    Return the i-th value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the value.
+    """Return the i-th value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the
+    value.
 
     Args:
         x: flexible array like object or scalar
@@ -24,7 +27,8 @@ def get(x, i, name=None):
     Returns:
         : element from x
     """
-    # function to take the i-eme value in an array or dict of array. Can deal with scalar as well. In this case, it repeats the value.
+    # function to take the i-eme value in an array or dict of array. Can deal with scalar as well. In this case, it
+    # repeats the value.
 
     if isinstance(x, str):
         return x
@@ -43,17 +47,16 @@ def get(x, i, name=None):
 
 
 def check_argument_size(x, n, name=None):
-    """
-    Check that x is either a scalar or a sequence of exactly n items and raise an error otherwise.
+    """Check that x is either a scalar or a sequence of exactly n items and raise an error otherwise.
 
     Args:
         x: array like object or scalar
         n: expected size
         name: name of the object x, for reporting error messages. Defaults to None.
+
     Raises:
         SMRTError: if x is not a scalar or a sequence of size n
     """
-
     if isinstance(x, pd.DataFrame) or isinstance(x, pd.Series):
         error = len(x.values) != n
     elif (not isinstance(x, str) and isinstance(x, Sequence)) or isinstance(x, np.ndarray):
@@ -69,8 +72,7 @@ def check_argument_size(x, n, name=None):
 
 
 def is_sequence(x):
-    """
-    Check that x is a sequence
+    """Check that x is a sequence
 
     Args:
         x: flexible object
@@ -85,8 +87,8 @@ def is_sequence(x):
 
 
 def class_specializer(domain: str, cls: Union[str, Type], **options) -> Type:
-    """
-    Return a subclass of cls (imported from the domain if cls is a string) that use the provided "options" for __init__.
+    """Return a subclass of cls (imported from the domain if cls is a string) that use the provided "options" for
+    __init__.
 
     This is equivalent to functools.partial but for a class.
 
@@ -104,7 +106,7 @@ def class_specializer(domain: str, cls: Union[str, Type], **options) -> Type:
     def __init__(self, *args, **other_options):
         cls.__init__(self, *args, **options, **other_options)
 
-    old_doc = getattr(cls, "__doc__")
+    old_doc = cls.__doc__
     if old_doc is None:
         old_doc = "No original documentation."
 
@@ -119,8 +121,7 @@ def class_specializer(domain: str, cls: Union[str, Type], **options) -> Type:
 
 
 def len_atleast_1d(x):
-    """
-    Return length of x if it is an array or similar, otherwise return 1, or 0 if None.
+    """Return length of x if it is an array or similar, otherwise return 1, or 0 if None.
 
     Args:
         x: object to return the length of
@@ -135,8 +136,7 @@ def len_atleast_1d(x):
 
 
 class smrt_diag(object):
-    """
-    Define a simple diagonal matrix class.
+    """Define a simple diagonal matrix class.
 
     Scipy.sparse is very slow for diagonal matrix and numpy has no good support for linear algebra. This diag class
     implements simple diagonal object without numpy subclassing (but without much features).
@@ -234,14 +234,14 @@ class smrt_diag(object):
             i, j = key
         except TypeError:
             raise IndexError(
-                "The index of a diag object must be a tuple with two indices. See smrt.core.lib for the rational of this diag object."
+                "The index of a diag object must be a tuple with two indices. See smrt.core.lib for the rational of"
+                " this diag object."
             )
         return self.diag[i] if i == j else 0
 
 
 class smrt_matrix(object):
-    """
-    Return a smrt_matrix object.
+    """Return a smrt_matrix object.
 
     SMRT uses two formats of matrix: one most suitable to implement emmodel where equations are different for each
     polarization and another one suitable for DORT computation where stream and polarization are collapsed in one
@@ -312,11 +312,11 @@ class smrt_matrix(object):
         return is_equal_zero(self)
 
     def compress(self, mode=None, auto_reduce_npol=False):
-        """
-        Compresses a matrix. This comprises several actions:
+        """Compresses a matrix. This comprises several actions:
         1) select one mode, if relevant (dense5, and diagonal5).
         2) reduce the number of polarization from 3 to 2 if mode==0 and auto_reduce_npol=True.
-        3) convert the format of the matrix to compressed numpy, involving a change of the dimension order (pola and streams are merged).
+        3) convert the format of the matrix to compressed numpy, involving a change of the dimension order
+            (pola and streams are merged).
         """
         if self.mtype == "0":
             return np.float64(0.0)  # 0, but can be used as a numpy thing
@@ -413,7 +413,8 @@ class smrt_matrix(object):
             return np.moveaxis(
                 np.diagonal(np.diagonal(self.values, axis1=-2, axis2=-1)), -1, 0
             )  # diagonal in incidence angle and pola
-            # the moveaxis is necessary to put back the pola indice at the first position because diagonal move the diagonale "index" to the end of the array.
+            # the moveaxis is necessary to put back the pola indice at the first position because diagonal move the
+            # diagonale "index" to the end of the array.
 
     def to_dense(self):
         if self.mtype in ["dense5", "dense4"]:
@@ -464,8 +465,7 @@ class smrt_matrix(object):
 
 
 def is_zero_scalar(m):
-    """
-    Returns true if the object is a scalar equal to zero
+    """Returns true if the object is a scalar equal to zero
 
     Args:
         m: object to test
@@ -476,15 +476,13 @@ def is_zero_scalar(m):
 
 
 def is_equal_zero(m):
-    """
-    Returns true if the smrt matrix is null
+    """Returns true if the smrt matrix is null
 
     Args:
         m: object to test
     Returns:
         : True if m is equal to zero
     """
-
     if isinstance(m, smrt_diag):
         m = m.diagonal()
 
@@ -503,8 +501,7 @@ else:
 
 
 def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
-    """
-    Compute the Fourier transform of an even matrix.
+    """Compute the Fourier transform of an even matrix.
 
     This matrix can be a phase function, reflection or transmission matrix.
 
@@ -522,7 +519,8 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
              [Puvp Puhp Puup]
 
     Args:
-        phase_function: must be a function taking dphi as input. It is assumed that phi is symmetrical (it is in cos(phi))
+        phase_function: must be a function taking dphi as input. It is assumed that phi is symmetrical (it is in
+            cos(phi))
         m_max: maximum Fourier decomposition mode needed
         nsamples: number of samples to use for the Fourier decomposition. If None, it is automatically computed.
     """
@@ -533,13 +531,18 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
 
     assert nsamples > 2 * m_max
 
-    # dphi must be evenly spaced from 0 to 2 * np.pi (but not including period), but we can use the symmetry of the phase function
-    # to reduce the computation to 0 to pi (including 0 and pi) and mirroring for pi to 2*pi (excluding both)
+    # dphi must be evenly spaced from 0 to 2 * np.pi (but not including period), but we can use the symmetry of the
+    # phase function to reduce the computation to 0 to pi (including 0 and pi) and mirroring for pi to 2*pi (excluding
+    # both)
 
     dphi = np.linspace(0, np.pi, int(nsamples // 2 + 1))
 
     # compute the phase function
     p = phase_function(dphi)
+
+    if p.is_equal_zero():
+        # if the phase function is zero, we can save a lot of time by not doing the Fourier transform
+        return smrt_matrix(0)
 
     npol = p.npol
 
@@ -579,7 +582,8 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
 
         # For the even matrix:
         # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
-        # The sign for 0:2, 2 and 2, 0:2 have been double check with Rayleigh and Mazter 2006 formulation of the Rayeligh Matrix (p111-112)
+        # The sign for 0:2, 2 and 2, 0:2 have been double check with Rayleigh and Mazter 2006 formulation of the
+        # Rayeligh Matrix (p111-112)
         ft_even_p[0:2, 2, 1:] = ft_p[0:2, 2, 1 : m_max + 1].imag * delta
         ft_even_p[2, 0:2, 1:] = -ft_p[2, 0:2, 1 : m_max + 1].imag * delta
         ft_even_p[2, 2, 1:] = ft_p[2, 2, 1 : m_max + 1].real * delta
@@ -587,9 +591,37 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples=None):
     return ft_even_p  # order is pola_s, pola_i, m, mu_s, mu_i
 
 
+def planck_function(frequency, temperature):
+    temperature = np.asarray(temperature)
+    high_temperature = temperature > 1e-10
+
+    b = np.divide((PLANCK_CONSTANT / BOLTZMANN_CONSTANT) * frequency, temperature, where=high_temperature, out=None)
+
+    radiance = np.zeros_like(temperature, dtype=float)
+    np.divide(
+        (2.0 * PLANCK_CONSTANT / C_SPEED**2) * frequency**3,
+        np.exp(b) - 1.0,
+        out=radiance,
+        where=high_temperature,
+    )
+    return radiance
+
+
+def inverse_planck_function(frequency, radiance):
+    radiance = np.asarray(radiance)
+    positive_radiance = radiance > 1e-40
+
+    x = np.divide((2.0 * PLANCK_CONSTANT / C_SPEED**2) * frequency**3, radiance, where=positive_radiance, out=None)
+
+    temperature = np.zeros_like(radiance, dtype=float)
+    np.divide(
+        (PLANCK_CONSTANT / BOLTZMANN_CONSTANT) * frequency, np.log(1 + x), out=temperature, where=positive_radiance
+    )
+    return temperature
+
+
 def vectorize_angles(mu_s, mu_i, dphi, compute_cross_product=True, compute_sin=True):
-    """
-    Return angular cosines and sinus with proper dimensions, ready for vectorized calculations.
+    """Return angular cosines and sinus with proper dimensions, ready for vectorized calculations.
 
     Args:
         mu_s: scattering cosine angle.
@@ -602,7 +634,6 @@ def vectorize_angles(mu_s, mu_i, dphi, compute_cross_product=True, compute_sin=T
     Returns:
         vectorize angles
     """
-
     mu_s = np.atleast_1d(mu_s)
     mu_i = np.atleast_1d(mu_i)
     dphi = np.atleast_1d(dphi)
@@ -622,13 +653,11 @@ def vectorize_angles(mu_s, mu_i, dphi, compute_cross_product=True, compute_sin=T
 
 
 def set_max_numerical_threads(nthreads):
-    """
-    Set the maximum number of threads for a few known library.
+    """Set the maximum number of threads for a few known library.
 
     This is useful to disable parallel computing in SMRT when using parallel computing to call multiple // SMRT runs.
     This avoid over-committing the CPUs and results in much better performance. Inspire from joblib.
     """
-
     nthreads = str(nthreads)
     os.environ["MKL_NUM_THREADS"] = nthreads
     os.environ["OPENBLAS_NUM_THREADS"] = nthreads
@@ -637,18 +666,19 @@ def set_max_numerical_threads(nthreads):
     os.environ["NUMEXPR_NUM_THREADS"] = nthreads
 
 
-def cached_roots_legendre(n):
+@lru_cache(maxsize=32)
+def cached_roots_legendre(n, a=-1, b=1):
+    """Cache roots_legendre results
+
+    Args:
+        n: number of points
+        a: lower bound
+        b: upper bound
     """
-    Cache roots_legendre results to speed up calls of the fixed_quad
-    function.
-    """
-    if n in cached_roots_legendre.cache:
-        return cached_roots_legendre.cache[n]
+    x, w = roots_legendre(n)
 
-    from scipy.special import roots_legendre
-
-    cached_roots_legendre.cache[n] = roots_legendre(n)
-    return cached_roots_legendre.cache[n]
-
-
-cached_roots_legendre.cache = dict()
+    if a != -1 or b != 1:
+        delta = (b - a) / 2.0
+        x = delta * (x + 1) + a
+        w *= delta
+    return x, w

@@ -7,13 +7,11 @@ from smrt.core.sensor import altimeter, make_multi_channel_altimeter
 
 
 def envisat_ra2(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
-    """
-    Returns an Altimeter instance for the ENVISAT RA2 altimeter.
+    """Returns an Altimeter instance for the ENVISAT RA2 altimeter.
 
     Args:
       channel: can be 'S', 'Ku', or both. Default is both.
     """
-
     config = {
         "Ku": dict(
             frequency=13.575e9,
@@ -41,12 +39,11 @@ def envisat_ra2(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
 
 
 def sentinel3_sral(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
-    """return an Altimeter instance for the Sentinel 3 SRAL instrument.
+    """Return an Altimeter instance for the Sentinel 3 SRAL instrument.
 
     :param channel: can be 'Ku' only ('C' is to be implemented)
 
     """
-
     config = {
         "Ku": dict(
             frequency=13.575e9,
@@ -65,8 +62,7 @@ def sentinel3_sral(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
 
 
 def saral_altika(pitch_angle_deg=0, roll_angle_deg=0):
-    """return an Altimeter instance for the Saral/AltiKa instrument."""
-
+    """Return an Altimeter instance for the Saral/AltiKa instrument."""
     params = dict(
         frequency=35.75e9,
         altitude=800e3,
@@ -89,7 +85,6 @@ def cryosat2_lrm(pitch_angle_deg=0, roll_angle_deg=0):
     Beam width is 1.08 along track and 1.2 across track
 
     """
-
     params = dict(
         frequency=13.575e9,
         altitude=720e3,
@@ -113,7 +108,6 @@ def cryosat2_sin(pitch_angle_deg=0, roll_angle_deg=0):
     account elliptical footprints yet in LRM
 
     """
-
     params = dict(
         frequency=13.575e9,
         altitude=720e3,

@@ -38,8 +38,7 @@ class NonScattering(IsotropicScatteringMixin):
         pass
 
     def ft_even_phase(self, mu_s, mu_i, m_max, npol=None):
-        """
-        Non-scattering phase matrix.
+        """Non-scattering phase matrix.
 
         Args:
             mu_s:
@@ -56,8 +55,7 @@ class NonScattering(IsotropicScatteringMixin):
         return smrt_matrix.zeros((npol, npol, m_max + 1, len_atleast_1d(mu_s), len_atleast_1d(mu_i)))
 
     def phase(self, mu_s, mu_i, dphi, npol=2):
-        """
-        Non-scattering phase matrix.
+        """Non-scattering phase matrix.
 
         Args:
             mu_s:
@@ -68,7 +66,6 @@ class NonScattering(IsotropicScatteringMixin):
         Returns:
             null phase matrix
         """
-
         return smrt_matrix.zeros(
             (
                 npol,
@@ -83,7 +80,8 @@ class NonScattering(IsotropicScatteringMixin):
         return extinction_matrix(self.ka, mu=mu, npol=npol)
 
     def effective_permittivity(self):
-        # very basic mixing formula. It is recommended to use either with frac_volume=0 or 1 a better mixings when available.
+        # very basic mixing formula. It is recommended to use either with frac_volume=0 or 1 a better mixings when
+        # available.
         # return self.e0 * (1 - self.frac_volume) + self.eps * self.frac_volume
 
         # change to polder von santen

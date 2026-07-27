@@ -5,6 +5,7 @@ from smrt.permittivity.ice import (
     _ice_permittivity_DMRTML,
     _ice_permittivity_HUT,
     _ice_permittivity_MEMLS,
+    ice_permittivity_cuzzi80,
     ice_permittivity_hufford91_maetzler87,
     ice_permittivity_maetzler06,
     ice_permittivity_maetzler87,
@@ -25,7 +26,8 @@ from smrt.permittivity.ice import (
 #     ice_permittivity(np.array([230]), 10e9)
 #     # Verify some things
 #     assert len(w) == 1
-#     assert 'Warning: temperature is below 240K. Ice permittivity is out of range of applicability' in str(w[-1].message)
+#     assert 'Warning: temperature is below 240K. Ice permittivity is out of range of applicability' in
+#     str(w[-1].message)
 
 
 # Test output of this module against output from MEMLS code
@@ -41,6 +43,7 @@ from smrt.permittivity.ice import (
         (_ice_permittivity_HUT, 10e9, 270, 3.18567, 8.86909246416410e-04, 1e-8, 1e-8),
         (_ice_permittivity_DMRTML, 10e9, 270, 3.18567, 9.0679820556720323e-04, 1e-8, 1e-8),
         (ice_permittivity_hufford91_maetzler87, 10e9, 270, 3.18567, 0.0009650945, 1e-8, 1e-8),
+        (ice_permittivity_cuzzi80, 10e9, 100, 3.1683999993, 8.906161341790659e-05, 1e-8, 1e-8),
     ],
 )
 def test_ice_permittivity(permittivity_model, frequency, temperature, real, imag, ratol, iatol):

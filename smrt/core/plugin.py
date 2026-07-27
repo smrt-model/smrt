@@ -11,8 +11,8 @@ user_plugin_package = []
 
 
 def register_package(pkg):
-    """
-    Register an external package having the same structure as the smrt package, to make available the modules as plugins.
+    """Register an external package having the same structure as the smrt package, to make available the modules as
+    plugins.
 
     This is useful for development of independent packages.
 
@@ -22,7 +22,6 @@ def register_package(pkg):
     Raises:
         SMRTError: if the package cannot be imported.
     """
-
     global user_plugin_package
 
     # check that the package can be imported. It must have an __init__.py
@@ -30,7 +29,8 @@ def register_package(pkg):
         importlib.import_module(pkg)
     except ImportError as e:
         raise SMRTError(
-            f"The package must be in the the sys.path list and must contain a __init__.py file (even empty). The import error is {str(e)}"
+            f"The package must be in the the sys.path list and must contain a __init__.py file (even empty)."
+            f" The import error is {str(e)}"
         )
 
     user_plugin_package.insert(0, pkg)
@@ -38,8 +38,7 @@ def register_package(pkg):
 
 @lru_cache(maxsize=128)
 def import_class(scope: str, modulename: str, classname: Optional[str] = None) -> Type:
-    """
-    Import the modulename and return either the class named "classname" or the first class defined in the module if
+    """Import the modulename and return either the class named "classname" or the first class defined in the module if
     classname is None.
 
     Args:
@@ -47,14 +46,12 @@ def import_class(scope: str, modulename: str, classname: Optional[str] = None) -
         modulename: name of the module to load.
         classname: name of the class to read from the module.
     """
-
     return _import_object(scope, modulename, classname, _do_import_class)
 
 
 @lru_cache(maxsize=128)
 def import_function(scope: str, modulename: str, funcname: Optional[str] = None) -> Type:
-    """
-    Import the modulename and return the function named "funcname"
+    """Import the modulename and return the function named "funcname"
     classname is None.
 
     Args:
@@ -62,7 +59,6 @@ def import_function(scope: str, modulename: str, funcname: Optional[str] = None)
         modulename: name of the module to load.
         funcname: name of the function to read from the module.
     """
-
     return _import_object(scope, modulename, funcname, _do_import_function)
 
 
@@ -104,7 +100,6 @@ def _do_import_class(modulename, classname):
         SMRTError: if the module can not be found
 
     """
-
     try:
         module = importlib.import_module(modulename)
     except ModuleNotFoundError:
@@ -147,7 +142,6 @@ def _do_import_function(modulename, funcname):
         SMRTError: if the module can not be found
 
     """
-
     try:
         module = importlib.import_module(modulename)
     except ModuleNotFoundError:

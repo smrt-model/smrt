@@ -1,5 +1,4 @@
-"""
-Provide many formulations for the permittivity of various materials (ice, water, etc.) or for mixing formulae.
+"""Provide many formulations for the permittivity of various materials (ice, water, etc.) or for mixing formulae.
 
 The former are to be used as input of the functions in :py:mod:`smrt.inputs` in order
 to prescribe the scatterers and background permittivity, while the latter are to be used in :py:mod:`smrt.emmodels` to
@@ -9,7 +8,7 @@ users. See :py:mod:`smrt.emmodel.symsce_torquato21.derived_SymSCETK21` and :py:m
 To import a material permittivity function by name instead of using the classical import statement, use the helper
 function :py:func:`permittivity_function` as follows:
 
-    from smrt.permittivity import permittivity_function
+    from smrt.permittivity.permittivity_utils import permittivity_function
     ice_perm_func = permittivity_function("ice_permittivity_maetzler06")
 
 It is also possible to pass directly the permittivity name to :py:func:`~smrt.inputs.make_snowpack` or
@@ -23,7 +22,8 @@ It is also possible to pass directly the permittivity name to :py:func:`~smrt.in
     To add a new permittivity function proceed as follows:
 
     1. To add a new permittivity formulation add a function either in an existing file or
-    in a new file (recommended for testing). E.g. for salty ice permittivity formulations should be in saltyice.py and so on.
+    in a new file (recommended for testing). E.g. for salty ice permittivity formulations should be in saltyice.py and
+    so on.
 
     2. Any function defining a permittivity model must declare the mapping
     between the layer properties and the arguments of the function (see ice.py for examples).
@@ -37,41 +37,12 @@ It is also possible to pass directly the permittivity name to :py:func:`~smrt.in
     maps the layer property "temperature" to the argument "t" of the function (and "salinity" to s)
     However, it is recommended to change t into temperature for sake of clarity.
 
-    For curious ones, this declaration is required because the function can be called either with its arguments (normal case)
-    or with only two arguments like this (frequency, layer). In this latter case, the arguments required by the original function
-    are automatically extracted from the layer attributes (=properties) based on the declaration in @required_layer_properties.
-    This complication is necessary because there is no way in Python to inspect the name of the arguments of
-    a function, so the need for explicit declaration.
+    For curious ones, this declaration is required because the function can be called either with its arguments (normal
+    case) or with only two arguments like this (frequency, layer). In this latter case, the arguments required by the
+    original function are automatically extracted from the layer attributes (=properties) based on the declaration in
+    @required_layer_properties. This complication is necessary because there is no way in Python to inspect the name of
+    the arguments of a function, so the need for explicit declaration.
 
     3. To use the new function, import the module (e.g. from smrt.permittivity.ice import permittivity_something) and
     pass this function to :py:mod:`smrt.core.snowpack.make_snowpack` or :py:mod:`smrt.core.layer:make_snow_layer`.
 """
-
-from typing import Callable
-
-from smrt.core.plugin import import_function
-
-
-def permittivity_function(permittivity_model: str | Callable) -> callable:
-    """Return a permittivity function based on its name.
-
-    Args:
-        permittivity_model: name of the model
-
-    Example to get the Maetzler (2006) ice permittivity function, do:
-        perm_func = permittivity_model("ice_permittivity_maetzler06")
-
-    """
-    if isinstance(permittivity_model, str):
-        # get the function by model name
-        try:
-            modulename, _ = permittivity_model.split("_permittivity_")
-        except ValueError:  # unpack problem
-            raise ValueError(
-                f"The permittivity model {permittivity_model} has not a valid name. It must match the pattern <modulename>_permittivity_<something>."
-            )
-
-        return import_function("permittivity", modulename, permittivity_model)
-    else:
-        # callable or scalar or others are returned as is
-        return permittivity_model

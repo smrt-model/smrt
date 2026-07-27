@@ -37,8 +37,8 @@ the snowpack. Here, for a 2-layer snowpack the lists are of length 2.
     temperature_list = [265, 250]
     corr_length_list = [0.1e-3, 0.3e-3]
 
-The top 10cm layer of the snowpack has a density of 200 kg m\ :sup:`-3`, temperature 265K and correlation length 0.1mm.
-The bottom 1km of the snowpack has a density of 350 kg m\ :sup:`-3`, temperature of 250K and correlation length 0.3mm.
+The top 10\ cm layer of the snowpack has a density of 200\ kg\ m\ :sup:`-3`, temperature 265\ K and correlation length 0.1\ mm.
+The bottom 1 km of the snowpack has a density of 350\ kg\ m\ :sup:`-3`, temperature of 250\ K and correlation length 0.3\ mm.
 This isn't a physically realistic snowpack but just illustrates how to use SMRT. To add a layer to the snowpack, simply
 extend the length of the lists. Here we have used correlation length to describe the snow microstructure, and we will
 assume an exponential microstructure model (more on that later). Other microstructure models require alternative parameters

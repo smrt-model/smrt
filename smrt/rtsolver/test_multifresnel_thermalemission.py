@@ -27,7 +27,7 @@ def snowpack_with_substrate(snowpack):
 
 
 def test_basic_mfte(snowpack):
-    """test MFTE against some values calculated earlier."""
+    """Test MFTE against some values calculated earlier."""
     theta = [30, 40]
     sensor = passive(1.4e9, theta)
 
@@ -40,7 +40,7 @@ def test_basic_mfte(snowpack):
 
 
 def test_basic_mfte_with_substrate(snowpack_with_substrate):
-    """test MFTE against some values calculated earlier."""
+    """Test MFTE against some values calculated earlier."""
     theta = [30, 40]
     sensor = passive(1.4e9, theta)
 
@@ -54,7 +54,7 @@ def test_basic_mfte_with_substrate(snowpack_with_substrate):
 
 
 def test_mfte_vs_dort(snowpack):
-    """test MFTE against DORT."""
+    """Test MFTE against DORT."""
     theta = [30, 40]
     sensor = passive(1.4e9, theta)
 

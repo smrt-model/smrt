@@ -1,7 +1,6 @@
 # coding: utf-8
 
-"""
-Provide an iterative second-order radiative transfer solver based on Karam et al. 1995.
+"""Provide an iterative second-order radiative transfer solver based on Karam et al. 1995.
 
 This module implements a second-order iterative solution of the radiative transfer equation
 to calculate backscatter coefficients. The solver computes zeroth, first and second-order
@@ -16,24 +15,25 @@ Key Features:
 
 Backscatter Components:
     Zeroth Order:
-        order0_backscatter: Backscatter from the surface, interfaces, and substrate after attenuation through the snowpack.
-        Volume Scattering is only included through its contribution to extinction.
-        (Reference: Ulaby et al. 2014, first term of Eq. 11.74)
+        order0_backscatter: Backscatter from the surface, interfaces, and substrate after attenuation through the
+        snowpack. Volume Scattering is only included through its contribution to extinction. (Reference: Ulaby et al.
+        2014, first term of Eq. 11.74)
 
 
     First Order:
         Calculate three main contributions (Ulaby et al. 2014, Eqs. 11.75 and 11.62):
             - order1_direct_backscatter: Single volume backscatter upwards by the layer.
             - order1_double_bounce: Single volume scattering and single reflection by the interfaces and the substrate.
-            - order1_reflected_backscatter: Single volume backscatter and double specular reflection by the interfaces and the substrate.
+            - order1_reflected_backscatter: Single volume backscatter and double specular reflection by the interfaces
+              and the substrate.
 
     Second Order:
         Calculate three main contributions of second order (Karam et al. 1995):
             - order2_intralayer_scattering: Double volume scattering inside one layer.
-            - order2_substrate_layer_scattering: Substrate diffuse reflection with one volume scattering event. This needs bi-static
-            coefficients to work. Only geometrical_optics has full bi-static for now.
-            - order2_interlayer_scattering: Double volume scattering between all layer pair combinations. The snow interfaces diffuse
-            reflection with one volume scattering event is neglected in this solver.
+            - order2_substrate_layer_scattering: Substrate diffuse reflection with one volume scattering event.
+              This needs bi-static coefficients to work. Only geometrical_optics has full bi-static for now.
+            - order2_interlayer_scattering: Double volume scattering between all layer pair combinations. The snow
+              interfaces diffuse reflection with one volume scattering event is neglected in this solver.
 
 Usage:
     Basic usage with default settings and iba emmodel:
@@ -45,24 +45,25 @@ Usage:
 
 Note:
     - This solver is designed for backscatter calculations only.
-    - Single scattering albedo should be < 0.5 for reliable results. Can compare to dort to estimate unaccounted scattering.
+    - Single scattering albedo should be < 0.5 for reliable results. Can compare to dort to estimate unaccounted
+      scattering.
     - Using the interlayer double scattering with multiple layers (> 10) is not suggested (increased computation)
 
 References:
-    Karam, M. A, Amar, F., Fung, A., Mougin, E. Lopes, A., Le Vine, D. M., & Beaudoin, A. (1995). A microwave polarimetric
-    scattering model for forest canopies based on vector radiative transfer theory. Remote Sensing of Environment, 53(1), 16-30.
-    https://doi.org/10.1016/0034-4257(95)00048-6
+    Karam, M. A, Amar, F., Fung, A., Mougin, E. Lopes, A., Le Vine, D. M., & Beaudoin, A. (1995). A microwave
+    polarimetric scattering model for forest canopies based on vector radiative transfer theory. Remote Sensing of
+    Environment, 53(1), 16-30. https://doi.org/10.1016/0034-4257(95)00048-6
 
     Ulaby, F. T., et al. (2014). Microwave radar and radiometric remote sensing. Chapter 11.
 
-    Tsang, L., Pan, J., Liang, D., Li, Z., Cline, D. W., & Tan, Y. (2007). Modeling Active Microwave Remote Sensing of Snow
-    Using Dense Media Radiative Transfer (DMRT) Theory With Multiple-Scattering Effects. IEEE Transactions on Geoscience and
-    Remote Sensing, 45(4), 990–1004. https://doi.org/10.1109/tgrs.2006.888854
+    Tsang, L., Pan, J., Liang, D., Li, Z., Cline, D. W., & Tan, Y. (2007). Modeling Active Microwave Remote Sensing of
+    Snow Using Dense Media Radiative Transfer (DMRT) Theory With Multiple-Scattering Effects. IEEE Transactions on
+    Geoscience and Remote Sensing, 45(4), 990–1004. https://doi.org/10.1109/tgrs.2006.888854
 
-    Tan, S., Chang, W., Tsang, L., Lemmetyinen, J., & Proksch, M. (2015). Modeling Both Active and Passive Microwave Remote
-    Sensing of Snow Using Dense Media Radiative Transfer (DMRT) Theory With Multiple Scattering and Backscattering
-    Enhancement. IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, 8(9), 4418–4430.
-    https://doi.org/10.1109/jstars.2015.2469290
+    Tan, S., Chang, W., Tsang, L., Lemmetyinen, J., & Proksch, M. (2015). Modeling Both Active and Passive Microwave
+    Remote Sensing of Snow Using Dense Media Radiative Transfer (DMRT) Theory With Multiple Scattering and
+    Backscattering Enhancement. IEEE Journal of Selected Topics in Applied Earth Observations and Remote Sensing, 8(9),
+    4418–4430. https://doi.org/10.1109/jstars.2015.2469290
 
 """
 
@@ -71,6 +72,7 @@ import numpy as np
 
 # local import
 from smrt.core.error import SMRTError, smrt_warn
+from smrt.core.interface import Interface, SubstrateBase
 from smrt.core.result import make_result
 from smrt.rtsolver.iterative_first_order import (
     _InterfaceProperties,
@@ -85,8 +87,7 @@ from smrt.rtsolver.streams import compute_stream
 
 
 class IterativeSecondOrder(RTSolverBase):
-    """
-    Implement the iterative radiative transfer solver using second-order approximation.
+    """Implement the iterative radiative transfer solver using second-order approximation.
 
     This solver computes the zeroth first-order and second-order terms of the iterative solution
     for the radiative transfer equation. It provides efficient backscatter calculations
@@ -95,14 +96,18 @@ class IterativeSecondOrder(RTSolverBase):
     Args:
         error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
             If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
-            the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
+            the error message is not accessible. This is only recommended for long simulations that sometimes produce an
+            error.
         return_contributions: If False (default), returns only total backscatter.
             If True, returns individual contributions:
                 - 'total': Sum of all contributions.
-                - 'order0_backscatter': Backscatter from the surface, interfaces, and substrate after attenuation through the snowpack.
+                - 'order0_backscatter': Backscatter from the surface, interfaces, and substrate after attenuation
+                  through the snowpack.
                 - 'order1_direct_backscatter': Single volume backscatter upwards by the layer.
-                - 'order1_double_bounce': Single volume scattering and single reflection by the interfaces and the substrate.
-                - 'order1_reflected_backscatter': Single volume backscatter and double specular reflection by the interfaces and the substrate.
+                - 'order1_double_bounce': Single volume scattering and single reflection by the interfaces and the
+                  substrate.
+                - 'order1_reflected_backscatter': Single volume backscatter and double specular reflection by the
+                  interfaces and the substrate.
                 - 'order2_intralayer_scattering': Double volume scattering inside one layer.
                 - 'order2_substrate_layer_scattering' : Substrate diffuse reflection with one volume scattering event.
                 - 'order2_interlayer_scattering' : Double volume scattering between all layer pair combinations.
@@ -111,8 +116,8 @@ class IterativeSecondOrder(RTSolverBase):
             polynomials and then use Snell-law to prograpate the direction in the other layers. If set to "uniform_air",
             streams are calculated uniformly in air and then according to Snells law.
         m_max: Number of mode for integral of phi from 0 to 2pi.
-        compute_scattering_interlayer: If False (default), skip interlayer calculation. Using interlayer with a large number of layer will increase
-            computation time significantly.
+        compute_scattering_interlayer: If False (default), skip interlayer calculation. Using interlayer with a large
+            number of layer will increase computation time significantly.
     """
 
     # this specifies which dimension this solver is able to deal with.
@@ -127,7 +132,8 @@ class IterativeSecondOrder(RTSolverBase):
         n_max_stream=32,  # stream for integral of theta 0 to pi/2
         stream_mode="most_refringent",
         m_max=5,  # mode for integral of phi from 0 to 2pi
-        compute_scattering_interlayer=False,  # using interlayer with a large number of layer will increase computation time significantly
+        compute_scattering_interlayer=False,  # using interlayer with a large number of layer will increase computation
+        # time significantly
     ):
         self.error_handling = error_handling
         self.return_contributions = return_contributions
@@ -136,9 +142,8 @@ class IterativeSecondOrder(RTSolverBase):
         self.m_max = m_max
         self.compute_scattering_interlayer = compute_scattering_interlayer
 
-    def solve(self, snowpack, emmodels, sensor, atmosphere=None):
-        """
-        Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
+    def solve(self, snowpack, emmodels, sensor, atmosphere=None, parallel_computation=None):
+        """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
             snowpack: Snowpack object.
@@ -183,7 +188,7 @@ class IterativeSecondOrder(RTSolverBase):
         self.npol = 3
         self.nlayer = snowpack.nlayer
         temperature = None
-        mu0 = np.cos(sensor.theta)
+        mu0 = sensor.mu_i
         self.len_mu = len(mu0)
 
         # # create the model
@@ -274,8 +279,18 @@ class IterativeSecondOrder(RTSolverBase):
 
         # check if layer to ground interaction can to be calculated if True, need bistatic coef from diffuse matrix
         # TO-DO Maybe theres is a better way to check if bi-static coefs are available from the substrate
-        if (substrate is not None) and (hasattr(substrate, "ft_even_diffuse_reflection_matrix")):
-            self.compute_substrate_integral = hasattr(substrate, "ft_even_diffuse_reflection_matrix")
+        if substrate is not None:
+            # either check if substrate or ice
+            # reflection matrix of the ice (need to take last interface since the substrate is water)
+            if hasattr(snowpack.layers[-1], "ice_type"):
+                substrate_interface = snowpack.interfaces[-1]
+                eps_ice = effective_permittivity[-1]
+                self.compute_substrate_integral = hasattr(substrate_interface, "ft_even_diffuse_reflection_matrix")
+            else:
+                substrate_interface = substrate
+                eps_ice = None
+            self.compute_substrate_integral = hasattr(substrate_interface, "ft_even_diffuse_reflection_matrix")
+
         else:
             self.compute_substrate_integral = False
 
@@ -319,20 +334,31 @@ class IterativeSecondOrder(RTSolverBase):
             )
 
             if self.compute_substrate_integral:
-                # reflection matrix of the ground
+                # if ice, then need to take last interface since the substrate is water)
+                if hasattr(snowpack.layers[-1], "ice_type"):
+                    # dont calculate for last layer( which is now the new "substrate")
+                    if ln == nlayer - 1:
+                        continue
+                    else:  # optical dept of layer n to the ice
+                        layer_optical_depth_ln_ground = np.sum(
+                            [(emmodels[lng]._ks + emmodels[lng].ka) * thickness[lng] for lng in range(ln, nlayer - 1)]
+                        )
+                else:
+                    # optical dept of layer n to the ground
+                    layer_optical_depth_ln_ground = np.sum(
+                        [(emmodels[lng]._ks + emmodels[lng].ka) * thickness[lng] for lng in range(ln, nlayer)]
+                    )
+
+                # reflection matrix of the ground or ice
                 Rbottom_diff_int = substrate_reflectivity_integral(
-                    substrate,
+                    substrate_interface,
                     sensor.frequency,
                     effective_permittivity[ln],
+                    eps_ice,
                     np.concatenate([-mus[ln], mus[ln]]),
                     np.concatenate([-mu_int_ln, mu_int_ln]),
                     self.m_max,
                     npol,
-                )
-
-                # optical dept of layer n+1 to the ground
-                layer_optical_depth_ln_ground = np.sum(
-                    [(emmodels[lng]._ks + emmodels[lng].ka) * thickness[lng] for lng in range(ln + 1, nlayer)]
                 )
 
                 intensity_up_ground += transmission_top @ self.compute_scattering_layer_ground(
@@ -394,7 +420,11 @@ class IterativeSecondOrder(RTSolverBase):
 
                 if snowpack.substrate is None and optical_depth < 5:
                     smrt_warn(
-                        f"The solver has detected that the snowpack is optically shallow (tau={optical_depth:g}) and no substrate has been set, meaning that the space under the snowpack is vaccum and that the snowpack is shallow enough to affect the signal measured at the surface. This is usually not wanted. Either increase the thickness of the snowpack or set a substrate. If wanted, add a transparent substrate to supress this warning"
+                        f"The solver has detected that the snowpack is optically shallow (tau={optical_depth:g}) and"
+                        " no substrate has been set, meaning that the space under the snowpack is vaccum and that the "
+                        "snowpack is shallow enough to affect the signal measured at the surface. This is usually not "
+                        "wanted. Either increase the thickness of the snowpack or set a substrate. If wanted, add a "
+                        "transparent substrate to supress this warning"
                     )
 
         return intensity_up_intra, intensity_up_ground, intensity_up_inter
@@ -408,7 +438,7 @@ class IterativeSecondOrder(RTSolverBase):
         #   integral of phi (0, 2pi) using fourier decomposition Appendix 2 tsang et al 2007
         # integral theta:
         #   Compute summation of the Gauss quadrature (integral of theta) G.Picard thesis eq. 2.22
-        #   integral of theta from 0 to 1, for mu with change of variable
+        #   integral of mu from 0 to 1 (not -1 to 1), for mu with change of variable
         #   need weight and mu_int from streams
 
         # multiple incident angle
@@ -418,47 +448,33 @@ class IterativeSecondOrder(RTSolverBase):
 
         # get negative and positive mu
         mu_i_sym = np.concatenate([-mus_i, mus_i])
-        mus_int = np.concatenate([-mu_int, mu_int])
+        mu_int_sym = np.concatenate([-mu_int, mu_int])
 
         n_stream = len(mu_int)
         n_mu_i = len(mus_i)
 
-        phase_mu_int_mu = emmodel.ft_even_phase(mus_int, mu_i_sym, self.m_max) / (4 * np.pi)
-        phase_mu_mu_int = emmodel.ft_even_phase(mu_i_sym, mus_int, self.m_max) / (4 * np.pi)
+        phase_mu_int_mu = emmodel.ft_even_phase(mu_int_sym, mu_i_sym, self.m_max) / (4 * np.pi)
+        phase_mu_mu_int = emmodel.ft_even_phase(mu_i_sym, mu_int_sym, self.m_max) / (4 * np.pi)
 
         P1 = phase_mu_mu_int[:, :, :, n_mu_i:, n_stream:]  # P(mu_i, mu_int)
         P2 = phase_mu_int_mu[:, :, :, n_stream:, 0:n_mu_i]  # P(mu_int, -mu_i)
-        P3 = phase_mu_mu_int[:, :, :, n_mu_i:, 0:n_stream]  # P(mu_i, -mu_int)
-        P4 = phase_mu_int_mu[:, :, :, n_stream:, n_mu_i:]  # P(mu_int, mu_i)
 
-        P5 = phase_mu_mu_int[:, :, :, n_mu_i:, 0:n_stream]  # P(mu_i, -mu_int)
-        P6 = phase_mu_int_mu[:, :, :, 0:n_stream, 0:n_mu_i]  # P(-mu_int, -mu_i)
-        P7 = phase_mu_mu_int[:, :, :, n_mu_i:, n_stream:]  # P(mu_i, mu_int)
-        P8 = phase_mu_int_mu[:, :, :, n_stream:, n_mu_i:]  # P(mu_int, mu_i)
+        P3 = phase_mu_mu_int[:, :, :, n_mu_i:, 0:n_stream]  # P(mu_i, -mu_int)
+        P4 = phase_mu_int_mu[:, :, :, 0:n_stream, 0:n_mu_i]  # P(-mu_int, -mu_i)
 
         sum_a, sum_b = 0, 0
-        for mu, w, i in zip(mu_int, weight, range(n_stream)):
+        for mu, w, i in zip(mu_int, weight, range(n_stream), strict=False):
             # bound 1 of the integral
             # integral of mu (G.Picard thesis p.72)
-            # -1 coef for incident angle
-            # P(mu_i, mu_int)* P(mu_int, -mu_i) + P(mu_i, -mu_int)* P(mu_int, mu_i)
 
             A = compute_A(mus_i, mu, ke, layer_optical_depth)
-            sum_a += w * (
-                (A * compute_integral_phi(P1[:, :, :, :, i], P2[:, :, :, i, :], m_max, len_mu, npol, np.pi))
-                + (A * compute_integral_phi(P3[:, :, :, :, i], P4[:, :, :, i, :], m_max, len_mu, npol, np.pi))
-            )
+            sum_a += w * (A * compute_integral_phi(P1[:, :, :, :, i], P2[:, :, :, i, :], m_max, len_mu, npol, np.pi))
 
-            # P(mu_i, -mu)* P(-mu_int, -mu_i) + P(mu_i, mu_int)* P(mu_int, mu_i)
+            # P(mu_i, -mu_int)* P(-mu_int, -mu_i)
             B = compute_B(mus_i, mu, ke, layer_optical_depth)
-            sum_b += w * (
-                (B * compute_integral_phi(P5[:, :, :, :, i], P6[:, :, :, i, :], m_max, len_mu, npol, np.pi))
-                + (B * compute_integral_phi(P7[:, :, :, :, i], P8[:, :, :, i, :], m_max, len_mu, npol, np.pi))
-            )
+            sum_b += w * (B * compute_integral_phi(P3[:, :, :, :, i], P4[:, :, :, i, :], m_max, len_mu, npol, np.pi))
 
-        I_mu = (sum_a + sum_b) @ I_l
-
-        return I_mu
+        return (sum_a + sum_b) @ I_l
 
     def compute_scattering_layer_ground(
         self,
@@ -480,7 +496,7 @@ class IterativeSecondOrder(RTSolverBase):
         #   integral of phi (0, 2pi) using fourier decomposition Appendix 2 tsang et al 2007
         # integral theta:
         #   Compute summation of the Gauss quadrature (integral of theta) G.Picard thesis eq. 2.22
-        #   integral of theta from 0 to 1, for mu with change of variable
+        #   integral of mu from 0 to 1 (not -1 to 1), for mu with change of variable
         #   need weight and mu_int from streams
 
         # multiple incident angle
@@ -500,23 +516,22 @@ class IterativeSecondOrder(RTSolverBase):
 
         R1 = Rbottom_diff_int["i_int"][:, :, :, n_mu_i:, n_stream:]  # R(mu_i, mu_int)
         P1 = phase_mu_int_mu[:, :, :, 0:n_stream, 0:n_mu_i]  # P(-mu_int, -mu_i)
-        R2 = Rbottom_diff_int["i_int"][:, :, :, n_mu_i:, 0:n_stream]  # R(mu_i, -mu_int)
-        P2 = phase_mu_int_mu[:, :, :, n_stream:, 0:n_mu_i]  # P(mu_int, -mu_i)
+
+        # P2 = phase_mu_mu_int[:, :, :, n_mu_i:, n_stream:]  # P(mu_i, mu_int)
+        # R2 = Rbottom_diff_int["int_i"][:, :, :, n_stream:, 0:n_mu_i]  # R(mu_int, -mu_i)
 
         sum_e = 0
-        for mu, w, i in zip(mu_int, weight, range(n_stream)):
+        # sum_f = 0
+        for mu, w, i in zip(mu_int, weight, range(n_stream), strict=False):
             # bound 1 of the integral
             # integral of mu (G.Picard thesis p.72)
-            # -1 coef for incident angle
-            # Rbottom(mu_i, mu_int) * P(-mu_int, -mu_i) + Rbottom(mu_i, -mu_int) * P(mu_int,-mu_i)
 
             E = compute_E(mus_i, mu, ke, layer_optical_depth, layer_optical_depth_ln_ground)
-            sum_e += w * (
-                (E * compute_integral_phi(R1[:, :, :, :, i], P1[:, :, :, i, :], m_max, len_mu, npol, np.pi))
-                + (E * compute_integral_phi(R2[:, :, :, :, i], P2[:, :, :, i, :], m_max, len_mu, npol, np.pi))
-            )
+            sum_e += w * (E * compute_integral_phi(R1[:, :, :, :, i], P1[:, :, :, i, :], m_max, len_mu, npol, np.pi))
 
-        return sum_e @ I_l
+            # sum_f += w * (E * compute_integral_phi(P2[:, :, :, :, i], R2[:, :, :, i, :], m_max, len_mu, npol, np.pi))
+        # print(sum_e, sum_f)
+        return (sum_e) @ I_l
 
     def compute_double_scattering_interlayer(
         self,
@@ -543,7 +558,7 @@ class IterativeSecondOrder(RTSolverBase):
         #   integral of phi (0, 2pi) using fourier decomposition Appendix 2 tsang et al 2007
         # integral theta:
         #   Compute summation of the Gauss quadrature (integral of theta) G.Picard thesis eq. 2.22
-        #   integral of theta from 0 to 1, for mu with change of variable
+        #   integral of mu from 0 to 1 (not -1 to 1), for mu with change of variable
         #   need weight and mu_int from streams
 
         # multiple incident angle
@@ -573,43 +588,32 @@ class IterativeSecondOrder(RTSolverBase):
 
         P1n = phase_mu_mu_int_ln[:, :, :, n_mu_i_ln:, n_stream_ln:]  # P(mu_i_ln, mu_int_ln)
         P2m = phase_mu_int_mu_lm[:, :, :, n_stream_lm:, 0:n_mu_i_lm]  # P(mu_int_ln, -mu_i_ln)
-        P3n = phase_mu_mu_int_ln[:, :, :, n_mu_i_ln:, 0:n_stream_ln]  # P(mu_i_lm, -mu_int_lm)
-        P4m = phase_mu_int_mu_lm[:, :, :, n_stream_lm:, n_mu_i_lm:]  # P(mu_int_lm, mu_i_lm)
 
-        P5m = phase_mu_mu_int_lm[:, :, :, n_mu_i_lm:, 0:n_stream_lm]  # P(mu_i_lm, -mu_int_lm)
-        P6n = phase_mu_int_mu_ln[:, :, :, 0:n_stream_ln, 0:n_mu_i_ln]  # P(-mu_int_lm, -mu_i_lm)
-        P7m = phase_mu_mu_int_lm[:, :, :, n_mu_i_lm:, n_stream_lm:]  # P(mu_i_ln, mu_int_ln)
-        P8n = phase_mu_int_mu_ln[:, :, :, n_stream_ln:, n_mu_i_ln:]  # P(mu_int_ln, mu_i_ln)
+        P3m = phase_mu_mu_int_lm[:, :, :, n_mu_i_lm:, 0:n_stream_lm]  # P(mu_i_lm, -mu_int_lm)
+        P4n = phase_mu_int_mu_ln[:, :, :, 0:n_stream_ln, 0:n_mu_i_ln]  # P(-mu_int_lm, -mu_i_lm)
 
         sum_c, sum_d = 0, 0
         for mu_ln, w_ln, i_ln, mu_lm, w_lm, i_lm in zip(
-            mu_int_ln, weight_ln, range(n_stream_ln), mu_int_lm, weight_lm, range(n_stream_lm)
+            mu_int_ln, weight_ln, range(n_stream_ln), mu_int_lm, weight_lm, range(n_stream_lm), strict=False
         ):
             # bound 1 of the integral
             # integral of mu (G.Picard thesis p.72)
-            # -1 coef for incident angle
-            # P(mu_i, mu_int)* P(mu_int, -mu_i) + P(mu_i, -mu_int)* P(mu_int, mu_i)
 
             C = compute_C(
                 mu_i_ln, mu_ln, ke_ln, ke_lm, layer_optical_depth_ln, layer_optical_depth_lm, layer_optical_depth_lr
             )
             sum_c += w_ln * (
-                (C * compute_integral_phi(P1n[:, :, :, :, i_ln], P2m[:, :, :, i_lm, :], m_max, len_mu, npol, np.pi))
-                + (C * compute_integral_phi(P3n[:, :, :, :, i_ln], P4m[:, :, :, i_lm, :], m_max, len_mu, npol, np.pi))
+                C * compute_integral_phi(P1n[:, :, :, :, i_ln], P2m[:, :, :, i_lm, :], m_max, len_mu, npol, np.pi)
             )
 
-            # P(mu_i, -mu)* P(-mu_int, -mu_i) + P(mu_i, mu_int)* P(mu_int, mu_i)
             D = compute_D(
                 mu_i_ln, mu_ln, ke_ln, ke_lm, layer_optical_depth_ln, layer_optical_depth_lm, layer_optical_depth_lr
             )
             sum_d += w_ln * (
-                (D * compute_integral_phi(P5m[:, :, :, :, i_lm], P6n[:, :, :, i_ln, :], m_max, len_mu, npol, np.pi))
-                + (D * compute_integral_phi(P7m[:, :, :, :, i_lm], P8n[:, :, :, i_ln, :], m_max, len_mu, npol, np.pi))
+                D * compute_integral_phi(P3m[:, :, :, :, i_lm], P4n[:, :, :, i_ln, :], m_max, len_mu, npol, np.pi)
             )
 
-        I_mu = (sum_c + sum_d) @ I_l
-
-        return I_mu
+        return (sum_c + sum_d) @ I_l
 
 
 def separate_ft_matrix(ft_matrix, m_max, len_mu, npol):
@@ -673,19 +677,34 @@ def compute_integral_phi(ft_matrix1, ft_matrix2, m_max, len_mu, npol, dphi):
     # summation of m=1 to m_max, skip 0
     for m in range(m_max)[1:]:
         sum_m_cosine += (m1_cosine[:, m] @ m2_cosine[:, m] - m1_sine[:, m] @ m2_sine[:, m]) * np.cos(m * dphi)
-        # sum_m_sine += (m1_cosine[:,m] @ m2_sine[:,m]  + m1_sine[:,m] @ m2_cosine[:,m]) * np.sin(m * self.dphi) # equal to 0
+        # equal to 0:
+        # sum_m_sine += (m1_cosine[:,m] @ m2_sine[:,m]  + m1_sine[:,m] @ m2_cosine[:,m]) * np.sin(m * self.dphi)
 
     int_phi = int_0 + np.pi * sum_m_cosine  # + np.pi * sum_m_sine
 
     return int_phi
 
 
-def substrate_reflectivity_integral(substrate, frequency, eps_l, mu_i, mu_int, m_max, npol):
+def substrate_reflectivity_integral(substrate_interface, frequency, eps_l, eps_ice, mu_i, mu_int, m_max, npol):
     # Compute the reflectivity matrix for integrals
     # Need full bi-static to work...
-    Rbottom_diff_i_int = substrate.ft_even_diffuse_reflection_matrix(frequency, eps_l, mu_i, mu_int, m_max, npol)
-    Rbottom_diff_int_i = substrate.ft_even_diffuse_reflection_matrix(frequency, eps_l, mu_int, mu_i, m_max, npol)
-
+    if isinstance(substrate_interface, Interface):
+        Rbottom_diff_i_int = substrate_interface.ft_even_diffuse_reflection_matrix(
+            frequency, eps_l, eps_ice, mu_i, mu_int, m_max, npol
+        )
+        Rbottom_diff_int_i = substrate_interface.ft_even_diffuse_reflection_matrix(
+            frequency, eps_l, eps_ice, mu_int, mu_i, m_max, npol
+        )
+    elif isinstance(substrate_interface, SubstrateBase):
+        # print( substrate_interface.diffuse_reflection_matrix(frequency, eps_l, mu_i, mu_int, m_max, npol))
+        Rbottom_diff_i_int = substrate_interface.ft_even_diffuse_reflection_matrix(
+            frequency, eps_l, mu_i, mu_int, m_max, npol
+        )
+        Rbottom_diff_int_i = substrate_interface.ft_even_diffuse_reflection_matrix(
+            frequency, eps_l, mu_int, mu_i, m_max, npol
+        )
+    else:
+        SMRTError("provide a valide interface of substrate")
     # get the two integral, for incident to int (streams) and int to incident)
     Rbottom_diff_int = {"i_int": Rbottom_diff_i_int, "int_i": Rbottom_diff_int_i}
     return Rbottom_diff_int
@@ -776,7 +795,7 @@ def compute_E(mu_i, mu_int, ke, layer_optical_depth, layer_optical_depth_ln_grou
     gamma_i = compute_gamma(mu_i, layer_optical_depth)
     gamma_int = compute_gamma(mu_int, layer_optical_depth)
 
-    E = mu_i * (gamma_int - gamma_i) / (ke * (mu_int - mu_i))
+    E = gamma_i**2 * mu_i * (gamma_int - gamma_i) / (ke * (mu_int - mu_i))
     # attenuation of layer n to the ground
     attenuation_ln_ground = compute_gamma(mu_i, layer_optical_depth_ln_ground) * compute_gamma(
         mu_int, layer_optical_depth_ln_ground

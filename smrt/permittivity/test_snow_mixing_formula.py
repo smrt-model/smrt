@@ -30,7 +30,8 @@ def test_wetsnow_permittivity_hallikainen86():
     np.testing.assert_allclose(eps.imag, 0.685, atol=0.001)
 
     # Data from the graph in Fig 8
-    # the incremental epsilon for the modified debye-model seems defined with respect to A = 1 + 1.83 * dry_snow_density_gcm3 + B1
+    # the incremental epsilon for the modified debye-model seems defined with respect to A = 1 + 1.83 * dry_snow_density
+    # _gcm3 + B1
     frequency = 37e9
     eps = wetsnow_permittivity_hallikainen86(frequency, snow_density, liquid_water)
 

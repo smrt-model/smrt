@@ -1,7 +1,8 @@
 # coding: utf-8
 """A non-scattering atmosphere provided by PyRTLib for SMRT using ERA5 data as input
 
-This atmosphere is a special case using ERA5. Please refer to the general documentation `py:module::~smrt.atmosphere.pyrtlib_atmosphere`.
+This atmosphere is a special case using ERA5. Please refer to the general documentation
+`py:module::~smrt.atmosphere.pyrtlib_atmosphere`.
 
 """
 
@@ -67,6 +68,7 @@ class PyRTlibERA5Atmosphere(PyRTlibAtmosphereBase):
         self.df_era5 = df_era5
 
         self.z = df_era5.z.values
+        assert np.all(self.z >= 0), f"Negative altitude values are not supported by PyRTlibAtmosphere: {self.z=}"
         self.p = df_era5.p.values
         self.t = df_era5.t.values
         self.rh = df_era5.rh.values
@@ -87,14 +89,12 @@ class PyRTlibERA5Atmosphere(PyRTlibAtmosphereBase):
 
 
 class _ERA5Reanalysis_with_grib(ERA5Reanalysis):
-    """
-    Temporary hack to retrieve ERA5 data in grib instead of netcdf which seems to be broken. The only disavantage is to require the dependency (cfgrib)
-    """
+    """Temporary hack to retrieve ERA5 data in grib instead of netcdf which seems to be broken. The only disavantage is
+    to require the dependency (cfgrib)"""
 
     @classmethod
     def read_data(cls, file: str, lonlat: tuple) -> pd.DataFrame:
-        """
-        Read data from the ERA5 Reanalysis dataset.
+        """Read data from the ERA5 Reanalysis dataset.
 
         Args:
             file (str): The netcdf file
@@ -195,8 +195,7 @@ class _ERA5Reanalysis_with_grib(ERA5Reanalysis):
         resolution: Optional[float] = 0.25,
         offset: Optional[float] = 0.4,
     ) -> str:
-        """
-        Download ERA5Reanalysis data from the Copernicus Climate Change Service using the grib format as the netcdf
+        """Download ERA5Reanalysis data from the Copernicus Climate Change Service using the grib format as the netcdf
         format seems to be broken at the moment (April 2024).
 
         Args:
@@ -209,7 +208,6 @@ class _ERA5Reanalysis_with_grib(ERA5Reanalysis):
         Returns:
             str: The path to downloaded netcdf file
         """
-
         import cdsapi
 
         # North, West, South, Est

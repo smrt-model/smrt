@@ -7,7 +7,7 @@ from smrt.core.lib import abs2, len_atleast_1d, smrt_matrix, vectorize_angles
 
 
 def rayleigh_scattering_matrix_and_angle_tsang00(mu_s, mu_i, dphi, npol=2):
-    """compute the Rayleigh matrix and half scattering angle. Based on Tsang theory and application p271 Eq 7.2.16"""
+    """Compute the Rayleigh matrix and half scattering angle. Based on Tsang theory and application p271 Eq 7.2.16"""
     mu_s, sin_s, mu_i, sin_i, cosphi, sinphi = vectorize_angles(mu_s, mu_i, dphi)
 
     # Tsang theory and application p127 Eq 3.2.47
@@ -29,8 +29,7 @@ def rayleigh_scattering_matrix_and_angle_tsang00(mu_s, mu_i, dphi, npol=2):
 
 
 def phase_matrix_from_scattering_amplitude(fvv, fvh, fhv, fhh, npol=2):
-    """compute the phase function according to the scattering amplitude. This follows Tsang's convention."""
-
+    """Compute the phase function according to the scattering amplitude. This follows Tsang's convention."""
     fvv, fvh, fhv, fhh = np.broadcast_arrays(fvv, fvh, fhv, fhh)
 
     if npol == 2:
@@ -73,16 +72,17 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples):
              [Puvp Puhp Puup]
 
     Arg:
-        phase_function: must be a function taking dphi as input. It is assumed that phi is symmetrical (it is in cos(phi))
+        phase_function: must be a function taking dphi as input. It is assumed that phi is symmetrical (it is in
+            cos(phi))
         m_max: maximum Fourier decomposition mode needed
         nsamples: number of samples to use for the Fourier transform
 
     """
-
     assert nsamples > 2 * m_max
 
-    # dphi must be evenly spaced from 0 to 2 * np.pi (but not including period), but we can use the symmetry of the phase function
-    # to reduce the computation to 0 to pi (including 0 and pi) and mirroring for pi to 2*pi (excluding both)
+    # dphi must be evenly spaced from 0 to 2 * np.pi (but not including period), but we can use the symmetry of the
+    # phase function to reduce the computation to 0 to pi (including 0 and pi) and mirroring for pi to 2*pi
+    # (excluding both)
 
     dphi = np.linspace(0, np.pi, int(nsamples // 2 + 1))
 
@@ -106,8 +106,6 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples):
     # compute the Fourier Transform of the phase function along phi axis (axis=2)
     ft_p = np.fft.fft(p, axis=2)
 
-    # assert np.allclose(ft_p[:, :, 0, :, :], np.sum(p, axis=2)), f"Strange ... {ft_p[:, :, 0, :, :]} {np.sum(p, axis=2)}"
-
     ft_even_p = smrt_matrix.empty((npol, npol, m_max + 1, p.shape[-2], p.shape[-1]))
 
     # m=0 mode
@@ -124,7 +122,8 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples):
 
         # For the even matrix:
         # Sin components needed for p31, p32. Negative sin components needed for p13, p23. Cos for p33
-        # The sign for 0:2, 2 and 2, 0:2 have been double check with Rayleigh and Mazter 2006 formulation of the Rayeligh Matrix (p111-112)
+        # The sign for 0:2, 2 and 2, 0:2 have been double check with Rayleigh and Mazter 2006 formulation of the
+        # Rayeligh Matrix (p111-112)
         ft_even_p[0:2, 2, 1:] = ft_p[0:2, 2, 1 : m_max + 1].imag * delta
         ft_even_p[2, 0:2, 1:] = -ft_p[2, 0:2, 1 : m_max + 1].imag * delta
         ft_even_p[2, 2, 1:] = ft_p[2, 2, 1 : m_max + 1].real * delta
@@ -133,11 +132,10 @@ def generic_ft_even_matrix(phase_function, m_max, nsamples):
 
 
 def extinction_matrix(sigma_V, sigma_H=None, npol=2, mu=None):
-    """compute the extinction matrix from the extinction in V and in H-pol.
+    """Compute the extinction matrix from the extinction in V and in H-pol.
     If sigma_V or sigma_H are a scalar, they are expanded in a diagonal matrix provided mu is given.
     If sigma_H is None, sigma_V is used.
     """
-
     if np.isscalar(sigma_V):
         sigma_V = np.full(len_atleast_1d(mu), sigma_V)
 
@@ -155,12 +153,11 @@ def extinction_matrix(sigma_V, sigma_H=None, npol=2, mu=None):
 
 
 def rayleigh_scattering_matrix_and_angle_maetzler06(mu_s, mu_i, dphi, npol=2):
-    """compute the Rayleigh matrix and half scattering angle. Based on Mätzler 2006 book p111.
-    This version is relatively slow because it uses phase matrix rotations which is unnecessarily complex for the Rayleigh phase matrix
-    but would be of interest for other phase matrices.
+    """Compute the Rayleigh matrix and half scattering angle. Based on Mätzler 2006 book p111.
+    This version is relatively slow because it uses phase matrix rotations which is unnecessarily complex for the
+    Rayleigh phase matrix but would be of interest for other phase matrices.
 
     """
-
     # cos and sin of scattering and incident angles in the main frame
     cos_ti = np.atleast_1d(mu_i)[np.newaxis, np.newaxis, :]
     sin_ti = np.sqrt(1.0 - cos_ti**2)
@@ -264,9 +261,8 @@ rayleigh_scattering_matrix_and_angle = rayleigh_scattering_matrix_and_angle_tsan
 
 
 class AdjustableEffectivePermittivityMixin(object):
-    """
-        Mixin that allows an EM model to have the effective permittivity model defined by the user instead of by the theory of the EM Model.
-    The EM model must declare a default effective permittivity model.
+    """Mixin that allows an EM model to have the effective permittivity model defined by the user instead of by the
+    theory of the EM Model. The EM model must declare a default effective permittivity model.
 
     """
 
@@ -276,7 +272,6 @@ class AdjustableEffectivePermittivityMixin(object):
         :returns effective_permittivity: complex effective permittivity of the medium
 
         """
-
         # eps = type(self).effective_permittivity_model(
         #    self.frac_volume, self.e0, self.eps, self.depol_xyz, self.inclusion_shape)
 
@@ -287,7 +282,7 @@ class AdjustableEffectivePermittivityMixin(object):
         args = dict(e0=self.e0, eps=self.eps, frequency=self.frequency)
         args = {k: v for k, v in args.items() if k in signature}  # filter the arguments needed by the function
 
-        eps = type(self).effective_permittivity_model(layer_to_inject=self.layer, **args)
+        eps = type(self).effective_permittivity_model(_properties_to_inject=self.layer, **args)
         if eps.imag < -1e-10:
             print(eps)
             raise SMRTError("the imaginary part of the permittivity must be positive, by convention, in SMRT")
@@ -295,7 +290,7 @@ class AdjustableEffectivePermittivityMixin(object):
 
 
 def derived_EMModel(base_class, effective_permittivity_model):
-    """return a new IBA/SCE model with variant from the default IBA/SCE.
+    """Return a new IBA/SCE model with variant from the default IBA/SCE.
 
     :param effective_permittivity_model: permittivity mixing formula.
 
@@ -326,11 +321,10 @@ class IsotropicScatteringMixin(object):
             streams, which is set by the radiative transfer solver.
 
         """
-
         return extinction_matrix(self._ks, mu=mu, npol=npol)
 
     def ke(self, mu, npol=2):
-        """return the extinction coefficient matrix
+        """Return the extinction coefficient matrix
 
         The extinction coefficient is defined as the sum of scattering and absorption
         coefficients. However, the radiative transfer solver requires this in matrix form,
@@ -348,7 +342,6 @@ class IsotropicScatteringMixin(object):
                 streams, which is set by the radiative transfer solver.
 
         """
-
         return extinction_matrix(self._ks + self.ka, mu=mu, npol=npol)
 
 
@@ -378,7 +371,8 @@ class GenericFTPhaseMixin(object):
         6111-6117. Here, calculation of the phase matrix is based on the phase matrix in
         the 1-2 frame, which is then rotated according to the incident and scattering angles,
         as described in e.g. *Thermal Microwave Radiation: Applications for Remote Sensing, Mätzler (2006)*.
-        Fourier decomposition is then performed to separate the azimuthal dependency from the incidence angle dependency.
+        Fourier decomposition is then performed to separate the azimuthal dependency from the incidence angle
+        dependency.
 
         :param mu_s: 1-D array of cosine of viewing radiation stream angles (set by solver)
         :param mu_i: 1-D array of cosine of incident radiation stream angles (set by solver)
@@ -387,7 +381,6 @@ class GenericFTPhaseMixin(object):
         :param nsamples: number of samples to use to compute the fourrier transform
 
         """
-
         if npol is None:
             npol = self.npol  # npol is set from sensor mode except in call to energy conservation test
 
@@ -406,8 +399,7 @@ class GenericFTPhaseMixin(object):
         return generic_ft_even_matrix(phase_function, m_max, nsamples=nsamples)
 
     def estimate_ft_number_samples(self, m_max: int):
-        """
-        Estimate the number of samples of dphi for fourier decomposition. Highest efficiency for 2^n numbers.
+        """Estimate the number of samples of dphi for fourier decomposition. Highest efficiency for 2^n numbers.
 
         This should be adaptative depending on the size/wavelength. The default estimate is sufficient for smooth phase
         function but emmodel with sharp phase function must increase this value.
