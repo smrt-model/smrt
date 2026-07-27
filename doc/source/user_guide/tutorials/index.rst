@@ -12,15 +12,15 @@ For more tutorials and notebook versions please refer to `tutorials <https://git
 
     tutorial23.rst
     tutorial4.rst
-    tutorial61.rst
-    tutorial62.rst
     tutorial63.rst
+    tutorial91.rst
 
 ..
     tutorial32.rst
     tutorial3b.rst
     tutorial5.rst
+    tutorial61.rst
+    tutorial62.rst
     tutorial81.rst
     tutorial82.rst
-    tutorial91.rst
     tutorial92.rst
