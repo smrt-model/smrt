@@ -1,10 +1,5 @@
-Comparison of microstructure model
-==================================
-
-**Goal**: Highlight that very different microstructure may give similar
-results.
-
-**The long story**:
+Comparison of microstructure models
+===================================
 
 “Grain size” is a major issue when running microwave models. Different
 authors have addressed this in different way:
@@ -15,43 +10,29 @@ authors have addressed this in different way:
 
 - Grenoble+Sherboorke group tends use DMRT with no stickiness but with
   grain size derived from SSA that is using the classical relationship
-  a_opt = 3/SSA/rho_ice, and *scaled by a factor phi*. It means a_dmrt =
-  phi \* 3/SSA/rho_ice. The Dome C dataset provided in this training
-  includign scaled grain size with phi=2.3
+  ``a_opt = 3/SSA/rho_ice``, and *scaled by a factor phi*: ``a_dmrt =
+  phi * 3/SSA/rho_ice``.
 
-- Matzler uses Exponential function and, when microstructure images are
-  not available, tends to recommend to use scaled Debye relation, ie.
-  corr_length = X \* 3/4 a_opt (1-f) where f is the fractional volume. X
-  found to be 0.75.
+- Mätzler uses the exponential function and, when microstructure images are
+  not available, tends to recommend to use scaled Debye relation
+  ``corr_length = X * 3/4 * a_opt* (1-f)`` where f is the fractional volume. ``X``
+   is found to be 0.75.
 
-In all cases, there is one “free” parameter (stickiness, scaling phi or
-scaling X) that is not determined from measurements, but is optimized.
-This parameter is assumed constant for all snowpits, frequencies, … to
+In all cases, there is one “free” parameter (``stickiness``, scaling ``phi`` or
+scaling ``X``) that is not determined from measurements, but is optimized.
+This parameter is assumed constant for all snowpits and frequencies to
 avoid over-fitting
 
-**Specific goal**\ \_:
-
 In this excerice, we’ll show that different microstructure gives similar
-results: - create a snowpack (as usual) using SHS and stickiness=0.1 or
-0.15 or 0.2 - compute and plot the output (e.g. the angular diagram) -
-create another snowpack using stickiness=1000 (=not sticky) and adjust
-by hand the radius until you get the same results as before. This radius
-should be 2-3 times larger than the one before, the precise value
-depends on the stickiness chosen in the first case. - repeat the same
-using exponential micro-structure and using scaled debye relationship.
+results.
+
+
+Create a snowpack (as usual) using SHS and ``stickiness=0.1`` (or
+0.15 or 0.2), then compute and plot the output.
 
 .. code:: ipython3
 
-    import numpy as np
-
-    import matplotlib.pyplot as plt
-    %matplotlib notebook
-
-    from smrt import make_model, make_snowpack, sensor_list
-
-.. code:: ipython3
-
-    # prepare the snowpack
+    from smrt import make_snowpack,
 
     thickness = [10]
     density = 350
@@ -59,20 +40,30 @@ using exponential micro-structure and using scaled debye relationship.
     radius = 100e-6
     stickiness = 0.1
 
-    snowpack = make_snowpack(thickness=thickness, microstructure_model='sticky_hard_spheres',
-                             radius=radius, density=density, stickiness=stickiness, temperature=temperature)
+    snowpack = make_snowpack(thickness=thickness,
+                            microstructure_model='sticky_hard_spheres',
+                            radius=radius,
+                            density=density,
+                            stickiness=stickiness,
+                            temperature=temperature)
+
+Now create a non-sticky snowpack (e.g. stickiness=1000). Adjust
+by hand the radius until you get the same results as before.
 
 .. code:: ipython3
 
-    # run the model and plot the results as done in previous practicals
+    phi = 1
 
+    scaled_snowpack = make_snowpack(thickness=thickness,
+                                    microstructure_model='sticky_hard_spheres',
+                                    radius=phi*radius,
+                                    density=density,
+                                    stickiness=1000,
+                                    temperature=temperature)
 
-.. code:: ipython3
+This radius
+should be 2-3 times larger than the one before, the precise value
+depends on the stickiness chosen in the first case.
 
-    # a new snowpack with scaled radius
-    phi = 2.5
-
-    scaled_snowpack = make_snowpack(thickness=thickness, microstructure_model='sticky_hard_spheres',
-                             radius=phi*radius, density=density, stickiness=stickiness, temperature=temperature)
-
-    #... continue
+Repeat the experiment
+using the ``exponential`` micro-structure and using the scaled debye relationship. What ``X`` do you get?

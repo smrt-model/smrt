@@ -10,15 +10,15 @@ For more tutorials and notebook versions please refer to `tutorials <https://git
     :titlesonly:
     :maxdepth: 1
 
-    tutorial23.rst
-    tutorial4.rst
     tutorial61.rst
     tutorial63.rst
+    tutorial23.rst
+    tutorial4.rst
+    tutorial32.rst
     tutorial91.rst
     tutorial81.rst
     tutorial5.rst
 
 ..
-    tutorial32.rst
     tutorial3b.rst
     tutorial92.rst

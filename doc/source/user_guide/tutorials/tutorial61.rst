@@ -1,6 +1,6 @@
-##################################
+##################
 Adding a substrate
-##################################
+##################
 
 **Goal**: understand how to add a substrate to simulations in passive and active mode.
 
