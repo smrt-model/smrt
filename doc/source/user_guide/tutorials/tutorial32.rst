@@ -16,7 +16,7 @@ authors have addressed this in different way:
 - Mätzler uses the exponential function and, when microstructure images are
   not available, tends to recommend to use scaled Debye relation
   ``corr_length = X * 3/4 * a_opt* (1-f)`` where f is the fractional volume. ``X``
-   is found to be 0.75.
+  is found to be 0.75.
 
 In all cases, there is one “free” parameter (``stickiness``, scaling ``phi`` or
 scaling ``X``) that is not determined from measurements, but is optimized.

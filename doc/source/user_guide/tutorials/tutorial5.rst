@@ -29,6 +29,7 @@ SMRT core**.
 Let's define a new arbitrary permittivity function.
 
 .. code:: ipython3
+
     from smrt.core.layer import layer_properties
 
     @layer_properties("temperature", "potassium_concentration")

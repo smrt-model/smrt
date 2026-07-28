@@ -103,7 +103,7 @@ The model can the be run as usual:
 You can output the intensity e.g. ``result.sigmaVV()`` directly or in dB with ``result.sigmaVV_dB()``.
 
 Active with backscatter models
-------------------------
+------------------------------
 
 SMRT currently has two backscatter models implemented: IEM (2 versions)
 and Geometric Optics. These are implemented as interfaces, but can be
