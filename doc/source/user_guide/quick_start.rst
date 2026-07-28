@@ -143,6 +143,6 @@ functions e.g.
 This displays the brightness temperature at vertical polarisation in xarray form (or scalar if a single frequency and incidence angle is specified). If you
 want just a single value you can specify how to slice the data along a particular dimension by passing an argument into the TbV function e.g.
 
-. code:: ipython3
+.. code:: ipython3
 
     result.TbV(frequency=19e9)
