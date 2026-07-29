@@ -28,13 +28,13 @@ Let’s first create a simple snowpack for our purpose: one layer and a rough in
                          surface=rough_interface)
 
 There are a number of altimeter sensors in altimeter_list. We’ll use
-Sentinel3 in SRAL mode as an example.
+the AltiKa instrument onboard SARAL as an example.
 
 .. code:: ipython3
 
     from smrt.inputs import altimeter_list
 
-    sensor = altimeter_list.sentinel3_sral()
+    sensor = altimeter_list.saral_altika()
 
 The solver needed is the LRM altimeter solver. We will use the Improved Born Approximation electromagnetic model.
 
@@ -62,7 +62,7 @@ The model is then ran as usual. The waveform can be displayed easily:
     ax.set_ylabel('Returned power', size = 15)
     plt.tight_layout()
 
-The gate number is the time since recording starts. In general
+The gate number is the time (given in discrete time units) since recording starts. In general
 altimeters try to adjust this starting time in order to keep the leading
 edge (the big rise) as close as possible to a prescribed gate number
 (not too early, not too late). In SMRT, the surface corresponds exactly
@@ -122,7 +122,7 @@ Further decomposition of the signal
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 To understand the altimetric signal it is convenient to only calculate
-the “vertical” component of the echo, as if the altimeter antenna
+the strictly vertical component of the echo, as if the altimeter antenna
 pattern were infinitely small (like a perfect laser). This can be done by adjusting the altimeter parameters:
 
 .. code:: ipython3
@@ -140,7 +140,7 @@ Take some time to look at the results of a model run and plot them.
 
 A cleaner way to achieve the same is to use the
 ``skip_pfs_convolution`` option. This stops the computation before
-applying the “Brown” model. See :py:mod:`~smrt.rtsolver.nadir_lrm_altimetry` code for available
+applying the Brown77 convolution model. See :py:mod:`~smrt.rtsolver.nadir_lrm_altimetry` code for available
 options.
 
 **Note:** the ``nominal_gate`` is applied with the ``pfs_convolution``, so here
@@ -151,19 +151,16 @@ Simulate more realistic waveforms
 
 The surface is never flat, and this roughness has two consequences:
 
-- influence the power of the surface echo with respect to the volume
+- small scale roughness (typically smaller than the wavelength) influences the power of the surface echo with respect to the volume
   (electromagnetic effect).
-- influence the time of return when the height of the topographic within
-  the footprint varies by more than the gate equivalent depth.
+- large scale roughness (topography) delays the received signal by one or more gate when it is greater than the gate-equivalent depth.
 
 Both effects have the same origin, but are treated completely
-independantly in SMRT. More on the former effect later on sea ice. For the latter effect, there are two options in
+independantly in SMRT. More on the electromagnetic roughness at the end of this tutorial. For the topographic effect, there are two options in
 SMRT to simulate it.
 
-The easy one is to add a ``sigma_surface`` attribute to the snowpack which
-is the RMS height of the topography (considered normally distributed). This only controls the second
-effect, not the “electromagnetic” roughness that must be controled
-independantly.
+1) The easy one is to add a ``sigma_surface`` attribute to the snowpack which
+is the RMS height of the topography (considered normally distributed).
 
 .. code:: ipython3
 
@@ -196,8 +193,7 @@ Have a look at a comparison between results considering topography or not.
     ax.set_ylabel('Returned power', size = 15)
     plt.tight_layout()
 
-The second way to simulate roughness effects is to perform a convolution of the signal. This allows
-to take into account non-gaussian topography. The best way is to achieve this is to use ``numpy.convolve`` on the waveform.
+2) The second way to simulate roughness effects can be used to take into account non-gaussian topography. If you have access to a digital elevation model of the surface, you can perform a convolution of the signal over the surface. The best way is to achieve this is to use ``numpy.convolve`` (see Numpy documentation for more information).
 
 Altimetry on sea ice
 --------------------
@@ -235,11 +231,11 @@ to be flat.
     medium = snow + ice
 
 There are a number of altimeter sensors to chose from. We’ll use
-CryoSat-2 in SIN mode.
+CryoSat-2 in LRM mode.
 
 .. code:: ipython3
 
-    sensor = altimeter_list.cryosat2_sin()
+    sensor = altimeter_list.cryosat2_lrm()
     altimodel = make_model("iba", "nadir_lrm_altimetry")
 
     result = altimodel.run(sensor, medium)
