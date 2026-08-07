@@ -410,7 +410,8 @@ def get_other_data(snowpack, emmodels, effective_permittivity, mu0, backscatter_
         snowpack, emmodels, effective_permittivity=effective_permittivity, mu=mu0
     )
     # store backscatter per layer, which can be used to check the contribution of each layer to the total backscatter.
-    # index -1 refers to surface (air-snow interface), and the rest of the index refers to the layer number, starting from 0 for the first layer.
+    # index -1 refers to surface (air-snow interface), and the rest of the index refers to the layer number, starting
+    # from 0 for the first layer.
     layer_index = [
         ("layer", range(-1, len(emmodels))),
         ("theta_inc", mu0),
