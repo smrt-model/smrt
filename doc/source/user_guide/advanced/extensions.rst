@@ -6,7 +6,7 @@ Extending SMRT
 
 For information on how to contribute to SMRT, please refer to `Developer Guidelines <../../developer/index.html>`_.
 
-We here we address the definition of a new ice
+This guide takes as example the definition of a new ice
 permittivity function.
 
 Open the ``smrt/permittivity/ice.py`` file in an editor to see how it looks
@@ -68,7 +68,7 @@ You can now use the new function for simulations:
     result = m.run(sensor, sp)
 
 ``potassium_concentration`` never appears in SMRT code, it is purely user-defined.
-Any other variables (as long as it does not colleige with internal SMRT naming) is valid.
+Any other variables (as long as it does not collide with internal SMRT naming) is valid.
 
 **Note:** A more complex definition of an ice permittivity model for wet snow is described in `this Github issue <https://github.com/smrt-model/smrt/issues/17>`_.
 

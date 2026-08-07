@@ -23,7 +23,7 @@ scaling ``X``) that is not determined from measurements, but is optimized.
 This parameter is assumed constant for all snowpits and frequencies to
 avoid over-fitting
 
-In this excerice, we’ll show that different microstructure gives similar
+This guide shows that different microstructure gives similar
 results.
 
 

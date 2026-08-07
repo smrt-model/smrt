@@ -116,7 +116,7 @@ The difference in brightness temperature is the reflectivity of the snowpack.
 Recap:
 ======
 
-- Atmosphere modelq are for passive microwave use only
+- Atmosphere models are for passive microwave use only
 - Use `make_atmosphere` to create an atmosphere object, then add the snowpack to it with `sp = atmos + sp`
   or in `make_snowpack`.
 - `make_atmosphere("pyrtlib_era5_atmosphere", ...)` is the most advanced way currently available to perform

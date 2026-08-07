@@ -12,7 +12,7 @@ Comparison of electromagnetic models
 Some of the theories can be used only with sphere microstructures (QCA, QCA-CP, Rayleigh), others only with exponential
 microstructures (SFT) and others can be combined with any microstructure model (IBA and different variants of SCE).
 
-In this tutorial, we create two ensembles of snowpacks with varying size parameter:
+This guide helps you create two ensembles of snowpacks with varying size parameter and then run SMRT for the different snowpacks and compare the results of the different electromagnetic theories.
 
 - One snowpack made of a sticky_hard_spheres microstructure with varyin radius. Here it is possible to compare IBA,
   DMRT_QCA_shortrange, DMRT_QCA_shortrange, Rayleigh and different variants of SCE
@@ -20,12 +20,10 @@ In this tutorial, we create two ensembles of snowpacks with varying size paramet
   variants of sce
   can be compared.
 
-Then, we run SMRT for the different snowpacks and compare the results of the different electromagnetic theories.
-
 Electromagnetic models compatible with spheres
 ----------------------------------------------
 
-First we create an ensemble of snowpacks initialized with the sticky hard sphere (shs) microstructure of different radii
+Let's first create an ensemble of snowpacks initialized with the sticky hard sphere (shs) microstructure of different radii
 
 .. code:: ipython3
 
@@ -49,7 +47,7 @@ First we create an ensemble of snowpacks initialized with the sticky hard sphere
                          temperature=temperature,
                          stickiness=stickiness) for r in radius_list]
 
-Then, we create electromagnetic models which are only compatible with sphere microstructures:
+Then, create electromagnetic models which are only compatible with sphere microstructures:
 
 .. code:: ipython3
 
@@ -62,22 +60,20 @@ Then, we create electromagnetic models which are only compatible with sphere mic
     )
 
 
-We run the models as usual, and plot the results:
+Run the models as usual, and plot the results:
 
 .. code:: ipython3
 
     radiometer = sensor_list.amsre("37")
 
-    # m is a dictionary of models, so we can loop over using dict comprehension
+    # m is a dictionary of models, so it is possible to loop over using dict comprehension
     res = {m: models[m].run(radiometer, snowpack_list_shs) for m in models}
 
-    # plot the results
+
 
     plt.figure()
-
     for m in models:
         plt.plot(radius, res[m].TbV(), label=m)
-
     plt.show()
 
 
@@ -112,16 +108,11 @@ The same approach can be used for the exponential microstructure, with different
 
     radiometer = sensor_list.amsre("37")
 
-    # m is a dictionary of models, so we can loop over using dict comprehension
     res = {m: models[m].run(radiometer, snowpack_list_shs) for m in models}
 
-    # plot the results
-
     plt.figure()
-
     for m in models:
         plt.plot(radius, res[m].TbV(), label=m)
-
     plt.show()
 
 
@@ -168,8 +159,8 @@ for each layer, as well as other information such as the 'optical_depth' or the 
 Comparing the scattering coefficient from different formulations
 ----------------------------------------------------------------
 
-Most of the theories can be compared for the SHS snowpack. We compute
-the scattering coefficient and assess the radius dependence
+Most of the theories can be compared for the SHS snowpack. Let's compute
+the scattering coefficient and assess the radius dependence.
 
 .. code:: ipython3
 
@@ -178,7 +169,7 @@ the scattering coefficient and assess the radius dependence
     ks_qca = [m_dmrt_qca.emmodel(sensor, sp.layers[0]).ks for sp in snowpack_list_shs]
 
 
-Now we can compare the radius dependence:
+Now compare the radius dependence:
 
 .. code:: ipython3
 

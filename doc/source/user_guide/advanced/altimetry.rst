@@ -36,7 +36,7 @@ the AltiKa instrument onboard SARAL as an example.
 
     sensor = altimeter_list.saral_altika()
 
-The solver needed is the LRM altimeter solver. We will use the Improved Born Approximation electromagnetic model.
+The solver needed is the LRM altimeter solver, which can work with the Improved Born Approximation electromagnetic model.
 
 .. code:: ipython3
 
@@ -99,7 +99,7 @@ To convert ``t_gate`` to a distance, replace ``t_gate`` with:
 Separating different contributions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The returned power coming from the surface, volume and interfaces is computed independantly by SMRT and can be returned separately.
+The returned power coming from the surface, volume and interfaces is computed independently by SMRT and can be returned separately.
 
 .. code:: ipython3
 
@@ -156,7 +156,7 @@ The surface is never flat, and this roughness has two consequences:
 - large scale roughness (topography) delays the received signal by one or more gate when it is greater than the gate-equivalent depth.
 
 Both effects have the same origin, but are treated completely
-independantly in SMRT. More on the electromagnetic roughness at the end of this tutorial. For the topographic effect, there are two options in
+independently in SMRT. More on the electromagnetic roughness at the end of this tutorial. For the topographic effect, there are two options in
 SMRT to simulate it.
 
 1) The easy one is to add a ``sigma_surface`` attribute to the snowpack which
@@ -198,12 +198,12 @@ Have a look at a comparison between results considering topography or not.
 Altimetry on sea ice
 --------------------
 
-Let’s now create a more complex (two layers) snowpack on top of sea ice. We’ll allow the snow to be saline and use the Scharien permittivity
+Let’s now create a more complex (two layers) snowpack on top of sea ice. Allow the snow to be saline and use the Scharien permittivity
 formulation (the default
 permittivity for snow :py:func:`~smrt.ice.permittivity.wetice_permittivity_bohren83` does not depend on
 salinity).
 Salinity can also specified using PSU unit.
-We do not specify the interfaces yet so they are all assumed
+Do not specify the interfaces yet so they are all assumed
 to be flat.
 
 .. code:: ipython3
@@ -280,8 +280,8 @@ Internal rough surfaces
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 You can just copy the snowpack and substitute one of the interfaces for
-a rough one. We’ll use the rough interface that we have already made and
-put it at the bottom of the medium. Interfaces, as with layers, are
+a rough one. A rough interface is already defined and can be
+put at the bottom of the medium. Interfaces, as with layers, are
 numbered from 0 at the top (-1 just references the last one). Interface
 index refer to the top interface of the layer index
 

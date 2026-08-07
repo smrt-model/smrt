@@ -23,10 +23,8 @@ An even more convenient approach is proposed by using pandas. A pandas DataFrame
 ``run`` and the result is a dataframe with the same column plus the simulation results. This is the most advanced and
 powerful way to conduct sensitivity analysis.
 
-In the following, we show these different approaches to conduct sensitivity studies.
-
-Sensitivity with a list of snowpack
-===================================
+Sensitivity with a list of snowpacks
+====================================
 
 First import the necessary libraries and prepare the sensor and model configuration:
 
@@ -42,8 +40,8 @@ First import the necessary libraries and prepare the sensor and model configurat
     from smrt import make_model, make_snowpack, sensor_list
 
 
-The key idea is to build a list of snowpacks. Here we will test the sensitivity of TB to the radius.
-We first build a list of snowpack with different radius.
+The key idea is to build a list of snowpacks. Let's test the sensitivity of TB to the radius by 
+first building a list of snowpack with different radius.
 
 .. code:: ipython3
 
@@ -78,7 +76,7 @@ In simple cases, it is easier to use “list comprehension”, a nice python fea
 
     #run!
 
-Now we have a list of snowpacks, we want to call the model for each snowpack. Here, results is a list of `Results` objects and a loop is again necessary to extract the TB for each snowpack  and plot it. This works but this approach is not
+With this list of snowpacks, you can call the model for each snowpack. Here, results is a list of `Results` objects and a loop is again necessary to extract the TB for each snowpack  and plot it. This works but this approach is not
 recommended.
 
 .. code:: ipython3
@@ -143,12 +141,9 @@ Sensitivity with pandas.DataFrame
 =================================
 
 Instead of a list of snowpack and providing the dimension name and values, a more concise approach is using
-pandas.DataFrame:
+`pandas.DataFrame`:
 
 .. code:: ipython3
-
-    # here we build a simple DataFrame with the radius. More complex sensitivity analysis with more variables is
-    # possible for instance radius and density could co-vary.
 
     sp = pd.DataFrame({'radius' : np.arange(0.05, 0.5, 0.01) * 1e-3})
 
