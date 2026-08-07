@@ -1,5 +1,5 @@
 ##############################
-Contribution of the atmosphere
+Adding an atmosphere
 ##############################
 
 **Goal**: add an atmosphere to a snowpack

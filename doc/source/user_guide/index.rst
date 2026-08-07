@@ -73,6 +73,6 @@ For more detailed documentation you can browse the API reference which gives the
     :maxdepth: 2
 
     Installation guide <install>
-    Getting started <quick_start>
-    Tutorials <tutorials/index>
+    Getting started <quick_start/index>
+    Advanced use <advanced/index>
     Cite SMRT <publish>

@@ -146,3 +146,16 @@ want just a single value you can specify how to slice the data along a particula
 .. code:: ipython3
 
     result.TbV(frequency=19e9)
+
+
+The most frequent use cases are developped in the following pages:
+
+.. toctree::
+    :titlesonly:
+    :maxdepth: 1
+
+    substrate.rst
+    atmosphere.rst
+    sensitivity.rst
+    emmodel.rst
+    microstructure.rst
