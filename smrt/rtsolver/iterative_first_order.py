@@ -62,6 +62,7 @@ References:
 
 # other import
 import numpy as np
+from xarray import DataArray
 
 # local import
 from smrt.core.error import SMRTError, smrt_warn
@@ -143,7 +144,7 @@ class IterativeFirstOrder(RTSolverBase):
         mu0 = np.cos(sensor.theta)
 
         # solve with first order iterative solution
-        intensity = compute_intensity(
+        intensity, backscatter_layer = compute_intensity(
             snowpack, emmodels, sensor, snowpack.interfaces, substrate, self.effective_permittivity, mu0, npol
         )
 
@@ -151,9 +152,7 @@ class IterativeFirstOrder(RTSolverBase):
         coords = [("theta_inc", sensor.theta_inc_deg), ("polarization_inc", self.pola), ("polarization", self.pola)]
 
         # store other diagnostic information
-        other_data = prepare_kskaeps_profile_information(
-            snowpack, emmodels, effective_permittivity=self.effective_permittivity, mu=mu0
-        )
+        other_data = get_other_data(snowpack, emmodels, self.effective_permittivity, mu0, backscatter_layer)
 
         # get total intensity from the three contributions
         # first index is the number of mu
@@ -247,10 +246,12 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
     transmission_bottom_surface = interface_l.transmission_bottom(-1)
     I_l = transmission_bottom_surface @ I_i * refraction_factor_0
 
-    # 3 for the number of contribution for the first order backscatter
+    # 4 for the number of contribution for the first order backscatter
     intensity_up = np.zeros((4, n, npol, npol))
+    transmission_top = np.ones((n, npol, npol))
     # add surface contribution to I0
     intensity_up[0] = I0_surface
+    backscatter_layer = [I0_surface * mu0[:, np.newaxis, np.newaxis] * 4 * np.pi]
 
     optical_depth = 0
     for layer in range(nlayer):
@@ -264,8 +265,8 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
             )
 
         # prepare matrix of interface
-        # transmission matrix of the top layer to l-1
-        transmission_top = interface_l.transmission_top(layer)
+        # cumulative transmission matrix of the top layer to l-1
+        transmission_top *= interface_l.transmission_top(layer)
 
         # transmission matrix of the bottom layer to l+1
         transmission_bottom = interface_l.transmission_bottom(layer)
@@ -337,6 +338,7 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
         I1 = np.array([I0, I1_backscatter, I1_double_bounce, I1_reflected_backscatter]).reshape(4, n, npol, npol)
         # add intensity
         intensity_up += I1
+        backscatter_layer.append(I1.sum(axis=0) * mus_l * 4 * np.pi)
 
         if layer < nlayer - 1:
             mus_l1 = mus[layer + 1][:, np.newaxis, np.newaxis]
@@ -354,7 +356,7 @@ def compute_intensity(snowpack, emmodels, sensor, interfaces, substrate, effecti
             "of the snowpack or set a substrate. If wanted, add a transparent substrate to supress this warning"
         )
 
-    return intensity_up
+    return intensity_up, np.array(backscatter_layer)
 
 
 def compute_gamma(mu, layer_optical_depth):
@@ -400,6 +402,24 @@ def _get_np_matrix(smrt_m, npol, n_mu):
 
     else:
         SMRTError("SMRT matrix conversion type to numpy conversion not implemented in iterative solver")
+
+
+def get_other_data(snowpack, emmodels, effective_permittivity, mu0, backscatter_layer):
+    # store other diagnostic information
+    other_data = prepare_kskaeps_profile_information(
+        snowpack, emmodels, effective_permittivity=effective_permittivity, mu=mu0
+    )
+    # store backscatter per layer, which can be used to check the contribution of each layer to the total backscatter.
+    # index -1 refers to surface (air-snow interface), and the rest of the index refers to the layer number, starting from 0 for the first layer.
+    layer_index = [
+        ("layer", range(-1, len(emmodels))),
+        ("theta_inc", mu0),
+        ("polarization_inc", ["V", "H"]),
+        ("polarization", ["V", "H"]),
+    ]
+    other_data["backscatter_layer"] = DataArray(backscatter_layer, coords=layer_index, name="backscatter_layer")
+
+    return other_data
 
 
 class _InterfaceProperties(object):
