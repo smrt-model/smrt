@@ -10,20 +10,20 @@ Comparison of electromagnetic models
 - Learn how to compute scattering coefficient, without running the full model.
 
 Some of the theories can be used only with sphere microstructures (QCA, QCA-CP, Rayleigh), others only with exponential
-microstructures (SFT) and others can be combined with any microstructure model (IBA and different variants of SCE).
+microstructures (SFT) and others can be combined with any microstructure model (IBA and the different variants of SCE).
 
-This guide helps you create two ensembles of snowpacks with varying size parameter and then run SMRT for the different snowpacks and compare the results of the different electromagnetic theories.
+This guide helps you create two ensembles of snowpacks with varying size parameter and then run SMRT for the different
+snowpacks and compare the results of the different electromagnetic theories.
 
-- One snowpack made of a sticky_hard_spheres microstructure with varyin radius. Here it is possible to compare IBA,
-  DMRT_QCA_shortrange, DMRT_QCA_shortrange, Rayleigh and different variants of SCE
-- Another snowpack made of an exponential microstructure with varying correlation length. Here only IBA, SFT and
-  variants of sce
-  can be compared.
+- One snowpack made of a sticky_hard_spheres microstructure with varying radius. Here it is possible to compare IBA,
+  DMRT_QCA_shortrange, DMRT_QCA_shortrange, Rayleigh and the different variants of SCE.
+- Another snowpack made of an exponential microstructure with varying correlation length (also know as Porod length).
+  Here only IBA, SFT and the variants of SCE can be compared.
 
 Electromagnetic models compatible with spheres
 ----------------------------------------------
 
-Let's first create an ensemble of snowpacks initialized with the sticky hard sphere (shs) microstructure of different radii
+First create an ensemble of snowpacks initialized with the sticky hard sphere (SHS) microstructure of different radii:
 
 .. code:: ipython3
 
@@ -47,7 +47,7 @@ Let's first create an ensemble of snowpacks initialized with the sticky hard sph
                          temperature=temperature,
                          stickiness=stickiness) for r in radius_list]
 
-Then, create electromagnetic models which are only compatible with sphere microstructures:
+Then, create electromagnetic models (compatible with sphere microstructures):
 
 .. code:: ipython3
 
@@ -124,7 +124,7 @@ scattering coefficient.
 
 There are three ways to get the scattering coefficient.
 
-1) access the 'emmodel' attribute of the model and run it on one layer (not on the full snowpack):
+1) access the 'emmodel' attribute of the model and run it on one of the layer (not on the full snowpack):
 
 .. code:: ipython3
 
@@ -133,6 +133,7 @@ There are three ways to get the scattering coefficient.
     m_iba = make_model("iba", "dort")
 
     m_iba.emmodel(sensor, firstlayer).ks
+
 
 2) without the overhead of make_model. It is simpler when the full model is not needed:
 
@@ -146,8 +147,13 @@ There are three ways to get the scattering coefficient.
     # get ks
     em_iba.ks
 
-3) when the full model has run as usual. In this case, the `Result` object contains the scattering coefficient
-for each layer, as well as other information such as the 'optical_depth' or the 'single_scattering_albedo':
+The double parenthesis ()() is not a typo, it is correct! `make_emmodel("iba")` returns a
+:py:class:`~smrt.core.sensor.Sensor` class (here of type :py:class:`~smrt.emmodel.iba.IBA`) that needs to be called
+with the sensor and the layer as argumentsto get a proper EM model instance.
+
+3) when the full model has run as usual. In this case, the :py:class:`~smrt.core.result.Result` object contains the
+   scattering coefficient for each layer, as well as other information such as the 'optical_depth' or the
+   'single_scattering_albedo':
 
 .. code:: ipython3
 
@@ -155,6 +161,10 @@ for each layer, as well as other information such as the 'optical_depth' or the 
     res = m_iba.run(radiometer, snowpack_list_exp)
 
     res.ks
+
+This latter approach is the most convenient, but the RTSolver is run which requires significantly more
+computation than just computing the scattering coefficient. The former approaches are more efficient if you just want to
+compare the scattering coefficient of different models.
 
 Comparing the scattering coefficient from different formulations
 ----------------------------------------------------------------

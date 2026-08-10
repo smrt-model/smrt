@@ -16,27 +16,31 @@ SMRT’s modular framework allows easy customization and extension. This "plug-a
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 SMRT supports a variety of scattering models that account for the interactions between microwave radiation and the microstructure of snow, ice, and other surface materials. The following scattering models are available:
-    • IBA (Integral Equation-Based Approximation): A model used to compute scattering and absorption properties, especially suitable for simulating the interactions of microwaves with layered or heterogeneous media for a variety of microstructure.
-    • SCE (Strong Contrast Expansion): the cutting edge method to compute microwave scattering modeling for dense media. SCE addresses limitations in traditional scattering models that struggle with intermediate snow densities and high frequencies. It provides a more accurate way to calculate scattering coefficients by using a detailed microstructure model and the effective permittivity of heterogeneous, dielectric media.
-    • DMRT (Dense Media Radiative Transfer): A fast model used to compute scattering and absorption properties of sticky or none sticky spheres, accounting for the high fractional volume of scatterers found in snow.
-    • Rayleigh Independent Scattering: An approximation method for cases where the scattering is dominated by small, non-resonant particles (such as small ice crystals or snow grains).
+    - IBA (Integral Equation-Based Approximation): A model used to compute scattering and absorption properties, especially suitable for simulating the interactions of microwaves with layered or heterogeneous media for a variety of microstructure.
+    - SCE (Strong Contrast Expansion): the cutting edge method to compute microwave scattering modeling for dense media. SCE addresses limitations in traditional scattering models that struggle with intermediate snow densities and high frequencies. It provides a more accurate way to calculate scattering coefficients by using a detailed microstructure model and the effective permittivity of heterogeneous, dielectric media.
+    - DMRT (Dense Media Radiative Transfer): A fast model used to compute scattering and absorption properties of sticky or none sticky spheres, accounting for the high fractional volume of scatterers found in snow.
+    - Rayleigh Independent Scattering: An approximation method for cases where the scattering is dominated by small, non-resonant particles (such as small ice crystals or snow grains).
 
 3. Microstructure Representations:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The snow and ice microstructure—its composition, grain size, shape, and layering—heavily influences microwave scattering properties. SMRT includes a variety of microstructure representations, allowing researchers to simulate and analyze different physical characteristics of snow and ice:
-    • Exponential Distribution: A probabilistic model to simulate random distributions of snow grain sizes or ice crystal shapes.
-    • Sticky Hard Spheres: This model treats the snow or ice microstructure as hard spheres with sticky interactions, suitable for studying the effects of snow cohesion and aggregation.
-    • Gaussian Random Fields: A model that represents snow and ice microstructure using spatially correlated random fields, making it ideal for studying more complex, realistic structures found in nature.
+    - Exponential Distribution: A probabilistic model to simulate random distributions of snow grain sizes or ice crystal shapes.
+    - Sticky Hard Spheres: This model treats the snow or ice microstructure as hard spheres with sticky interactions, suitable for studying the effects of snow cohesion and aggregation.
+    - Gaussian Random Fields: A model that represents snow and ice microstructure using spatially correlated random fields, making it ideal for studying more complex, realistic structures found in nature.
+    - Unified Microstructures: A set of microstructure representations reparametrized using three common parameters: porod length, polidsipersity and density, as introduced by Picard et al. (2022) in AGU Advance.
+
 
 4. Radiative Transfer Solvers:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 SMRT comes with several radiative transfer solver, which is used to compute the transmission, scattering, and absorption of microwaves through snow and ice:
-- DORT (Discrete Ordinate Radiative Transfer): a general purpose solver for radiometers and radars that is robust and account for multiple scattering between the layers and the interfaces.
-- First Order Iterative solution: a simple yet fast solver for radar applications that only compute single scattering but provide also the contribution of each scattering mechanisms.
-- Nadir LRM Altimetry: a solver to compute altimetric waveform in the Low Rate Mode.
-- Multi-Fresnel Thermal Emission: a very fast solver to compute thermal emission of non scattering layered media, such as the ice-sheet at low frequencies.
+    - DORT (Discrete Ordinate Radiative Transfer): a general purpose solver for radiometers and radars that is robust and account for multiple scattering between the layers and the interfaces.
+    - Successive Order: a general purpose solver for radiometers and radars that provides successive order of interactions. Slow but useful to interpret the contribution of each scattering mechanism.
+    - First Order Iterative solution: a simple yet fast solver for radar applications that only compute single scattering but provide also the contribution of each scattering mechanisms.
+    - Second Order Iterative solution: a more complete solver for radar applications.
+    - Nadir LRM Altimetry: a solver to compute altimetric waveform in the Low Rate Mode.
+    - Multi-Fresnel Thermal Emission: a very fast solver to compute thermal emission of non scattering layered media, such as the ice-sheet at low frequencies.
 
 5. Snow, Sea-Ice, and Lake-Ice Applications:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -47,26 +51,28 @@ SMRT is versatile enough to model not only snow but also other cryospheric mater
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 SMRT offers wrappers that allow users to run other established models such as:
-    • MEMLS (Microwave Emission Model for Layered Snowpacks): A model used to simulate microwave emission from layered snowpacks.
-    • HUT (Helsinki University of Technology Snow Microwave Emission Model): Another widely-used snow microwave emission model.
-    • DMRT-QMS: A model based on the Discrete-Ordinate Method, extended for complex snow and ice structures.
+    - MEMLS (Microwave Emission Model for Layered Snowpacks): A model used to simulate microwave emission from layered snowpacks.
+    - HUT (Helsinki University of Technology Snow Microwave Emission Model): Another widely-used snow microwave emission model.
+    - DMRT-QMS: A model based on the Discrete-Ordinate Method, extended for complex snow and ice structures.
 This ability to run multiple models within a single framework helps users validate and cross-check results, compare theoretical assumptions, and integrate different data sources.
 
 7. Open-Source and Community-Driven:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 One of the key strengths of SMRT is its open-source nature. As a community-driven model, SMRT encourages contributions from researchers, scientists, and engineers around the world. This collaborative approach ensures that the model continues to evolve, incorporating the latest scientific advancements, user feedback, and new methodologies. Whether you’re a beginner or an expert, the open-source design allows you to adapt the model to your specific research needs and contribute back to its development.
-Looking Ahead: Future Developments
+
 While SMRT provides a robust set of tools for current research, there are plenty of opportunities for future enhancements. Researchers are constantly working to integrate new theoretical advancements in radiative transfer modeling, improve solver efficiency, and extend SMRT’s capabilities to new materials and conditions. Whether it's developing new solvers, adding support for more complex microstructural models, or incorporating other types of remote sensing data, SMRT continues to evolve as a cutting-edge research tool.
 
 Contents of the User Guide
 ==========================
 
-Follow this user guide to learn how to install SMRT and to get started. A few tutorials then go through the most frequent use cases.
+Follow this user guide to learn how to install SMRT and to get started. Advanced usages are also described.
 
-We then give recommendations for citing SMRT in publications that give results given by the model.
+We then give recommendations for publishing with SMRT and how to describe your simulations to ensure reproducibility. SMRT is a framework with a lot of options and it is important to describe the configuration of your simulations in a clear way. We provide an approach for this purpose.
 
-For more detailed documentation you can browse the API reference which gives the only continuously up-to-date reference for default behaviours as it is auto-generated from code source. For developers who want to implement new behaviour in SMRT for their own use or for improving SMRT, we recommend to read the `Developer Guidelines <../developer/index.html>`_ and to contact the authors of the model to discuss about the best/most generic approach to solve their problem.
+For more detailed documentation you can browse the API reference which gives the continuously up-to-date reference for the functions.
+
+At last, for developers who want to implement new behaviour in SMRT for their own use or for improving SMRT, we recommend to read the `Developer Guidelines <../developer/index.html>`_ and to contact the authors of the model to discuss about the best/most generic approach to solve their problem.
 
 .. toctree::
     :titlesonly:
@@ -75,4 +81,4 @@ For more detailed documentation you can browse the API reference which gives the
     Installation guide <install>
     Getting started <quick_start/index>
     Advanced use <advanced/index>
-    Cite SMRT <publish>
+    Publishing using SMRT <publish>

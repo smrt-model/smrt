@@ -1,6 +1,6 @@
-#########
-Tutorials
-#########
+############
+Advanced use
+############
 
 This section develops less frequent use cases of SMRT.
 

@@ -2,7 +2,7 @@
 Getting started with SMRT
 #########################
 
-This tutorial is aimed at a complete beginner with no experience of running SMRT. By following the code, you will run SMRT
+This guide is aimed at a complete beginner with no experience of running SMRT. By following the code, you will run SMRT
 in passive mode for a simple, dry, 2-layer snowpack by learning how to:
 
 #. Generate inputs for the model
@@ -37,8 +37,8 @@ the snowpack. Here, for a 2-layer snowpack the lists are of length 2.
     temperature_list = [265, 250]
     corr_length_list = [0.1e-3, 0.3e-3]
 
-The top 10\ cm layer of the snowpack has a density of 200\ kg\ m\ :sup:`-3`, temperature 265\ K and correlation length 0.1\ mm.
-The bottom 1 km of the snowpack has a density of 350\ kg\ m\ :sup:`-3`, temperature of 250\ K and correlation length 0.3\ mm.
+The top 10 cm layer of the snowpack has a density of 200 kg m :sup:`-3`, temperature 265 K and correlation length 0.1 mm.
+The bottom 1 km of the snowpack has a density of 350 kg m :sup:`-3`, temperature of 250 K and correlation length 0.3 mm.
 This isn't a physically realistic snowpack but just illustrates how to use SMRT. To add a layer to the snowpack, simply
 extend the length of the lists. Here we have used correlation length to describe the snow microstructure, and we will
 assume an exponential microstructure model (more on that later). Other microstructure models require alternative parameters
@@ -77,7 +77,7 @@ Try changing the thickness of the layers to be similar: they will be much cleare
 The other *input* needed to run the model is the sensor, containing information related to the observation technique i.e.
 instrument characteristics. There are many pre-built sensors (e.g. AMSR-E) that can simply be imported from smrt.inputs.sensor_list, but here
 we will specify our own simple passive sensor covering two frequencies (19 and 37 GHz) operating at a single incidence
-angle of 50\ :sup:`o`.
+angle of 50 :sup:`o`.
 
 .. code:: ipython3
 

@@ -33,4 +33,5 @@ The documentation can be browsed using the following table of contents, the indi
     Electromagnetic Model <smrt.emmodel.rst>
     Radiative Transfer Solver <smrt.rtsolver.rst>
     Core <smrt.core.rst>
+    Runner <smrt.runner.rst>
     Utilities and tools <smrt.utils.rst>

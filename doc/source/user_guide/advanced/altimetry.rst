@@ -6,12 +6,13 @@ https://doi.org/10.1016/j.rse.2021.112534
 
 **Goals**:
 
-- Simulate altimetry waveforms
-- Distinguish different contributions (surface, interfaces or volume)
-- Integrate roughness at interfaces
+    - Simulate altimetry waveforms
+    - Distinguish different contributions (surface, interfaces or volume)
+    - Integrate roughness at interfaces
 
-This tutorial will help you use the
-:py:mod:`~smrt.rtsolver.nadir_lrm_altimetry` solver, the :py:mod:`~smrt.interface.geometrical_optics_backscatter` module and the :py:mod:`~smrt.inputs.altimeter_list` sensors.
+This guide helps you use the
+:py:mod:`~smrt.rtsolver.nadir_lrm_altimetry` solver, the :py:mod:`~smrt.interface.geometrical_optics_backscatter` module
+and the :py:mod:`~smrt.inputs.altimeter_list` sensors.
 
 Altimetry on snow
 -----------------
@@ -22,13 +23,13 @@ Let’s first create a simple snowpack for our purpose: one layer and a rough in
 
     from smrt import make_snowpack, make_interface
 
-    rough_interface = make_interface("geometrical_optics_backscatter", mean_square_slope=0.05)
+    rough_interface = make_interface("geometrical_optics_backscatter", mean_square_slope=0.05, roughness_rms=0.01)
+
     snowpack = make_snowpack(thickness=[1000], microstructure_model='exponential',
                          density=[350], corr_length=700e-6, temperature=260,
                          surface=rough_interface)
 
-There are a number of altimeter sensors in altimeter_list. We’ll use
-the AltiKa instrument onboard SARAL as an example.
+There are a number of altimeter sensors in altimeter_list. The AltiKa instrument onboard SARAL is used as an example.
 
 .. code:: ipython3
 
@@ -36,7 +37,8 @@ the AltiKa instrument onboard SARAL as an example.
 
     sensor = altimeter_list.saral_altika()
 
-The solver needed is the LRM altimeter solver, which can work with the Improved Born Approximation electromagnetic model.
+The solver needed is the LRM altimeter solver, which can work with the Improved Born Approximation electromagnetic
+model.
 
 .. code:: ipython3
 
@@ -45,7 +47,7 @@ The solver needed is the LRM altimeter solver, which can work with the Improved 
     altimodel = make_model("iba", "nadir_lrm_altimetry")
 
 
-The model is then ran as usual. The waveform can be displayed easily:
+The model is then ran as usual. The waveform can be plotted easily:
 
 .. code:: ipython3
 
@@ -62,14 +64,12 @@ The model is then ran as usual. The waveform can be displayed easily:
     ax.set_ylabel('Returned power', size = 15)
     plt.tight_layout()
 
-The gate number is the time (given in discrete time units) since recording starts. In general
-altimeters try to adjust this starting time in order to keep the leading
-edge (the big rise) as close as possible to a prescribed gate number
+The gate number is the time (given in discrete time units) since recording starts. In general altimeters try to adjust
+this starting time in order to keep the leading edge (the big rise) as close as possible to a prescribed gate number
 (not too early, not too late). In SMRT, the surface corresponds exactly
-to a fixed gate number. Here ``nominal_gate=42`` for Sentinel 3. See
-parameters in :py:mod:`~smrt.inputs.altimeter_list`. This has consequences when comparing to
-observed waveforms, especially when these waveforms are averaged (more on this
-later).
+to a fixed gate number. Here ``nominal_gate=42`` for Sentinel 3. See parameters in
+:py:mod:`~smrt.inputs.altimeter_list`. This has consequences when comparing to observed waveforms, especially when
+these waveforms are averaged (more on this later).
 
 The waveform can also be plotted as a function of time:
 
@@ -93,13 +93,14 @@ To convert ``t_gate`` to a distance, replace ``t_gate`` with:
 
     from smrt.core.globalconstants import C_SPEED
 
-    a_depth = t_gate \* C_SPEED / 2
+    a_depth = t_gate * C_SPEED / 2
 
 
 Separating different contributions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The returned power coming from the surface, volume and interfaces is computed independently by SMRT and can be returned separately.
+The returned power coming from the surface, volume and interfaces is computed independently by SMRT and can be returned
+separately.
 
 .. code:: ipython3
 
@@ -109,21 +110,18 @@ The returned power coming from the surface, volume and interfaces is computed in
 
     result_with_returns = altimodel_with_returns.run(sensor, snowpack)
 
-Have a look at the result and take a moment to plot the different contributions.
-
 .. code:: ipython3
 
     result_with_returns.sigma()
 
-**Note:** the contribution from internal interfaces is null as our snowpack does not have any. More on interfaces for sea ice later.
-
+**Note:** the contribution from internal interfaces is null here as our snowpack does not have any interface.
 
 Further decomposition of the signal
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To understand the altimetric signal it is convenient to only calculate
-the strictly vertical component of the echo, as if the altimeter antenna
-pattern were infinitely small (like a perfect laser). This can be done by adjusting the altimeter parameters:
+To understand the altimetric signal it is convenient to only calculate the strictly vertical component of the echo,
+as if the altimeter antenna pattern were infinitely small (like a perfect laser). This can be done by adjusting the
+altimeter parameters:
 
 .. code:: ipython3
 
@@ -136,27 +134,24 @@ pattern were infinitely small (like a perfect laser). This can be done by adjust
                             beamwidth=0.00001)}
         return make_multi_channel_altimeter(config, channel)
 
-Take some time to look at the results of a model run and plot them.
-
-A cleaner way to achieve the same is to use the
-``skip_pfs_convolution`` option. This stops the computation before
+A cleaner way to achieve the same is to use the ``skip_pfs_convolution`` option. This stops the computation before
 applying the Brown77 convolution model. See :py:mod:`~smrt.rtsolver.nadir_lrm_altimetry` code for available
 options.
 
-**Note:** the ``nominal_gate`` is applied with the ``pfs_convolution``, so here
-the snowpack surface is at ``time=0``.
+**Note:** the ``nominal_gate`` is applied with the ``pfs_convolution``, so here the snowpack surface is at ``time=0``.
 
 Simulate more realistic waveforms
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The surface is never flat, and this roughness has two consequences:
 
-- small scale roughness (typically smaller than the wavelength) influences the power of the surface echo with respect to the volume
-  (electromagnetic effect).
-- large scale roughness (topography) delays the received signal by one or more gate when it is greater than the gate-equivalent depth.
+- small scale roughness (typically smaller than the wavelength) influences the power of the surface echo with respect to
+the volume (electromagnetic effect).
+- large scale roughness (topography) delays the received signal by one or more gate when it is greater than the
+gate-equivalent depth.
 
-Both effects have the same origin, but are treated completely
-independently in SMRT. More on the electromagnetic roughness at the end of this tutorial. For the topographic effect, there are two options in
+Both effects have the same origin, but are treated completely independently in SMRT.
+More on the electromagnetic roughness at the end of this guide. For the topographic effect, there are two options in
 SMRT to simulate it.
 
 1) The easy one is to add a ``sigma_surface`` attribute to the snowpack which
@@ -255,7 +250,7 @@ This is done the same way as with snow.
 
 .. code:: ipython3
 
-    rough_interface = make_interface("geometrical_optics_backscatter", mean_square_slope=0.03)
+    rough_interface = make_interface("geometrical_optics_backscatter", mean_square_slope=0.03, roughness_rms=0.01)
 
     rough_snow = make_snowpack(thickness=[0.1, 0.2], microstructure_model='exponential',
                          ice_permittivity_model=ssp,density=[300, 350],

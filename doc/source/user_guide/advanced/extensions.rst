@@ -21,10 +21,9 @@ We heavily use dynamical nature of Python because we really want users
 to be able to define new arguments at will, without changing the core of the model. For the permittivity, the trick is
 in the declaration ``@layer_properties("temperature", "salinity")`` put
 just before the function declaration. This tells SMRT that this function
-needs two ``temperature`` and ``salinity`` arguments (in addition to ``frequency``) that are taken from the
-layer for which we want to compute the permittivity. The important point
-is that **any new arguments can be defined without changing anything in
-SMRT core**.
+needs two  arguments (``temperature`` and ``salinity``, in addition to ``frequency``) that are automatically taken from
+the layer for which we want to compute the permittivity. The important point is that **any new arguments can be defined
+without changing anything in SMRT core**.
 
 Let's define a new arbitrary permittivity function.
 
@@ -68,16 +67,19 @@ You can now use the new function for simulations:
     result = m.run(sensor, sp)
 
 ``potassium_concentration`` never appears in SMRT code, it is purely user-defined.
-Any other variables (as long as it does not collide with internal SMRT naming) is valid.
+Any other variables (as long as it does not collide with internal SMRT variable names) is valid.
 
-**Note:** A more complex definition of an ice permittivity model for wet snow is described in `this Github issue <https://github.com/smrt-model/smrt/issues/17>`_.
+**Note:** A more complex definition of an ice permittivity model for wet snow is described in
+`this Github issue <https://github.com/smrt-model/smrt/issues/17>`_.
 
 Recap:
 ======
 
-SMRT is build in a way that users can create their own functions for most building blocks of the simulator without having to modify the core of the library. If you need to implement a new function:
+SMRT is build in a way that users can create their own functions for most building blocks of the simulator without
+having to modify the core of the library. If you need to implement a new function:
 
 - have a look at the `API Reference <../../api/index.html>`_ to understand where to find similar functions;
 - check the code to mimic the structure of similar functions;
 - use e.g. ``layer_properties`` to pass your own arguments;
-- if you believe your code can be useful to others, refer to `Developer Guidelines <../../developer/index.html>`_ to see how to include it to SMRT.
+- if you believe your code can be useful to others, refer to `Developer Guidelines <../../developer/index.html>`_ to
+see how to include it to SMRT following standard practices.

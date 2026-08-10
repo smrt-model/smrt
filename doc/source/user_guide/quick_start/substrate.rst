@@ -7,8 +7,8 @@ Adding a substrate
 Substrate implementation
 ========================
 
-The substrate is an object containing information namely on the
-reflectivity. It can be included as an attribute of a ``snowpack``.
+The substrate is an object containing information to compute the
+reflectivity (and emissivity). It can be included as an attribute of a ``snowpack``.
 
 This tutorial shows multiple ways to define a substrate both in passive and active modes.
 
@@ -67,12 +67,12 @@ included in SMRT, other soil models may be contributed by taking a
 similar approach. A soil dielectric
 constant model is also required. Here we use the Dobson et al., (1985) model.
 
-The substrate is here defined with :py:func:`~smrt.make_soil`:
+The substrate is here defined with :py:func:`~smrt.make_soil_substrate` and added to the snowpack:
 
 .. code:: ipython3
 
-    from smrt import make_soil
-    soil = make_soil('soil_wegmuller', 'dobson85', temperature=265, roughness_rms=0.25,
+    from smrt import make_soil_substrate
+    soil = make_soil_substrate('soil_wegmuller', 'soil_permittivity_dobson85', temperature=265, roughness_rms=0.25,
                      moisture=0.25, sand=0.01, clay=0.7, drymatter=1300)
 
 Active with prescribed backscatter
@@ -111,7 +111,7 @@ applied to represent the substrate. Here we’ll use IEM:
 
 .. code:: ipython3
 
-    substrate = make_soil("iem_fung92", "dobson85", temperature=260,
+    substrate = make_soil_substrate("iem_fung92", "soil_permittivity_dobson85", temperature=260,
                                                 roughness_rms=1e-3,
                                                 corr_length=5e-2,
                                                 autocorrelation_function="exponential",

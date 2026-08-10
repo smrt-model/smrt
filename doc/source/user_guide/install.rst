@@ -14,7 +14,10 @@ Option 2: Install the development version
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 If you need features that are still under development, you may want to install the latest developers' version of SMRT.
 
-Make sure you have activated a virtual environment so that you do not get conflicts with another installed version of smrt. This can be done for example with `venv` but please refer to https://docs.python.org/3/library/venv.html if this is new to you. Most IDE have their own way of generating virtual environments, which may be easier than using `venv`.
+Make sure you have activated a virtual environment so that you do not get conflicts with another installed version of smrt.
+This can be done for example with `pixi` (https://pixi.prefix.dev/latest/concepts/conda_pypi/), `conda`
+(https://docs.conda.io/) or
+`venv` (https://docs.python.org/3/library/venv.html). Most IDE have their own way of generating virtual environments, which may be easier than using `venv`.
 
 .. code:: shell
 

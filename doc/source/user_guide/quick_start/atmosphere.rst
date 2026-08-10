@@ -10,7 +10,7 @@ advanced atmosphere models could be added in the future using the "normal" layer
 thus allowing multiple scattering between atmospheric layers and snow layers.
 
 Several atmosphere models are provided in the `smrt/atmosphere` directory. They are configured and added to the snowpack
-by the user using the :py:func:`~smrt.make_atmosphere` function. The RTsolver call this model internally to get 1)
+by the user using the :py:func:`~smrt.inputs.make_medium.make_atmosphere` function. The RTsolver call this model internally to get 1)
 the downwelling radiation, 2) the upwelling radiation, and 3) the transmittance of the layer. This information is used
 by the RTsolver to compute the brightness temperature or the backscatter at the sensor level.
 
@@ -60,7 +60,7 @@ Beer-Lambert law. This can be modeled with the `simple_atmosphere` model.
 Atmosphere model from air temperature and humidity profiles
 ===========================================================
 
-The absorption and emission of the atmosphere is mainly controlled by the profile of temperature and humidity of the
+The absorption and emission of the atmosphere are mainly controlled by the profile of temperature and humidity of the
 air in the microwave domain. Several air absorption models exist to perform this complex computation and they can be
 coupled with SMRT through the `simple_atmosphere` model. The absorption model computes the absorption of each layer and
 using simple radiative transfer calculation outputs the total transmittance and upwelling and downwelling brightness
@@ -73,8 +73,8 @@ from.
 PyRTlib Installation
 --------------------
 
-PyRTLib is licensed under the GPL-3.0 License. It can not be distributed along with SMRT, so  and it must be installed
-independently of SMRT using:
+PyRTLib is open source, licensed under the GPL-3.0 License. It can not be distributed along with SMRT because of this license
+but users can freely install it independently of SMRT using:
 
 .. code:: bash
 

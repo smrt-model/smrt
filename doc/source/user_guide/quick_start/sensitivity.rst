@@ -6,9 +6,9 @@ Sensitivity analysis
 
 **Learning**:
 
-Intuitively running many simulations can be done with a loop and many calls to the SMRT functions. However this is not
+Intuitively running many simulations can be done with a loop and many calls to the SMRT functions. However, this is not
 the recommended way. SMRT is able to iterate on several parameters of the sensor or the snowpack, and return a unique
-result with new coordinates. This is more convenient to work with and allows parallel computation.
+result with new coordinates. This is more convenient to work with, and enables parallel computations.
 
 A sensor with several frequencies, angles or polarizations is automatically understood by SMRT and the
 ``Result`` object contains all simulation results as array (i.e. internally as xarray).
@@ -16,12 +16,12 @@ The result methods (e.g. TbV()) can return all the values with `xarray.Dataset` 
 `xarray.Dataset` `result.TbH()` or can be filtered by frequency, angle or polarization. For instance, to get the
 brightness temperature at vertical polarisation for 37 GHz, simply call `result.TbV(frequency=37e9)``.
 
-The same applies when a list of snowpacks is given to the ``run`` method. The ``result`` contains all the computation
-results as an array with a dimension `snowpack`, or a customn name if provided.
+The same applies when a list of snowpacks is given to the ``run`` method. The ``result`` contains all simulation results
+as an xarray with a dimension called `snowpack`, or a customn name if provided.
 
-An even more convenient approach is proposed by using pandas. A pandas DataFrame with a snowpack column can be given to
-``run`` and the result is a dataframe with the same column plus the simulation results. This is the most advanced and
-powerful way to conduct sensitivity analysis.
+Using pandas provides an extra leval of convenience for sensitivity analysis. A pandas DataFrame with a snowpack column
+can be given to ``run`` and the result is a dataframe with the same column plus the simulation results. This is the most
+advanced and powerful way to conduct sensitivity analysis.
 
 Sensitivity with a list of snowpacks
 ====================================
@@ -40,7 +40,7 @@ First import the necessary libraries and prepare the sensor and model configurat
     from smrt import make_model, make_snowpack, sensor_list
 
 
-The key idea is to build a list of snowpacks. Let's test the sensitivity of TB to the radius by 
+The key idea is to build a list of snowpacks. Let's test the sensitivity of TB to the radius by
 first building a list of snowpack with different radius.
 
 .. code:: ipython3
@@ -122,7 +122,7 @@ debugging, the error messages are clearer without parallel computation.
     results = model.run(sensor, snowpack, snowpack_dimension=('radius', radius), parallel_computation=False)
 
 
-It is also possible to save the simulation result to disk:
+It is also possible to save the simulation results to disk:
 
 .. code:: ipython3
 
@@ -140,24 +140,27 @@ And later read the results, and get a `Result` object as if the simulations were
 Sensitivity with pandas.DataFrame
 =================================
 
-Instead of a list of snowpack and providing the dimension name and values, a more concise approach is using
+Instead of providing a list of snowpack and the dimension name and values, a more concise approach is using
 `pandas.DataFrame`:
 
 .. code:: ipython3
 
+    # create and load a DataFrame with snowpack information:
     sp = pd.DataFrame({'radius' : np.arange(0.05, 0.5, 0.01) * 1e-3})
 
+    # add a column named "snowpack" in the DataFrame:
     sp['snowpack'] = [make_snowpack([1000.0], "sticky_hard_spheres",
                               density=density, temperature=265,
                               radius=row['radius'], stickiness=0.15) for i, row in sp.iterrows()]
 
+    # use model.run with the DataFrame as input for the snowpack.
     results = model.run(sensor, sp)
 
     results
 
 The key step is to add a column named "snowpack" in the DataFrame that contains the `Snowpack` objects.
 While `pandas.DataFrame` is mainly used with numerical values, it is possible to add any kind of object into the
-columns.
+columns. SMRT will automatically detect the snowpack column and use it as if it was a list of snowpack.
 
 This approach is particularly useful when using pandas to read a database of sites, and build the snowpacks directly
 from it.
@@ -172,9 +175,9 @@ from it.
 
 The `to_dataframe()` method converts the `Result`` object into a dataframe.
 
-It is recommended to use a named sensor (e.g. amsre, smos, …) defined in `smrt.sensor.list`. The sensors define a
+For this, it is recommended to use a named sensor (e.g. amsre, smos, …) defined in `smrt.sensor.list`. The sensors define a
 channel_map that allows elegant conversion into DataFrame. In this case the columns of the DataFrame are the channels
-of the sensor. This is the most convenient way to run multiple simulations and use the results for plotting or computing
+of the sensor, as expected. This is the most convenient way to run multiple simulations and use the results for plotting or computing
 statistics.
 
 
@@ -186,7 +189,8 @@ The two recommended ways to run sensitivity analysis are:
 .. code:: ipython3
 
     # with List
-    snowpack = [make_snowpack([1000.0], "sticky_hard_spheres", density=density, temperature=265, radius=x, stickiness=0.15) for x in radius]
+    snowpack = [make_snowpack([1000.0], "sticky_hard_spheres",
+                                        density=density, temperature=265, radius=x, stickiness=0.15) for x in radius]
 
     model = make_model("iba", "dort")
     sensor = sensor_list.amsre(['19', '37'])
@@ -203,8 +207,9 @@ The two recommended ways to run sensitivity analysis are:
     # with DataFrame
     sp = pd.DataFrame({'radius' : np.arange(0.05, 0.5, 0.01) * 1e-3})
 
-    sp['snowpack'] = [make_snowpack([1000.0], "sticky_hard_spheres", density=density, temperature=265, radius=row['radius'],
-      stickiness=0.15) for i, row in sp.iterrows()]
+    sp['snowpack'] = [make_snowpack([1000.0], "sticky_hard_spheres",
+                                            density=density, temperature=265, radius=row['radius'],
+                                            stickiness=0.15) for i, row in sp.iterrows()]
 
     model = make_model("iba", "dort")
     sensor = sensor_list.amsre(['19', '37'])
