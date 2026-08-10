@@ -243,8 +243,6 @@ class Substrate(SubstrateBase, Interface):
     def __init__(self, temperature=None, permittivity_model=None, **kwargs):
         SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model, **kwargs)
         Interface.__init__(self, **kwargs)
-        print("substrate dict:", self.__dict__)
-        print("kwargs:", kwargs)
 
 
 def get_substrate_model(substrate_model):

@@ -4,7 +4,7 @@
 
 To create a substrate (bottom interface under a snowpack), use `make_soil_substrate`.
 This function is able to automatically load a specific soil or bedrock model and provides many permittivity formulae
-from the files permittivity/soil.py and permittivity/bedrock.py (or any other).
+defined in the files permittivity/soil.py and permittivity/bedrock.py (or any other).
 
 Example::
 
