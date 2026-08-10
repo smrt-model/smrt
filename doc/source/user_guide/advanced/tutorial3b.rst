@@ -16,7 +16,7 @@ Objectives
 2. Consider approximations to be used
 3. Compare outputs with real data
 
-.. code:: ipython2
+.. code:: ipython3
 
     # Standard imports
     %matplotlib notebook
@@ -46,14 +46,14 @@ manipulation of data. A dataframe is a way of storing data - a bit like
 a spreadsheet. The read_csv module allows csv files to be read in to a
 dataframe.
 
-.. code:: ipython2
+.. code:: ipython3
 
     # Read PAMIR
     obs = pd.read_csv('data/PAMIR_obs_09May84.csv')
 
 Let’s have a look at what is inside the dataframe
 
-.. code:: ipython2
+.. code:: ipython3
 
     # Look at first 3 data rows
     obs.head(3)
@@ -190,7 +190,7 @@ to look at the end, or slice a few rows of the data e.g. obs[4:7]
 You can also select data based on specific elements e.g. to print the
 whole row for time 15.08
 
-.. code:: ipython2
+.. code:: ipython3
 
     obs[obs['Time(h)']==15.08]
 
@@ -272,7 +272,7 @@ whole row for time 15.08
 Or be even more specific by selecting one brightness temperature value
 for that particular time. Check other row / column outputs.
 
-.. code:: ipython2
+.. code:: ipython3
 
     T4_9V = obs[obs['Time(h)']==15.08]['T4.9V']
     print (T4_9V)
@@ -287,7 +287,7 @@ for that particular time. Check other row / column outputs.
 Here is a quick plot of TB35V against time. Have a look at other
 frequencies, frozen layer thickness or surface temperature.
 
-.. code:: ipython2
+.. code:: ipython3
 
     plt.plot(obs['Time(h)'], obs['T35V'])
 
@@ -316,7 +316,7 @@ First, set up the sensor. This can be a single frequency or range of
 frequencies. The PAMIR radiometers were mounted at an incidence angle of
 50 degrees.
 
-.. code:: ipython2
+.. code:: ipython3
 
     ## BLANK THIS CELL
     rad = sensor_list.passive(19e9,50)
@@ -333,7 +333,7 @@ Rayleigh requires independent_sphere model. You’ll also need some
 assumption about the snow temperature, but you do have data for the snow
 surface temperature.
 
-.. code:: ipython2
+.. code:: ipython3
 
     # Make the absorber
     absorber = make_reflector(specular_reflection=0., temperature=FREEZING_POINT)
@@ -351,7 +351,7 @@ The model configuration needs to be specified using the function
 make_model. This has been given below, except for the electromagnetic
 model, which has to be inserted between the empty ’ ’.
 
-.. code:: ipython2
+.. code:: ipython3
 
     ## BLANK OUT iba
     m = make_model('iba','dort')
@@ -359,7 +359,7 @@ model, which has to be inserted between the empty ’ ’.
 Time to run the model for your sensor on your snowpack e.g. m.run(sensor, snowpack)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython2
+.. code:: ipython3
 
     ## BLANK THIS CELL
     res = m.run(rad, snowpack_exp)

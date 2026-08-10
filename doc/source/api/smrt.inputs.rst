@@ -22,12 +22,6 @@ smrt.inputs.make\_soil module
    :members:
    :show-inheritance:
 
-smrt.inputs.make\_bedrock module
------------------------------
-
-.. automodule:: smrt.inputs.make_bedrock
-   :members:
-   :show-inheritance:
 
 smrt.inputs.sensor\_list module
 -------------------------------

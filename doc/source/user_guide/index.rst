@@ -66,13 +66,13 @@ Follow this user guide to learn how to install SMRT and to get started. A few tu
 
 We then give recommendations for citing SMRT in publications that give results given by the model.
 
-For more detailed documentation you can browse the API reference which gives the only continuously up-to-date reference for default behaviours as it is auto-generated from code source. For developers who want to implement new behaviour in SMRT for their own use or for improving SMRT, we recommend to read the :doc:`developer_guidelines` and to contact the authors of the model to discuss about the best/most generic approach to solve their problem.
+For more detailed documentation you can browse the API reference which gives the only continuously up-to-date reference for default behaviours as it is auto-generated from code source. For developers who want to implement new behaviour in SMRT for their own use or for improving SMRT, we recommend to read the `Developer Guidelines <../developer/index.html>`_ and to contact the authors of the model to discuss about the best/most generic approach to solve their problem.
 
 .. toctree::
     :titlesonly:
     :maxdepth: 2
 
     Installation guide <install>
-    Getting started <quick_start>
-    Tutorials <tutorials/index>
+    Getting started <quick_start/index>
+    Advanced use <advanced/index>
     Cite SMRT <publish>
