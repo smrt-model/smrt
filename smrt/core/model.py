@@ -341,10 +341,10 @@ class Model(object):
                 with the high-level parallelism activated by parallel_computation. For this reason joblib and other
                 parallel runners try to desactivate numpy and scipy low-level parallelism
                 (see :py:func:`~smrt.core.lib.set_max_numerical_threads`) to maximize performances. Conversely it means
-                that when parallel_computation is False, the simulations are run sequentially, but numpy and scipy
-                parallelism is activated. If you really want to use a single core for the simulations, you must first
-                call :py:func:`~smrt.core.lib.set_max_numerical_threads` with 1 as argument and then call Model.run with
-                parallel_computation=False. (Default value = False)
+                that when parallel_computation is "none" (or False), the simulations are run sequentially, but numpy and
+                scipy parallelism is activated. If you really want to use a single core for the simulations, you must
+                first call :py:func:`~smrt.core.lib.set_max_numerical_threads` with 1 as argument and then call
+                Model.run with parallel_computation="none".
             runner: a 'runner' is a function (or more likely a class with a __call__ method) that takes a function and a
                 list/generator of simulations, executes the function on each simulation and returns a list of results.
                 If a runner is provided, parallel_computation is ignored. The runner can be used to implement advanced
@@ -382,8 +382,13 @@ class Model(object):
 
             if (parallel_computation == "outer") or (parallel_computation is True):  # True for legacy reasons
                 runner = JoblibParallelRunner(progressbar=progressbar)
-            else:
+            elif (parallel_computation == "none") or (parallel_computation is False):  # False for legacy reasons
                 runner = SequentialRunner(progressbar=progressbar)
+            else:
+                raise SMRTError(
+                    f"parallel_computation={parallel_computation} is not valid. "
+                    "Must be 'outer', 'inner', 'none' or None"
+                )
 
         #  run all the simulations (with atmosphere as long as it is not depreciated), the results is a flat list of
         # results
