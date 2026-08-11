@@ -118,7 +118,7 @@ master_doc = "index"
 
 # General information about the project.
 project = "SMRT"
-copyright = "2016-2025, G. Picard, M. Sandells, H. Löwe"
+copyright = "2016-2026, G. Picard, M. Sandells, H. Löwe"
 author = "G. Picard, M. Sandells, H. Löwe"
 
 
