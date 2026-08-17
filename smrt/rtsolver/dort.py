@@ -77,6 +77,7 @@ from smrt.rtsolver.rtsolver_utils import (
     PlanckMixin,
     RTSolverBase,
     compute_interface_properties,
+    symmetrize_phase_matrix,
 )
 
 
@@ -1123,32 +1124,3 @@ obtained by setting the option error_handling='nan'.
 
 Note:: setting an option in DORT is obtained with make_model(..., "dort", rtsolver_options=dict(error_handling='nan')).
 """
-
-
-def symmetrize_phase_matrix(A, m):
-    n = A.shape[1] // 2
-    newA = np.empty_like(A)
-
-    if m == 0:
-        npol = 2
-        newA[:n, :n] = 0.5 * (A[:n, :n] + A[n:, n:])
-        newA[n:, n:] = newA[:n, :n]
-        newA[:n, n:] = 0.5 * (A[:n, n:] + A[n:, :n])
-        newA[n:, :n] = newA[:n, n:]
-    else:
-        npol = 3
-        for i in range(n):
-            d0 = 1 if (i % npol) < 2 else -1
-            for j in range(n):
-                d = d0 if (j % npol) < 2 else -d0
-                # alpha
-                newA[i, j] = 0.5 * (A[i, j] + A[i + n, j + n] * d)
-                newA[i + n, j + n] = d * A[i, j]
-                # beta
-                newA[i, j + n] = 0.5 * (A[i, j + n] + A[i + n, j] * d)
-                newA[i + n, j] = d * newA[i, j + n]
-    return newA
-
-
-if numba:
-    symmetrize_phase_matrix = numba.jit(symmetrize_phase_matrix)

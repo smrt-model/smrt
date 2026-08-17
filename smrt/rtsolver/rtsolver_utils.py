@@ -5,6 +5,7 @@ from abc import ABCMeta
 from collections.abc import Sequence
 from typing import Optional, cast
 
+import numba
 import numpy as np
 import scipy.interpolate
 import xarray as xr
@@ -737,3 +738,32 @@ def normalize_diffuse_matrix(mat, mu_st, mu_i, weights):
         else:
             mat *= mu_i * weights / mu_st  # the last dimension
     return mat
+
+
+def symmetrize_phase_matrix(A, m):
+    n = A.shape[1] // 2
+    newA = np.empty_like(A)
+
+    if m == 0:
+        npol = 2
+        newA[:n, :n] = 0.5 * (A[:n, :n] + A[n:, n:])
+        newA[n:, n:] = newA[:n, :n]
+        newA[:n, n:] = 0.5 * (A[:n, n:] + A[n:, :n])
+        newA[n:, :n] = newA[:n, n:]
+    else:
+        npol = 3
+        for i in range(n):
+            d0 = 1 if (i % npol) < 2 else -1
+            for j in range(n):
+                d = d0 if (j % npol) < 2 else -d0
+                # alpha
+                newA[i, j] = 0.5 * (A[i, j] + A[i + n, j + n] * d)
+                newA[i + n, j + n] = d * A[i, j]
+                # beta
+                newA[i, j + n] = 0.5 * (A[i, j + n] + A[i + n, j] * d)
+                newA[i + n, j] = d * newA[i, j + n]
+    return newA
+
+
+if numba:
+    symmetrize_phase_matrix = numba.jit(symmetrize_phase_matrix)
