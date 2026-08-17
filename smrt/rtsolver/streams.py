@@ -28,7 +28,7 @@ class Streams(object):
     # n_substrate: int = 0
     n_air: int = 0
 
-    def up_down_cosine(self, layer: int) -> np.ndarray:
+    def down_up_cosine(self, layer: int) -> np.ndarray:
         """Return the mu for both directions (up and down) for a given layer.
 
         Args:
@@ -64,8 +64,8 @@ class Streams(object):
         """
         return np.repeat(self.mu[layer], npol)
 
-    def layer_streams(self, layer: int) -> "LayerStreams":
-        """Return the streams for a given layer.
+    def sel(self, *, layer: int) -> "LayerStreams":
+        """Return the streams for a given layer. Use a xarray like syntax to select the layer.
 
         Args:
             layer: layer index
@@ -81,7 +81,7 @@ class LayerStreams:
     mu: np.ndarray
     weight: np.ndarray
 
-    def up_down_cosine(self) -> np.ndarray:
+    def down_up_cosine(self) -> np.ndarray:
         """Return the mu for both directions (up and down) for a given layer.
 
         Returns:
