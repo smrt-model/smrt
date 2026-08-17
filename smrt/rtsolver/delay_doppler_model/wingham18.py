@@ -187,8 +187,9 @@ class Wingham18(object):
     def get_j_integrand(self, j: int):
         """Return the integrand in j function defined in W18 Eq 14.
 
-        For efficiency reason they are return as compiled C function (more precisely scipy.LowLevelCallable) suitable for
-        the integration with scipy.integrate.quad. To avoid the cost of mulitple compilations, the result is cached. Changing the sensor, the kernel or the ptr_doppler
+        For efficiency reason they are return as compiled C function (more precisely scipy.LowLevelCallable) suitable
+        for the integration with scipy.integrate.quad. To avoid the cost of mulitple compilations, the result is cached.
+        Changing the sensor, the kernel or the ptr_doppler.
         """
         return make_j_integrand(
             self.sensor.wavelength,

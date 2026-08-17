@@ -27,7 +27,8 @@ def sinc2d_interp_nu2(x, y, s, B, xp, yp):
     import logging
 
     logging.warning(
-        "The method used here for calculating the Jacobian of the sample points for Sinc-2 interpolation is seriously flawed. Consider using Sinc-3 (sinc2d_interp_nu3)"
+        "The method used here for calculating the Jacobian of the sample points for Sinc-2 interpolation is seriously "
+        "flawed. Consider using Sinc-3 (sinc2d_interp_nu3)"
     )
 
     assert len(x.shape) == 1

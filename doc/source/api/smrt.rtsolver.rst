@@ -6,7 +6,7 @@ smrt.rtsolver package
    :show-inheritance:
 
 .. contents:: Contents
-   :depth: 3
+   :depth: 2
 
 smrt.rtsolver.dort module
 -------------------------
@@ -60,21 +60,21 @@ smrt.rtsolver.nadir\_sar\_altimetry module
 
 
 smrt.rtsolver.delay\_doppler\_model.boy17 module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: smrt.rtsolver.delay_doppler_model.boy17
    :members:
    :show-inheritance:
 
 smrt.rtsolver.delay\_doppler\_model.buchhaupt18 module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 .. automodule:: smrt.rtsolver.delay_doppler_model.buchhaupt18
    :members:
    :show-inheritance:
 
 
 smrt.rtsolver.delay\_doppler\_model.dinardo18 module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: smrt.rtsolver.delay_doppler_model.dinardo18
    :members:
@@ -82,7 +82,7 @@ smrt.rtsolver.delay\_doppler\_model.dinardo18 module
 
 
 smrt.rtsolver.delay\_doppler\_model.halimi14 module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: smrt.rtsolver.delay_doppler_model.halimi14
    :members:
@@ -90,14 +90,14 @@ smrt.rtsolver.delay\_doppler\_model.halimi14 module
 
 
 smrt.rtsolver.delay\_doppler\_model.landy19 module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: smrt.rtsolver.delay_doppler_model.landy19
    :members:
    :show-inheritance:
 
 smrt.rtsolver.delay\_doppler\_model.ray15 module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: smrt.rtsolver.delay_doppler_model.ray15
    :members:
@@ -105,14 +105,14 @@ smrt.rtsolver.delay\_doppler\_model.ray15 module
 
 
 smrt.rtsolver.delay\_doppler\_model.wingham04 module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: smrt.rtsolver.delay_doppler_model.wingham04
    :members:
    :show-inheritance:
 
 smrt.rtsolver.delay\_doppler\_model.wingham18 module
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. automodule:: smrt.rtsolver.delay_doppler_model.wingham18
    :members:

@@ -16,7 +16,8 @@ def delay_sampling_vector(sensor, oversampling_time: int, window_widening: int =
 
     :param sensor: Sensor instance containing all the required parameters
     :param oversampling_time: factor of oversampling in the time dimension
-    :param window_widening: factor of widening the range of times w/r to that recorded by the sensor (multiply ngate in practice)
+    :param window_widening: factor of widening the range of times w/r to that recorded by the sensor (multiply ngate in
+        practice)
     """
     # return np.arange(
     #     -sensor.nominal_gate * oversampling_time,
@@ -48,7 +49,8 @@ def doppler_frequency_vector(sensor, oversampling_doppler: int):
 def check_low_ndoppler(ndoppler, ddm_model):
     if ndoppler < 16:
         smrt_warn(
-            f"The DDM model {type(ddm_model).__name__} is not suitable for a low number of doppler frequencies 'ndoppler={ndoppler}'."
+            f"The DDM model {type(ddm_model).__name__} is not suitable for a low number of doppler frequencies "
+            f"'ndoppler={ndoppler}'."
             " This is due to approximating the SAR compressed window to be a rectangle, a sinc, or a gaussian."
             " Only models using sin(ndoppler*x)/sin(x) are suitable."
         )
@@ -136,8 +138,8 @@ def triangular_function(x: npt.ArrayLike, a: npt.ArrayLike) -> np.ndarray:
 
 
 def delay_compensation(sensor, delay_doppler_map, oversampling_time, oversampling_doppler, with_earth_curvature=True):
-    """Perform the delay compensation on the delay_doppler_map array using sensor characteristics and oversampling in the
-    doppler and time dimension.
+    """Perform the delay compensation on the delay_doppler_map array using sensor characteristics and oversampling in
+    the doppler and time dimension.
 
     """
     idelta_r1 = _compute_idelta_r1(sensor, oversampling_time, oversampling_doppler, with_earth_curvature)

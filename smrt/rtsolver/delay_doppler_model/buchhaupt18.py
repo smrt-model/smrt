@@ -114,7 +114,8 @@ class Buchhaupt18(object):
         ]  # frequencies organised for scipy.fft
 
         etam = (m / L) / (self.Lx / self.oversampling_doppler)
-        # etam = 1 / (fdoppler[1] - fdoppler[0]) * sensor.pulse_repetition_frequency / sensor.ndoppler / self.Lx  * (m / L)
+        # etam = 1 / (fdoppler[1] - fdoppler[0]) * sensor.pulse_repetition_frequency / sensor.ndoppler / self.Lx  *
+        # (m / L)
 
         mean_square_slope = np.asarray(mean_square_slope)
         if mean_square_slope.ndim > 0:
@@ -137,7 +138,8 @@ class Buchhaupt18(object):
         # geometrical optics
         alpha0 = 1 / (2 * mean_square_slope)
 
-        # coef A after Eq 29. We separate this coef in a constant term (calculated here) and the variable term calculated in ft2_FSSR
+        # coef A after Eq 29. We separate this coef in a constant term (calculated here) and the variable term
+        # calculated in ft2_FSSR
         Lp = 1  # two-way atmospheric transmittance
         G0 = sensor.antenna_gain
         Aconst = (
@@ -227,8 +229,8 @@ def ft2_FSSR(
     tanxi_p = np.tan(xi_p)
     tanxi_r = np.tan(xi_r)
 
-    # coef A after Eq 29. We separate this coef in a constant term (calculated outside this function) and the variable term
-    # (depend on xi xi_p)
+    # coef A after Eq 29. We separate this coef in a constant term (calculated outside this function) and the variable
+    #  term (depend on xi xi_p)
     # Aconst = wavelength**2 * G0**2 * sigma0 * C_SPEED / (4 * (4 * np.pi)**2 * Lp * altitude**3 * alpha)
     Avar = np.exp(-4 / gamma_y * (sinxi2 + mu / 2 * tanxi_p**2 * (cosxi + cosxi2)))
 

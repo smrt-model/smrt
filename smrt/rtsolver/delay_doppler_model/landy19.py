@@ -62,8 +62,9 @@ class Landy19(object):
             finufft package, only applicable with ptr_time = sinc^2) or "original" (original Landy et al. 2019 code,
             significantly slower but more flexible).
         use_local_slope: the local slope of the DEM is taken into account to compute the backscatter of the terrain.
-            This assumes that the local slope is much larger than the wavelength (generally true) and that this large-scale
-            roughness is not taken into account in the small-scale roughness. Set to False to deactivate the local slope.
+            This assumes that the local slope is much larger than the wavelength (generally true) and that this
+            large-scale roughness is not taken into account in the small-scale roughness. Set to False to deactivate
+            the local slope.
     """
 
     def __init__(
@@ -210,7 +211,8 @@ class Landy19(object):
             # antenna gain
             # find the angle in the antenna framework
             xg = x - sensor.altitude * xi_k  # simplification of (x0 - sensor.altitude * np.tan(sensor.pitch_angle))
-            yg = y  # - (y0 - altitude * np.tan(roll_angle))   # can be simplified because y0 - altiude * tan(rool_angle) == 0 by definition
+            yg = y  # - (y0 - altitude * np.tan(roll_angle))
+            # can be simplified because y0 - altiude * tan(rool_angle) == 0 by definition
 
             xg2 = xg**2
             yg2 = yg**2

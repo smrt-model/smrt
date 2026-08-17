@@ -23,8 +23,8 @@ and volume independently (that is three different delay Doppler maps).
 Main approximations:
     - Backscatter is computed assuming only first order scattering. The propagation is then simply calculated with the
       extinction.
-    - Small-angle approximation: to compute delay, the paths in the snow are assumed vertical. We neglect the 1/cos(theta)
-      lengthening of the path
+    - Small-angle approximation: to compute delay, the paths in the snow are assumed vertical. We neglect the
+      1/cos(theta) lengthening of the path
 
 Usage:
     Basic usage with default settings and IBA EM model and Dinardo18 DDM model:
@@ -105,8 +105,8 @@ class NadirSARAltimetry(object):
         error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
-    # e.g. here, frequency, time, ... are not managed
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the
+    # caller (Model object) e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {}  # "theta_inc", "polarization_inc", "theta", "phi", "polarization"}
 
     def __init__(
@@ -164,10 +164,12 @@ class NadirSARAltimetry(object):
         self.prune_deep_snowpack = prune_deep_snowpack
 
     def solve(self, snowpack_or_terrain, emmodels, sensor, atmosphere=None):
-        """Solve the radiative transfer equation for a given snowpack (or terrain with multiple snowpack), emmodels and sensor configuration."""
+        """Solve the radiative transfer equation for a given snowpack (or terrain with multiple snowpack), emmodels and
+        sensor configuration."""
         if sensor.theta_inc != 0:
             raise SMRTError(
-                "This solver is for nadir looking altimeter only. Satellite mis-pointing (pitch and roll) is allowed for some waveform model."
+                "This solver is for nadir looking altimeter only. Satellite mis-pointing (pitch and roll) is allowed "
+                "for some waveform model."
             )
         assert atmosphere is None
 
@@ -177,12 +179,14 @@ class NadirSARAltimetry(object):
         # check that all interfaces have roughness_rms
         if any(not hasattr(interface, "roughness_rms") for interface in snowpack_or_terrain.interfaces):
             raise SMRTError(
-                "nadir_sarm_altimetry only works with interfaces that define 'roughness_rms' to compute the coherent reflection. "
+                "nadir_sarm_altimetry only works with interfaces that define 'roughness_rms' to compute the coherent "
+                "reflection. "
             )
 
         if (snowpack_or_terrain.substrate is not None) and not hasattr(snowpack_or_terrain.substrate, "roughness_rms"):
             raise SMRTError(
-                "nadir_sarm_altimetry only works with substrates that define 'roughness_rms' to compute the coherent reflection. "
+                "nadir_sarm_altimetry only works with substrates that define 'roughness_rms' to compute the coherent "
+                "reflection. "
             )
 
         # prune the snowpack if this option is set
@@ -341,15 +345,16 @@ class NadirSARAltimetry(object):
         # Geometrical optics model
         #
         if hasattr(self.delay_doppler_model, "delay_doppler_map_with_GO"):
-            # the model uses geometrical optics for the interfaces. Let's compute the response for each different value of MSS
-
+            # the model uses geometrical optics for the interfaces. Let's compute the response for each different value
+            # of MSS
             # prepare a set of unique mean_square_slope values in the interfaces that contributes to the backscatter
             # First for the volume: np.inf means no dependency to the incidence angle
             mean_square_slope = set([np.inf])
 
             # Second for the coherent backscatter
             if np.any(coh_backscatter_i > 0):
-                # this is the coherent reflection which always decays the same way, depending only on sensor characteristics
+                # this is the coherent reflection which always decays the same way, depending only on sensor
+                # characteristics
                 coherent_decay = coherent_reflection_square_decay(self.sensor)
                 mean_square_slope.add(coherent_decay)
 
@@ -360,7 +365,8 @@ class NadirSARAltimetry(object):
                         mean_square_slope.add(interface.mean_square_slope)
                     except AttributeError:
                         raise SMRTError(
-                            f'The delay_doppler_model "{self.delay_doppler_model}" relies on geometrical optics interfaces only (or non scattering interfaces).'
+                            f'The delay_doppler_model "{self.delay_doppler_model}" relies on geometrical optics'
+                            "interfaces only (or non scattering interfaces)."
                         )
 
             # gather all the mean_square_slope
@@ -443,7 +449,8 @@ class NadirSARAltimetry(object):
             # compute a single ddm_v
             ddm_v = self.delay_doppler_model.delay_doppler_map(terrain_info=self.terrain_info)
 
-            # TODO: could be optimized when return_contributions is False, but I'm not sure this represent a significant gain
+            # TODO: could be optimized when return_contributions is False, but I'm not sure this represent a significant
+            #  gain
 
             # first convolve with the volume
             ddm_volume = convolve_ddm(ddm_v, backscatter_v)
@@ -566,7 +573,8 @@ class NadirSARAltimetry(object):
         return z[:-1], dz, b_gate, b_layer[:-1], b_interface
 
     def vertical_scattering_distribution(self, mu_i):
-        """Compute the vertical backscattering distribution due to "grain" or volume scattering, "interfaces" or 'surface' scattering"""
+        """Compute the vertical backscattering distribution due to "grain" or volume scattering, "interfaces" or
+        'surface' scattering"""
         mu_i = np.atleast_1d(mu_i)
 
         # compute the merged depth grid including gates and layers
@@ -579,7 +587,8 @@ class NadirSARAltimetry(object):
 
         ############################################################################################
         # compute layer volume backscatter
-        # backward scattering (take VV, is equal to HH) # nadir backward scattering. a.k.a gamma in Matzler's notation. We neglect mu_i.
+        # backward scattering (take VV, is equal to HH) # nadir backward scattering. a.k.a gamma in Matzler's notation.
+        #  We neglect mu_i.
         backward_scattering = np.array(
             [
                 em.phase(mu_s=-1.0, mu_i=1.0, dphi=np.pi, npol=2)[0, 0].squeeze().real / (4 * np.pi)
@@ -621,8 +630,8 @@ class NadirSARAltimetry(object):
         # we now compute the volume backscatter of each subgate
         subgate_backscatter_v *= subgate_attenuation_v[:-1] * subgate_attenuation_i[1:]
 
-        # at last compute the volume backscatter of each gate by computing the primitive of the subgate volume backscatter,
-        # select the gate interval and differentitate to get the integrated backscatter over each gate
+        # at last compute the volume backscatter of each gate by computing the primitive of the subgate volume
+        # backscatter, select the gate interval and differentitate to get the integrated backscatter over each gate
         subgate_backscatter_v = np.insert(subgate_backscatter_v, 0, 0)
         gate_backscatter_v = np.diff(np.insert(np.cumsum(subgate_backscatter_v)[b_gate], 0, 0))
 

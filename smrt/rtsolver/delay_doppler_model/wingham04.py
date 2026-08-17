@@ -210,7 +210,8 @@ class Wingham04(object):
 
 
 # def slant_correction(tau, xi_b, sensor, slope_angle, slope_direction):
-#     """calculate slant correction using Wingham et al. 2004 equations that takes into account the terrain slope and latitude"""
+#     """calculate slant correction using Wingham et al. 2004 equations that takes into account the terrain slope and
+#       latitude"""
 #     lambda_s = 0
 
 #     # Eq 35

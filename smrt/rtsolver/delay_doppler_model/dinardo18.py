@@ -1,7 +1,7 @@
 """This module calculates Delay Doppler Map (DDM) based on Dinardo et al. 2018.
 
-This DDM model extends Ray et al. 2015 with a fully analytical solution under the conditions that the surface is Gaussian and
-the backscatter decreases according to Geometrical Optics, using analytical functions.
+This DDM model extends Ray et al. 2015 with a fully analytical solution under the conditions that the surface is
+Gaussian and the backscatter decreases according to Geometrical Optics, using analytical functions.
 
 References:
     - Dinardo, S., Fenoglio-Marc, L., Buchhaupt, C., Becker, M., Scharroo, R., Joana Fernandes, M., & Benveniste, J.
@@ -104,7 +104,8 @@ class Dinardo18(object):
             * sigma_g**2
         )  # unit: m^2 * m * m / m^4 =no unit
         # The sqrt(pulse_bandiwth) comes for sqrt(gl) in R15
-        # The sqrt(2) is coming for R15 Eq 32,  the 1/sqrt(2) a,nd equation of Gamma_e which is twice G. This yields: 2/sqrt(2)
+        # The sqrt(2) is coming for R15 Eq 32,  the 1/sqrt(2) a,nd equation of Gamma_e which is twice G. This yields:
+        # 2/sqrt(2)
         self.Pu = K / np.sqrt(sensor.pulse_bandwidth) * np.sqrt(2)  # unit: s
 
         self.tau = delay_sampling_vector(sensor, oversampling_time)
@@ -133,7 +134,8 @@ class Dinardo18(object):
             tau = tau[np.newaxis, ...]
             look_angle = look_angle[np.newaxis, ...]
 
-        # D18 Eq 19  # the term with look_angle explains the X shape of the DDM (widening of the DDM for large fdoppler).
+        # D18 Eq 19  # the term with look_angle explains the X shape of the DDM (widening of the DDM for large
+        # fdoppler).
 
         sigma_c = np.sqrt(
             self.sigma_p**2 * (1 + (look_angle / self.theta_lim) ** 2) + (2 * terrain_info.sigma_surface / C_SPEED) ** 2
