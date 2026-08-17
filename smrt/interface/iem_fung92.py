@@ -32,7 +32,7 @@ import numpy as np
 
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.fresnel import (
-    fresnel_coefficients,
+    fresnel_reflection_coefficients,
 )
 from smrt.core.globalconstants import C_SPEED
 from smrt.core.interface import Interface
@@ -79,10 +79,10 @@ class IEM_Fung92(
                 f"< sqrt(eps_r). Here ks*kl={ks * kl:g} and sqrt(eps_r)={np.sqrt(eps_r):g}"
             )
 
-    def fresnel_coefficients(self, eps_1, eps_2, mu_i, ks, kl):
+    def fresnel_reflection_coefficients(self, eps_1, eps_2, mu_i, ks, kl):
         """Calculate the fresnel coefficients at the angle mu_i whatever is ks and kl according to the original
         formulation of Fung 1992"""
-        Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
+        Rv, Rh, _ = fresnel_reflection_coefficients(eps_1, eps_2, mu_i)
         return Rv, Rh
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol, debug=False):
@@ -130,7 +130,7 @@ class IEM_Fung92(
             elif self.warning_handling == "nan":
                 return smrt_matrix.full((npol, len(mu_i)), np.nan)
 
-        Rv, Rh = self.fresnel_coefficients(eps_1, eps_2, mu_i, ks, kl)
+        Rv, Rh = self.fresnel_reflection_coefficients(eps_1, eps_2, mu_i, ks, kl)
 
         fvv = 2 * Rv / mu  # Eq 44 in Fung et al. 1992
         fhh = -2 * Rh / mu  # Eq 45 in Fung et al. 1992

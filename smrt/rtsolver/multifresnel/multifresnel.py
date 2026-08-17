@@ -14,12 +14,10 @@ import numpy as np
 import numpy.typing as npt
 from numba import jit
 
-from smrt.core import fresnel
+from smrt.core.fresnel import (
+    fresnel_reflection_coefficients_maezawa09_rigorous_compiled as fresnel_reflection_coefficients_maezawa09_rigorous,
+)
 from smrt.core.globalconstants import C_SPEED
-
-# compile fresnel_coefficients
-fresnel_coefficients_maezawa09_rigorous = fresnel.fresnel_coefficients_maezawa09_rigorous_compiled
-
 
 VPOL = 0
 HPOL = 1
@@ -119,7 +117,7 @@ def forward_matrix_fulloutput(
     mu = np.atleast_1d(mu)
     # mu is above the current layer
 
-    rv, rh, mu2 = fresnel_coefficients_maezawa09_rigorous(eps1, eps2, mu)
+    rv, rh, mu2 = fresnel_reflection_coefficients_maezawa09_rigorous(eps1, eps2, mu)
 
     # r = np.array([abs2(rv), abs2(rh)])
     r = np.stack((rv.real**2 + rv.imag**2, rh.real**2 + rh.imag**2))

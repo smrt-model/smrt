@@ -25,7 +25,7 @@ import scipy.integrate
 import scipy.special
 
 from smrt.core.error import SMRTError, smrt_warn
-from smrt.core.fresnel import fresnel_coefficients
+from smrt.core.fresnel import fresnel_reflection_coefficients
 from smrt.core.globalconstants import C_SPEED
 from smrt.core.interface import Interface
 from smrt.core.lib import abs2, generic_ft_even_matrix, smrt_matrix
@@ -156,7 +156,7 @@ class GeometricalOptics(HemisphericalIntegrationMixin, Interface):
         mu_local = -vector3.dot(n, ki)
         assert np.all(mu_local >= 0)
         assert np.all(mu_local <= 1.0001)  # compare with some tolerance
-        Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, _clip_mu(mu_local))
+        Rv, Rh, _ = fresnel_reflection_coefficients(eps_1, eps_2, _clip_mu(mu_local))
 
         # define polarizations
         hs = vector3.from_xyz(-sin_phi, cos_phi, 0)
@@ -417,7 +417,7 @@ class GeometricalOptics(HemisphericalIntegrationMixin, Interface):
 
         mu_local = -vector3.dot(n, ki)
 
-        Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_local)
+        Rv, Rh, _ = fresnel_reflection_coefficients(eps_1, eps_2, mu_local)
 
         # define polarizations
         hi = vector3.from_xyz(0, 1, 0)

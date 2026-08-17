@@ -7,7 +7,7 @@ is neglected.
 import numpy as np
 
 from smrt.core.error import SMRTError
-from smrt.core.fresnel import fresnel_coefficients
+from smrt.core.fresnel import fresnel_reflection_coefficients
 from smrt.core.globalconstants import C_SPEED
 from smrt.core.lib import abs2, smrt_matrix
 
@@ -144,8 +144,8 @@ class CoherentFlat(object):
         eps_t = eps_2
 
         mu_0 = mu1
-        R01_v, R01_h, mu_1 = fresnel_coefficients(eps_0, eps_1, mu_0)
-        R1t_v, R1t_h, mu_t = fresnel_coefficients(eps_1, eps_t, np.maximum(mu_1, 1e-4))
+        R01_v, R01_h, mu_1 = fresnel_reflection_coefficients(eps_0, eps_1, mu_0)
+        R1t_v, R1t_h, mu_t = fresnel_reflection_coefficients(eps_1, eps_t, np.maximum(mu_1, 1e-4))
 
         k_1 = 2 * np.pi / C_SPEED * frequency * np.sqrt(eps_1)
 

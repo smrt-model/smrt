@@ -23,7 +23,7 @@ References:
 import numpy as np
 
 from smrt.core.error import SMRTError
-from smrt.core.fresnel import fresnel_coefficients
+from smrt.core.fresnel import fresnel_reflection_coefficients
 from smrt.interface.iem_fung92 import IEM_Fung92
 
 
@@ -42,13 +42,13 @@ class IEM_Fung92_Briogoni10(IEM_Fung92):
                 f"Warning, roughness_rms is too high for the given wavelength. Limit is ks < 3. Here ks={ks:g}"
             )
 
-    def fresnel_coefficients(self, eps_1, eps_2, mu_i, ks, kl):
+    def fresnel_reflection_coefficients(self, eps_1, eps_2, mu_i, ks, kl):
         # """
         # Calculate the fresnel coefficients at the angle mu_i or 0° depending on ks*kl. The transition is abrupt.
         # """
 
         if ks * kl > np.sqrt(eps_2 / eps_1):
-            Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, 1)
+            Rv, Rh, _ = fresnel_reflection_coefficients(eps_1, eps_2, 1)
         else:
-            Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
+            Rv, Rh, _ = fresnel_reflection_coefficients(eps_1, eps_2, mu_i)
         return Rv, Rh

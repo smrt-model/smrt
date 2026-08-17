@@ -15,7 +15,7 @@ Note:
 
 import numpy as np
 
-from smrt.core.fresnel import fresnel_coefficients  # a modifier quand on fusionne
+from smrt.core.fresnel import fresnel_reflection_coefficients  # a modifier quand on fusionne
 from smrt.core.lib import len_atleast_1d, smrt_matrix
 from smrt.interface.geometrical_optics import GeometricalOptics, shadow_function
 
@@ -74,7 +74,7 @@ class GeometricalOpticsBackscatter(GeometricalOptics):
         if len(np.atleast_1d(dphi)) != 1:
             raise NotImplementedError("Only the backscattering coefficient is implemented at this stage. ")
 
-        R_normal, _, _ = fresnel_coefficients(eps_1, eps_2, np.ones(1))
+        R_normal, _, _ = fresnel_reflection_coefficients(eps_1, eps_2, np.ones(1))
 
         tantheta_i2 = 1 / mu_i**2 - 1
 

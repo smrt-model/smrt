@@ -33,7 +33,7 @@ import numpy as np
 
 # local import
 from smrt.core.error import SMRTError
-from smrt.core.fresnel import fresnel_coefficients
+from smrt.core.fresnel import fresnel_reflection_coefficients
 from smrt.core.globalconstants import C_SPEED
 from smrt.core.lib import abs2, cached_roots_legendre, generic_ft_even_matrix, smrt_matrix
 from smrt.core.vector3 import vector3
@@ -84,9 +84,9 @@ class IIEM_Fung02(IEM_Fung92):
         eps_r = eps_2.real
 
         # at 0
-        Rv_0, Rh_0, _ = fresnel_coefficients(eps_1, eps_2, 1)
+        Rv_0, Rh_0, _ = fresnel_reflection_coefficients(eps_1, eps_2, 1)
         # at mu
-        Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
+        Rv, Rh, _ = fresnel_reflection_coefficients(eps_1, eps_2, mu_i)
 
         # sin_ i squared
         sin_i2 = 1 - mu_i**2
@@ -183,7 +183,7 @@ class IIEM_Fung02(IEM_Fung92):
         if self.transition_fresnel:
             Rv, Rh = self.transition_fresnel_coefficients(eps_1, eps_2, mu_i, k, k_w, n)
         else:
-            Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
+            Rv, Rh, _ = fresnel_reflection_coefficients(eps_1, eps_2, mu_i)
 
         # #Debug, R from matlab code
         # rt = np.sqrt(eps_2 - sin_i**2)
@@ -215,7 +215,7 @@ class IIEM_Fung02(IEM_Fung92):
         # calculate multiple scattering contribution for cross-pol backscatter with a double integral function
         if self.compute_crosspol:
             # take regular fresnel, not transitionnal... not valid for cross for now
-            Rv, Rh, _ = fresnel_coefficients(eps_1, eps_2, mu_i)
+            Rv, Rh, _ = fresnel_reflection_coefficients(eps_1, eps_2, mu_i)
             Rvh = (Rv - Rh) / 2
             ks2 = ks**2
 
