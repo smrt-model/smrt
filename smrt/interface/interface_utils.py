@@ -5,6 +5,7 @@ from abc import ABCMeta
 import numpy as np
 
 from smrt.core.fresnel import (
+    field_fresnel_matrix,
     fresnel_reflection_matrix,
     fresnel_transmission_matrix,
 )
@@ -61,6 +62,26 @@ class KirchoffApproximationCoherentInterfaceMixin(metaclass=ABCMeta):
         return fresnel_transmission_matrix(eps_1, eps_2, mu1, npol) * np.exp(
             -((k_sz - k_iz) ** 2) * self.roughness_rms**2
         )
+
+    def field_matrix(self, frequency, eps_1, eps_2, mu1):
+        """Compute the specular reflection and transmission field coefficients.
+
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is
+        where the beam is transmitted.
+
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
+        """
+        k2 = (2 * np.pi * frequency / C_SPEED) ** 2 * abs2(eps_1)
+        # Eq: 2.1.94 in Tsang 2001 Tome I
+        r, t = field_fresnel_matrix(eps_1, eps_2, mu1)
+
+        kirchoff_coefficient = np.exp(-2 * k2 * self.roughness_rms**2 * mu1**2)
+        return r * kirchoff_coefficient, t * kirchoff_coefficient
 
 
 class HemisphericalIntegrationMixin(metaclass=ABCMeta):

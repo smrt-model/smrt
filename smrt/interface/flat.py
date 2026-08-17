@@ -3,7 +3,7 @@
 The reflection and transmission are computed using the Fresnel coefficient from :py:mod:`smrt.core.fresnel`.
 """
 
-from smrt.core.fresnel import fresnel_reflection_matrix, fresnel_transmission_matrix
+from smrt.core.fresnel import field_fresnel_matrix, fresnel_reflection_matrix, fresnel_transmission_matrix
 from smrt.core.interface import Interface
 from smrt.core.lib import smrt_matrix
 
@@ -58,3 +58,18 @@ class Flat(Interface):
 
     def diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
         return smrt_matrix(0)
+
+    def field_matrix(self, frequency, eps_1, eps_2, mu1):
+        """Compute the specular reflection and transmission field coefficients.
+
+        Coefficients are calculated for an array of incidence angles (given by their cosine) in medium 1. Medium 2 is
+        where the beam is transmitted.
+
+        Args:
+            frequency: Frequency of the incident wave.
+            eps_1: Permittivity of the medium where the incident beam is propagating.
+            eps_2: Permittivity of the other medium.
+            mu1: Array of cosine of incident angles.
+            npol: Number of polarization.
+        """
+        return field_fresnel_matrix(eps_1, eps_2, mu1)

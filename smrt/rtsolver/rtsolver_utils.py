@@ -286,9 +286,7 @@ class DiscreteOrdinatesMixin(metaclass=ABCMeta):
 
             # compute the upwelling intensity for mode m
             intensity_up_m = compute_modem(
-                mode=m,
-                streams=self.streams,
-                intensity_down=intensity_down_m,
+                mode=m, streams=self.streams, intensity_down=intensity_down_m, coherent_only=False
             )
 
             if self.sensor.mode == "A":
@@ -421,21 +419,35 @@ class PlanckMixin(metaclass=ABCMeta):
 
 
 def compute_interface_properties(
-    frequency, interfaces, substrate, permittivity, streams, m_max, npol, compress=True, auto_reduce_npol=True
+    frequency,
+    interfaces,
+    substrate,
+    permittivity,
+    streams,
+    m_max,
+    npol,
+    compress=True,
+    auto_reduce_npol=True,
+    field_coefficients=False,
 ):
     """Compute the reflection adn transmission for each interface and store them in a InterfaceProperties object."""
-    intprop = InterfaceProperties(compress=compress, auto_reduce_npol=auto_reduce_npol)
+    intprop = InterfaceProperties(
+        compress=compress, auto_reduce_npol=auto_reduce_npol, field_coefficients=field_coefficients
+    )
     intprop.compute(frequency, interfaces, substrate, permittivity, streams, m_max, npol)
     return intprop
 
 
 class InterfaceProperties(object):
-    def __init__(self, layer=None, mode=None, compress=True, auto_reduce_npol=True, coherent_only=False):
+    def __init__(
+        self, layer=None, mode=None, compress=True, auto_reduce_npol=True, coherent_only=False, field_coefficients=False
+    ):
         self.selected_layer = layer
         self.selected_mode = mode
         self.compress = compress
         self.auto_reduce_npol = auto_reduce_npol
         self.coherent_only = coherent_only
+        self.field_coefficients = field_coefficients
 
         self.Rtop_coh = dict()
         self.Rtop_diff = dict()
@@ -445,6 +457,10 @@ class InterfaceProperties(object):
         self.Rbottom_diff = dict()
         self.Tbottom_coh = dict()
         self.Tbottom_diff = dict()
+
+        # field coefficients (contains reflection and transmission coefficients for the field, not the power)
+        self.field_top = dict()
+        self.field_bottom = dict()
 
     def sel(self, layer=None, mode=None, coherent_only=False):
         intprop = copy.copy(self)  # shallow copy is enough since we don't modify the dicts
@@ -465,6 +481,9 @@ class InterfaceProperties(object):
             self.Rtop_coh[layer] = interfaces[layer].specular_reflection_matrix(
                 frequency, eps_l, eps_lm1, streams.mu[layer], npol
             )
+
+            if self.field_coefficients:
+                self.field_top[layer] = interfaces[layer].field_matrix(frequency, eps_l, eps_lm1, streams.mu[layer])
 
             self.Rtop_diff[layer] = (
                 normalize_diffuse_matrix(
@@ -537,6 +556,11 @@ class InterfaceProperties(object):
                     frequency, eps_l, eps_lp1, streams.mu[layer], npol
                 )
 
+                if self.field_coefficients:
+                    self.field_bottom[layer] = interfaces[layer + 1].field_matrix(
+                        frequency, eps_l, eps_lp1, streams.mu[layer]
+                    )
+
                 self.Rbottom_diff[layer] = (
                     normalize_diffuse_matrix(
                         interfaces[layer + 1].ft_even_diffuse_reflection_matrix(
@@ -551,10 +575,14 @@ class InterfaceProperties(object):
                 )
 
             elif substrate is not None:
-                # snow-substrate
+                # snow-substrate UP
                 self.Rbottom_coh[layer] = substrate.specular_reflection_matrix(
                     frequency, eps_l, streams.mu[layer], npol
                 )
+
+                if self.field_coefficients:
+                    self.field_bottom[layer] = substrate.field_matrix(frequency, eps_l, streams.mu[layer])
+
                 if not self.coherent_only:
                     self.Rbottom_diff[layer] = (
                         normalize_diffuse_matrix(
@@ -569,11 +597,13 @@ class InterfaceProperties(object):
                         else smrt_matrix(0)
                     )
 
-            else:
+            else:  # no substrate
                 self.Rbottom_coh[layer] = smrt_matrix(0)  # fully transparent substrate
                 self.Rbottom_diff[layer] = smrt_matrix(0)
+                if self.field_coefficients:
+                    self.field_bottom[layer] = smrt_matrix(0)
 
-        # air-snow DOWN
+        # air-snow DOWN  (-1 is the index of the top air-snow interface)
         self.Tbottom_coh[-1] = interfaces[0].coherent_transmission_matrix(
             frequency, 1, permittivity[0], streams.outmu, npol
         )
@@ -592,10 +622,13 @@ class InterfaceProperties(object):
             else smrt_matrix(0)
         )
 
-        # air-snow DOWN
         self.Rbottom_coh[-1] = interfaces[0].specular_reflection_matrix(
             frequency, 1, permittivity[0], streams.outmu, npol
         )
+
+        if self.field_coefficients:
+            self.field_bottom[-1] = interfaces[0].field_matrix(frequency, 1, permittivity[0], streams.outmu)
+
         self.Rbottom_diff[-1] = (
             normalize_diffuse_matrix(
                 interfaces[0].ft_even_diffuse_reflection_matrix(
@@ -673,6 +706,22 @@ class InterfaceProperties(object):
             return coef * mat_diff + mat_coh
         else:
             return mat_coh
+
+    def field_reflection_top(self, layer=None):
+        lay = self.selected_layer if layer is None else layer
+        return self.field_top[lay][0]
+
+    def field_transmission_top(self, layer=None):
+        lay = self.selected_layer if layer is None else layer
+        return self.field_top[lay][1]
+
+    def field_reflection_bottom(self, layer=None):
+        lay = self.selected_layer if layer is None else layer
+        return self.field_bottom[lay][0]
+
+    def field_transmission_bottom(self, layer=None):
+        lay = self.selected_layer if layer is None else layer
+        return self.field_bottom[lay][1]
 
 
 def normalize_diffuse_matrix(mat, mu_st, mu_i, weights):
