@@ -1,6 +1,7 @@
 # coding: utf-8
 
-"""This module defines the configuration for sensors used in radiative transfer simulations. The sensor configuration
+"""
+This module defines the configuration for sensors used in radiative transfer simulations. The sensor configuration
 includes all the information describing the sensor viewing geometry (incidence, ...) and operating parameters
 (frequency, polarization, ...). The easiest and recommended way to create a :py:class:`Sensor` instance is to use one of
 the convenience functions such as :py:func:`~smrt.inputs.sensor_list.passive`,
@@ -14,14 +15,15 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from ..core.globalconstants import C_SPEED
+from ..core.globalconstants import C_SPEED, EARTH_RADIUS
 
 # local import
 from .error import SMRTError, smrt_warn
 
 
 def passive(frequency, theta, polarization=None, channel_map=None, name=None):
-    """Return a generic configuration for passive microwave sensor.
+    """
+    Return a generic configuration for passive microwave sensor.
 
     Return a :py:class:`Sensor` for a microwave radiometer with given frequency, incidence angle and polarization
 
@@ -52,6 +54,7 @@ def passive(frequency, theta, polarization=None, channel_map=None, name=None):
         from smrt import sensor_list radiometer = sensor_list.passive(18e9, 50) radiometer = sensor_list.passive(18e9,
         50, "V") radiometer = sensor_list.passive([18e9,36.5e9], [50,55], ["V","H"])
     """
+
     if polarization is None:
         polarization = ["V", "H"]
 
@@ -72,7 +75,8 @@ def passive(frequency, theta, polarization=None, channel_map=None, name=None):
 
 
 def channel_map_for_radar(frequency=None, polarization="HV", order="fp"):
-    """Create a channel map for radar sensors.
+    """
+    Create a channel map for radar sensors.
 
     Args:
         frequency:  frequency
@@ -83,6 +87,7 @@ def channel_map_for_radar(frequency=None, polarization="HV", order="fp"):
         name of the channels is in GHz with leading 0 if necessary.
         The polarization is after the frequency if order is 'fp' and before if order is 'pf'.
     """
+
     if frequency is None:
         frequency_str = ""
     else:
@@ -103,7 +108,7 @@ def channel_map_for_radar(frequency=None, polarization="HV", order="fp"):
         channel_name(freq_str, pola_inc, pola_refl): dict(
             frequency=freq, polarization_inc=pola_inc, polarization=pola_refl
         )
-        for freq_str, freq in zip(frequency_str, frequency, strict=False)
+        for freq_str, freq in zip(frequency_str, frequency)
         for pola_inc in polarization
         for pola_refl in polarization
     }
@@ -121,7 +126,8 @@ def active(
     channel_map=None,
     name=None,
 ):
-    """Return a generic configuration for active microwave sensor.
+    """
+    Return a generic configuration for active microwave sensor.
 
     Return a :py:class:`Sensor` for a radar with given frequency, incidence and viewing angles and polarization
 
@@ -160,9 +166,9 @@ def active(
         from smrt import sensor_list
         scatterometer = sensor_list.active(frequency=18e9, theta_inc=50)
         scatterometer = sensor_list.active(18e9, 50, 50, 0, "V", "V")
-        scatterometer = sensor_list.active([18e9,36.5e9], theta=50, theta_inc=50, polarization_inc=["V", "H"],
-                                            polarization=["V", "H"])
+        scatterometer = sensor_list.active([18e9,36.5e9], theta=50, theta_inc=50, polarization_inc=["V", "H"], polarization=["V", "H"])
     """
+
     # if polarization is None or polarization == '4P':
     #     polarization = ['VV', 'VH', 'HV', 'HH']
 
@@ -194,18 +200,31 @@ def active(
     return sensor
 
 
-def altimeter(channel, **kwargs):
+def lrm_altimeter(channel, **kwargs):
+    """
+    Return a generic configuration for a LRM altimeter.
+
+    """
+
+    return Altimeter(channel=channel, ndoppler=0, **kwargs)
+
+
+def sar_altimeter(channel, **kwargs):
+    """
+    Return a generic configuration for a SAR altimeter.
+
+    """
     return Altimeter(channel=channel, **kwargs)
 
 
 def make_multi_channel_altimeter(config, channel):
-    # helper function to make a single or multi channel altimter sensor object from a config in dict format
+    # helper function to make a single or multi channel altimeter sensor object from a config in dict format
     if isinstance(channel, str):
-        return altimeter(channel, **config[channel])
+        return Altimeter(channel=channel, **config[channel])
     else:
         if channel is None:
             channel = config.keys()
-        return SensorList([altimeter(c, **config[c]) for c in channel])
+        return SensorList([Altimeter(channel=c, **config[c]) for c in channel])
 
 
 class SensorBase(object):
@@ -213,7 +232,8 @@ class SensorBase(object):
 
 
 class Sensor(SensorBase):
-    """This class contains a sensor configuration.
+    """
+    This class contains a sensor configuration.
 
     Use of the functions :py:func:`passive`, :py:func:`active`, or the sensor specific functions
     e.g. :py:func:`amsre` are recommended to access this class.
@@ -231,7 +251,8 @@ class Sensor(SensorBase):
         name=None,
         wavelength=None,
     ):
-        """Build a Sensor.
+        """
+        Build a Sensor.
 
         Setting theta_inc to None means passive mode
 
@@ -242,8 +263,8 @@ class Sensor(SensorBase):
             theta_deg: zenith angle in degrees at which the observation is made.
             phi_deg: azimuth angle at which the observation is made.
             polarization: List of single character (H or V).
-            channel_map: map channel names (keys) to configuration (values). A configuration is a dict with frequency,
-                polarization and other such parameters to be used by Result to select the results.
+            channel_map: map channel names (keys) to configuration (values). A configuration is a dict with frequency, polarization and other
+                such parameters to be used by Result to select the results.
             name: name of the sensor.
             wavelength: wavelength of the sensor. Can be set instead of the frequency.
         """
@@ -254,9 +275,10 @@ class Sensor(SensorBase):
                 smrt_warn("Sensor requires either frequency or wavelength argument, not both")
 
             self.frequency = np.asarray(frequency).squeeze() if isinstance(frequency, Sequence) else frequency
+            self.wavelength = C_SPEED / self.frequency
         elif wavelength is not None:
-            wl = np.asarray(wavelength).squeeze() if isinstance(wavelength, Sequence) else wavelength
-            self.frequency = C_SPEED / wl
+            self.wavelength = np.asarray(wavelength).squeeze() if isinstance(wavelength, Sequence) else wavelength
+            self.frequency = C_SPEED / self.wavelength
         else:
             raise SMRTError("Either frequency or wavelength is required")
 
@@ -298,19 +320,18 @@ class Sensor(SensorBase):
                 raise SMRTError("Zenith angle theta_inc has duplicated values which is invalid.")
 
             self.theta_inc = np.radians(self.theta_inc_deg)
-            self.mu_i = np.cos(self.theta_inc)
+            self.mu_s = np.cos(self.theta_inc)
 
     @property
     def wavenumber(self):
-        return (2 * np.pi / C_SPEED) * self.frequency
-
-    @property
-    def wavelength(self):
-        return C_SPEED / self.frequency
+        return 2 * np.pi / self.wavelength
 
     @property
     def mode(self):
-        """Return the mode of observation: "A" for active or "P" for passive."""
+        """
+        Return the mode of observation: "A" for active or "P" for passive.
+        """
+
         if self.theta_inc is None:
             return "P"
         else:
@@ -340,7 +361,8 @@ class Sensor(SensorBase):
                 yield axis, values
 
     def iterate(self, axis):
-        """Iterate over the configuration for the given axis.
+        """
+        Iterate over the configuration for the given axis.
 
         Args:
             axis: one of the attribute of the sensor (frequency, ...) to iterate along
@@ -397,30 +419,57 @@ class SensorList(SensorBase):
 
 
 class Altimeter(Sensor):
-    """This class contains a configuration for altimeter.
+    """Configuration for LRM and SAR altimeters.
+    Use of the functions :py:func:`sar_altimeter`, or the sensor specific functions
+    e.g. :py:func:`sentinel3_sarm` are recommended to access this class.
 
-    Use of the functions :py:func:`altimeter`, or the sensor specific functions
-    e.g. :py:func:`envisat_ra2` are recommended to access this class.
     """
 
     def __init__(
         self,
         frequency,
         altitude,
-        beamwidth,
         pulse_bandwidth,
-        sigma_p=None,
+        beamwidth_alongtrack,
+        beamwidth_acrosstrack,
+        pulse_repetition_frequency=0,  # can be zero for LRM, but not for SAR
+        velocity=0,  # can be zero for LRM, but not for SAR
         antenna_gain=1,
-        pitch_angle_deg=0,
-        roll_angle_deg=0,
-        beam_asymmetry=0,
-        ngate=1024,
+        ngate=128,
+        ndoppler=0,  # 0 = LRM
         nominal_gate=40,
+        doppler_window="rect",
+        pitch_angle_deg=0.0,
+        roll_angle_deg=0.0,
         theta_inc_deg=0.0,
         polarization_inc=None,
         polarization=None,
         channel=None,
     ):
+        """Build a SAR altimeter sensor configuration.
+
+
+        Args:
+            frequency: frequency in Hz.
+            altitude: altitude of the sensor in m.
+            pulse_bandwidth: pulse bandwidth in Hz.
+            beamwidth_alongtrack: beamwidth along track in degrees.
+            beamwidth_acrosstrack: beamwidth across track in degrees.
+            pulse_repetition_frequency: pulse repetition frequency in Hz (SAR mode). Can be zero for LRM mode.
+            velocity: velocity of the sensor in m/s (SAR mode). Can be unset or zero for LRM mode.
+            antenna_gain: one-way antenna gain at the center of the antenna (unitless).
+            ngate: number of range gates.
+            ndoppler: number of Doppler bins (SAR mode). Must be 0 for LRM mode.
+            nominal_gate: nominal gate number (used for georeferencing).
+            doppler_window: Doppler window type ('rect' or 'hamming').
+            pitch_angle_deg: pitch angle in degrees.
+            roll_angle_deg: roll angle in degrees.
+            theta_inc_deg: incidence angle in degrees from nadir.
+            polarization_inc: list of single character (H or V) for the incident wave.
+            polarization: list of single character (H or V) for the received wave.
+            channel: name of the channel.
+        """
+
         channel_map = {channel: dict()} if channel is not None else dict()
 
         super().__init__(
@@ -432,16 +481,29 @@ class Altimeter(Sensor):
             channel_map=channel_map,
             phi_deg=180,  # this is important to get backscatter with DORT
         )
+
         self.altitude = altitude
-        self.beamwidth = beamwidth
+        self.beamwidth_alongtrack = beamwidth_alongtrack
+        self.beamwidth_acrosstrack = beamwidth_acrosstrack
+        self.antenna_gain = antenna_gain
+        self.pulse_repetition_frequency = pulse_repetition_frequency
+        self.velocity = velocity
         self.ngate = ngate
+        self.ndoppler = ndoppler
         self.pulse_bandwidth = pulse_bandwidth
-        self.pulse_sigma = sigma_p if sigma_p is not None else 0.513 / pulse_bandwidth
         self.nominal_gate = nominal_gate
         self.pitch_angle = np.deg2rad(pitch_angle_deg)
         self.roll_angle = np.deg2rad(roll_angle_deg)
-        self.beam_asymmetry = beam_asymmetry
-        self.antenna_gain = antenna_gain
+
+        self.doppler_window = doppler_window
+
+        # Earth sphericity compensation # see Chelton 1989
+        self.alpha = 1 + altitude / EARTH_RADIUS  # earth sphericity compensation # see Chelton 1989
+
+    @property
+    def burst_duration(self):
+        # used by some delay_doppler_map models:
+        return self.ndoppler / self.pulse_repetition_frequency
 
     @property
     def off_nadir_angle(self):

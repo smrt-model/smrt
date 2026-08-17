@@ -1,5 +1,6 @@
-"""Compute waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the given snowpack and sensor (or
-complex terrain soon).
+"""
+Compute waveforms as measured by Low Rate Mode altimeters (e.g. ENVISAT) for the given snowpack and sensor (or complex
+terrain soon).
 
 The implementation is based on Adams and Brown 1998 and Lacroix et al. 2008. Both models differ in the specific choices
 for the scattering and backscatter of the interface, but are similar in the way the waveform is calculated, which
@@ -10,7 +11,7 @@ Approximations:
       extinction.
     - Near nadir / small angle approximation: to compute delay, the paths in the snow are along the z-axis. Off-nadir
       delay is neglected. This error is likely to be small (except for very deep penetration).
-    - Do not account for specular refelction (to be implemented).
+    - Do not account for specular reflection (to be implemented).
 
 Note:
     With this RT solver, if using Geometrical Optics for rough surface/interface modeling, it is strongly advised to use
@@ -25,9 +26,10 @@ Usage:
         >>> altimodel = make_model('iba', "nadir_lrm_altimetry", rtsolver_options={return_contributions=True})
 
 References:
-    - F. Larue, G. Picard, J. Aublanc, L. Arnaud, A. Robledano-Perez, E. Le Meur, V. Favier, B. Jourdain, J. Savarino,
-      P. Thibaut, Radar altimeter waveform simulations in Antarctica with the Snow Microwave Radiative Transfer Model
-       (SMRT) , Remote Sensing of Environment, 263, 112534 doi:10.1016/j.rse.2021.112534, 2021
+    - F. Larue, G. Picard, J. Aublanc, L. Arnaud, A. Robledano-Perez, E. Le Meur, V. Favier, B. Jourdain, J. Savarino, P.
+      Thibaut, Radar altimeter waveform simulations in Antarctica with the Snow Microwave Radiative Transfer Model
+      (SMRT) , Remote Sensing of Environment, 263, 112534 doi:10.1016/j.rse.2021.112534, 2021
+
 """
 
 import numpy as np
@@ -38,34 +40,31 @@ from smrt.core.error import SMRTError
 from smrt.core.globalconstants import C_SPEED
 from smrt.core.result import AltimetryResult
 from smrt.interface.flat import Flat
-from smrt.rtsolver.waveform_model import Brown1977
+from smrt.rtsolver.lrm_waveform_model import Brown1977
 
 
 class NadirLRMAltimetry(object):
-    """Implement the Nadir LRM Mode Altimetry RT solver.
+    """
+    Implement the Nadir LRM Mode Altimetry RT solver.
 
     Args:
-        oversampling_time: integer number defining the number of subgates used for the computation in each altimeter
-            gate. This is equivalent to multiply the bandwidth by this number. It is used to perform more accurate
-            computation.
-        return_oversampled: by default the backscatter is returned for each gate. If set to True, the oversampled
-            waveform is returned instead. See the 'oversampling' argument.
-        return_contributions: return "volume", "surface" and "interface" backscatter contributions in addition to the
-            "total" backscatter.
+        oversampling_time: integer number defining the number of subgates used for the computation in each altimeter gate.
+            This is equivalent to multiply the bandwidth by this number. It is used to perform more accurate computation.
+        return_oversampled: by default the backscatter is returned for each gate. If set to True, the oversampled waveform
+            is returned instead. See the 'oversampling' argument.
+        return_contributions: return "volume", "surface" and "interface" backscatter contributions in addition to the "total" backscatter.
         compute_coherent_reflection: if True (default), compute the coherent reflection according to Fung and Eom, 1983.
         skip_pfs_convolution: return the vertical backscatter without the convolution by the PFS, if set to True.
-        theta_inc_sampling: number of subdivisions used to calculate the incidence angular variations of surface and
-            inteface backscatter (the higher the better but the more computationnaly expensive). Note
-            that the subdivisions are irregular in incidence angle but correspond to annulii of equi-duration. This
-            number must be a true divider of the number of gates.
+        theta_inc_sampling: number of subdivisions used to calculate the incidence angular variations of surface and inteface
+            backscatter (the higher the better but the more computationnaly expensive). Note
+            that the subdivisions are irregular in incidence angle but correspond to annulii of equi-duration. This number
+            must be a true divider of the number of gates.
         error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
             If set to "nan", return a nan, so the calculation can continue, but the result is of course unusuable and
-            the error message is not accessible. This is only recommended for long simulations that sometimes produce an
-            error.
+            the error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
     """
 
-    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the
-    # caller (Model object)
+    # this specifies which dimension this solver is able to deal with. Those not in this list must be managed by the caller (Model object)
     # e.g. here, frequency, time, ... are not managed
     _broadcast_capability = {}
 
@@ -95,8 +94,9 @@ class NadirLRMAltimetry(object):
         self.skip_pfs_convolution = skip_pfs_convolution
         self.theta_inc_sampling = theta_inc_sampling
 
-    def solve(self, snowpack, emmodels, sensor, atmosphere=None, parallel_computation=None):
-        """Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
+    def solve(self, snowpack, emmodels, sensor, atmosphere=None):
+        """
+        Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
         Args:
             snowpack: Snowpack object.
@@ -227,7 +227,7 @@ class NadirLRMAltimetry(object):
             # then the (PTR and PDF)
 
             # start with building the PTR
-            if (self.sensor.pulse_sigma > 0) or (sigma_surface > 0):
+            if sigma_surface > 0:
                 sigma_c = np.sqrt(self.sensor.pulse_sigma**2 + (2 * sigma_surface / C_SPEED) ** 2)
 
                 # restrict t_gate to 5 sigma and compute the positive and negative values
@@ -288,7 +288,7 @@ class NadirLRMAltimetry(object):
                     )
 
             # now take into account the PTR + PDF assuming both are gaussian
-            if (self.sensor.pulse_sigma > 0) or (sigma_surface > 0):
+            if sigma_surface > 0:
                 # perform the last convolution
                 def do_convolve_by_PTR_PDF(backscatter):
                     # perform the convolution and cut the first part due to t_gate symmetrization (ensure the nominal
@@ -352,8 +352,7 @@ class NadirLRMAltimetry(object):
         return z[:-1], dz, b_gate, b_layer[:-1], b_interface
 
     def vertical_scattering_distribution(self, return_contributions, mu_i=1.0):
-        # """Compute the vertical backscattering distribution due to "grain" or volume scattering (symbol pvg in Eq 9 in
-        #  Lacroix 2008) and
+        # """Compute the vertical backscattering distribution due to "grain" or volume scattering (symbol pvg in Eq 9 in Lacroix 2008) and
         # "interfaces" or 'surface' scattering (symbol pvl in Eq 9 in Lacroix 2008)
 
         # :param mu: cosine of the incidence angles. Only the dependence on the surface scattering depend on mu_i
@@ -375,8 +374,7 @@ class NadirLRMAltimetry(object):
         subgate_layer_extinction = fill_forward(layer_extinction, b_layer)
 
         # layer backscatter
-        # backward scattering (take VV, is equal to HH) # nadir backward scattering. a.k.a gamma in Matzler's notation.
-        #  We neglect mu_i.
+        # backward scattering (take VV, is equal to HH) # nadir backward scattering. a.k.a gamma in Matzler's notation. We neglect mu_i.
         backward_scattering = np.array(
             [
                 em.phase(mu_s=-1.0, mu_i=1.0, dphi=np.pi, npol=2)[0, 0].squeeze().real / (4 * np.pi)
@@ -401,7 +399,7 @@ class NadirLRMAltimetry(object):
         # 'interface' attenuation due to transmission. We neglect mu_i.
         transmission = [
             i.coherent_transmission_matrix(self.sensor.frequency, eps_1, eps_2, mu1=1.0, npol=2)[0, 0]
-            for i, eps_1, eps_2 in zip(self.snowpack.interfaces, np.insert(eps[:-1], 0, 1), eps, strict=False)
+            for i, eps_1, eps_2 in zip(self.snowpack.interfaces, np.insert(eps[:-1], 0, 1), eps)
         ]
         cum_transmission = np.cumprod(np.array(transmission) ** 2, axis=0)  # two-way transmission
 
@@ -436,9 +434,7 @@ class NadirLRMAltimetry(object):
                 if (self.compute_coherent_reflection) and hasattr(i, "roughness_rms")
                 else 0
             )
-            for i, eps_1, eps_2, mu in zip(
-                self.snowpack.interfaces, eps_upper_interface, eps, mu_upper_interface, strict=False
-            )
+            for i, eps_1, eps_2, mu in zip(self.snowpack.interfaces, eps_upper_interface, eps, mu_upper_interface)
         ]
 
         # note that the division by eps_1 takes into account the divergence of the upwelling stream due to refraction
@@ -488,8 +484,8 @@ class NadirLRMAltimetry(object):
         # attenuation at the bottom of the layer is the product of layer and interface attenuation
         subgate_backscatter_i = fill(interface_echo, b_interface) * subgate_attenuation_v * subgate_attenuation_i
 
-        # compute the primitive of the subgate backscatter, select the gate interval and differentitate to get the
-        # integrated backscatter over each gate
+        # compute the primitive of the subgate backscatter, select the gate interval and differentitate to get the integrated backscatter
+        # over each gate
         if self.return_contributions or (self.theta_inc_sampling > 1):
             # volume contribution
             subgate_backscatter_v = np.insert(subgate_backscatter_v, 0, 0)
@@ -566,9 +562,10 @@ def coherent_reflection_square_decay(sensor):
 
 
 def coherent_reflection_factor(sensor, roughness_rms, mu):
-    """Return the factor to account for the coherent echo due to the spherical wave (see Fung and Eom, 1983) equation 6.
+    """return the factor to account for the coherent echo due to the spherical wave (see Fung and Eom, 1983) equation 6.
     This neglects the macroscopic slope of the terrain, which should be included in principle.
     """
+
     sintheta2 = 1 - mu**2  # we neglect the slope
     theta2 = sintheta2  # approximation
 
@@ -578,8 +575,9 @@ def coherent_reflection_factor(sensor, roughness_rms, mu):
 
 
 def local_incidence_cosine(sensor, mu):
-    """Compute the cosine of the local incidence angle considering a small pitch and roll.
+    """compute the cosine of the local incidence angle considering a small pitch and roll.
 
     This function assumes pitch and roll are small, otherwise yaw would be involved in the equation
     """
+
     return mu * np.cos(sensor.pitch_angle) * np.cos(sensor.roll_angle)

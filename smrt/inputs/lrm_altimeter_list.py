@@ -1,17 +1,19 @@
 from smrt.core.error import SMRTError
-from smrt.core.sensor import altimeter, make_multi_channel_altimeter
+from smrt.core.sensor import lrm_altimeter, make_multi_channel_altimeter
 
 #
-# List of sensors
+# List of LRM altimeters
 #
 
 
 def envisat_ra2(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
-    """Returns an Altimeter instance for the ENVISAT RA2 altimeter.
+    """
+    Returns an Altimeter instance for the ENVISAT RA2 altimeter.
 
     Args:
       channel: can be 'S', 'Ku', or both. Default is both.
     """
+
     config = {
         "Ku": dict(
             frequency=13.575e9,
@@ -19,7 +21,8 @@ def envisat_ra2(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
             pulse_bandwidth=320e6,
             ngate=128,
             nominal_gate=45,
-            beamwidth=1.29,
+            beamwidth_alongtrack=1.29,
+            beamwidth_acrosstrack=1.29,
             pitch_angle_deg=pitch_angle_deg,
             roll_angle_deg=roll_angle_deg,
         ),
@@ -29,7 +32,8 @@ def envisat_ra2(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
             pulse_bandwidth=160e6,
             ngate=128,
             nominal_gate=32,  # to correct, the value is rather close to 25
-            beamwidth=5.5,  # Lacroix et al. and Fatras et al.,
+            beamwidth_alongtrack=5.5,  # Lacroix et al. and Fatras et al.,
+            beamwidth_acrosstrack=5.5,
             pitch_angle_deg=pitch_angle_deg,
             roll_angle_deg=roll_angle_deg,
         ),
@@ -39,11 +43,12 @@ def envisat_ra2(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
 
 
 def sentinel3_sral(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
-    """Return an Altimeter instance for the Sentinel 3 SRAL instrument.
+    """return an Altimeter instance for the Sentinel 3 SRAL instrument.
 
     :param channel: can be 'Ku' only ('C' is to be implemented)
 
     """
+
     config = {
         "Ku": dict(
             frequency=13.575e9,
@@ -51,7 +56,8 @@ def sentinel3_sral(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
             pulse_bandwidth=320e6,
             nominal_gate=44,
             ngate=128,
-            beamwidth=1.35,
+            beamwidth_alongtrack=1.35,
+            beamwidth_acrosstrack=1.35,
             antenna_gain=1,
             pitch_angle_deg=pitch_angle_deg,
             roll_angle_deg=roll_angle_deg,
@@ -62,19 +68,21 @@ def sentinel3_sral(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
 
 
 def saral_altika(pitch_angle_deg=0, roll_angle_deg=0):
-    """Return an Altimeter instance for the Saral/AltiKa instrument."""
+    """return an Altimeter instance for the Saral/AltiKa instrument."""
+
     params = dict(
         frequency=35.75e9,
         altitude=800e3,
         pulse_bandwidth=480e6,
         nominal_gate=51,
         ngate=128,
-        beamwidth=0.605,
+        beamwidth_alongtrack=0.605,
+        beamwidth_acrosstrack=0.605,
         antenna_gain=1,
         pitch_angle_deg=pitch_angle_deg,
         roll_angle_deg=roll_angle_deg,
     )
-    return altimeter(channel="Ka", **params)
+    return lrm_altimeter(channel="Ka", **params)
 
 
 def cryosat2_lrm(pitch_angle_deg=0, roll_angle_deg=0):
@@ -85,41 +93,45 @@ def cryosat2_lrm(pitch_angle_deg=0, roll_angle_deg=0):
     Beam width is 1.08 along track and 1.2 across track
 
     """
+
     params = dict(
         frequency=13.575e9,
         altitude=720e3,
         pulse_bandwidth=320e6,
         nominal_gate=50,  # Estimate - needs better definition
         ngate=128,
-        beamwidth=1.2,
+        beamwidth_alongtrack=1.08,
+        beamwidth_acrosstrack=1.2,
         antenna_gain=1,
         pitch_angle_deg=pitch_angle_deg,
         roll_angle_deg=roll_angle_deg,
     )
-    return altimeter(channel="Ku", **params)
+    return lrm_altimeter(channel="Ku", **params)
 
 
-def cryosat2_sin(pitch_angle_deg=0, roll_angle_deg=0):
-    """Return an altimeter instance for CryoSat-2: SIN mode
+# def cryosat2_sin(pitch_angle_deg=0, roll_angle_deg=0):
+#     """Return an altimeter instance for CryoSat-2: SIN mode
 
-    Parameters from https://earth.esa.int/web/eoportal/satellite-missions/c-missions/cryosat-2
-    Altitude from https://doi.org/10.1016/j.asr.2018.04.014
-    Beam width is 1.08 along track and 1.2 across track. Unfortunately SMRT is not able to take into
-    account elliptical footprints yet in LRM
+#     Parameters from https://earth.esa.int/web/eoportal/satellite-missions/c-missions/cryosat-2
+#     Altitude from https://doi.org/10.1016/j.asr.2018.04.014
+#     Beam width is 1.08 along track and 1.2 across track. Brown1977 is not able to take into
+#     account elliptical footprints yet in LRM, however Newkirk1992 model can. Select it in the waveform model.
 
-    """
-    params = dict(
-        frequency=13.575e9,
-        altitude=720e3,
-        pulse_bandwidth=320e6,
-        nominal_gate=164,  # Estimate - needs better definition
-        ngate=512,
-        beamwidth=1.2,
-        antenna_gain=1,
-        pitch_angle_deg=pitch_angle_deg,
-        roll_angle_deg=roll_angle_deg,
-    )
-    return altimeter(channel="Ku", **params)
+#     """
+
+#     params = dict(
+#         frequency=13.575e9,
+#         altitude=720e3,
+#         pulse_bandwidth=320e6,
+#         nominal_gate=164,  # Estimate - needs better definition
+#         ngate=512,
+#         beamwidth_alongtrack=1.08,
+#         beamwidth_acrosstrack=1.2,
+#         antenna_gain=1,
+#         pitch_angle_deg=pitch_angle_deg,
+#         roll_angle_deg=roll_angle_deg,
+#     )
+#     return lrm_altimeter(channel="Ku", **params)
 
 
 def asiras_lam(altitude=None, pitch_angle_deg=0, roll_angle_deg=0):
@@ -127,6 +139,8 @@ def asiras_lam(altitude=None, pitch_angle_deg=0, roll_angle_deg=0):
 
     Parameters from https://earth.esa.int/web/eoportal/airborne-sensors/asiras
     Beam width is 2.2 x 9.8 deg
+
+    Brown1997 can not take elliptical footprints into account whereas Newkirk1992 model can. Select it in the waveform model.
     """
     if altitude is None:
         raise SMRTError("Aircraft altitude must be defined")
@@ -139,12 +153,10 @@ def asiras_lam(altitude=None, pitch_angle_deg=0, roll_angle_deg=0):
         altitude=altitude,
         nominal_gate=41,  # Estimate - needs better definition
         ngate=256,
-        beamwidth=2.2,
+        beamwidth_alongtrack=2.2,
+        beamwidth_acrosstrack=9.8,
         antenna_gain=1,
         pitch_angle_deg=pitch_angle_deg,
         roll_angle_deg=roll_angle_deg,
     )
-    return altimeter(channel="Ku", **params)
-
-
-# TODO: add Sentinel 6. Need to add non-circular footprints first.
+    return lrm_altimeter(channel="Ku", **params)

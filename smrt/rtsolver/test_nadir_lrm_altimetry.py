@@ -5,7 +5,7 @@ from smrt import make_snowpack
 from smrt.core.model import Model
 from smrt.emmodel.nonscattering import NonScattering
 from smrt.emmodel.rayleigh import Rayleigh
-from smrt.inputs.altimeter_list import envisat_ra2
+from smrt.inputs.lrm_altimeter_list import envisat_ra2
 from smrt.interface.transparent import Transparent
 from smrt.rtsolver.nadir_lrm_altimetry import NadirLRMAltimetry
 
