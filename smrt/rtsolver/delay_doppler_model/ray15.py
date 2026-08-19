@@ -153,15 +153,17 @@ def fn(xi: npt.NDArray, n: int):
 
     # in reality it is enough to integrate around sqrt(xi)
     delta = np.sqrt(2 * 50)
-
-    return np.array(
-        [scipy.integrate.quad(fn_integrand,
-                              a=np.sqrt(max(0, xi_ - delta)), b=np.sqrt(max(0, xi_ + delta)),
-                              args=(n, xi_, ))[0] for xi_ in np.atleast_1d(xi)]
-    )  # fmt: skip
-
-
-fn = np.vectorize(fn)
+    xi = np.asarray(xi)
+    values = [
+        scipy.integrate.quad(
+            fn_integrand,
+            a=np.sqrt(max(0, xi_ - delta)),
+            b=np.sqrt(max(0, xi_ + delta)),
+            args=(n, xi_),
+        )[0]
+        for xi_ in xi.flat
+    ]
+    return np.asarray(values).reshape(xi.shape)
 
 
 @numba.jit(nopython=True)
