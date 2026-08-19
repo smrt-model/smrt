@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Bug
 
+## [v1.7]
+### Added
+	- add nadir_sar_altimetry module for SAR Altimetry waveform simulations
+
 ## [v1.6]
 ### Added
 	- add two faster diagonalization methods in DORT: half_rank_eig and stamnes88. "eig" is still the default, but this 	may change in the future.
