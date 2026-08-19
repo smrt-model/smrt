@@ -98,7 +98,7 @@ class NadirLRMAltimetry(object):
         self.skip_pfs_convolution = skip_pfs_convolution
         self.theta_inc_sampling = theta_inc_sampling
 
-    def solve(self, snowpack, emmodels, sensor, atmosphere=None):
+    def solve(self, snowpack, emmodels, sensor, atmosphere=None, parallel_computation=False):
         """
         Solve the radiative transfer equation for a given snowpack, emmodels and sensor configuration.
 
@@ -107,6 +107,7 @@ class NadirLRMAltimetry(object):
             emmodels: List of electromagnetic models object.
             sensor: Sensor object.
             atmosphere: [Optional] Atmosphere object.
+            parallel_computation: [Optional] Boolean indicating whether to use parallel computation.
 
         Returns:
             result: Result object.

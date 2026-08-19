@@ -154,7 +154,8 @@ class NadirSARAltimetry(object):
 
         if self.return_contributions not in [None, False, "no", "basic", "full"]:
             raise SMRTError(
-                'Invalid return_contributions. It must None, "no", basic", "basic coherent", "full" or  "full coherent"'
+                'Invalid return_contributions. It must be None, "no", basic", "basic coherent", '
+                '"full" or  "full coherent"'
             )
 
         self.return_oversampled = return_oversampled
@@ -163,9 +164,18 @@ class NadirSARAltimetry(object):
 
         self.prune_deep_snowpack = prune_deep_snowpack
 
-    def solve(self, snowpack_or_terrain, emmodels, sensor, atmosphere=None):
-        """Solve the radiative transfer equation for a given snowpack (or terrain with multiple snowpack), emmodels and
-        sensor configuration."""
+    def solve(self, snowpack_or_terrain, emmodels, sensor, atmosphere=None, parallel_computation=False):
+        """Solve the radiative transfer equation for a given snowpack (or terrain with multiple snowpack),
+        emmodels and sensor configuration.
+
+        Args:
+            snowpack_or_terrain: Snowpack or terrain object.
+            emmodels: List of electromagnetic models object.
+            sensor: Sensor object.
+            atmosphere: [Optional] Atmosphere object.
+            parallel_computation: [Optional] Boolean indicating whether to use parallel computation.
+        """
+
         if sensor.theta_inc != 0:
             raise SMRTError(
                 "This solver is for nadir looking altimeter only. Satellite mis-pointing (pitch and roll) is allowed "
