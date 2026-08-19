@@ -140,7 +140,8 @@ def asiras_lam(altitude=None, pitch_angle_deg=0, roll_angle_deg=0):
     Parameters from https://earth.esa.int/web/eoportal/airborne-sensors/asiras
     Beam width is 2.2 x 9.8 deg
 
-    Brown1997 can not take elliptical footprints into account whereas Newkirk1992 model can. Select it in the waveform model.
+    Brown1997 can not take elliptical footprints into account whereas Newkirk1992 model can. Select it in the waveform
+    model.
     """
     if altitude is None:
         raise SMRTError("Aircraft altitude must be defined")
