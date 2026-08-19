@@ -18,7 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [v1.6]
 ### Added
-	- add two faster diagonalization methods in DORT: half_rank_eig and stamnes88. "eig" is still the default, but this 	may change in the future.
+	- add two faster diagonalization methods in DORT: half_rank_eig and stamnes88. "eig" is still the default, but this
+	  may change in the future.
 	- add second order iterative rtsolver
 	- add successive_order rtsolver.
 	- add local incidence angles in altimetry calculation from satellite pitch and roll angles.
@@ -27,7 +28,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 	- add Turner2016 water permittivity for supercoold water
 	- allow to define the emmodel and emmodel in the Layer object. This override the default emmodel used in make_model.
 	- add optional cache for the diagonalization in DORT, allowing strong acceleration in case of identical layers
-		within a snowpacks or across snowpacks. Experimental.
+	  within a snowpacks or across snowpacks. Experimental.
 	- add atmosphere objects together now results in an atmosphere stack
 	- allow to use a string where permittivity_module function are expected. Import is automatic.
 	- add method Result.ks() and Result.ka().
