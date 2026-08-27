@@ -316,6 +316,8 @@ class IterativeSecondOrder(RTSolverBase):
 
         # store backscatter contribution for each layer, start with 0 for the surface contribution
         backscatter_layer = [np.zeros((len(mu0), npol, npol))]
+        #in case no rough layer interaction is set, set to zeros
+        intensity_up_ground_layer = np.zeros((len(mu0), npol, npol))
         for ln in range(nlayer):
             # prepare matrix of interface
             # cumulative transmission matrix of the top layer
@@ -333,9 +335,10 @@ class IterativeSecondOrder(RTSolverBase):
             optical_depth += layer_optical_depth_ln
 
             # get intensity of double scatter
-            intensity_up_intra += transmission_top @ self.compute_double_scattering_intralayer(
+            intensity_up_intra_layer = transmission_top @ self.compute_double_scattering_intralayer(
                 emmodels[ln], I_l, weight_ln, mu_int_ln, mus[ln], ke_ln, layer_optical_depth_ln
             )
+            intensity_up_intra += intensity_up_intra_layer
 
             # calcualte layer n volume interaction with a rough substrate
             if condition_rough_substrate_integral:
@@ -356,7 +359,7 @@ class IterativeSecondOrder(RTSolverBase):
                     npol,
                 )
 
-                intensity_up_ground += transmission_top @ self.compute_scattering_rough_layer(
+                intensity_up_ground_layer = transmission_top @ self.compute_scattering_rough_layer(
                     emmodels[ln],
                     I_l,
                     weight_ln,
@@ -367,6 +370,7 @@ class IterativeSecondOrder(RTSolverBase):
                     layer_optical_depth_ln_ground,
                     Rbottom_diff_int,
                 )
+                intensity_up_ground += intensity_up_ground_layer
 
             # calculate any rough layer (other than susbtrate) volume interaction with upper layer)
             if condition_rough_layer_integral[ln + 1]:
@@ -391,7 +395,7 @@ class IterativeSecondOrder(RTSolverBase):
                         self.m_max,
                         npol,
                     )
-                    intensity_up_ground += self.compute_scattering_rough_layer(
+                    intensity_up_ground_layer = self.compute_scattering_rough_layer(
                         emmodels[lr],
                         I_l,
                         weight_lr,
@@ -402,9 +406,10 @@ class IterativeSecondOrder(RTSolverBase):
                         layer_optical_depth_ln_to_lr,
                         Rbottom_diff_int,
                     )
+                    intensity_up_ground += intensity_up_ground_layer
 
             backscatter_layer.append(
-                (intensity_up_intra + intensity_up_ground) * mus[ln][:, np.newaxis, np.newaxis] * 4 * np.pi
+                (intensity_up_intra_layer + intensity_up_ground_layer) * mus[ln][:, np.newaxis, np.newaxis] * 4 * np.pi
             )
 
             if self.compute_scattering_interlayer:
