@@ -232,6 +232,9 @@ class SensorBase(object):
     pass
 
 
+ANGULAR_WAVENUMBER = 2 * np.pi / C_SPEED
+
+
 class Sensor(SensorBase):
     """
     This class contains a sensor configuration.
@@ -276,10 +279,9 @@ class Sensor(SensorBase):
                 smrt_warn("Sensor requires either frequency or wavelength argument, not both")
 
             self.frequency = np.asarray(frequency).squeeze() if isinstance(frequency, Sequence) else frequency
-            self.wavelength = C_SPEED / self.frequency
         elif wavelength is not None:
-            self.wavelength = np.asarray(wavelength).squeeze() if isinstance(wavelength, Sequence) else wavelength
-            self.frequency = C_SPEED / self.wavelength
+            wavelength = np.asarray(wavelength).squeeze() if isinstance(wavelength, Sequence) else wavelength
+            self.frequency = C_SPEED / wavelength
         else:
             raise SMRTError("Either frequency or wavelength is required")
 
@@ -324,8 +326,12 @@ class Sensor(SensorBase):
             self.mu_i = np.cos(self.theta_inc)
 
     @property
+    def wavelength(self):
+        return C_SPEED / self.frequency
+
+    @property
     def wavenumber(self):
-        return 2 * np.pi / self.wavelength
+        return ANGULAR_WAVENUMBER * self.frequency
 
     @property
     def mode(self):

@@ -3,6 +3,7 @@ import pytest
 
 from smrt.core import sensor
 from smrt.core.error import SMRTError, SMRTWarning
+from smrt.core.globalconstants import C_SPEED
 
 # Generic test - store for later
 # class FooTests(unittest.TestCase):
@@ -23,6 +24,15 @@ def test_iterate():
     freqs_bis = [sub_s.frequency for sub_s in s.iterate("frequency")]
 
     np.testing.assert_equal(freqs, freqs_bis)
+
+
+def test_iterate_wavelength():
+    freqs = [1e9, 2e9, 3e9]
+    s = sensor.active(freqs, 55)
+
+    wavelengths_bis = [sub_s.wavelength for sub_s in s.iterate("frequency")]
+
+    np.testing.assert_equal(C_SPEED / np.array(freqs), wavelengths_bis)
 
 
 def test_wavelength():
