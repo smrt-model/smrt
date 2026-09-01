@@ -20,7 +20,7 @@ import os
 import sys
 
 # sys.path.insert(0, os.path.abspath('source/'))
-sys.path.insert(0, os.path.abspath("../../smrt/"))
+sys.path.insert(0, os.path.abspath("../../src/smrt/"))
 
 # This allows readthedocs to find the submodules
 on_rtd = os.environ.get("READTHEDOCS") == "True"

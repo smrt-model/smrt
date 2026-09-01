@@ -316,7 +316,7 @@ class IterativeSecondOrder(RTSolverBase):
 
         # store backscatter contribution for each layer, start with 0 for the surface contribution
         backscatter_layer = [np.zeros((len(mu0), npol, npol))]
-        #in case no rough layer interaction is set, set to zeros
+        # in case no rough layer interaction is set, set to zeros
         intensity_up_ground_layer = np.zeros((len(mu0), npol, npol))
         for ln in range(nlayer):
             # prepare matrix of interface
@@ -553,7 +553,7 @@ class IterativeSecondOrder(RTSolverBase):
         phase_mu_int_mu = emmodel.ft_even_phase(mu_int_sym, mu_i_sym, m_max) / (4 * np.pi)
         phase_mu_mu_int = emmodel.ft_even_phase(mu_i_sym, mu_int_sym, m_max) / (4 * np.pi)
 
-         ## sign of mu are different from Karam but its the only it works tabar**!!
+        ## sign of mu are different from Karam but its the only it works tabar**!!
         R1 = Rbottom_diff_int["i_int"][:, :, :, 0:n_mu_i, n_stream:]  # R(-mu_i, mu_int)
         R2 = Rbottom_diff_int["int_i"][:, :, :, n_stream:, n_mu_i:]  # R(mu_int, mu_i)
 

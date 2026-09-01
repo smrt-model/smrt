@@ -48,8 +48,9 @@ requires = ["setuptools >= 62",
 ]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ['smrt']
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["smrt", "smrt.*"]
 
 [tool.ruff]
 lint.select = ["E","F"]

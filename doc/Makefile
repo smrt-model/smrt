@@ -227,7 +227,7 @@ dummy:
 # the following target is based on:
 # https://developer.ridgerun.com/wiki/index.php/How_to_generate_sphinx_documentation_for_python_code_running_in_an_embedded_system
 rst:
-	sphinx-apidoc -M -f -e -o source/ ../smrt
+	sphinx-apidoc -M -f -e -o source/ ../src/smrt
 
 
 fullhtml:	rst html
