@@ -100,7 +100,9 @@ class Snowpack(object):
         )
         return [lay.density for lay in self.layers]  # TODO Ghi: caching
 
-    def profile(self, property_name: str, where: str = "all", raise_attributeerror: bool = False) -> np.ndarray:
+    def profile(
+        self, property_name: str, where: str = "all", raise_attributeerror: bool = False, dtype: type = None
+    ) -> np.ndarray:
         """Return the vertical profile of property_name. The property is searched either in the layer, microstructure or
         interface.
 
@@ -141,7 +143,7 @@ class Snowpack(object):
         if raise_attributeerror and all((p is None for p in prof)):
             raise AttributeError(f"The attribute {property_name} can not be found")
 
-        return np.array(prof)
+        return np.array(prof, dtype=dtype)
 
     def append(self, layer, interface=None):
         """Append a new layer at the bottom of the stack of layers.
