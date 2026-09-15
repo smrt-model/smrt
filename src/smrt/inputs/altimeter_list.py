@@ -5,8 +5,8 @@ The functions are named according to the satellite mission and sometimes the alt
 
 from warnings import warn
 
-from smrt.core.error import SensorList, SMRTError
-from smrt.core.sensor import Altimeter
+from smrt.core.error import SMRTError
+from smrt.core.sensor import Altimeter, SensorList
 
 
 def altimeter(channel, **kwargs):
