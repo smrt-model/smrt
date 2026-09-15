@@ -3,9 +3,10 @@
 import numpy as np
 import pytest
 
-from smrt import make_model, make_snowpack, sensor
+from smrt import make_model, make_snowpack
 from smrt.core.globalconstants import PERMITTIVITY_OF_FREE_SPACE
 from smrt.inputs.make_soil import make_soil_column, make_soil_substrate
+from smrt.inputs.sensor_list import passive
 
 #
 # Ghi: rapid hack, should be splitted in different functions
@@ -36,7 +37,7 @@ def run_model(snowpack):
     m = make_model("dmrt_qcacp_shortrange", "dort")
 
     # create the sensor
-    radiometer = sensor.passive(37e9, 40)  # test at 40° to avoid the Brewster angle
+    radiometer = passive(37e9, 40)  # test at 40° to avoid the Brewster angle
 
     # run the model
     res = m.run(radiometer, snowpack)
@@ -122,7 +123,7 @@ def test_soil_column():
     m = make_model("nonscattering", "dort")
 
     # create the sensor
-    radiometer = sensor.passive(1.4e9, 40)
+    radiometer = passive(1.4e9, 40)
 
     # run the model
     res = m.run(radiometer, soil_column)

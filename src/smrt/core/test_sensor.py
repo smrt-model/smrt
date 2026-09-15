@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
 
-from smrt.core import sensor
 from smrt.core.error import SMRTError, SMRTWarning
 from smrt.core.globalconstants import C_SPEED
+from smrt.core.sensor import Sensor
 
 # Generic test - store for later
 # class FooTests(unittest.TestCase):
@@ -19,7 +19,8 @@ from smrt.core.globalconstants import C_SPEED
 
 def test_iterate():
     freqs = [1e9, 2e9, 3e9]
-    s = sensor.active(freqs, 55)
+    s = Sensor(freqs, theta_inc_deg=55, theta_deg=55, phi_deg=180, polarization_inc=["V", "H"], polarization=["V", "H"])
+    s.basic_checks()
 
     freqs_bis = [sub_s.frequency for sub_s in s.iterate("frequency")]
 
@@ -28,7 +29,8 @@ def test_iterate():
 
 def test_iterate_wavelength():
     freqs = [1e9, 2e9, 3e9]
-    s = sensor.active(freqs, 55)
+    s = Sensor(freqs, theta_inc_deg=55, theta_deg=55, phi_deg=180, polarization_inc=["V", "H"], polarization=["V", "H"])
+    s.basic_checks()
 
     wavelengths_bis = [sub_s.wavelength for sub_s in s.iterate("frequency")]
 
@@ -36,33 +38,42 @@ def test_iterate_wavelength():
 
 
 def test_wavelength():
-    s = sensor.Sensor(wavelength=0.21, theta_deg=0)
+    s = Sensor(wavelength=0.21, theta_deg=0)
     np.testing.assert_allclose(s.wavelength, 0.21)
     np.testing.assert_allclose(s.frequency, 1427583133)
 
 
 def test_no_theta():
     with pytest.raises(SMRTError):
-        sensor.passive(1e9, theta=None)
+        Sensor(1e9, theta_deg=None)
 
 
 def test_passive_wrong_frequency_units_warning():
     with pytest.warns(SMRTWarning):
-        sensor.passive([1e9, 35], theta=55)
+        sensor = Sensor([1e9, 35], theta_deg=55, polarization=["V", "H"])
+        sensor.basic_checks()
 
 
 def test_duplicate_theta():
     with pytest.raises(SMRTError):
-        sensor.passive([1e9, 35], theta=[55, 55])
+        Sensor([1e9, 35], theta_deg=[55, 55], polarization=["V", "H"])
 
 
 def test_duplicate_theta_active():
     with pytest.raises(SMRTError):
-        sensor.active([1e9, 35], [55, 55])
+        Sensor(
+            [1e9, 35],
+            theta_inc_deg=[55, 55],
+            theta_deg=[55, 55],
+            phi_deg=180,
+            polarization_inc=["V", "H"],
+            polarization=["V", "H"],
+        )
 
 
 def test_passive_mode():
-    se = sensor.passive(35e9, 55, polarization="H")
+    se = Sensor(35e9, theta_deg=55, polarization="H")
+    se.basic_checks()
     print(se.mode)
 
 
@@ -71,7 +82,15 @@ def test_passive_mode():
 
 def test_active_wrong_frequency_units_warning():
     with pytest.warns(SMRTWarning):
-        sensor.active([1e9, 35], 55)
+        sensor = Sensor(
+            [1e9, 35],
+            theta_inc_deg=55,
+            theta_deg=55,
+            phi_deg=180,
+            polarization_inc=["V", "H"],
+            polarization=["V", "H"],
+        )
+        sensor.basic_checks()
 
 
 # def test_active_fourpol():
@@ -83,5 +102,13 @@ def test_active_wrong_frequency_units_warning():
 
 
 def test_active_mode():
-    se = sensor.active(35e9, 55)
+    se = Sensor(
+        35e9,
+        theta_inc_deg=55,
+        theta_deg=55,
+        phi_deg=180,
+        polarization_inc=["V", "H"],
+        polarization=["V", "H"],
+    )
+    se.basic_checks()
     assert se.mode == "A"
