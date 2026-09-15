@@ -28,6 +28,18 @@ class Streams(object):
     # n_substrate: int = 0
     n_air: int = 0
 
+    def cosine(self, layer: int) -> np.ndarray:
+        """Return the mu for a single direction (up) for a given layer.
+
+        Args:
+            layer: layer index
+
+        Returns:
+            np.ndarray: The mu values for both directions.
+        """
+
+        return self.mu[layer]
+
     def down_up_cosine(self, layer: int) -> np.ndarray:
         """Return the mu for both directions (up and down) for a given layer.
 
@@ -40,7 +52,7 @@ class Streams(object):
 
         return np.concatenate([self.mu[layer], -self.mu[layer]])
 
-    def extended_weights(self, layer: int, npol: int) -> np.ndarray:
+    def extended_weight(self, layer: int, npol: int) -> np.ndarray:
         """Return the weights for both directions (up and down) for a given layer, repeated npol times.
 
         Args:
@@ -90,7 +102,7 @@ class LayerStreams:
 
         return np.concatenate([self.mu, -self.mu])
 
-    def extended_weights(self, npol: int) -> np.ndarray:
+    def extended_weight(self, npol: int) -> np.ndarray:
         """Return the weights for both directions (up and down) for a given layer, repeated npol times.
 
         Args:
