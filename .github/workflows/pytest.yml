@@ -26,7 +26,7 @@ jobs:
 
     steps:
       - name: 🔽 Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: 🐍 Install uv and set the Python version
         uses: astral-sh/setup-uv@v7
@@ -37,7 +37,7 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: ✨ Lint with ruff
-        uses: astral-sh/ruff-action@v3
+        uses: astral-sh/ruff-action@v4.1.0
 
       - name: 🧪 Test with pytest
         run: uv run pytest
