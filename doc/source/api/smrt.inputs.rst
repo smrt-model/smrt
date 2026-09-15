@@ -30,16 +30,9 @@ smrt.inputs.sensor\_list module
    :members:
    :show-inheritance:
 
-smrt.inputs.lrm_altimeter\_list module
+smrt.inputs.altimeter\_list module
 ----------------------------------
 
-.. automodule:: smrt.inputs.lrm_altimeter_list
-   :members:
-   :show-inheritance:
-
-smrt.inputs.sar_altimeter\_list module
-----------------------------------
-
-.. automodule:: smrt.inputs.sar_altimeter_list
+.. automodule:: smrt.inputs.altimeter_list
    :members:
    :show-inheritance:
