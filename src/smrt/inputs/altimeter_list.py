@@ -50,15 +50,16 @@ def cryosat2(pitch_angle_deg=0, roll_angle_deg=0, force_circular_antenna=False):
         ngate=128,  # here we consider the initial configuration of the SAR Mode. No oversampling
         ndoppler=64,
         nominal_gate=44,  # Estimate - needs better definition
-        beamwidth_alongtrack=1.08,
-        beamwidth_acrosstrack=1.2,
+        beamwidth_along_track=1.08,
+        beamwidth_cross_track=1.2,
         doppler_window="hamming",
-        antenna_gain=1,  # one-way antenna gain
+        transmit_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
+        receive_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
     )
     if force_circular_antenna:
-        beamwidth = (params["beamwidth_alongtrack"] + params["beamwidth_acrosstrack"]) / 2
-        params["beamwidth_alongtrack"] = beamwidth
-        params["beamwidth_acrosstrack"] = beamwidth
+        beamwidth = (params["beamwidth_along_track"] + params["beamwidth_cross_track"]) / 2
+        params["beamwidth_along_track"] = beamwidth
+        params["beamwidth_cross_track"] = beamwidth
 
     return altimeter(channel="Ku", **params, pitch_angle_deg=pitch_angle_deg, roll_angle_deg=roll_angle_deg)
 
@@ -69,7 +70,7 @@ def cryosat2_sarm(*args, **kwargs):
         "Use cryosat2 instead but be aware that the altitude and nominal gate are slightly different.",
         DeprecationWarning,
     )
-    cryosat2(*args, **kwargs)
+    return cryosat2(*args, **kwargs)
 
 
 def sentinel3_sral(band: str, surface: str, pitch_angle_deg=0, roll_angle_deg=0):
@@ -96,10 +97,11 @@ def sentinel3_sral(band: str, surface: str, pitch_angle_deg=0, roll_angle_deg=0)
             ngate=128,  # here we consider the initial configuration of the SAR Mode. No oversampling
             ndoppler=64,
             nominal_gate=44,  # Estimate - needs better definition
-            beamwidth_alongtrack=1.35,
-            beamwidth_acrosstrack=1.35,
+            beamwidth_along_track=1.35,
+            beamwidth_cross_track=1.35,
             doppler_window="hamming",
-            antenna_gain=1,  # one-way antenna gain
+            transmit_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
+            receive_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
         )
     elif band == "C":
         params = dict(
@@ -112,9 +114,10 @@ def sentinel3_sral(band: str, surface: str, pitch_angle_deg=0, roll_angle_deg=0)
             ngate=128,  # here we consider the initial configuration of the SAR Mode. No oversampling
             ndoppler=2,
             nominal_gate=44,  # Estimate - needs better definition
-            beamwidth_alongtrack=3.4,  # estimated proportionnaly to Ku charcateristics...
-            beamwidth_acrosstrack=3.4,
-            antenna_gain=1,  # one-way antenna gain
+            beamwidth_along_track=3.4,  # estimated proportionnaly to Ku charcateristics...
+            beamwidth_cross_track=3.4,
+            transmit_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
+            receive_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
             doppler_window=doppler_window,
         )
     else:
@@ -128,7 +131,7 @@ def sentinel3_sarm(*args, **kwargs):
         "This function is deprecated and will be removed in a future version. Use sentinel3_ra2 instead",
         DeprecationWarning,
     )
-    sentinel3_sral(*args, **kwargs)
+    return sentinel3_sral(*args, **kwargs)
 
 
 def cristal(band: str, pitch_angle_deg=0, roll_angle_deg=0, force_circular_antenna=False):
@@ -148,10 +151,11 @@ def cristal(band: str, pitch_angle_deg=0, roll_angle_deg=0, force_circular_anten
             ngate=256,  # here we consider the initial configuration of the SAR Mode. No oversampling
             ndoppler=128,  # first guess
             nominal_gate=44,  # Estimate - needs better definition
-            beamwidth_alongtrack=1.08,  # from Cryosat2
-            beamwidth_acrosstrack=1.2,  # from Cryosat2
+            beamwidth_along_track=1.08,  # from Cryosat2
+            beamwidth_cross_track=1.2,  # from Cryosat2
             doppler_window="hamming",
-            antenna_gain=1,  # one-way antenna gain
+            transmit_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
+            receive_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
         )
     elif band == "Ka":
         params = dict(
@@ -163,18 +167,19 @@ def cristal(band: str, pitch_angle_deg=0, roll_angle_deg=0, force_circular_anten
             ngate=256,  # here we consider the initial configuration of the SAR Mode. No oversampling
             ndoppler=64,
             nominal_gate=44,  # Estimate - needs better definition
-            beamwidth_alongtrack=1.08 * 13.5 / 35.7,  # from Cryosat2 and scaled by the frequency
-            beamwidth_acrosstrack=1.2 * 13.5 / 35.7,
+            beamwidth_along_track=1.08 * 13.5 / 35.7,  # from Cryosat2 and scaled by the frequency
+            beamwidth_cross_track=1.2 * 13.5 / 35.7,
             doppler_window="hamming",
-            antenna_gain=1,  # one-way antenna gain
+            transmit_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
+            receive_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
         )
     else:
         raise SMRTError("Invalid band. Must be Ku or Ka.")
 
     if force_circular_antenna:
-        beamwidth = (params["beamwidth_alongtrack"] + params["beamwidth_acrosstrack"]) / 2
-        params["beamwidth_alongtrack"] = beamwidth
-        params["beamwidth_acrosstrack"] = beamwidth
+        beamwidth = (params["beamwidth_along_track"] + params["beamwidth_cross_track"]) / 2
+        params["beamwidth_along_track"] = beamwidth
+        params["beamwidth_cross_track"] = beamwidth
 
     return altimeter(channel="Ku", **params, pitch_angle_deg=pitch_angle_deg, roll_angle_deg=roll_angle_deg)
 
@@ -199,8 +204,8 @@ def envisat_ra2(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
             pulse_bandwidth=320e6,
             ngate=128,
             nominal_gate=45,
-            beamwidth_alongtrack=1.29,
-            beamwidth_acrosstrack=1.29,
+            beamwidth_along_track=1.29,
+            beamwidth_cross_track=1.29,
             pitch_angle_deg=pitch_angle_deg,
             roll_angle_deg=roll_angle_deg,
         ),
@@ -210,8 +215,8 @@ def envisat_ra2(channel=None, pitch_angle_deg=0, roll_angle_deg=0):
             pulse_bandwidth=160e6,
             ngate=128,
             nominal_gate=32,  # to correct, the value is rather close to 25
-            beamwidth_alongtrack=5.5,  # Lacroix et al. and Fatras et al.,
-            beamwidth_acrosstrack=5.5,
+            beamwidth_along_track=5.5,  # Lacroix et al. and Fatras et al.,
+            beamwidth_cross_track=5.5,
             pitch_angle_deg=pitch_angle_deg,
             roll_angle_deg=roll_angle_deg,
         ),
@@ -229,9 +234,10 @@ def saral_altika(pitch_angle_deg=0, roll_angle_deg=0):
         pulse_bandwidth=480e6,
         nominal_gate=51,
         ngate=128,
-        beamwidth_alongtrack=0.605,
-        beamwidth_acrosstrack=0.605,
-        antenna_gain=1,
+        beamwidth_along_track=0.605,
+        beamwidth_cross_track=0.605,
+        transmit_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
+        receive_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
         pitch_angle_deg=pitch_angle_deg,
         roll_angle_deg=roll_angle_deg,
     )
@@ -258,9 +264,10 @@ def asiras_lam(altitude=None, pitch_angle_deg=0, roll_angle_deg=0):
         altitude=altitude,
         nominal_gate=41,  # Estimate - needs better definition
         ngate=256,
-        beamwidth_alongtrack=2.2,
-        beamwidth_acrosstrack=9.8,
-        antenna_gain=1,
+        beamwidth_along_track=2.2,
+        beamwidth_cross_track=9.8,
+        transmit_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
+        receive_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
         pitch_angle_deg=pitch_angle_deg,
         roll_angle_deg=roll_angle_deg,
     )
@@ -288,9 +295,10 @@ def cryosat2_lrm(pitch_angle_deg=0, roll_angle_deg=0):
         pulse_bandwidth=320e6,
         nominal_gate=50,  # Estimate - needs better definition
         ngate=128,
-        beamwidth_alongtrack=1.08,
-        beamwidth_acrosstrack=1.2,
-        antenna_gain=1,
+        beamwidth_along_track=1.08,
+        beamwidth_cross_track=1.2,
+        transmit_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
+        receive_antenna_gain_db=0,  # this value needs to be changed to the actual value when known
         pitch_angle_deg=pitch_angle_deg,
         roll_angle_deg=roll_angle_deg,
     )

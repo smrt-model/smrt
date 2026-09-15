@@ -3,15 +3,29 @@
 """
 This module defines the configuration for sensors used in radiative transfer simulations. The sensor configuration
 includes all the information describing the sensor viewing geometry (incidence, ...) and operating parameters
-(frequency, polarization, ...). The easiest and recommended way to create a :py:class:`Sensor` instance is to use one of
-the convenience functions such as :py:func:`~smrt.inputs.sensor_list.passive`,
-:py:func:`~smrt.inputs.sensor_list.active`, :py:func:`~smrt.inputs.sensor_list.amsre`, etc. Adding a function for a new
-or unlisted sensor can be done in :py:mod:`~smrt.inputs.sensor_list` if the sensor is common and of general interest.
-Otherwise, we recommend to add these functions in your own files (outside of smrt directories).
+(frequency, polarization, ...). The easiest and recommended way to create a :py:class:`Sensor` instance is to generic
+or specific sensor as defined in :py:mod:`~smrt.inputs.sensor_list`, :py:mod:`~smrt.inputs.sar_altimeter_list`,
+, :py:mod:`~smrt.inputs.lrm_altimeter_list`, and others in the future.
+
+Adding a function for a new or unlisted sensor can be done in :py:mod:`~smrt.inputs.sensor_list`  if the sensor is
+common and of general interest (please contact the developers if you have a specific request). Otherwise, we recommend
+to add these functions in your own files (outside of smrt directories).
+
+The class hierarchy is as follows:
+
+SensorBase                      Base class without any attributes
+├── Sensor                      Basic sensor suitable for radiometers and total-backscatter radars (SAR, scatterometer)
+│   └── RangingSensor           Radar with ranging capabilities (altimeter, radar sounder)
+|       ├── Altimeter           Specific class for altimeters (LRM or SAR)
+|       └── RadarSounder        Specific class for radar sounders
+└── SensorList                  List of sensors with different configurations
+                                    along a given axis (channel, frequency, ...)
+
 """
 
 import copy
 from collections.abc import Sequence
+from typing import Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -230,7 +244,116 @@ class SensorList(SensorBase):
         yield from self.sensor_list
 
 
-class Altimeter(Sensor):
+class RangingRadar(Sensor):
+    """Configuration for a ranging radar sensor.
+
+    This class is specific to radar with ranging capabilities. It is used as a base for altimeters and sounding radars
+    The class Sensor is sufficient for total-backscatter radar such as SAR or scatterometer when the details of
+    the radar acquisition is not significant for the simulation.
+    In that case, the function :py:func:`active` is sufficient to create a sensor
+    """
+
+    altitude: float  # altitude of the sensor in m
+    velocity: Optional[float] = None  # velocity of the sensor with respect to the ground in m/s
+
+    pulse_bandwidth: float  # Pulse bandwidth in Hz.
+    pulse_repetition_frequency: Optional[float] = None  # Pulse repetition frequency in Hz.
+    pulse_duration: Optional[float] = None  # Duration of the pulse. If not set, it is computed from the pulse_bandwidth
+    onboard_coherent_integration_number: Optional[int] = None  # Number of pulses stacked on board acquisition.
+
+    receive_window_delay: Optional[float] = None  # Delay of the receive window from the transmitted pulse in seconds.
+    receive_window_duration: Optional[float] = None  # Duration of the receive window in seconds.
+
+    beamwidth_along_track: Optional[float]
+    beamwidth_cross_track: Optional[float]
+
+    peak_transmit_power: float = 1.0  # Transmit power of the radar in W
+
+    transmit_antenna_gain_db: float = 0.0  # Transmit antenna gain in dB
+    receive_antenna_gain_db: float = 0.0  # Receive antenna gain in dB
+
+    receiver_sampling_frequency: Optional[float] = None  # Sampling frequency of the receiver in Hz
+
+    def __init__(
+        self,
+        frequency,
+        altitude,
+        pulse_bandwidth,
+        pulse_duration=None,
+        velocity=None,
+        theta_inc_deg=None,
+        theta_deg=None,
+        phi_deg=None,
+        polarization_inc=None,
+        polarization=None,
+        beamwidth_along_track=None,
+        beamwidth_cross_track=None,
+        pulse_repetition_frequency=None,
+        receive_window_start_time=None,
+        receive_window_duration=None,
+        onboard_coherent_integration_number=None,
+        peak_transmit_power=1.0,
+        transmit_antenna_gain_db=0.0,
+        receive_antenna_gain_db=0.0,
+        receiver_sampling_frequency=None,
+        channel_map=None,
+        name=None,
+    ):
+        """Build a ranging radar sensor configuration.
+
+        Args:
+            frequency: frequency in Hz.
+            altitude: altitude of the sensor in m.
+            pulse_bandwidth: pulse bandwidth in Hz.
+            beamwidth_along_track: beamwidth along track in degrees.
+            beamwidth_cross_track: beamwidth across track in degrees.
+            pulse_repetition_frequency: pulse repetition frequency in Hz (SAR mode). Can be zero for LRM mode.
+            velocity: velocity of the sensor in m/s (SAR mode). Can be unset or zero for LRM mode.
+            transmit_power: transmit power of the radar in W
+            transmit_antenna_gain_db: transmit antenna gain in dB
+            receive_antenna_gain_db: receive antenna gain in dB
+            sampling_frequency: sampling frequency of the receiver in Hz
+        """
+        super().__init__(
+            frequency=frequency,
+            theta_inc_deg=theta_inc_deg,
+            theta_deg=theta_deg,
+            phi_deg=phi_deg,
+            polarization_inc=polarization_inc,
+            polarization=polarization,
+            channel_map=channel_map,
+            name=name,
+        )
+
+        self.altitude = altitude
+        self.velocity = velocity
+        self.pulse_bandwidth = pulse_bandwidth
+        self.pulse_repetition_frequency = pulse_repetition_frequency
+        self.pulse_duration = pulse_duration if pulse_duration is not None else 1 / pulse_bandwidth
+        self.beamwidth_along_track = beamwidth_along_track
+        self.beamwidth_cross_track = beamwidth_cross_track
+        self.peak_transmit_power = peak_transmit_power
+        self.transmit_antenna_gain_db = transmit_antenna_gain_db
+        self.receive_antenna_gain_db = receive_antenna_gain_db
+        self.receive_window_start_time = receive_window_start_time
+        self.receive_window_duration = receive_window_duration
+        self.onboard_coherent_integration_number = onboard_coherent_integration_number
+        self.receiver_sampling_frequency = receiver_sampling_frequency
+
+    @property
+    def transmit_antenna_gain(self):
+        return 10 ** (self.transmit_antenna_gain_db / 10)
+
+    @property
+    def receive_antenna_gain(self):
+        return 10 ** (self.receive_antenna_gain_db / 10)
+
+    @property
+    def two_way_antenna_gain(self):
+        return 10 ** ((self.transmit_antenna_gain_db + self.receive_antenna_gain_db) / 10)
+
+
+class Altimeter(RangingRadar):
     """Configuration for LRM and SAR altimeters.
     Use of the functions :py:func:`sar_altimeter`, or the sensor specific functions
     e.g. :py:func:`sentinel3_sarm` are recommended to access this class.
@@ -242,11 +365,13 @@ class Altimeter(Sensor):
         frequency,
         altitude,
         pulse_bandwidth,
-        beamwidth_alongtrack,
-        beamwidth_acrosstrack,
+        beamwidth_along_track,
+        beamwidth_cross_track,
         pulse_repetition_frequency=0,  # can be zero for LRM, but not for SAR
         velocity=0,  # can be zero for LRM, but not for SAR
-        antenna_gain=1,
+        peak_transmit_power=1.0,
+        transmit_antenna_gain_db=0.0,
+        receive_antenna_gain_db=0.0,
         ngate=128,
         ndoppler=0,  # 0 = LRM
         nominal_gate=40,
@@ -265,8 +390,8 @@ class Altimeter(Sensor):
             frequency: frequency in Hz.
             altitude: altitude of the sensor in m.
             pulse_bandwidth: pulse bandwidth in Hz.
-            beamwidth_alongtrack: beamwidth along track in degrees.
-            beamwidth_acrosstrack: beamwidth across track in degrees.
+            beamwidth_along_track: beamwidth along track in degrees.
+            beamwidth_cross_track: beamwidth across track in degrees.
             pulse_repetition_frequency: pulse repetition frequency in Hz (SAR mode). Can be zero for LRM mode.
             velocity: velocity of the sensor in m/s (SAR mode). Can be unset or zero for LRM mode.
             antenna_gain: one-way antenna gain at the center of the antenna (unitless).
@@ -286,23 +411,25 @@ class Altimeter(Sensor):
 
         super().__init__(
             frequency=frequency,
+            altitude=altitude,
+            pulse_bandwidth=pulse_bandwidth,
+            velocity=velocity,
             theta_inc_deg=theta_inc_deg,
             theta_deg=theta_inc_deg,
             polarization_inc=polarization_inc,
             polarization=polarization,
+            beamwidth_along_track=beamwidth_along_track,
+            beamwidth_cross_track=beamwidth_cross_track,
+            pulse_repetition_frequency=pulse_repetition_frequency,
+            peak_transmit_power=peak_transmit_power,
+            transmit_antenna_gain_db=transmit_antenna_gain_db,
+            receive_antenna_gain_db=receive_antenna_gain_db,
             channel_map=channel_map,
             phi_deg=180,  # this is important to get backscatter with DORT
         )
 
-        self.altitude = altitude
-        self.beamwidth_alongtrack = beamwidth_alongtrack
-        self.beamwidth_acrosstrack = beamwidth_acrosstrack
-        self.antenna_gain = antenna_gain
-        self.pulse_repetition_frequency = pulse_repetition_frequency
-        self.velocity = velocity
         self.ngate = ngate
         self.ndoppler = ndoppler
-        self.pulse_bandwidth = pulse_bandwidth
         self.nominal_gate = nominal_gate
         self.pitch_angle = np.deg2rad(pitch_angle_deg)
         self.roll_angle = np.deg2rad(roll_angle_deg)

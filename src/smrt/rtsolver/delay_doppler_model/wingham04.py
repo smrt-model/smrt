@@ -69,7 +69,9 @@ class Wingham04(object):
         self.slant_range_correction = slant_range_correction
         self.delay_window_widening = delay_window_widening
 
-        beamwidth = (sensor.beamwidth_alongtrack + sensor.beamwidth_acrosstrack) / 2  # get a 'circular' antenna pattern
+        beamwidth = (
+            sensor.beamwidth_along_track + sensor.beamwidth_cross_track
+        ) / 2  # get a 'circular' antenna pattern
 
         # from Eq 4 in wingham04
         self.gamma_a = np.sin(np.deg2rad(beamwidth) / 2) / SQRTLOG2
@@ -83,7 +85,7 @@ class Wingham04(object):
         # Eq 37   # alpha on other paper is called Kappa in this paper
         self.K = (
             sensor.wavelength**2
-            * sensor.antenna_gain**2
+            * sensor.two_way_antenna_gain**2
             * D0
             * C_SPEED
             / (32 * np.pi**2 * sensor.altitude**3 * sensor.alpha)

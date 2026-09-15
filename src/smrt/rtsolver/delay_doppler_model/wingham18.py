@@ -85,8 +85,8 @@ class Wingham18(object):
             raise SMRTError("slant_range_correction attribute must be False, True, 'analytical' or 'numerical'")
 
         # gamma is after W18 eq 5
-        self.gamma_1 = np.deg2rad(sensor.beamwidth_alongtrack / 2) / SQRTLOG2
-        self.gamma_2 = np.deg2rad(sensor.beamwidth_acrosstrack / 2) / SQRTLOG2
+        self.gamma_1 = np.deg2rad(sensor.beamwidth_along_track / 2) / SQRTLOG2
+        self.gamma_2 = np.deg2rad(sensor.beamwidth_cross_track / 2) / SQRTLOG2
 
         self.xi_b0 = np.pi / (sensor.ndoppler * sensor.wavenumber * sensor.velocity / sensor.pulse_repetition_frequency)
 
@@ -94,7 +94,7 @@ class Wingham18(object):
         # coef in Eq 16 (see also Eq 37 in W04)   # alpha on other paper is called Kappa in this paper
         self.K = (
             sensor.wavelength**2
-            * sensor.antenna_gain**2
+            * sensor.two_way_antenna_gain**2
             * D0
             * C_SPEED
             / (32 * np.pi**2 * sensor.altitude**3 * sensor.alpha)

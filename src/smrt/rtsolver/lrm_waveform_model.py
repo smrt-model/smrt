@@ -44,20 +44,20 @@ class Brown1977(LRMWaveformModel):
 
         log2 = 0.6931471805599453
         beamwidth = (
-            self.sensor.beamwidth_alongtrack + self.sensor.beamwidth_acrosstrack
+            self.sensor.beamwidth_along_track + self.sensor.beamwidth_cross_track
         ) / 2  # get a 'circular' antenna pattern
         self.gamma = 2 / log2 * np.sin(np.deg2rad(beamwidth) / 2) ** 2
 
         self.numerical_convolution = numerical_convolution
 
-    def G(self, theta, phi):
+    def two_way_antenna_gain(self, theta, phi):
         rho_h = np.tan(theta)
 
         newtheta = np.arccos(
             (np.cos(self.sensor.off_nadir_angle) + rho_h * np.sin(self.sensor.off_nadir_angle) * np.cos(phi))
             / np.sqrt(1 + rho_h**2)
         )
-        return self.sensor.antenna_gain * np.exp(-2 / self.gamma * np.sin(newtheta) ** 2)  # Eq 4
+        return self.sensor.two_way_antenna_gain * np.exp(-2 * 2 / self.gamma * np.sin(newtheta) ** 2)  # Eq 4
 
     def PFS(self, tau, surface_slope=0, shift_nominal_gate=True):
         # tau = t - 2*h/c
@@ -73,7 +73,7 @@ class Brown1977(LRMWaveformModel):
         e = C_SPEED / (self.sensor.altitude * (1 + self.sensor.altitude / EARTH_RADIUS)) * otau  #
 
         coef = (
-            self.sensor.antenna_gain**2
+            self.sensor.two_way_antenna_gain
             * self.sensor.wavelength**2
             * C_SPEED
             / (4 * (4 * np.pi) ** 2 * self.sensor.altitude**3)
@@ -155,31 +155,32 @@ class Newkrik1992(LRMWaveformModel):
 
     def __init__(self, sensor):
         self.sensor = sensor
-        self.G0 = 1
 
         log2 = 0.6931471805599453
         self.gamma = (
-            2 / log2 * np.sin(np.deg2rad(self.sensor.beamwidth_alongtrack) / 2) ** 2
+            2 / log2 * np.sin(np.deg2rad(self.sensor.beamwidth_along_track) / 2) ** 2
         )  # eq 5 in Newkrik and Brown 1992
         self.beam_asymmetry = (
-            np.sin(np.deg2rad(self.sensor.beamwidth_alongtrack) / 2)
-            / np.sin(np.deg2rad(self.sensor.beamwidth_acrosstrack) / 2)
+            np.sin(np.deg2rad(self.sensor.beamwidth_along_track) / 2)
+            / np.sin(np.deg2rad(self.sensor.beamwidth_cross_track) / 2)
         ) ** 2 - 1  # from eq 6 in Newkrik and Brown 1992
 
-    def G(self, theta, phi):
+    def two_way_antenna_gain(self, theta, phi):
         rho_h = np.tan(theta)
         rho0_h = np.tan(self.sensor.off_nadir_angle)
 
         sin_omega2 = rho_h**2 * np.sin(phi) ** 2 / (rho_h**2 - 2 * rho_h * rho0_h * np.cos(phi) + rho0_h)
 
-        return self.G0 * np.exp(-2 / self.gamma * (1 + self.beam_asymmetry * sin_omega2**2) * np.sin(theta) ** 2)
+        return self.sensor.two_way_antenna_gain * np.exp(
+            -2 * 2 / self.gamma * (1 + self.beam_asymmetry * sin_omega2**2) * np.sin(theta) ** 2
+        )
 
     def PFS(self, sensor, tau):
         # include Earth curvature as in Newkrik and Brown, 1992
         e2 = C_SPEED / (self.sensor.altitude * (1 + self.sensor.altitude / EARTH_RADIUS)) * tau
 
         return (
-            self.G0**2
+            self.sensor.two_way_antenna_gain
             * self.sensor.wavelength**2
             * C_SPEED
             / (4 * (4 * np.pi) ** 2 * self.sensor.altitude**3)

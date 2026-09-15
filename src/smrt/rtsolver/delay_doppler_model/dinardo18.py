@@ -88,14 +88,14 @@ class Dinardo18(object):
         print(f"{sigma_g=} {self.sigma_p=}")
 
         # D18 Eq 27
-        self.gamma_x = 8 * LOG2 / np.deg2rad(sensor.beamwidth_alongtrack) ** 2
-        self.gamma_y = 8 * LOG2 / np.deg2rad(sensor.beamwidth_acrosstrack) ** 2
+        self.gamma_x = 8 * LOG2 / np.deg2rad(sensor.beamwidth_along_track) ** 2
+        self.gamma_y = 8 * LOG2 / np.deg2rad(sensor.beamwidth_cross_track) ** 2
 
         self.L_gamma = sensor.alpha * sensor.altitude / (2 * self.gamma_y)
 
         # R15 Eq 37
         K = (
-            (sensor.antenna_gain * sensor.wavelength * sensor.ndoppler) ** 2
+            (sensor.two_way_antenna_gain * sensor.wavelength * sensor.ndoppler) ** 2
             * self.Lx
             * self.Ly
             / (4 * np.pi * sensor.altitude**4)

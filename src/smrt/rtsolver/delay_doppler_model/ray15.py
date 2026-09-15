@@ -60,7 +60,9 @@ class Ray15(object):
         self.Ly = np.sqrt(C_SPEED * sensor.altitude / (sensor.alpha * sensor.pulse_bandwidth))  # cross-track
         self.Lz = C_SPEED / (2 * sensor.pulse_bandwidth)
 
-        beamwidth = (sensor.beamwidth_alongtrack + sensor.beamwidth_acrosstrack) / 2  # get a 'circular' antenna pattern
+        beamwidth = (
+            sensor.beamwidth_along_track + sensor.beamwidth_cross_track
+        ) / 2  # get a 'circular' antenna pattern
         self.gamma = 2 / LOG2 * np.sin(np.deg2rad(beamwidth) / 2) ** 2
 
         assert ptr_time.startswith("gaussian")  # R15 uses the gaussian approx. It is not explicit though...
@@ -114,7 +116,7 @@ class Ray15(object):
                 self.Lz,
                 sensor.altitude,
                 self.gamma * sensor.alpha,
-                sensor.antenna_gain,
+                sensor.two_way_antenna_gain,
             )
 
             if sigma_s < 0.2:  # small roughness. No need to integrate

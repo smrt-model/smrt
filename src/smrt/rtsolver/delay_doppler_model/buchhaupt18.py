@@ -85,8 +85,8 @@ class Buchhaupt18(object):
         self.ft_ptr_time = ft_ptr_function(ptr_time) if ptr_time is not None else triangular_function
         self.ft_ptr_doppler = ft_ptr_function(ptr_doppler) if ptr_doppler is not None else triangular_function
 
-        self.gamma_y = np.sin(np.deg2rad(sensor.beamwidth_acrosstrack)) ** 2 / LOG4
-        gamma_x = np.sin(np.deg2rad(sensor.beamwidth_alongtrack)) ** 2 / LOG4
+        self.gamma_y = np.sin(np.deg2rad(sensor.beamwidth_cross_track)) ** 2 / LOG4
+        gamma_x = np.sin(np.deg2rad(sensor.beamwidth_along_track)) ** 2 / LOG4
         self.mu = (self.gamma_y - gamma_x) / gamma_x  # asymmetry parameter of the antenna gain
 
     def delay_doppler_map(self, terrain_info: TerrainInfo):
@@ -141,7 +141,7 @@ class Buchhaupt18(object):
         # coef A after Eq 29. We separate this coef in a constant term (calculated here) and the variable term
         # calculated in ft2_FSSR
         Lp = 1  # two-way atmospheric transmittance
-        G0 = sensor.antenna_gain
+        G0 = sensor.two_way_antenna_gain
         Aconst = (
             sensor.wavelength**2 * G0**2 * C_SPEED / (4 * (4 * np.pi) ** 2 * Lp * sensor.altitude**3 * sensor.alpha)
         )  # Hz

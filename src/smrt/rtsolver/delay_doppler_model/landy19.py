@@ -100,8 +100,8 @@ class Landy19(object):
             raise SMRTError("slant_range_correction attribute must be False, True, 'analytical' or 'numerical'")
 
         # gamma is after W18 eq 5
-        self.gamma_1 = np.deg2rad(sensor.beamwidth_alongtrack / 2) / SQRTLOG2
-        self.gamma_2 = np.deg2rad(sensor.beamwidth_acrosstrack / 2) / SQRTLOG2
+        self.gamma_1 = np.deg2rad(sensor.beamwidth_along_track / 2) / SQRTLOG2
+        self.gamma_2 = np.deg2rad(sensor.beamwidth_cross_track / 2) / SQRTLOG2
 
         # L19 Eq 4. There is an error in the text, it's written xi_k but it is xi_0
         self.xi_0 = sensor.wavelength * sensor.pulse_repetition_frequency / (2 * sensor.ndoppler * sensor.velocity)
@@ -228,7 +228,7 @@ class Landy19(object):
             cosphi2 = np.zeros_like(theta_g)
             cosphi2 = np.divide(xg2, yg2 + xg2, out=cosphi2, where=(xg2 != 0))
 
-            G2 = sensor.antenna_gain**2 * np.exp(
+            G2 = sensor.two_way_antenna_gain**2 * np.exp(
                 -2 * theta_g**2 * (cosphi2 * (1 / self.gamma_1**2 - 1 / self.gamma_2**2) + 1 / self.gamma_2**2)
             )  # here, we used sin² = 1 - cos²
 

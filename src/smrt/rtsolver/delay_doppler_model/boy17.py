@@ -78,8 +78,8 @@ class Boy17(object):
         )  # max horizontal extent of the footprint
         self.half_nx = self.half_ny = int(max_x / self.grid_space)
 
-        self.gamma_y = np.sin(np.deg2rad(sensor.beamwidth_acrosstrack)) ** 2 / LOG4
-        self.gamma_x = np.sin(np.deg2rad(sensor.beamwidth_alongtrack)) ** 2 / LOG4
+        self.gamma_y = np.sin(np.deg2rad(sensor.beamwidth_cross_track)) ** 2 / LOG4
+        self.gamma_x = np.sin(np.deg2rad(sensor.beamwidth_along_track)) ** 2 / LOG4
 
         # Doppler cell resolution (after Eq 1 in B17)
         self.Lx = sensor.altitude * sensor.wavelength / (2 * sensor.velocity * sensor.burst_duration)
@@ -127,7 +127,10 @@ class Boy17(object):
 
         # after Equation 3 in Halimi et al. 2014
         Pu = (
-            sensor.wavelength**2 * sensor.antenna_gain**2 * C_SPEED / (4 * (4 * np.pi) ** 2 * sensor.altitude**3)
+            sensor.wavelength**2
+            * sensor.two_way_antenna_gain**2
+            * C_SPEED
+            / (4 * (4 * np.pi) ** 2 * sensor.altitude**3)
         )  # in the text after Eq 3 H14. # unit: s^-1
 
         # grid_space**2 is due to the integration over x and y

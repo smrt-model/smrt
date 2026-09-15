@@ -522,7 +522,7 @@ class NadirLRMAltimetry(object):
         h = self.sensor.altitude
 
         def integrand(phi, theta):
-            return self.waveform_model.G(theta, phi) ** 2  # G^2
+            return self.waveform_model.two_way_antenna_gain(theta, phi)  # G^2
 
         e = C_SPEED / h * tau
 

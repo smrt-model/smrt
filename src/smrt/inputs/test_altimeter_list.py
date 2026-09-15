@@ -67,5 +67,5 @@ def test_asiras_lam_requires_aircraft_altitude():
 
     sensor = asiras_lam(altitude=5_000)
     assert sensor.altitude == 5_000
-    assert sensor.beamwidth_alongtrack == 2.2
-    assert sensor.beamwidth_acrosstrack == 9.8
+    assert sensor.beamwidth_along_track == 2.2
+    assert sensor.beamwidth_cross_track == 9.8

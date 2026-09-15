@@ -66,7 +66,9 @@ class Halimi14(object):
         self.slant_range_correction = slant_range_correction
         self.delay_window_widening = delay_window_widening
 
-        beamwidth = (sensor.beamwidth_alongtrack + sensor.beamwidth_acrosstrack) / 2  # get a 'circular' antenna pattern
+        beamwidth = (
+            sensor.beamwidth_along_track + sensor.beamwidth_cross_track
+        ) / 2  # get a 'circular' antenna pattern
         # gamma is after eq 3 in H14. This equation is slightly incorrect as the division by 2 is out of the sin...
         # it should be inside. This approx is valid for small angles only.
         self.gamma = 1 / (2 * LOG2) * np.sin(np.deg2rad(beamwidth)) ** 2
@@ -110,7 +112,10 @@ class Halimi14(object):
         dphi_n = diff_cyclic(phi_n)
 
         Pu = (
-            sensor.wavelength**2 * sensor.antenna_gain**2 * C_SPEED / (4 * (4 * np.pi) ** 2 * sensor.altitude**3)
+            sensor.wavelength**2
+            * sensor.two_way_antenna_gain**2
+            * C_SPEED
+            / (4 * (4 * np.pi) ** 2 * sensor.altitude**3)
         )  # in the text after Eq 3 H14. # unit: s^-1
 
         FSIR = (
