@@ -42,6 +42,8 @@ rst_link_suffix = ""
 rst_line_width = 78
 rst_indent = 4
 
+modify_rst_file = True
+
 
 def rst_file_transform(docname):
     if docname == "index":
