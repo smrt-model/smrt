@@ -7,10 +7,10 @@ from smrt import make_model, make_snowpack, sensor_list
 from smrt.core.error import SMRTWarning
 from smrt.core.fresnel import snell_angle
 from smrt.core.model import Model
-from smrt.core.sensor import active
 from smrt.emmodel.iba import IBA
 from smrt.emmodel.nonscattering import NonScattering
 from smrt.inputs.make_soil import make_soil_substrate
+from smrt.inputs.sensor_list import active
 from smrt.interface.transparent import Transparent
 from smrt.rtsolver.iterative_first_order import IterativeFirstOrder
 

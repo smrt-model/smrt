@@ -4,7 +4,6 @@ import numpy as np
 import pytest
 
 from smrt import make_snow_layer
-from smrt.core.sensor import active
 from smrt.emmodel import commontest
 from smrt.emmodel.symsce_torquato21 import SymSCETK21, derived_SymSCETK21
 from smrt.emmodel.test_iba import (
@@ -12,7 +11,7 @@ from smrt.emmodel.test_iba import (
     setup_func_pc,
     setup_func_sp,
 )  # move to a common test file
-from smrt.inputs.sensor_list import amsre
+from smrt.inputs.sensor_list import active, amsre
 from smrt.microstructure_model.sticky_hard_spheres import StickyHardSpheres
 from smrt.permittivity.generic_mixing_formula import maxwell_garnett
 

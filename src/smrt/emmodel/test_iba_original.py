@@ -5,11 +5,10 @@ import pytest
 
 from smrt import make_snow_layer
 from smrt.core.error import SMRTError
-from smrt.core.sensor import active
 from smrt.emmodel import commontest
 from smrt.emmodel.iba_original import IBA_original
 from smrt.emmodel.rayleigh import Rayleigh
-from smrt.inputs.sensor_list import amsre
+from smrt.inputs.sensor_list import active, amsre
 
 # import the microstructure
 from smrt.microstructure_model.exponential import Exponential

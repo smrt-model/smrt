@@ -3,8 +3,8 @@ from numpy.testing import assert_allclose
 
 from smrt import make_snowpack
 from smrt.core.model import Model
-from smrt.core.sensor import passive
 from smrt.emmodel.nonscattering import NonScattering
+from smrt.inputs.sensor_list import passive
 from smrt.rtsolver.dort import DORT
 from smrt.rtsolver.multifresnel_thermalemission import MultiFresnelThermalEmission
 from smrt.substrate.flat import Flat

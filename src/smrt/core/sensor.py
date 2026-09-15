@@ -4,8 +4,8 @@
 This module defines the configuration for sensors used in radiative transfer simulations. The sensor configuration
 includes all the information describing the sensor viewing geometry (incidence, ...) and operating parameters
 (frequency, polarization, ...). The easiest and recommended way to create a :py:class:`Sensor` instance is to generic
-or specific sensor as defined in :py:mod:`~smrt.inputs.sensor_list`, :py:mod:`~smrt.inputs.sar_altimeter_list`,
-, :py:mod:`~smrt.inputs.lrm_altimeter_list`, and others in the future.
+or specific sensor as defined in :py:mod:`~smrt.inputs.sensor_list` and  :py:mod:`~smrt.inputs.altimeter_list`,
+and others in the future.
 
 Adding a function for a new or unlisted sensor can be done in :py:mod:`~smrt.inputs.sensor_list`  if the sensor is
 common and of general interest (please contact the developers if you have a specific request). Otherwise, we recommend

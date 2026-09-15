@@ -2,8 +2,8 @@ import numpy as np
 
 from smrt import make_snowpack
 from smrt.core.model import Model
-from smrt.core.sensor import active
 from smrt.emmodel.nonscattering import NonScattering
+from smrt.inputs.sensor_list import active
 from smrt.interface.transparent import Transparent
 from smrt.rtsolver.iterative_second_order import IterativeSecondOrder
 

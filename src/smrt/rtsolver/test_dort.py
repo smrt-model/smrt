@@ -4,9 +4,9 @@ import pytest
 
 from smrt import make_snowpack
 from smrt.core.model import Model
-from smrt.core.sensor import active
 from smrt.emmodel.iba import IBA
 from smrt.emmodel.rayleigh import Rayleigh
+from smrt.inputs.sensor_list import active
 from smrt.rtsolver.dort import DORT, symmetrize_phase_matrix
 
 

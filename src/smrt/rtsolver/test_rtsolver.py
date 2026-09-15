@@ -7,8 +7,8 @@ import pytest
 from smrt import make_snowpack
 from smrt.core.error import SMRTWarning
 from smrt.core.model import Model
-from smrt.core.sensor import active, passive
 from smrt.emmodel.nonscattering import NonScattering
+from smrt.inputs.sensor_list import active, passive
 from smrt.interface.transparent import Transparent
 from smrt.rtsolver.dort import DORT
 
