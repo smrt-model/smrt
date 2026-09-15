@@ -77,7 +77,7 @@ class DiscreteOrdinatesMixin(metaclass=ABCMeta):
         https://stackoverflow.com/questions/36690588/should-mixins-use-parent-attributes
     """
 
-    def init(self, stream_mode="most_refringent", n_max_stream=32, m_max=2):
+    def init(self, *, stream_mode="most_refringent", n_max_stream=32, m_max=2):
         self.n_max_stream = n_max_stream
         self.stream_mode = stream_mode
         self.m_max = m_max
@@ -408,7 +408,7 @@ class PlanckMixin(metaclass=ABCMeta):
         https://stackoverflow.com/questions/36690588/should-mixins-use-parent-attributes
     """
 
-    def init(self, rayleigh_jeans_approximation):
+    def init(self, *, rayleigh_jeans_approximation):
         self.rayleigh_jeans_approximation = rayleigh_jeans_approximation
 
         if rayleigh_jeans_approximation:
