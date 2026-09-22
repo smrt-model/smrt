@@ -232,9 +232,8 @@ class NadirLRMAltimetry(object):
             # then the (PTR and PDF)
 
             # start with building the PTR
-            if sigma_surface > 0:
-                sigma_c = np.sqrt(self.sensor.pulse_sigma**2 + (2 * sigma_surface / C_SPEED) ** 2)
-
+            sigma_c = np.sqrt(self.sensor.pulse_sigma**2 + (2 * sigma_surface / C_SPEED) ** 2)
+            if sigma_c > 0:
                 # restrict t_gate to 5 sigma and compute the positive and negative values
                 i = min(np.searchsorted(t_gate, 5 * sigma_c), len(t_gate) - 1)
                 sym_t_gate = np.concatenate((-t_gate[i:0:-1], t_gate[0:i]))
@@ -293,7 +292,7 @@ class NadirLRMAltimetry(object):
                     )
 
             # now take into account the PTR + PDF assuming both are gaussian
-            if sigma_surface > 0:
+            if sigma_c > 0:
                 # perform the last convolution
                 def do_convolve_by_PTR_PDF(backscatter):
                     # perform the convolution and cut the first part due to t_gate symmetrization (ensure the nominal
