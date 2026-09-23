@@ -19,7 +19,12 @@ def fresnel_reflection_coefficients_old(eps_1, eps_2, mu1):
         mu1: cosine zenith angle in medium 1.
 
     Returns:
-        : rv, rh, mu2 the cosine of the angle in medium 2
+        rv: complex
+            reflection coefficient for vertical polarization.
+        rh: complex
+            reflection coefficient for horizontal polarization.
+        mu2: float
+            cosine of the angle in medium 2.
     """
     n = np.sqrt(eps_2 / eps_1)
     b = 1.0 - (1.0 - mu1**2) / n**2
@@ -33,7 +38,7 @@ def fresnel_reflection_coefficients_old(eps_1, eps_2, mu1):
 
 
 def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu, mu_medium="1", full_output=False):
-    """Compute the reflection in two polarizations (H and V) for lossly media with the "classical Fresnel" based
+    """Compute the reflection in two polarizations (H and V) for lossy media with the "classical Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between
     absorbing media. Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
 
@@ -47,9 +52,16 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu, mu_medium="1", fu
         eps_2: permittivity of medium 2.
         mu: cosine zenith angle in medium 1 or in the void according to mu_medium.
         mu_medium: string indicating which medium the angle is defined in ("1" or "void").
+        full_output: bool
+            if True, return additional transmission and power coefficients.
 
     Returns:
-        : rv, rh, mu2 the cosine of the angle in medium 2
+        rv: complex
+            reflection coefficient for vertical polarization.
+        rh: complex
+            reflection coefficient for horizontal polarization.
+        mu2: float
+            cosine of the angle in medium 2.
     """
     # y is the axis normal to the interface (usually z, but here it is y!)
 
@@ -99,11 +111,11 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu, mu_medium="1", fu
 def fresnel_reflection_coefficients_maezawa09_rigorous(
     eps_1, eps_2, mu, mu_medium="1"
 ) -> tuple[complex, complex, float]:
-    """Compute the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
+    """Compute the reflection in two polarizations (H and V) for lossy media with the "rigorous Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between
     absorbing media. Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
 
-    The 'rigorous' derivation respects the energy conservation even for strongly loosly media.
+    The 'rigorous' derivation respects the energy conservation even for strongly lossy media.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
     reflection coefficient.
 
@@ -116,7 +128,12 @@ def fresnel_reflection_coefficients_maezawa09_rigorous(
         mu_medium: string indicating which medium the angle is defined in ("1" or "void").
 
     Returns:
-        : rv, rh, mu2 the cosine of the angle in medium 2
+        rv: complex
+            reflection coefficient for vertical polarization.
+        rh: complex
+            reflection coefficient for horizontal polarization.
+        mu2: float
+            cosine of the angle in medium 2.
     """
     # y is the axis normal to the interface (usually z, but here it is y!)
 
@@ -148,11 +165,11 @@ def fresnel_reflection_coefficients_maezawa09_rigorous(
 
 @numba.jit(nopython=True, cache=True)
 def fresnel_reflection_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium="1"):
-    """Compute the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
+    """Compute the reflection in two polarizations (H and V) for lossy media with the "rigorous Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between
     absorbing media. Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
 
-    The 'rigorous' derivation respects the energy conservation even for strongly loosly media.
+    The 'rigorous' derivation respects the energy conservation even for strongly lossy media.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
     reflection coefficient.
 
@@ -165,7 +182,12 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu
         mu_medium: string indicating which medium the angle is defined in ("1" or "void").
 
     Returns:
-        : rv, rh, mu2 the cosine of the angle in medium 2
+        rv: complex
+            reflection coefficient for vertical polarization.
+        rh: complex
+            reflection coefficient for horizontal polarization.
+        mu2: float
+            cosine of the angle in medium 2.
     """
     # y is the axis normal to the interface (usually z, but here it is y!)
 
@@ -203,16 +225,16 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu
 
 @numba.jit(nopython=True, cache=True)
 def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium="1"):
-    """Compute the reflection and transmission in two polarizations (H and V) for lossly media with the
+    """Compute the reflection and transmission in two polarizations (H and V) for lossy media with the
     "rigorous Fresnel" based on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at
-    interfaces between
-    absorbing media. Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
+    interfaces between absorbing media. Journal of the Optical Society of America A, 26(2), 330.
+    https://doi.org/10.1364/josaa.26.000330
 
-    The 'rigorous' derivation respects the energy conservation even for strongly loosly media.
+    The 'rigorous' derivation respects the energy conservation even for strongly lossy media.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
     reflection coefficient.
 
-    This function only returns the FIELD reflection coefficients and the cosine angle in the medium 2
+    This function only returns the FIELD reflection and transmission coefficients and the cosine angle in the medium 2
 
     Args:
         eps_1: permittivity of medium 1.
@@ -221,7 +243,16 @@ def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium
         mu_medium: string indicating which medium the angle is defined in ("1" or "void").
 
     Returns:
-        : rv, rh, tv, th, mu2 the cosine of the angle in medium 2
+        rv: complex
+            reflection coefficient for vertical polarization.
+        rh: complex
+            reflection coefficient for horizontal polarization.
+        tv: complex
+            transmission coefficient for vertical polarization.
+        th: complex
+            transmission coefficient for horizontal polarization.
+        mu2: float
+            cosine of the angle in medium 2.
     """
     # y is the axis normal to the interface (usually z, but here it is y!)
 
@@ -261,15 +292,15 @@ def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium
 
 
 def fresnel_reflection_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu, mu_medium="1"):
-    """Compute the reflection in two polarizations (H and V) for lossly media with the "rigorous Fresnel" based
+    """Compute the reflection in two polarizations (H and V) for lossy media with the "rigorous Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between
     absorbing media. Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
 
-    The 'rigorous' derivation respects the energy conservation even for strongly loosly media.
+    The 'rigorous' derivation respects the energy conservation even for strongly lossy media.
     The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
     reflection coefficient.
 
-    This function returns the FIELF and INTENSITY reflection and transmission coefficients and the cosine angle in the
+    This function returns the FIELD and INTENSITY reflection and transmission coefficients and the cosine angle in the
     medium 2
 
     Args:
@@ -277,10 +308,26 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2,
         eps_2: permittivity of medium 2.
         mu: cosine zenith angle in medium 1 or in the void according to mu_medium.
         mu_medium: string indicating which medium the angle is defined in ("1" or "void").
-        full_output: return full output (Default value = False).
 
     Returns:
-            : rv, rh, mu2 the cosine of the angle in medium 2
+        rv: complex
+            reflection coefficient for vertical polarization.
+        rh: complex
+            reflection coefficient for horizontal polarization.
+        tv: complex
+            transmission coefficient for vertical polarization.
+        th: complex
+            transmission coefficient for horizontal polarization.
+        Rv: float
+            power reflection coefficient for vertical polarization.
+        Rh: float
+            power reflection coefficient for horizontal polarization.
+        Tv: float
+            power transmission coefficient for vertical polarization.
+        Th: float
+            power transmission coefficient for horizontal polarization.
+        mu2: float
+            cosine of the angle in medium 2.
     """
     # y is the axis normal to the interface (usually z, but here it is y!)
 
@@ -351,7 +398,8 @@ def snell_angle(eps_1, eps_2, mu1):
         mu1: cosine zenith angle in medium 1.
 
     Returns:
-        mu2: cosine zenith angle in medium 2.
+        mu2: float
+            cosine zenith angle in medium 2.
     """
     # incident wavenumber
     n1 = np.sqrt(eps_1)
@@ -373,7 +421,8 @@ def brewster_angle(eps_1, eps_2):
         eps_2: permittivity of medium 2.
 
     Returns:
-        : angle in radians.
+        angle: float
+            brewster angle in radians.
     """
     return np.arctan(np.sqrt(eps_2 / eps_1).real)
 
@@ -388,7 +437,10 @@ def fresnel_matrix(eps_1, eps_2, mu1, npol):
         npol: number of polarizations to return.
 
     Returns:
-        : a matrix or the diagional depending on `return_as_diagonal`
+        reflection_coefficients: matrix
+            reflection coefficients matrix.
+        transmission_coefficients: matrix
+            transmission coefficients matrix.
     """
     mu1 = np.atleast_1d(mu1)
     assert len(mu1.shape) == 1  # 1D array
@@ -409,7 +461,7 @@ def fresnel_matrix(eps_1, eps_2, mu1, npol):
     if npol >= 3:
         reflection_coefficients[2] = (rv * np.conj(rh)).real  # TsangI  Eq 7.2.93
         transmission_coefficients[2] = mu2 / mu1 * ((1 + rv) * np.conj(1 + rh)).real  # TsangI  Eq 7.2.95
-        # It is not sure this equation is valid for strongly loosly materails
+        # It is not sure this equation is valid for strongly lossy materials
 
     return reflection_coefficients
 
@@ -424,7 +476,8 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
         npol: number of polarizations to return.
 
     Returns:
-        : a matrix or the diagional depending on `return_as_diagonal`
+        reflection_coefficients: matrix
+            power reflection coefficients matrix.
     """
     mu1 = np.atleast_1d(mu1)
     assert len(mu1.shape) == 1  # 1D array
@@ -438,7 +491,7 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
 
     if npol >= 3:
         reflection_coefficients[2] = (rv * np.conj(rh)).real  # TsangI  Eq 7.2.93
-        # It is not sure this equation is valid for strongly loosly materails
+        # It is not sure this equation is valid for strongly lossy materials
 
     return reflection_coefficients
 
@@ -453,7 +506,8 @@ def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol):
         npol: number of polarizations to return.
 
     Returns:
-        : a matrix or the diagional depending on `return_as_diagonal`
+        transmission_coefficients: matrix
+            power transmission coefficients matrix.
     """
     mu1 = np.atleast_1d(mu1)
     assert len(mu1.shape) == 1  # 1D array
@@ -466,7 +520,7 @@ def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol):
     transmission_coefficients[1] = 1 - abs2(rh)
     if npol >= 3:
         transmission_coefficients[2] = mu2 / mu1 * ((1 + rv) * np.conj(1 + rh)).real  # TsangI  Eq 7.2.95
-        # It is not sure this equation is valid for strongly loosly materails
+        # It is not sure this equation is valid for strongly lossy materials
 
     if npol == 4:
         raise Exception("to be implemented, the matrix is not diagonal anymore")
@@ -475,16 +529,18 @@ def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol):
 
 
 def field_fresnel_matrix(eps_1, eps_2, mu1):
-    """Compute the fresnel field reflection and transmittion matrix for/in medium 1 laying above medium 2.
+    """Compute the fresnel field reflection and transmission matrices for/in medium 1 laying above medium 2.
 
     Args:
         eps_1: permittivity of medium 1.
         eps_2: permittivity of medium 2.
         mu1: cosine zenith angle in medium 1.
-        npol: number of polarizations to return.
 
     Returns:
-        : two matrix
+        reflection_matrix: matrix
+            field reflection coefficients matrix.
+        transmission_matrix: matrix
+            field transmission coefficients matrix.
     """
     mu1 = np.atleast_1d(mu1)
     assert len(mu1.shape) == 1  # 1D array

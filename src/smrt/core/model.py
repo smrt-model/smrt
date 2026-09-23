@@ -11,8 +11,9 @@ incident or emitted energy through the layers, up to the surface, and eventually
 To build a model, use the :py:meth:`make_model` function with the type of emmodel and type of rtsolver as arguments.
 Then call the :py:meth:`Model.run` method of the model instance by specifying the sensor
 (:py:class:`smrt.core.sensor.Sensor`), snowpack (:py:class:`smrt.core.snowpack.Snowpack`) and optionally atmosphere
-(see :py:mod:`smrt.atmosphere`). The results are returned as a :py:class:`~smrt.core.result.Result` which can then been
-interrogated to retrieve brightness temperature, backscattering coefficient, and other information.
+(see :py:mod:`smrt.atmosphere`). The results are returned as a :py:class:`~smrt.core.result.PassiveResult`
+or :py:class:`~smrt.core.result.ActiveResult` which can then be interrogated to retrieve brightness temperature,
+backscattering coefficient, and other information.
 
 Example::
 
@@ -22,7 +23,7 @@ Example::
 
     print(result.TbV())
 
-The model can be run on a list of snowpacks or even more conveniently on a `pandas.Series` or `pandas.DataFrame`
+The model can be run on a list of snowpacks or even more conveniently on a Pandas Series or DataFrame
 including snowpacks. The first advantage is that by setting parallel_computation=True, the :py:meth:`Model.run` method
 performs the simulation in parallel on all the available cores of your machine and even possibly remotely on a high
 performance cluster using dask. The second advantage is that the returned :py:class:`~smrt.core.result.Result` object
@@ -48,25 +49,25 @@ Example::
 
 The `res` variable has now a coordinate `time` and res.TbV() returns a timeseries.
 
-Using `pandas.Series` offers an even more elegant way to run SMRT and assemble the results of all the simulations.
+Using Pandas Series offers an even more elegant way to run SMRT and assemble the results of all the simulations.
 
 Example::
 
     thickness_list = np.arange(0, 10, 1)
-    snowpacks = pd.Series([make_snowpack(thickness=t, ........) for t in thickness_list], index=thickness_list)
-    # snowpacks is a pandas Series of snowpack objects with the thickness as index
+    snowpacks = pd.Series([make_snowpack(thickness=t, ...) for t in thickness_list], index=thickness_list)
+    # snowpacks is a Pandas Series of snowpack objects with the thickness as index
 
     # now run the model
 
     res = m.run(sensor, snowpacks, parallel_computation=True)
 
-    # convert the result into a datframe
+    # convert the result into a DataFrame
     res = res.to_dataframe()
 
-The `res` variable is a dataframe with the thickness as index and the channels of the sensor as column.
+The `res` variable is a DataFrame with the thickness as index and the channels of the sensor as columns.
 
-Using `pandas.DataFrame` is similar. One column must contain Snowpack objects (see snowpack_column argument).
-The results of the simulations are automatically joined with this dataframe and returned by
+Using Pandas DataFrame is similar. One column must contain Snowpack objects (see snowpack_column argument).
+The results of the simulations are automatically joined with this DataFrame and returned by
 :py:meth:`~smrt.core.result.PassiveResults.to_dataframe` or :py:meth:`~smrt.core.result.ActiveResults.to_dataframe`.
 
 Example::
@@ -74,15 +75,15 @@ Example::
     # df is a DataFrame with several parameters in each row.
 
     # add a snowpack object for each row
-    df['snowpack'] = [make_snowpack(thickness=row['thickness'], ........) for i, row in df.iterrows()]]
+    df['snowpack'] = [make_snowpack(thickness=row['thickness'], ...) for i, row in df.iterrows()]
 
     # now run the model
-    res = m.run(sensor, snowpacks, parallel_computation=True)
+    res = m.run(sensor, df, parallel_computation=True)
 
-    # convert the result into a datframe
+    # convert the result into a DataFrame
     res = res.to_dataframe()
 
-The `res` variable is a `pandas.DataFrame` equal to df  +  the results at all sensor's channel added.
+The `res` variable is a Pandas DataFrame equal to df + the results at all sensor's channels added.
 
 Most rtsolvers and some emmodels take arguments (usually optional but still useful) that can be specified in two ways in
 make_model. Either using the `rtsolver_options` and `emmodel_options` arguments of that function or using the functions
@@ -142,7 +143,6 @@ def make_model(
                 - If a dict is given, the keys are the kinds of medium and the values are the associated emmodels to
                   each sort of medium. The layer attribute 'medium' is used to determine the emmodel to use for each
                   layer. If a layer define an emmodel attribute, this will cause a warning.
-
         rtsolver (string or class., optional): type of RT solver to use. Can be given by the name of a file/module in
             the rtsolver directeory (as a string) or a class. This argument is optional when only the computation of the
             layer electromagnetic properties is needed. (Default value = None)
@@ -162,11 +162,11 @@ def make_model(
         a model instance
     """
     if emmodel_kwargs is not None:
-        raise DeprecationWarning("Use emmodel_options instead of emmodel_kwargs")
+        warnings.warn("Use emmodel_options instead of emmodel_kwargs", DeprecationWarning)
         emmodel_options = emmodel_kwargs
 
     if rtsolver_kwargs is not None:
-        raise DeprecationWarning("Use rtsolver_options instead of rtsolver_kwargs")
+        warnings.warn("Use rtsolver_options instead of rtsolver_kwargs", DeprecationWarning)
         rtsolver_options = rtsolver_kwargs
 
     return Model(
@@ -182,10 +182,11 @@ def make_rtsolver(rtsolver_class: Union[str, Type], **options) -> Type:
     __init__.
 
     Args:
-        rtsolver_class (Union[str, Type]): **options:
+        rtsolver_class (Union[str, Type]): The RT solver class or string name.
+        **options: Keyword arguments to pass to the solver's __init__.
 
     Returns:
-        Type: This function provides an alternative to setting `rtsolver_options` in :py:func:`make_model`).
+        Type: This function provides an alternative to setting `rtsolver_options` in :py:func:`make_model`.
 
     Example::
 
@@ -199,10 +200,11 @@ def make_emmodel(emmodel_class: Union[str, Type], **options) -> Type:
     __init__.
 
     Args:
-        emmodel_class (Union[str, Type]): **options:
+        emmodel_class (Union[str, Type]): The EM model class or string name.
+        **options: Keyword arguments to pass to the model's __init__.
 
     Returns:
-        Type: This function provides an alternative to setting `emmodel_options` in :py:func:`make_model`).
+        Type: This function provides an alternative to setting `emmodel_options` in :py:func:`make_model`.
 
     Example::
 
@@ -217,7 +219,7 @@ def get_emmodel(emmodel):
     Args:
         emmodel:
     """
-    raise DeprecationWarning("This function will be remove soon, use make_emmodel instead.")
+    warnings.warn("This function will be removed soon, use make_emmodel instead.", DeprecationWarning)
     if isinstance(emmodel, str):
         emmodel = import_class("emmodel", emmodel)
     assert inspect.isclass(emmodel)
@@ -226,19 +228,21 @@ def get_emmodel(emmodel):
 
 def make_emmodel_instance(emmodel, sensor, layer, **emmodel_options):
     """Create a new emmodel instance based on the emmodel class or string. This function used to be called
-    `make_emmodel` but has been renamed from SMRT v1.4 and will soon be depreciated. It is recommended to use instead::
+    `make_emmodel` but was renamed in SMRT v1.4 and will soon be deprecated. It is recommended to use instead::
 
         em = make_emmodel(emmodel)(sensor, layer, **emmodel_options)
 
     or::
 
-        emmodel_class = make_emmodel(emmodel) em = emodel_class(sensor, layer, **emmodel_options)
+        emmodel_class = make_emmodel(emmodel)
+        em = emmodel_class(sensor, layer, **emmodel_options)
 
     Args:
         emmodel: type of emmodel to use. Can be given by the name of a file/module in the emmodel directory (as a
             string) or a class.
         sensor: sensor to use for the calculation.
-        layer: layer to use for the calculation **emmodel_options:
+        layer: layer to use for the calculation
+        **emmodel_options: Additional arguments to pass to the emmodel constructor.
     """
     # instantiate
     emmodel = make_emmodel(emmodel)  # get the class
@@ -253,7 +257,18 @@ class Model(object):
     def __init__(self, emmodel, rtsolver, emmodel_options=None, rtsolver_options=None):
         """Create a new model.
 
-        It is not recommended to instantiate Model class directly. Instead use the :py:meth:`make_model` function.
+        Args:
+            emmodel: type of emmodel to use. Can be given by the name of a file/module in the emmodel directory (as a
+                string) or a class. Can be a single value (class or string), an array with the same size as
+                snowpack layers array, or a mapping between an emmodel for each layer medium.
+            rtsolver: type of RT solver to use. Can be given by the name of a file/module in the rtsolver directeory
+                (as a string) or a class. This argument is optional when only the computation of the layer
+                electromagnetic properties is needed.
+            emmodel_options: arguments applied to create the emmodel instance of each layer. Valid arguments depend on
+                the selected emmodel (refer to the documentation of the selected emmodel). The function
+                :py:func:`emmodel` provides an alternative to setting `emmodel_options`.
+            rtsolver_options: arguments applied to create the rtsolver instance (refer to the documentation of the
+                rtsolvers). The function :py:func:`rtsolver` provides an alternative to setting `rtsolver_options`.
         """
         # emmodel can be a single value (class or string), an array with the same size as snowpack layers array, or a
         # mapping between an emmodel for each layer medium
@@ -325,9 +340,10 @@ class Model(object):
                 case, the computation is performed for each pair (sensor, snowpack).
             snowpack: snowpack to use for the calculation. Can be a single snowpack, a list of snowpack, a dict of
                 snowpack or a SensitivityStudy object.
-            atmosphere:  (Default value = None) snowpack_dimension: name and values (as a tuple) of the dimension to
-                create for the results when a list of snowpack is provided. E.g. time, point, longitude, latitude. By
-                default the dimension is called 'snowpack' and the values are from 1 to the number of snowpacks.
+            atmosphere: atmosphere object (Default value = None).
+            snowpack_dimension: name and values (as a tuple) of the dimension to create for the results when a
+                list of snowpack is provided. E.g. time, point, longitude, latitude. By default the dimension is
+                called 'snowpack' and the values are from 1 to the number of snowpacks.
             snowpack_column: when snowpack is a DataFrame this argument is used to specify which column contains the
                 Snowpack objects (Default value = 'snowpack')
             progressbar: if True, display a progress bar during
@@ -355,10 +371,11 @@ class Model(object):
             result of the calculation(s) as a :py:class:`Results` instance
         """
         if atmosphere is not None:
-            raise DeprecationWarning(
-                "The atmosphere argument of the run method is depreciated."
+            warnings.warn(
+                "The atmosphere argument of the run method is deprecated. "
                 "Setting the 'atmosphere' through make_snowpack (and similar functions) or using medium = atmosphere "
-                "+ snowpack are now the recommended ways."
+                "+ snowpack are now the recommended ways.",
+                DeprecationWarning,
             )
 
         if not (
