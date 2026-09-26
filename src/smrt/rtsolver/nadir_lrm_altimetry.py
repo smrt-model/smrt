@@ -232,7 +232,8 @@ class NadirLRMAltimetry(object):
             # then the (PTR and PDF)
 
             # start with building the PTR
-            sigma_c = np.sqrt(self.sensor.pulse_sigma**2 + (2 * sigma_surface / C_SPEED) ** 2)
+            pulse_sigma = 0.513 / self.sensor.pulse_bandwidth
+            sigma_c = np.sqrt(pulse_sigma**2 + (2 * sigma_surface / C_SPEED) ** 2)
             if sigma_c > 0:
                 # restrict t_gate to 5 sigma and compute the positive and negative values
                 i = min(np.searchsorted(t_gate, 5 * sigma_c), len(t_gate) - 1)
