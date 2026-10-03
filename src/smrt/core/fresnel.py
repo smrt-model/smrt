@@ -197,18 +197,18 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu
     if mu_medium == "1":
         kiz2 = n1.real**2 * (1 - mu**2)
 
-        kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
+        kyi = -np.sqrt(np.complex128(eps_1) - kiz2)  # Eq 8 for i
 
         ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-        kyt = -np.sqrt(eps_2 - ktz2)  # Eq 8 for t
+        kyt = -np.sqrt(np.complex128(eps_2) - ktz2)  # Eq 8 for t
     elif mu_medium == "void":
         kiz2 = 1 - mu**2
 
         # repeating is necessary for the compilation typing pass
-        kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
+        kyi = -np.sqrt(np.complex128(eps_1) - kiz2)  # Eq 8 for i
 
         ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-        kyt = -np.sqrt(eps_2 - ktz2)  # Eq 8 for t
+        kyt = -np.sqrt(np.complex128(eps_2) - ktz2)  # Eq 8 for t
     else:
         raise SMRTError("mu_medium must be either '1' or 'void'")
 
@@ -263,18 +263,18 @@ def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium
     if mu_medium == "1":
         kiz2 = n1.real**2 * (1 - mu**2)
 
-        kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
+        kyi = -np.sqrt(np.complex128(eps_1) - kiz2)  # Eq 8 for i
 
         ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-        kyt = -np.sqrt(eps_2 - ktz2)  # Eq 8 for t
+        kyt = -np.sqrt(np.complex128(eps_2) - ktz2)  # Eq 8 for t
     elif mu_medium == "void":
         kiz2 = 1 - mu**2
 
         # repeating is necessary for the compilation typing pass
-        kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
+        kyi = -np.sqrt(np.complex128(eps_1) - kiz2)  # Eq 8 for i
 
         ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-        kyt = -np.sqrt(eps_2 - ktz2)  # Eq 8 for t
+        kyt = -np.sqrt(np.complex128(eps_2) - ktz2)  # Eq 8 for t
     else:
         raise SMRTError("mu_medium must be either '1' or 'void'")
 
@@ -286,6 +286,8 @@ def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium
     rv = n1.conjugate() * (eps_2 * kyi - eps_1 * kyt) / denom_v  # Eq 61
     tv = n2 * 2 * (eps_1.conjugate() * kyi).real / denom_v  # Eq 62
 
+    # we use the real part to avoid numerical issues with complex numbers but in principle we should use the
+    # complex cosine, only selecting the positive imag branch
     mu2 = -kyt.real / np.sqrt(eps_2).real  # by definition of kyt
 
     return rv, rh, tv, th, mu2
@@ -345,7 +347,7 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2,
     else:
         raise SMRTError("mu_medium must be either '1' or 'void'")
 
-    kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
+    kyi = -np.sqrt(eps_1 - kiz2, dtype=np.complex128)  # Eq 8 for i
 
     ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
     kyt = -np.sqrt(eps_2 - ktz2, dtype=np.complex128)  # Eq 8 for t
@@ -386,7 +388,7 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2,
 
 
 # use the best function for the fresnel coefficients
-fresnel_reflection_coefficients = fresnel_reflection_coefficients_maezawa09_rigorous
+fresnel_reflection_coefficients = fresnel_reflection_coefficients_maezawa09_rigorous_compiled
 
 
 def snell_angle(eps_1, eps_2, mu1):
