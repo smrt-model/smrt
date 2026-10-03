@@ -38,7 +38,7 @@ class Streams(object):
             np.ndarray: The mu values for both directions.
         """
 
-        return self.mu[layer]
+        return self.mu[layer] if layer >= 0 else self.outmu
 
     def down_up_cosine(self, layer: int) -> np.ndarray:
         """Return the mu for both directions (up and down) for a given layer.
