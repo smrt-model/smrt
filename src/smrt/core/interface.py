@@ -208,6 +208,12 @@ def substrate_from_interface(interface_cls):
                 frequency, eps_1, eps_2, mu_s, mu_i, m_max, npol
             )
 
+        def field_matrix(self, frequency, eps_1, mu1, npol):
+            eps_2 = self.permittivity(frequency)
+            if eps_2 is None:
+                raise SMRTError(f"No permittivity_model have been given to the substrate '{interface_cls!s}'")
+            return self.interface_inst.field_matrix(frequency, eps_1, eps_2, mu1, npol)
+
         def auto_add(new_method, dependency):
             new_method_name = new_method.__name__
             if not hasattr(cls, new_method_name) and hasattr(interface_cls, dependency):
@@ -226,6 +232,7 @@ def substrate_from_interface(interface_cls):
         auto_add(specular_reflection_matrix, "specular_reflection_matrix")
         auto_add(ft_even_diffuse_reflection_matrix, "ft_even_diffuse_reflection_matrix")
         auto_add(diffuse_reflection_matrix, "diffuse_reflection_matrix")
+        auto_add(field_matrix, "field_matrix")
 
         # does not work due to metaclass conflicts
         # parents = [o in cls.mro() for o in interface_cls.mro() if o not in [interface_cls, object, Interface]]
