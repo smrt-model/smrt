@@ -297,7 +297,7 @@ def compute_stream_uniform(n_max_stream, permittivity):
     # calculate the number of streams per layer
     streams.n = n_max_stream + np.sum(real_reflection, axis=1)
 
-    assert all(np.size(n) > 2 for n in streams.n)
+    assert all(n > 2 for n in streams.n)
 
     # compute the weights
     streams.weight = compute_weight(streams.mu)
