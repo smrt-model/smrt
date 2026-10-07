@@ -710,19 +710,23 @@ class InterfaceProperties(object):
 
     def field_reflection_top(self, layer=None):
         lay = self.selected_layer if layer is None else layer
-        return self.field_top[lay][0]
+        r = self.field_top[lay][0]
+        return r.compress(auto_reduce_npol=self.auto_reduce_npol) if self.compress else r
 
     def field_transmission_top(self, layer=None):
         lay = self.selected_layer if layer is None else layer
-        return self.field_top[lay][1]
+        t = self.field_top[lay][1]
+        return t.compress(auto_reduce_npol=self.auto_reduce_npol) if self.compress else t
 
     def field_reflection_bottom(self, layer=None):
         lay = self.selected_layer if layer is None else layer
-        return self.field_bottom[lay][0]
+        r = self.field_bottom[lay][0]
+        return r.compress(auto_reduce_npol=self.auto_reduce_npol) if self.compress else r
 
     def field_transmission_bottom(self, layer=None):
         lay = self.selected_layer if layer is None else layer
-        return self.field_bottom[lay][1]
+        t = self.field_bottom[lay][1]
+        return t.compress(auto_reduce_npol=self.auto_reduce_npol) if self.compress else t
 
 
 def normalize_diffuse_matrix(mat, mu_st, mu_i, weights):
