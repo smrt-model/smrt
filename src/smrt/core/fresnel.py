@@ -263,6 +263,7 @@ def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium
     if mu_medium == "1":
         kiz2 = n1.real**2 * (1 - mu**2)
 
+        # M09: We take the minus sign for the incidence and transmission field and plus sign for the reflection field.
         kyi = -np.sqrt(np.complex128(eps_1) - kiz2)  # Eq 8 for i
 
         ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
@@ -347,6 +348,7 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2,
     else:
         raise SMRTError("mu_medium must be either '1' or 'void'")
 
+    # M09: We take the minus sign for the incidence and transmission field and plus sign for the reflection field.
     kyi = -np.sqrt(eps_1 - kiz2, dtype=np.complex128)  # Eq 8 for i
 
     ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
@@ -365,7 +367,7 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2,
     #
     n2 = np.sqrt(eps_2)
 
-    th = 2 * kyi.real / (kyi.conjugate() + kyt)  # Eq 60
+    th = 2 * kyi.real / (kyi.conjugate() + kyt)  # Eq 60; in the paper is with kyi + kyi.conjugate() == 2 * kyi.real
 
     tv = n2 * 2 * (eps_1.conjugate() * kyi).real / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))  # Eq 62
 
@@ -548,5 +550,13 @@ def field_fresnel_matrix(eps_1, eps_2, mu1):
     assert len(mu1.shape) == 1  # 1D array
 
     rv, rh, tv, th, _ = fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1)
+
+    # # check energy conservation # eq 55 in M09
+    # assert np.allclose(th - rh, 1), f"Energy conservation violated in transmission {th=} and {rh=}"
+    # # check energy conservation # eq 56 in M09
+    # n1 = np.sqrt(eps_1)
+    # n2 = np.sqrt(eps_2)
+    # assert np.allclose(n2 * tv - n1.conj() * rv, n1), f"Energy conservation violated in transmission {tv=} and {rv=}"
+    # see test_fresnel.py for more details
 
     return smrt_matrix(np.array((rv, rh))), smrt_matrix(np.array((tv, th)))
