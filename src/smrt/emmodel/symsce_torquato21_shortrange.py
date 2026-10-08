@@ -14,7 +14,7 @@ also provides a good reference for this implementation. The only difference is i
 # local import
 from smrt.permittivity.generic_mixing_formula import polder_van_santen
 
-from .common import AdjustableEffectivePermittivityMixins, derived_EMModel
+from .emmodel_utils import AdjustableEffectivePermittivityMixins, derived_EMModel
 from .sce_common import SCEBase
 
 #

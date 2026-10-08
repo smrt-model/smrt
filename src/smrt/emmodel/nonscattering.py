@@ -11,7 +11,7 @@ import numpy as np
 from ..core.globalconstants import C_SPEED
 from ..core.lib import len_atleast_1d, smrt_matrix
 from ..permittivity.generic_mixing_formula import polder_van_santen
-from .common import IsotropicScatteringMixin, extinction_matrix
+from .emmodel_utils import IsotropicScatteringMixin, extinction_matrix
 
 
 class NonScattering(IsotropicScatteringMixin):

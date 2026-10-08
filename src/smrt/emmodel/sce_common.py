@@ -13,7 +13,7 @@ from ..core.error import SMRTError
 # local import
 from ..core.globalconstants import C_SPEED
 from ..core.lib import smrt_matrix
-from .common import (
+from .emmodel_utils import (
     GenericFTPhaseMixin,
     IsotropicScatteringMixin,
     rayleigh_scattering_matrix_and_angle,

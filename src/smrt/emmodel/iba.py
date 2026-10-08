@@ -25,7 +25,7 @@ from ..core.globalconstants import C_SPEED
 from ..core.lib import smrt_matrix
 from ..permittivity.depolarization_factors import depolarization_factors_spheroids
 from ..permittivity.generic_mixing_formula import polder_van_santen
-from .common import (
+from .emmodel_utils import (
     AdjustableEffectivePermittivityMixin,
     GenericFTPhaseMixin,
     IsotropicScatteringMixin,

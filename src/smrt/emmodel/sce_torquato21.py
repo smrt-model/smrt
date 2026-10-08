@@ -16,7 +16,7 @@ References:
 # local import
 from smrt.permittivity.generic_mixing_formula import maxwell_garnett_for_spheres
 
-from .common import AdjustableEffectivePermittivityMixin, derived_EMModel
+from .emmodel_utils import AdjustableEffectivePermittivityMixin, derived_EMModel
 from .sce_common import SCEBase
 
 #

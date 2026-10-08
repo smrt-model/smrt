@@ -12,7 +12,7 @@ import numpy as np
 from ..core.error import SMRTError
 from ..core.globalconstants import C_SPEED
 from ..core.lib import smrt_matrix
-from .common import IsotropicScatteringMixin, rayleigh_scattering_matrix_and_angle
+from .emmodel_utils import IsotropicScatteringMixin, rayleigh_scattering_matrix_and_angle
 
 
 class Rayleigh(IsotropicScatteringMixin):
