@@ -229,14 +229,14 @@ class GeometricalOptics(HemisphericalIntegrationMixin, Interface):
         def reflection_function(dphi):
             return self.diffuse_reflection_matrix(frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol=npol)
 
-        print("to be optimised")
+        # print("to be optimised")
         return generic_ft_even_matrix(reflection_function, m_max, nsamples=256)
 
     def ft_even_diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, m_max, npol):
         def transmission_function(dphi):
             return self.diffuse_transmission_matrix(frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol=npol)
 
-        print("to be optimised")
+        # print("to be optimised")
         return generic_ft_even_matrix(transmission_function, m_max, nsamples=256)
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
