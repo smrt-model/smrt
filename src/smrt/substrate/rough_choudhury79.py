@@ -14,6 +14,7 @@ import numpy as np
 from smrt.core.fresnel import fresnel_reflection_matrix, fresnel_transmission_matrix
 
 # local import
+from smrt.core.globalconstants import TWO_PI
 from smrt.core.interface import Substrate
 
 
@@ -26,7 +27,7 @@ class ChoudhuryReflectivity(Substrate):
 
         #  Calculate ksigma = wavenumber*soilp%sigma(standard deviation of surface height)
 
-        ksigma = 2 * np.pi * frequency * np.sqrt((1 / 2.9979e8) ** 2 * eps_1) * self.roughness_rms
+        ksigma = TWO_PI * frequency * np.sqrt((1 / 2.9979e8) ** 2 * eps_1) * self.roughness_rms
         ksigma = ksigma.real
 
         # Raise warning if outside validity
@@ -40,7 +41,7 @@ class ChoudhuryReflectivity(Substrate):
     def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
         eps_2 = self.permittivity(frequency)
 
-        reflection_coefficients = fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
+        reflection_coefficients, _ = fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
 
         self.adjust(reflection_coefficients[1], reflection_coefficients[0], frequency, eps_1, mu1)
 
@@ -60,7 +61,7 @@ class ChoudhuryReflectivity(Substrate):
 
         eps_2 = self.permittivity(frequency)
 
-        transmission_coefficients = fresnel_transmission_matrix(eps_1, eps_2, mu1, npol)
+        transmission_coefficients, _ = fresnel_transmission_matrix(eps_1, eps_2, mu1, npol)
 
         rh = 1 - transmission_coefficients[1]
         rv = 1 - transmission_coefficients[0]

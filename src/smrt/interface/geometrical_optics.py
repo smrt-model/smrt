@@ -26,7 +26,7 @@ import scipy.special
 
 from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.fresnel import fresnel_reflection_coefficients
-from smrt.core.globalconstants import C_SPEED
+from smrt.core.globalconstants import TWO_PI, WAVENUMBER_PER_HZ
 from smrt.core.interface import Interface
 from smrt.core.lib import abs2, generic_ft_even_matrix, smrt_matrix
 from smrt.core.vector3 import vector3
@@ -122,7 +122,7 @@ class GeometricalOptics(HemisphericalIntegrationMixin, Interface):
 
         # check validity of the parameters
         if self.roughness_rms is not None and self.corr_length is not None:
-            k = 2 * np.pi * frequency / C_SPEED * np.sqrt(eps_1).real
+            k = WAVENUMBER_PER_HZ * frequency * np.sqrt(eps_1).real
             ks = k * self.roughness_rms
             kl = k * self.corr_length
 
@@ -428,7 +428,7 @@ class GeometricalOptics(HemisphericalIntegrationMixin, Interface):
 
         coef = (
             1
-            / (2 * np.pi * self.mean_square_slope)
+            / (TWO_PI * self.mean_square_slope)
             * kd.norm2() ** 2
             / (4 * mu_i * vector3.cross(ki, ks).norm2() * kd.z**4)
             * np.exp(-(kd.x**2 + kd.y**2) / (2 * kd.z**2 * self.mean_square_slope))
@@ -497,7 +497,7 @@ class GeometricalOptics(HemisphericalIntegrationMixin, Interface):
 
         coef = (
             eps_2
-            / (2 * np.pi * self.mean_square_slope)
+            / (TWO_PI * self.mean_square_slope)
             * ktd.norm2()
             * n_kt
             * n_ki

@@ -4,7 +4,7 @@
 import numpy as np
 
 from ..core.error import SMRTError
-from ..core.globalconstants import FREEZING_POINT, GHz
+from ..core.globalconstants import FREEZING_POINT, TWO_PI, GHz
 from ..core.layer import layer_properties
 
 
@@ -135,11 +135,11 @@ def water_permittivity_turner16(frequency, temperature):
 
     print(A1, A2)
 
-    eps_real = eps_s - (2 * np.pi * frequency) ** 2 * (A1 + A2)  # eq 4
+    eps_real = eps_s - (TWO_PI * frequency) ** 2 * (A1 + A2)  # eq 4
 
     B1 = debye_B_i(tau1, delta1, frequency)
     B2 = debye_B_i(tau2, delta2, frequency)
-    eps_imag = (2 * np.pi * frequency) * (B1 + B2)  # eq 5
+    eps_imag = (TWO_PI * frequency) * (B1 + B2)  # eq 5
 
     return eps_real + 1j * eps_imag
 
@@ -156,9 +156,9 @@ def debye_tau_i(c_i, d_i, tempC, t_c):
 
 def debye_A_i(tau_i, delta_i, frequency):
     """Compute A_i relaxation term. Eq. 7 in Turner 2016"""
-    return (tau_i**2 * delta_i) / (1 + (2 * np.pi * frequency * tau_i) ** 2)
+    return (tau_i**2 * delta_i) / (1 + (TWO_PI * frequency * tau_i) ** 2)
 
 
 def debye_B_i(tau_i, delta_i, frequency):
     """Compute B_i relaxation term. Eq. 8 in Turner 2016"""
-    return (tau_i * delta_i) / (1 + (2 * np.pi * frequency * tau_i) ** 2)
+    return (tau_i * delta_i) / (1 + (TWO_PI * frequency * tau_i) ** 2)

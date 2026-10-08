@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.integrate
 
+from smrt.core.globalconstants import TWO_PI
+
 
 # Generic test: check integral of phase function equals scattering coefficient
 def test_energy_conservation(em, tolerance_pc, npol=None, subset=16):
@@ -27,7 +29,7 @@ def test_energy_conservation(em, tolerance_pc, npol=None, subset=16):
             # not needed as we already use m=0
 
             p11_12 = np.sum(ft_even_phase[:, pol, 0, :, inc], axis=0)
-            p_sum = 2 * np.pi * scipy.integrate.simpson(p11_12, x=mu)
+            p_sum = TWO_PI * scipy.integrate.simpson(p11_12, x=mu)
             phase_integral = p_sum / (4.0 * np.pi)
 
             ks = em.ks(mu[inc]).values

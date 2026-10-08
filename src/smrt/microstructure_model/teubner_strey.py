@@ -10,6 +10,8 @@ Args:
 
 import numpy as np
 
+from smrt.core.globalconstants import TWO_PI
+
 from .autocorrelation import Autocorrelation
 
 
@@ -49,7 +51,7 @@ class TeubnerStrey(Autocorrelation):
 
         """
         X = (k * self.corr_length) ** 2
-        Y = (2 * np.pi * self.corr_length / self.repeat_distance) ** 2
+        Y = (TWO_PI * self.corr_length / self.repeat_distance) ** 2
         ft_acf_normalized = 8 * np.pi * self.corr_length**3 / ((1 + Y) ** 2 + 2 * (1 - Y) * X + X**2)
 
         return self.corr_func_at_origin * ft_acf_normalized

@@ -21,7 +21,7 @@ import numpy.typing as npt
 import scipy.special
 
 from smrt.core.error import SMRTError
-from smrt.core.globalconstants import C_SPEED, LOG2
+from smrt.core.globalconstants import C_SPEED, LOG2, TWO_PI
 from smrt.core.terrain import TerrainInfo
 
 from .delay_doppler_utils import (
@@ -99,7 +99,7 @@ class Dinardo18(object):
             * self.Lx
             * self.Ly
             / (4 * np.pi * sensor.altitude**4)
-            * np.sqrt(2 * np.pi)
+            * np.sqrt(TWO_PI)
             * Ag**2
             * sigma_g**2
         )  # unit: m^2 * m * m / m^4 =no unit

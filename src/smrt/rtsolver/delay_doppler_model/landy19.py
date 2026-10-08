@@ -26,7 +26,7 @@ import numpy as np
 import numpy.typing as npt
 
 from smrt.core.error import SMRTError
-from smrt.core.globalconstants import C_SPEED
+from smrt.core.globalconstants import C_SPEED, TWO_PI
 from smrt.core.terrain import TerrainInfo, generate_dem
 
 from .delay_doppler_utils import delay_compensation, delay_sampling_vector, ptr_function, sinc2
@@ -300,7 +300,7 @@ class Landy19(object):
 
 @numba.vectorize(nopython=True, cache=True)
 def ptr_doppler_landy19(phi: float, wavelength, velocity, pulse_repetition_frequency, ndoppler):
-    k0 = 2 * np.pi / wavelength
+    k0 = TWO_PI / wavelength
     angle = (k0 * velocity / pulse_repetition_frequency) * np.sin(phi)
     return (np.sin(ndoppler * angle) / np.sin(angle)) ** 2 if np.abs(angle) > 1e-6 else float(ndoppler**2)  # unit: no
 

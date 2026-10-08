@@ -11,7 +11,7 @@ import scipy.integrate
 from ..core.error import SMRTError
 
 # local import
-from ..core.globalconstants import C_SPEED
+from ..core.globalconstants import TWO_PI, WAVENUMBER_PER_HZ
 from ..core.lib import smrt_matrix
 from .emmodel_utils import (
     GenericFTPhaseMixin,
@@ -37,7 +37,7 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         self.e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
         self.eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
         self.frequency = sensor.frequency
-        self.k0 = 2 * np.pi * sensor.frequency / C_SPEED  # Wavenumber in free space
+        self.k0 = WAVENUMBER_PER_HZ * sensor.frequency  # Wavenumber in free space
 
         self.k1 = self.k0 * np.sqrt(self.e0)
         self.k2 = self.k0 * np.sqrt(self.eps)
@@ -288,7 +288,7 @@ def compute_A2_nonlocal(Q, microstructure):
     # take the real part to avoid warnings... but this remains to be explored
     primitive = scipy.integrate.cumulative_trapezoid(y.real, 2 * q.real, initial=0)
 
-    ImF = -1 / (2 * (2 * np.pi) ** 1.5) * q * primitive
+    ImF = -1 / (2 * TWO_PI**1.5) * q * primitive
 
     # continue with the real part. Eq (71) is much more difficult to compute than the imaginary part
     # because of the principal value, but Torquato 2021, suppmat gives a hint with Eq S111.
@@ -309,12 +309,12 @@ def compute_A2_nonlocal(Q, microstructure):
     ReF = -2 / np.pi * Q * scipy.integrate.romb(y.real, maxq.real / n) - 1 / np.pi * asymptotic_integral
 
     gamma_3_2 = 0.5 * np.sqrt(np.pi)
-    A2 = -(2 * np.pi) / (2**1.5 * gamma_3_2) * (ReF + 1j * ImF[nQ])  # the factor is from eq 67
+    A2 = -TWO_PI / (2**1.5 * gamma_3_2) * (ReF + 1j * ImF[nQ])  # the factor is from eq 67
 
     # check ImF(Q)
     # q = np.linspace(0, 2 * Q, n + 1)
     # y = q * microstructure.ft_autocorrelation_funscipyction(q)
-    # ImFQ_direct = - 1 / (2 * (2 * np.pi)**1.5) * Q * scipy.integrate.romb(y, 2 * Q / n)
+    # ImFQ_direct = - 1 / (2 * TWO_PI**1.5) * Q * scipy.integrate.romb(y, 2 * Q / n)
     # print(ImF[nQ], ImFQ_direct)
 
     return A2

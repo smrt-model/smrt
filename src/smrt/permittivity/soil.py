@@ -24,11 +24,10 @@ References:
 
 """
 
-import numpy as np
 import scipy.interpolate
 
 from smrt.core.error import SMRTError
-from smrt.core.globalconstants import PERMITTIVITY_OF_FREE_SPACE
+from smrt.core.globalconstants import PERMITTIVITY_OF_FREE_SPACE, TWO_PI
 from smrt.core.layer import layer_properties
 
 
@@ -69,12 +68,12 @@ def soil_permittivity_dobson85_peplinski95(frequency, temperature, moisture, san
     # static water permittivity referenced to Stogryn 1971 in DB95
     e_w0 = 87.134 - 1.949e-1 * temp - 1.276e-2 * temp**2 + 2.491e-4 * temp**3
     # relaxation time of water referenced to Stogryn 1971 in DB95
-    rt_w = (1.1109e-10 - 3.824e-12 * temp + 6.938e-14 * temp**2 - 5.096e-16 * temp**3) / (2 * np.pi)
+    rt_w = (1.1109e-10 - 3.824e-12 * temp + 6.938e-14 * temp**2 - 5.096e-16 * temp**3) / TWO_PI
 
-    e_fw_prime = e_w_inf + (e_w0 - e_w_inf) / (1 + (2 * np.pi * frequency * rt_w) ** 2)  # eq 6 P95  or eq 23 DB85
-    e_fw_second = 2 * np.pi * frequency * rt_w * (e_w0 - e_w_inf) / (
-        1 + (2 * np.pi * frequency * rt_w) ** 2
-    ) + sigma_eff * (rho_s - rho_b) / (2 * np.pi * frequency * e_0 * rho_s * moisture)  # eq 7 P95 and eq 24 DB85
+    e_fw_prime = e_w_inf + (e_w0 - e_w_inf) / (1 + (TWO_PI * frequency * rt_w) ** 2)  # eq 6 P95  or eq 23 DB85
+    e_fw_second = TWO_PI * frequency * rt_w * (e_w0 - e_w_inf) / (1 + (TWO_PI * frequency * rt_w) ** 2) + sigma_eff * (
+        rho_s - rho_b
+    ) / (TWO_PI * frequency * e_0 * rho_s * moisture)  # eq 7 P95 and eq 24 DB85
 
     return complex(
         (1 + (rho_b / rho_s) * (e_s**0.65 - 1) + moisture**beta_prime * e_fw_prime**0.65 - moisture)
@@ -133,12 +132,12 @@ def soil_permittivity_dobson85_original(frequency, temperature, moisture, sand, 
     # static water permittivity referenced to Stogryn 1971 in DB95
     e_w0 = 87.134 - 1.949e-1 * temp - 1.276e-2 * temp**2 + 2.491e-4 * temp**3
     # relaxation time of water referenced to Stogryn 1971 in DB95
-    rt_w = (1.1109e-10 - 3.824e-12 * temp + 6.938e-14 * temp**2 - 5.096e-16 * temp**3) / (2 * np.pi)
+    rt_w = (1.1109e-10 - 3.824e-12 * temp + 6.938e-14 * temp**2 - 5.096e-16 * temp**3) / (TWO_PI)
 
-    e_fw_prime = e_w_inf + (e_w0 - e_w_inf) / (1 + (2 * np.pi * frequency * rt_w) ** 2)  # eq 6 P95  or eq 23 DB85
-    e_fw_second = 2 * np.pi * frequency * rt_w * (e_w0 - e_w_inf) / (
-        1 + (2 * np.pi * frequency * rt_w) ** 2
-    ) + sigma_eff * (rho_s - rho_b) / (2 * np.pi * frequency * e_0 * rho_s * moisture)  # eq 7 P95 and eq 24 DB85
+    e_fw_prime = e_w_inf + (e_w0 - e_w_inf) / (1 + (TWO_PI * frequency * rt_w) ** 2)  # eq 6 P95  or eq 23 DB85
+    e_fw_second = TWO_PI * frequency * rt_w * (e_w0 - e_w_inf) / (1 + (TWO_PI * frequency * rt_w) ** 2) + sigma_eff * (
+        rho_s - rho_b
+    ) / (TWO_PI * frequency * e_0 * rho_s * moisture)  # eq 7 P95 and eq 24 DB85
 
     return complex(
         (1 + (rho_b / rho_s) * (e_s**0.65 - 1) + moisture**beta_prime * e_fw_prime**0.65 - moisture)
@@ -161,10 +160,10 @@ def soil_permittivity_hut(frequency, temperature, moisture, sand, clay, dry_matt
         ew0 = 87.74 - 0.40008 * tempC + 9.398e-4 * tempC**2 + 1.410e-6 * tempC**3
         # d = 25 - tempC # unused
         # alfa = 2.033e-2 + 1.266e-4 * d + 2.464e-6 * d**2 # unused
-        tw = 1 / (2 * np.pi) * (1.1109e-10 - 3.824e-12 * tempC + 6.938e-14 * tempC**2 - 5.096e-16 * tempC**3)
+        tw = 1 / (TWO_PI) * (1.1109e-10 - 3.824e-12 * tempC + 6.938e-14 * tempC**2 - 5.096e-16 * tempC**3)
 
-        ew_r = ew_inf + (ew0 - ew_inf) / (1 + (2 * np.pi * frequency * tw) ** 2)
-        ew_i = (ew0 - ew_inf) * 2 * np.pi * frequency * tw / (1 + (2 * np.pi * frequency * tw) ** 2)
+        ew_r = ew_inf + (ew0 - ew_inf) / (1 + (TWO_PI * frequency * tw) ** 2)
+        ew_i = (ew0 - ew_inf) * TWO_PI * frequency * tw / (1 + (TWO_PI * frequency * tw) ** 2)
     else:
         raise SMRTError("soil_permittivity_hut requires above freezing point temperatures")
     #      !option for salt consideration (Mätzler 1987)

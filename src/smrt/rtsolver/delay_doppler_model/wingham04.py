@@ -17,7 +17,7 @@ import scipy.signal
 from numba.types import CPointer, float64, intc
 from scipy import LowLevelCallable
 
-from smrt.core.globalconstants import C_SPEED
+from smrt.core.globalconstants import C_SPEED, TWO_PI
 from smrt.core.terrain import TerrainInfo
 
 from .delay_doppler_utils import (
@@ -122,7 +122,7 @@ class Wingham04(object):
         # W04 Eq 22
         integral = [
             [
-                scipy.integrate.quad(fn_integrand, 0, 2 * np.pi, args=(tau_ + half_gate, xi_b_) + args, epsabs=0)[0]
+                scipy.integrate.quad(fn_integrand, 0, TWO_PI, args=(tau_ + half_gate, xi_b_) + args, epsabs=0)[0]
                 for xi_b_ in xi_b
             ]
             for tau_ in self.tau
@@ -146,7 +146,7 @@ class Wingham04(object):
         #   the pdf is in time. coef: 1 / (C_SPEED / 2)  # unit m^-1 s
         # - v(ct/2) has a factor 1 / (2 * np.pi C_SPEED)   # unit m^-1 s
 
-        coef = (C_SPEED**2 / 4) / (C_SPEED / 2) / (2 * np.pi * C_SPEED)  # unit: no
+        coef = (C_SPEED**2 / 4) / (C_SPEED / 2) / (TWO_PI * C_SPEED)  # unit: no
 
         # # the convolution by v brings seconds and is not taken into account in numerical_convolution.
         # # we must add them here, with the coef delta_t

@@ -8,7 +8,7 @@ This model is only compatible with the Exponential autocorrelation function only
 
 import numpy as np
 
-from ..core.globalconstants import C_SPEED
+from ..core.globalconstants import WAVENUMBER_PER_HZ
 from ..permittivity.generic_mixing_formula import polder_van_santen
 from .rayleigh import Rayleigh
 
@@ -28,8 +28,7 @@ class SFT_Rayleigh(Rayleigh):
         es = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
         e0 = 1  # always
 
-        lmda = C_SPEED / sensor.frequency
-        k0 = 2 * np.pi / lmda * np.sqrt(e0)
+        k0 = WAVENUMBER_PER_HZ * sensor.frequency * np.sqrt(e0)
 
         corr_length = layer.microstructure.corr_length
 

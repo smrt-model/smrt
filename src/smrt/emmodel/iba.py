@@ -21,7 +21,7 @@ import scipy.integrate
 
 # local import
 from ..core.error import SMRTError, smrt_warn
-from ..core.globalconstants import C_SPEED
+from ..core.globalconstants import WAVENUMBER_PER_HZ
 from ..core.lib import smrt_matrix
 from ..permittivity.depolarization_factors import depolarization_factors_spheroids
 from ..permittivity.generic_mixing_formula import polder_van_santen
@@ -109,7 +109,7 @@ become a default in the future.""")
         self.e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
         self.eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
         self.frequency = sensor.frequency
-        self.k0 = 2 * np.pi * sensor.frequency / C_SPEED  # Wavenumber in free space
+        self.k0 = WAVENUMBER_PER_HZ * sensor.frequency
         self.inclusion_shape = layer.inclusion_shape  # for assuming spherical or ellipsoidal inclusions
 
         # Calculate depolarization factors and iba_coefficient

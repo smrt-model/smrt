@@ -9,6 +9,8 @@ import copy
 import numpy as np
 from scipy.fftpack import dst
 
+from smrt.core.globalconstants import TWO_PI
+
 from ..core.error import SMRTError
 
 
@@ -136,8 +138,8 @@ class Autocorrelation(AutocorrelationBase):
         ft = self.ft_autocorrelation_function(k)
 
         C_resampled = np.empty_like(ft)
-        C_resampled[1:] = dst(4 * np.pi * ft[1:] * k[1:], type=1) / (2 / (dk / (2 * np.pi) ** 3) * r_resampled[1:])
-        C_resampled[0] = (dk / (2 * np.pi) ** 3) * 4 * np.pi * np.sum(ft * k**2)
+        C_resampled[1:] = dst(4 * np.pi * ft[1:] * k[1:], type=1) / (2 / (dk / TWO_PI**3) * r_resampled[1:])
+        C_resampled[0] = (dk / TWO_PI**3) * 4 * np.pi * np.sum(ft * k**2)
 
         # get invft values corresponding to input r-values by linear interpolation
         C = np.interp(r, r_resampled, C_resampled)

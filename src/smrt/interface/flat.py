@@ -33,7 +33,8 @@ class Flat(Interface):
         Returns:
             The reflection matrix.
         """
-        return fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
+        r, _ = fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
+        return r
 
     def diffuse_reflection_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
         return smrt_matrix(0)
@@ -54,7 +55,8 @@ class Flat(Interface):
         Returns:
             The transmission matrix.
         """
-        return fresnel_transmission_matrix(eps_1, eps_2, mu1, npol)
+        t, _ = fresnel_transmission_matrix(eps_1, eps_2, mu1, npol)
+        return t
 
     def diffuse_transmission_matrix(self, frequency, eps_1, eps_2, mu_s, mu_i, dphi, npol):
         return smrt_matrix(0)
@@ -72,4 +74,5 @@ class Flat(Interface):
             mu1: Array of cosine of incident angles.
             npol: Number of polarization.
         """
-        return field_fresnel_matrix(eps_1, eps_2, mu1)
+        r, t, _ = field_fresnel_matrix(eps_1, eps_2, mu1)
+        return r, t

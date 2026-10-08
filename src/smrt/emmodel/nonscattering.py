@@ -8,7 +8,7 @@
 import numpy as np
 
 # local import
-from ..core.globalconstants import C_SPEED
+from ..core.globalconstants import WAVENUMBER_PER_HZ
 from ..core.lib import len_atleast_1d, smrt_matrix
 from ..permittivity.generic_mixing_formula import polder_van_santen
 from .emmodel_utils import IsotropicScatteringMixin, extinction_matrix
@@ -27,7 +27,7 @@ class NonScattering(IsotropicScatteringMixin):
         self._effective_permittivity = polder_van_santen(self.frac_volume, self.e0, self.eps)
 
         # Wavenumber in free space
-        self.k0 = 2 * np.pi * sensor.frequency / C_SPEED
+        self.k0 = WAVENUMBER_PER_HZ * sensor.frequency  # Wavenumber in free space
 
         self.ka = 2 * self.k0 * np.sqrt(self.effective_permittivity()).imag
         # no scattering

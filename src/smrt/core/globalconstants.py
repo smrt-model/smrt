@@ -36,6 +36,9 @@ EARTH_RADIUS = 6371000.0  # volumetric mean radius of the earth
 LOG2 = 0.6931471805599453  # often used in altimetry
 LOG4 = 1.3862943611198906  # often used in altimetry
 
+TWO_PI = 2 * np.pi
+WAVENUMBER_PER_HZ = TWO_PI / C_SPEED
+
 GHz = 1e9  # G in fact
 cm = 1e-2  # centimeter
 mm = 1e-3  # millimeter

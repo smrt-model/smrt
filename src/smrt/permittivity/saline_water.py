@@ -8,6 +8,7 @@ from smrt.core.globalconstants import (
     FREEZING_POINT,
     PERMITTIVITY_OF_FREE_SPACE,
     PSU,
+    TWO_PI,
     GHz,
 )
 
@@ -52,7 +53,7 @@ def seawater_permittivity_klein76(frequency, temperature, salinity):
             f"(here {tempF + FREEZING_POINT:.2f} K)."
         )
 
-    omega = 2 * np.pi * frequency
+    omega = TWO_PI * frequency
     eps_inf = 4.9  # limiting high frequency value
 
     # calculate static dielectric constant of saline water:
@@ -109,7 +110,7 @@ def seawater_permittivity_stogryn71(frequency, temperature):
     eps_static = static_brine_permittivity_stogryn85(temperature)
 
     # Angular frequency
-    omega_brine = 2 * np.pi * frequency
+    omega_brine = TWO_PI * frequency
 
     # Relaxation time
     tau_brine = brine_relaxation_time_stogryn85(temperature)

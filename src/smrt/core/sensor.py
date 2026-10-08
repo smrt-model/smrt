@@ -30,7 +30,7 @@ from typing import Optional
 import numpy as np
 import numpy.typing as npt
 
-from ..core.globalconstants import C_SPEED, EARTH_RADIUS
+from ..core.globalconstants import C_SPEED, EARTH_RADIUS, WAVENUMBER_PER_HZ
 
 # local import
 from .error import SMRTError, smrt_warn
@@ -38,9 +38,6 @@ from .error import SMRTError, smrt_warn
 
 class SensorBase(object):
     pass
-
-
-ANGULAR_WAVENUMBER = 2 * np.pi / C_SPEED
 
 
 class Sensor(SensorBase):
@@ -148,7 +145,7 @@ class Sensor(SensorBase):
 
     @property
     def wavenumber(self):
-        return ANGULAR_WAVENUMBER * self.frequency
+        return WAVENUMBER_PER_HZ * self.frequency
 
     @property
     def mode(self):

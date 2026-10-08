@@ -11,6 +11,8 @@ Args:
 import numpy as np
 from scipy.special import erfinv
 
+from smrt.core.globalconstants import TWO_PI
+
 # from scipy.special import erfcinv
 from .autocorrelation import Autocorrelation
 
@@ -35,7 +37,7 @@ class GaussianRandomField(Autocorrelation):
         beta = np.sqrt(2) * erfinv(2 * (1 - self.frac_volume) - 1)
         # second derivative of the field acf at the origin
         acf_psi_doubleprime = (
-            -1.0 / 2 * ((1.0 / self.corr_length) ** 2 + 1.0 / 3 * (2 * np.pi / self.repeat_distance) ** 2)
+            -1.0 / 2 * ((1.0 / self.corr_length) ** 2 + 1.0 / 3 * (TWO_PI / self.repeat_distance) ** 2)
         )
         SSA_tilde = 2.0 / np.pi * np.exp(-(beta**2) / 2) * np.sqrt(-acf_psi_doubleprime) / self.frac_volume
         return 4.0 * (1 - self.frac_volume) / SSA_tilde
@@ -72,7 +74,7 @@ class GaussianRandomField(Autocorrelation):
             * np.exp(-(beta**2) / (1 + t_gridded * acf_psi_gridded))
         )
 
-        acf = 1.0 / (2 * np.pi) * np.trapz(integrand_gridded, x=t_gridded)
+        acf = 1.0 / (TWO_PI * 2) * np.trapz(integrand_gridded, x=t_gridded)
 
         return acf
 

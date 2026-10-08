@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from smrt.core.error import SMRTError
-from smrt.core.globalconstants import C_SPEED
+from smrt.core.globalconstants import TWO_PI, WAVENUMBER_PER_HZ
 
 colors = {"kirchoff": "#87CEEB", "IEM": "#FF6F61", "SPM": "#32CD32", "SSA": "#FFD700", "GO": "#708090"}
 
@@ -81,8 +81,8 @@ def validity_diagram(
     # kl > 2 * pi  Dierking 1999
     # ks * cos(theta) > pi/2
 
-    ax.loglog(kl[kl > 2 * np.pi], np.full_like(kl, np.pi / 2)[kl > 2 * np.pi], color=colors["GO"])
-    ax.loglog(np.full_like(ks, 2 * np.pi)[ks > np.pi / 2], ks[ks > np.pi / 2], color=colors["GO"])
+    ax.loglog(kl[kl > TWO_PI], np.full_like(kl, np.pi / 2)[kl > TWO_PI], color=colors["GO"])
+    ax.loglog(np.full_like(ks, TWO_PI)[ks > np.pi / 2], ks[ks > np.pi / 2], color=colors["GO"])
 
     ax.annotate("GO", xy=(40, 10), xycoords="data", color=colors["GO"])
 
@@ -124,7 +124,7 @@ def validity_diagram(
         frequency = [frequency]
 
     for freq in frequency:
-        k = 2 * np.pi * freq / C_SPEED
+        k = WAVENUMBER_PER_HZ * freq
 
         kl_p = k * np.array(correlation_length)
         ks_p = k * np.array(rms_height)

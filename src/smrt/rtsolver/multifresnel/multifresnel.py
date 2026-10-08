@@ -17,7 +17,7 @@ from numba import jit
 from smrt.core.fresnel import (
     fresnel_reflection_coefficients_maezawa09_rigorous_compiled as fresnel_reflection_coefficients_maezawa09_rigorous,
 )
-from smrt.core.globalconstants import C_SPEED
+from smrt.core.globalconstants import WAVENUMBER_PER_HZ
 
 VPOL = 0
 HPOL = 1
@@ -45,7 +45,7 @@ def compute_matrix_slab(
             contribution of the lowest layers is neglegible.
         air_permittivity: permittivity in above the slab
     """
-    kd = 2 * np.pi * frequency / C_SPEED * np.array(thickness)
+    kd = WAVENUMBER_PER_HZ * frequency * np.array(thickness)
 
     mu = np.atleast_1d(outmu)
     imumax = np.argmax(mu)

@@ -36,6 +36,7 @@ import numpy as np
 
 # local import
 from smrt.core.error import SMRTError, smrt_warn
+from smrt.core.globalconstants import TWO_PI
 from smrt.rtsolver.dort import (
     _matmul,
     symmetrize_phase_matrix,
@@ -241,7 +242,7 @@ class SuccessiveOrder(CoherentLayerMixin, DiscreteOrdinatesMixin, PlanckMixin, R
             for i in incident_streams:
                 for ipol in range(incident_npol):
                     # set the ieme value at j=incident_streams[i]
-                    power = 1.0 / (2 * np.pi * self.streams.outweight[i])
+                    power = 1.0 / (TWO_PI * self.streams.outweight[i])
                     incident_intensity_0[npol * i + ipol, j] = power
                     j += 1
 

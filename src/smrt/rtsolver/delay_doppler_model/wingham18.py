@@ -19,7 +19,7 @@ from numba.types import CPointer, float64, intc
 from scipy import LowLevelCallable
 
 from smrt.core.error import SMRTError
-from smrt.core.globalconstants import C_SPEED
+from smrt.core.globalconstants import C_SPEED, TWO_PI
 from smrt.core.terrain import TerrainInfo
 
 from .delay_doppler_utils import (
@@ -132,21 +132,21 @@ class Wingham18(object):
             rho = np.sqrt(rho2)
 
             j1_integrand = self.get_j_integrand(1)
-            j1 = scipy.integrate.quad(j1_integrand, 0, 2 * np.pi, args=(rho, xi_b), epsabs=0)[0]
+            j1 = scipy.integrate.quad(j1_integrand, 0, TWO_PI, args=(rho, xi_b), epsabs=0)[0]
 
             if mu != 0:
                 j2_integrand = self.get_j_integrand(2)
-                j2 = scipy.integrate.quad(j2_integrand, 0, 2 * np.pi, args=(rho, xi_b), epsabs=0)[0]
+                j2 = scipy.integrate.quad(j2_integrand, 0, TWO_PI, args=(rho, xi_b), epsabs=0)[0]
 
                 j3_integrand = self.get_j_integrand(3)
-                j3 = scipy.integrate.quad(j3_integrand, 0, 2 * np.pi, args=(rho, xi_b), epsabs=0)[0]
+                j3 = scipy.integrate.quad(j3_integrand, 0, TWO_PI, args=(rho, xi_b), epsabs=0)[0]
             else:
                 j2 = 0.0
                 j3 = 0.0
 
             if theta != 0:
                 j4_integrand = self.get_j_integrand(4)
-                j4 = scipy.integrate.quad(j4_integrand, 0, 2 * np.pi, args=(rho, xi_b), epsabs=0)[0]
+                j4 = scipy.integrate.quad(j4_integrand, 0, TWO_PI, args=(rho, xi_b), epsabs=0)[0]
             else:
                 j4 = 0
 
@@ -217,17 +217,17 @@ def make_j_integrand(
     def ptrf_sar_wingham18(phi: float):
         # valid for the SAR mode only according to W18
         # eq 18 in W18 without the pi which is an error ! See eq 14 in Landy 18
-        k0 = 2 * np.pi / wavelength
+        k0 = TWO_PI / wavelength
         angle = (k0 * velocity / pulse_repetition_frequency) * phi
         return (np.sin(ndoppler * angle) / np.sin(angle)) ** 2 if np.abs(angle) > 1e-6 else ndoppler**2
 
     def ptrf_sarin_wingham18(phi: float):
         # valid for the SARIN mode
         n = np.arange(0, ndoppler)
-        k0 = 2 * np.pi / wavelength
+        k0 = TWO_PI / wavelength
         # Eq 17 in W18  # this is different in the Cryosat Handbook
         s = np.sum(
-            (0.54 - 0.46 * np.cos(2 * np.pi * n / (ndoppler - 1) - np.pi))
+            (0.54 - 0.46 * np.cos(TWO_PI * n / (ndoppler - 1) - np.pi))
             * np.exp(-2j * (k0 * velocity / pulse_repetition_frequency * (n - (ndoppler - 1) / 2)) * phi)
         )
         return s.real**2 + s.imag**2

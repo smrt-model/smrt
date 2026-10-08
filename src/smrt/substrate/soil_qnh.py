@@ -50,7 +50,7 @@ class SoilQNH(Substrate):
     def specular_reflection_matrix(self, frequency, eps_1, mu1, npol):
         eps_2 = self.permittivity(frequency)
 
-        reflection_coefficients = fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
+        reflection_coefficients, _ = fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
 
         self.adjust(reflection_coefficients[1], reflection_coefficients[0], mu1)
 
@@ -70,7 +70,7 @@ class SoilQNH(Substrate):
 
         eps_2 = self.permittivity(frequency)
 
-        transmission_coefficients = fresnel_transmission_matrix(eps_1, eps_2, mu1, npol)
+        transmission_coefficients, _ = fresnel_transmission_matrix(eps_1, eps_2, mu1, npol)
 
         rh = 1 - transmission_coefficients[1]
         rv = 1 - transmission_coefficients[0]

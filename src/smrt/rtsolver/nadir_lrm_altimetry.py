@@ -37,7 +37,7 @@ import scipy.signal
 import xarray as xr
 
 from smrt.core.error import SMRTError
-from smrt.core.globalconstants import C_SPEED
+from smrt.core.globalconstants import C_SPEED, TWO_PI
 from smrt.core.result import AltimetryResult
 from smrt.interface.flat import Flat
 from smrt.rtsolver.lrm_waveform_model import Brown1977
@@ -531,7 +531,7 @@ class NadirLRMAltimetry(object):
 
         integral = np.empty_like(tau)
         for i, ttau in enumerate(tau):
-            integral[i], err = scipy.integrate.quad(integrand, 0, 2 * np.pi, agrs=theta[i], epsrel=1e-4)
+            integral[i], err = scipy.integrate.quad(integrand, 0, TWO_PI, agrs=theta[i], epsrel=1e-4)
 
         return (
             self.sensor.wavelength**2

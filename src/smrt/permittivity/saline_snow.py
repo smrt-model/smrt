@@ -21,6 +21,7 @@ from smrt.core.globalconstants import (
     FREEZING_POINT,
     PERMITTIVITY_OF_FREE_SPACE,
     PSU,
+    TWO_PI,
     GHz,
 )
 
@@ -77,7 +78,7 @@ def saline_snow_permittivity_geldsetzer09(frequency, density, temperature, salin
     eps_drysnow = 1 + 2.55 * (density / 1e3)
     eps_inf = permittivity_high_frequency_limit_stogryn85(temperature)
     eps_static = static_brine_permittivity_stogryn85(temperature)
-    omega_brine = 2 * np.pi * frequency
+    omega_brine = TWO_PI * frequency
     tau_brine = brine_relaxation_time_stogryn85(temperature)
     fr = 1 / tau_brine
     sigma_brine = brine_conductivity_stogryn85(temperature)

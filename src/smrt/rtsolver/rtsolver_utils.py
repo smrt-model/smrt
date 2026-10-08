@@ -11,6 +11,7 @@ import scipy.interpolate
 import xarray as xr
 
 from smrt.core.error import SMRTError
+from smrt.core.globalconstants import TWO_PI
 from smrt.core.lib import inverse_planck_function, is_equal_zero, planck_function, smrt_matrix
 from smrt.core.result import make_result
 from smrt.core.sensor import Sensor
@@ -126,7 +127,7 @@ class DiscreteOrdinatesMixin(metaclass=ABCMeta):
             j0 = 0
             j_higher = 0
             for i in incident_streams:
-                power = 1.0 / (2 * np.pi * self.streams.outweight[i])
+                power = 1.0 / (TWO_PI * self.streams.outweight[i])
                 for ipol in [0, 1]:
                     intensity_0[2 * i + ipol, j0] = power
                     j0 += 1
@@ -696,7 +697,7 @@ class InterfaceProperties(object):
             # m=n=0 --> 2*np.pi
             # m=n > 1 --> np.pi
             if m == 0:
-                coef = 2 * np.pi
+                coef = TWO_PI
                 # npol = 2
             else:
                 coef = np.pi  # the factor 2*np.pi comes from the integration of \int dphi

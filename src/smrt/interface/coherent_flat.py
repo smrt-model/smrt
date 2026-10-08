@@ -8,7 +8,7 @@ import numpy as np
 
 from smrt.core.error import SMRTError
 from smrt.core.fresnel import fresnel_reflection_coefficients
-from smrt.core.globalconstants import C_SPEED
+from smrt.core.globalconstants import WAVENUMBER_PER_HZ
 from smrt.core.lib import abs2, smrt_matrix
 
 
@@ -147,7 +147,7 @@ class CoherentFlat(object):
         R01_v, R01_h, mu_1 = fresnel_reflection_coefficients(eps_0, eps_1, mu_0)
         R1t_v, R1t_h, mu_t = fresnel_reflection_coefficients(eps_1, eps_t, np.maximum(mu_1, 1e-4))
 
-        k_1 = 2 * np.pi / C_SPEED * frequency * np.sqrt(eps_1)
+        k_1 = WAVENUMBER_PER_HZ * frequency * np.sqrt(eps_1)
 
         phase = k_1 * mu_1 * self.layer.thickness
         assert np.all(phase.imag >= 0)

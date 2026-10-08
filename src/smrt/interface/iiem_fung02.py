@@ -34,7 +34,7 @@ import numpy as np
 # local import
 from smrt.core.error import SMRTError
 from smrt.core.fresnel import fresnel_reflection_coefficients
-from smrt.core.globalconstants import C_SPEED
+from smrt.core.globalconstants import WAVENUMBER_PER_HZ
 from smrt.core.lib import abs2, cached_roots_legendre, generic_ft_even_matrix, smrt_matrix
 from smrt.core.vector3 import vector3
 from smrt.interface.geometrical_optics import _clip_mu, shadow_function
@@ -141,9 +141,10 @@ class IIEM_Fung02(IEM_Fung92):
         dphi = np.atleast_1d(dphi)[:, np.newaxis, np.newaxis, np.newaxis]
 
         # incident wavenumber
-        k = vector3.from_angles(2 * np.pi * frequency / C_SPEED * np.sqrt(eps_1).real, mu_i, 0)
+        k01 = WAVENUMBER_PER_HZ * frequency * np.sqrt(eps_1).real
+        k = vector3.from_angles(k01, mu_i, 0)
         # scattered wavenumber
-        k_s = vector3.from_angles(2 * np.pi * frequency / C_SPEED * np.sqrt(eps_1).real, mu_s, dphi)
+        k_s = vector3.from_angles(k01, mu_s, dphi)
 
         # wavenumber for roughness spectra
         # k_w is 1d representation of W_n(ksx - kx, ksy - ky) eqn 4 Fung et al 2002

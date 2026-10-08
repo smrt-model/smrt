@@ -19,9 +19,7 @@ Example::
 
 """
 
-import numpy as np
-
-from smrt.core.globalconstants import PERMITTIVITY_OF_FREE_SPACE
+from smrt.core.globalconstants import PERMITTIVITY_OF_FREE_SPACE, TWO_PI
 from smrt.core.layer import layer_properties
 
 
@@ -54,7 +52,7 @@ def bedrock_permittivity_frozen_bedrock_tulaczyk20(frequency):
     """Tulaczyk & Foley (2020) 10.5194/tc-14-4495-2020
     Frequency = 5e6HZ, temperature = close to 0 degC
     """
-    angular_frequency = 2 * np.pi * frequency
+    angular_frequency = TWO_PI * frequency
     return 2.7 + 1j * (0.0002 / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
 
 
@@ -64,7 +62,7 @@ def bedrock_permittivity_saturated_bedrock_tulaczyk20(frequency):
     Frequency = Midpoints used, conductivity measurment frequency 0.9 to 25 kHZ,
     temperature = close to 0 degC
     """
-    angular_frequency = 2 * np.pi * frequency
+    angular_frequency = TWO_PI * frequency
     return 9.5 + 1j * (0.0055 / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
 
 
@@ -74,7 +72,7 @@ def bedrock_permittivity_sandy_till_tulaczyk20(frequency):
     Frequency = Midpoint & Upper bound, unclear frequency in paper,
     temperature = close to 0 degC
     """
-    angular_frequency = 2 * np.pi * frequency
+    angular_frequency = TWO_PI * frequency
     return 13.0 + 1j * (0.02 / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
 
 
@@ -84,7 +82,7 @@ def bedrock_permittivity_fairbanks_silt_tulaczyk20(frequency):
     Frequency = 100MHz,
     temperature = close to 0 degC
     """
-    angular_frequency = 2 * np.pi * frequency
+    angular_frequency = TWO_PI * frequency
     return 24.0 + 1j * (0.043 / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
 
 
@@ -94,7 +92,7 @@ def bedrock_permittivity_clay_bearing_till_tulaczyk20(frequency):
     Frequency = Midpoints used, unclear frequency in paper,
     temperature = close to 0 degC
     """
-    angular_frequency = 2 * np.pi * frequency
+    angular_frequency = TWO_PI * frequency
     return 13.0 + 1j * (0.0575 / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
 
 
@@ -104,7 +102,7 @@ def bedrock_permittivity_clay_tulaczyk20(frequency):
     Frequency =  100MHz,
     temperature = close to 0 degC
     """
-    angular_frequency = 2 * np.pi * frequency
+    angular_frequency = TWO_PI * frequency
     return 31.0 + 1j * (0.24 / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
 
 
@@ -114,7 +112,7 @@ def bedrock_permittivity_marine_clay_tulaczyk20(frequency):
     Frequency =  Midpoint used, unclear frequency in paper,
     temperature = close to 0 degC
     """
-    angular_frequency = 2 * np.pi * frequency
+    angular_frequency = TWO_PI * frequency
     return 31.0 + 1j * (0.55 / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
 
 
@@ -124,7 +122,7 @@ def bedrock_permittivity_debris_laden_ice_christianson16(frequency):
     Frequency =  5MHz,
     temperature = unclear in paper, depend of medium
     """
-    angular_frequency = 2 * np.pi * frequency
+    angular_frequency = TWO_PI * frequency
     return 3.1 + 1j * (8.0e-5 / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
 
 
@@ -134,7 +132,7 @@ def bedrock_permittivity_sand_christianson16(frequency):
     Frequency =  5MHz,
     temperature = unclear in paper, depend of medium
     """
-    angular_frequency = 2 * np.pi * frequency
+    angular_frequency = TWO_PI * frequency
     return 2.6 + 1j * (1.3e-4 / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
 
 
@@ -144,7 +142,7 @@ def bedrock_permittivity_groundwater_till_christianson16(frequency):
     Frequency =  5MHz,
     temperature = unclear in paper, depend of medium
     """
-    angular_frequency = 2 * np.pi * frequency
+    angular_frequency = TWO_PI * frequency
     return 36.0 + 1j * (0.037 / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
 
 
@@ -154,7 +152,7 @@ def bedrock_permittivity_freshwater_till_christianson16(frequency):
     Frequency =  5MHz,
     temperature = unclear in paper, depend of medium
     """
-    angular_frequency = 2 * np.pi * frequency
+    angular_frequency = TWO_PI * frequency
     return 13.0 + 1j * (2.5e-4 / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
 
 
@@ -164,7 +162,7 @@ def bedrock_permittivity_frozen_till_christianson16(frequency):
     Frequency =  5MHz,
     temperature = unclear in paper, depend of medium
     """
-    angular_frequency = 2 * np.pi * frequency
+    angular_frequency = TWO_PI * frequency
     return 2.9 + 1j * (3.4e-4 / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
 
 
@@ -174,7 +172,7 @@ def bedrock_permittivity_frozen_bedrock_christianson16(frequency):
     Frequency =  5MHz,
     temperature = unclear in paper, depend of medium
     """
-    angular_frequency = 2 * np.pi * frequency
+    angular_frequency = TWO_PI * frequency
     return 2.7 + 1j * (2.0e-4 / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))
 
 
@@ -184,5 +182,5 @@ def bedrock_permittivity_unfrozen_bedrock_christianson16(frequency):
     Frequency =  5MHz,
     temperature = unclear in paper, depend of medium
     """
-    angular_frequency = 2 * np.pi * frequency
+    angular_frequency = TWO_PI * frequency
     return 12.0 + 1j * (0.0048 / (angular_frequency * PERMITTIVITY_OF_FREE_SPACE))

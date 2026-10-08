@@ -431,7 +431,7 @@ def brewster_angle(eps_1, eps_2):
     return np.arctan(np.sqrt(eps_2 / eps_1).real)
 
 
-def fresnel_matrix(eps_1, eps_2, mu1, npol):
+def fresnel_matrix(eps_1, eps_2, mu1, npol) -> tuple[smrt_matrix, smrt_matrix, np.ndarray]:
     """Compute the fresnel power reflection and transmission matrix for/in medium 1 laying above medium 2.
 
     Args:
@@ -449,15 +449,13 @@ def fresnel_matrix(eps_1, eps_2, mu1, npol):
     mu1 = np.atleast_1d(mu1)
     assert len(mu1.shape) == 1  # 1D array
 
-    rv, rh, tv, th, _ = fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1)
+    rv, rh, tv, th, mu2 = fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1)
 
     reflection_coefficients = smrt_matrix.ones((npol, len(mu1)))
     transmission_coefficients = smrt_matrix.zeros((npol, len(mu1)))
 
     reflection_coefficients[0] = abs2(rv)
     reflection_coefficients[1] = abs2(rh)
-
-    rv, rh, mu2 = fresnel_reflection_coefficients(eps_1, eps_2, mu1)
 
     transmission_coefficients[0] = abs2(tv)
     transmission_coefficients[1] = abs2(th)
@@ -467,10 +465,10 @@ def fresnel_matrix(eps_1, eps_2, mu1, npol):
         transmission_coefficients[2] = mu2 / mu1 * ((1 + rv) * np.conj(1 + rh)).real  # TsangI  Eq 7.2.95
         # It is not sure this equation is valid for strongly lossy materials
 
-    return reflection_coefficients
+    return reflection_coefficients, transmission_coefficients, mu2
 
 
-def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
+def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol) -> tuple[smrt_matrix, np.ndarray]:
     """Compute the fresnel power reflection matrix for/in medium 1 laying above medium 2.
 
     Args:
@@ -488,7 +486,7 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
 
     reflection_coefficients = smrt_matrix.ones((npol, len(mu1)))
 
-    rv, rh, _ = fresnel_reflection_coefficients(eps_1, eps_2, mu1)
+    rv, rh, mu2 = fresnel_reflection_coefficients(eps_1, eps_2, mu1)
 
     reflection_coefficients[0] = abs2(rv)
     reflection_coefficients[1] = abs2(rh)
@@ -497,10 +495,10 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol):
         reflection_coefficients[2] = (rv * np.conj(rh)).real  # TsangI  Eq 7.2.93
         # It is not sure this equation is valid for strongly lossy materials
 
-    return reflection_coefficients
+    return reflection_coefficients, mu2
 
 
-def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol):
+def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol) -> tuple[smrt_matrix, np.ndarray]:
     """Compute the fresnel power transmission matrix for/in medium 1 lying above medium 2.
 
     Args:
@@ -529,10 +527,10 @@ def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol):
     if npol == 4:
         raise Exception("to be implemented, the matrix is not diagonal anymore")
 
-    return transmission_coefficients
+    return transmission_coefficients, mu2
 
 
-def field_fresnel_matrix(eps_1, eps_2, mu1):
+def field_fresnel_matrix(eps_1, eps_2, mu1) -> tuple[smrt_matrix, smrt_matrix, np.ndarray]:
     """Compute the fresnel field reflection and transmission matrices for/in medium 1 laying above medium 2.
 
     Args:
@@ -549,7 +547,7 @@ def field_fresnel_matrix(eps_1, eps_2, mu1):
     mu1 = np.atleast_1d(mu1)
     assert len(mu1.shape) == 1  # 1D array
 
-    rv, rh, tv, th, _ = fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1)
+    rv, rh, tv, th, mu2 = fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1)
 
     # # check energy conservation # eq 55 in M09
     # assert np.allclose(th - rh, 1), f"Energy conservation violated in transmission {th=} and {rh=}"
@@ -559,4 +557,4 @@ def field_fresnel_matrix(eps_1, eps_2, mu1):
     # assert np.allclose(n2 * tv - n1.conj() * rv, n1), f"Energy conservation violated in transmission {tv=} and {rv=}"
     # see test_fresnel.py for more details
 
-    return smrt_matrix(np.array((rv, rh))), smrt_matrix(np.array((tv, th)))
+    return smrt_matrix(np.array((rv, rh))), smrt_matrix(np.array((tv, th))), mu2

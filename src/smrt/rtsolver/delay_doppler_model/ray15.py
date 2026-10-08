@@ -12,7 +12,7 @@ import numpy.typing as npt
 import scipy.integrate
 
 from smrt.core.error import SMRTError
-from smrt.core.globalconstants import C_SPEED, LOG2
+from smrt.core.globalconstants import C_SPEED, LOG2, TWO_PI
 from smrt.core.terrain import TerrainInfo
 
 from .delay_doppler_utils import (
@@ -75,7 +75,7 @@ class Ray15(object):
             * self.Lx
             * self.Ly
             / (4 * np.pi * sensor.altitude**4)
-            * np.sqrt(2 * np.pi)
+            * np.sqrt(TWO_PI)
             * self.Ag**2
             * self.sigma_g**2
         )  # fmt: skip  # unit: no unit
@@ -123,7 +123,7 @@ class Ray15(object):
                 Bkl = B_integrand(0, k, l, 0.2 * self.Lz, *args[3:])
                 Tkl = 0
             else:
-                coefB = 1 / (np.sqrt(2 * np.pi) * terrain_info.sigma_surface)
+                coefB = 1 / (np.sqrt(TWO_PI) * terrain_info.sigma_surface)
                 Bkl = scipy.integrate.quad(B_integrand, -np.inf, np.inf, args=args)[0] * coefB
 
                 coefT = self.Lz / (Bkl * terrain_info.sigma_surface**2) * coefB

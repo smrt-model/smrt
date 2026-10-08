@@ -7,7 +7,7 @@ import numpy.typing as npt
 import scipy.signal
 
 from smrt.core.error import SMRTError, smrt_warn
-from smrt.core.globalconstants import C_SPEED
+from smrt.core.globalconstants import C_SPEED, TWO_PI
 from smrt.core.terrain import TerrainInfo
 
 
@@ -215,7 +215,7 @@ def numerical_convolution(
         sigma_s = 2 * terrain_info.sigma_surface / C_SPEED  # unit s
         assert terrain_info.distribution == "normal"  # TODO allows more distributions
         pdf = np.exp(-(ctau**2) / (2 * sigma_s**2)) / (
-            np.sqrt(2 * np.pi) * sigma_s
+            np.sqrt(TWO_PI) * sigma_s
         )  # Eq 5 Halimi et al. 2014 # unit: s^-1
 
         if ptr_time is not None:

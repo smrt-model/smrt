@@ -35,11 +35,9 @@ import cmath
 import math
 
 # other import
-import numpy as np
-
 # local import
 from ..core.error import SMRTError, smrt_warn
-from ..core.globalconstants import C_SPEED
+from ..core.globalconstants import C_SPEED, TWO_PI
 from .rayleigh import Rayleigh
 
 #
@@ -107,7 +105,7 @@ class DMRT_QCACP_ShortRange(Rayleigh):
                                     * cmath.sqrt(Eeff0) * (es - e0) / (1.0 + (es - e0) / (3 * Eeff0) * (1.0 - f))
                                     * (1.0 - f)**4 / (1.0 + 2 * f - t * f * (1.0 - f))**2)  # fmt: skip
 
-        albedo = 2.0 / 9.0 * (2 * np.pi * radius / lmda)**3 * f / (2 * cmath.sqrt(Eeff).imag) *  \
+        albedo = 2.0 / 9.0 * (TWO_PI * radius / lmda)**3 * f / (2 * cmath.sqrt(Eeff).imag) *  \
             abs((es - e0) / (1 + (es - e0) / (3 * Eeff0) * (1.0 - f)))**2 * \
             (1.0 - f)**4 / (1.0 + 2 * f - t * f * (1.0 - f))**2  # fmt: skip
 

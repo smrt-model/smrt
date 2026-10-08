@@ -34,7 +34,7 @@ from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.fresnel import (
     fresnel_reflection_coefficients,
 )
-from smrt.core.globalconstants import C_SPEED
+from smrt.core.globalconstants import WAVENUMBER_PER_HZ
 from smrt.core.interface import Interface
 from smrt.core.lib import abs2, smrt_matrix
 from smrt.core.vector3 import vector3
@@ -116,7 +116,7 @@ class IEM_Fung92(
             raise NotImplementedError("Only the backscattering coefficient is implemented at this stage. ")
 
         mu = mu_i[None, :]
-        k = vector3.from_angles(2 * np.pi * frequency / C_SPEED * np.sqrt(eps_1).real, mu, 0)
+        k = vector3.from_angles(WAVENUMBER_PER_HZ * frequency * np.sqrt(eps_1).real, mu, 0)
         eps_r = eps_2 / eps_1
 
         ks = np.abs(k.norm() * self.roughness_rms)

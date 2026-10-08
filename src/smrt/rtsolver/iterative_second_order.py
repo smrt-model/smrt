@@ -72,6 +72,7 @@ import numpy as np
 
 # local import
 from smrt.core.error import SMRTError, smrt_warn
+from smrt.core.globalconstants import TWO_PI
 from smrt.core.interface import Interface, SubstrateBase
 from smrt.core.result import make_result
 from smrt.rtsolver.iterative_first_order import (
@@ -710,7 +711,7 @@ def compute_integral_phi(ft_matrix1, ft_matrix2, m_max, len_mu, npol, dphi):
     matrix1_0 = np.array([ft_matrix1[:, :, 0, i] for i in range(len_mu)])
     matrix2_0 = np.array([ft_matrix2[:, :, 0, i] for i in range(len_mu)])
 
-    int_0 = 2 * np.pi * (matrix1_0 @ matrix2_0)
+    int_0 = TWO_PI * (matrix1_0 @ matrix2_0)
     sum_m_cosine = 0
     # sum_m_sine = 0
     # summation of m=1 to m_max, skip 0

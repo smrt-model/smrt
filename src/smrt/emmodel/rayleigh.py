@@ -10,7 +10,7 @@ This model is only compatible with the Independent Sphere microstructure model
 import numpy as np
 
 from ..core.error import SMRTError
-from ..core.globalconstants import C_SPEED
+from ..core.globalconstants import WAVENUMBER_PER_HZ
 from ..core.lib import smrt_matrix
 from .emmodel_utils import IsotropicScatteringMixin, rayleigh_scattering_matrix_and_angle
 
@@ -33,11 +33,9 @@ class Rayleigh(IsotropicScatteringMixin):
         # TODO Ghi: solve the problem of dielectric constant dependency. Which object is responsible of running
         # Probably the emmodule
 
-        lmda = C_SPEED / sensor.frequency
-
         radius = layer.microstructure.radius
 
-        k0 = 2 * np.pi / lmda
+        k0 = WAVENUMBER_PER_HZ * sensor.frequency * np.sqrt(e0)
 
         self._ks = f * 2 * abs((eps - e0) / (eps + 2 * e0)) ** 2 * radius**3 * abs(e0) ** 2 * k0**4
         self.ka = f * k0 * eps.imag * abs(3 * e0 / (eps + 2 * e0)) ** 2 + (1 - f) * 2 * k0 * np.sqrt(e0).imag
