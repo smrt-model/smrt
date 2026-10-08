@@ -9,7 +9,7 @@ from smrt.core.fresnel import (
     fresnel_reflection_matrix,
     fresnel_transmission_matrix,
 )
-from smrt.core.globalconstants import C_SPEED
+from smrt.core.globalconstants import TWO_PI, WAVENUMBER_PER_HZ
 from smrt.core.lib import abs2, cached_roots_legendre
 
 
@@ -34,9 +34,12 @@ class KirchoffApproximationCoherentInterfaceMixin(metaclass=ABCMeta):
         Returns:
             The reflection matrix.
         """
-        k2 = (2 * np.pi * frequency / C_SPEED) ** 2 * abs2(eps_1)
+
+        ks = WAVENUMBER_PER_HZ * frequency * self.roughness_rms
+        ks2 = ks**2 * abs2(eps_1)
         # Eq: 2.1.94 in Tsang 2001 Tome I
-        return fresnel_reflection_matrix(eps_1, eps_2, mu1, npol) * np.exp(-4 * k2 * self.roughness_rms**2 * mu1**2)
+        r, _ = fresnel_reflection_matrix(eps_1, eps_2, mu1, npol)
+        return r * np.exp(-4 * ks2 * mu1**2)
 
     def coherent_transmission_matrix(self, frequency, eps_1, eps_2, mu1, npol):
         """Compute the transmission coefficients.
@@ -54,14 +57,14 @@ class KirchoffApproximationCoherentInterfaceMixin(metaclass=ABCMeta):
         Returns:
             The transmission matrix.
         """
-        k0 = 2 * np.pi * frequency / C_SPEED
+        k0 = WAVENUMBER_PER_HZ * frequency
 
-        k_iz = k0 * np.sqrt(eps_1).real * mu1
-        k_sz = k0 * np.sqrt(eps_2 - (1 - mu1**2) * eps_1).real
+        t, mu2 = fresnel_transmission_matrix(eps_1, eps_2, mu1, npol)
 
-        return fresnel_transmission_matrix(eps_1, eps_2, mu1, npol) * np.exp(
-            -((k_sz - k_iz) ** 2) * self.roughness_rms**2
-        )
+        ks_iz = k0 * np.sqrt(eps_1).real * mu1 * self.roughness_rms
+        ks_sz = k0 * np.sqrt(eps_2).real * mu2 * self.roughness_rms
+
+        return t * np.exp(-((ks_sz - ks_iz) ** 2))
 
     def field_matrix(self, frequency, eps_1, eps_2, mu1):
         """Compute the specular reflection and transmission field coefficients.
@@ -76,12 +79,17 @@ class KirchoffApproximationCoherentInterfaceMixin(metaclass=ABCMeta):
             mu1: Array of cosine of incident angles.
             npol: Number of polarization.
         """
-        k2 = (2 * np.pi * frequency / C_SPEED) ** 2 * abs2(eps_1)
         # Eq: 2.1.94 in Tsang 2001 Tome I
-        r, t = field_fresnel_matrix(eps_1, eps_2, mu1)
+        r, t, mu2 = field_fresnel_matrix(eps_1, eps_2, mu1)
 
-        kirchoff_coefficient = np.exp(-2 * k2 * self.roughness_rms**2 * mu1**2)
-        return r * kirchoff_coefficient, t * kirchoff_coefficient
+        ks = WAVENUMBER_PER_HZ * frequency * self.roughness_rms
+        ks_iz = ks * np.sqrt(eps_1).real * mu1
+        ks_sz = ks * np.sqrt(eps_2).real * mu2
+
+        return (
+            r * np.exp(-2 * ks_iz**2),
+            t * np.exp(-0.5 * ((ks_sz - ks_iz) ** 2)),
+        )
 
 
 class HemisphericalIntegrationMixin(metaclass=ABCMeta):
@@ -96,22 +104,22 @@ class HemisphericalIntegrationMixin(metaclass=ABCMeta):
         # for debugging only at this stage
 
         mu, weights = cached_roots_legendre(n_mu, 0, 1)
-        dphi = np.linspace(0, 2 * np.pi, n_phi, endpoint=False)
+        dphi = np.linspace(0, TWO_PI, n_phi, endpoint=False)
 
         R = self.diffuse_reflection_matrix(frequency, eps_1, eps_2, mu, mu_i, dphi, 2)
 
         # integrate the pola first, then the azimuth and last the mu
         R = R.values.sum(axis=(0, 2))
-        return 2 * np.pi / n_phi * np.einsum("j...,ij...->i...", weights, R)
+        return TWO_PI / n_phi * np.einsum("j...,ij...->i...", weights, R)
 
     def transmission_coefficients(self, frequency, eps_1, eps_2, mu_i, n_mu=128, n_phi=128):
         # for debugging only at this stage
 
         mu, weights = cached_roots_legendre(n_mu, 0, 1)
-        dphi = np.linspace(0, 2 * np.pi, n_phi, endpoint=False)
+        dphi = np.linspace(0, TWO_PI, n_phi, endpoint=False)
 
         T = self.diffuse_transmission_matrix(frequency, eps_1, eps_2, mu, mu_i, dphi, 2)
 
         # integrate the pola first, then the azimuth and last the mu
         T = T.values.sum(axis=(0, 2))
-        return 2 * np.pi / n_phi * np.einsum("j...,ij...->i...", weights, T)
+        return TWO_PI / n_phi * np.einsum("j...,ij...->i...", weights, T)
