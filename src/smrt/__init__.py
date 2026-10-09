@@ -2,12 +2,8 @@
 
 import sys
 
-if (sys.version_info[0] == 2) or ((sys.version_info[0] == 3) and (sys.version_info[1] <= 9)):
-    raise RuntimeError("Python 3.9 and lower are not supported anymore")
-
-# if (sys.version_info[0] == 3) and (sys.version_info[1] <= 9):
-#     from warnings import warn
-#     warn('Support of Python 3.9 will be discarded in 2025 to implement type hinting', DeprecationWarning)
+if (sys.version_info[0] == 2) or ((sys.version_info[0] == 3) and (sys.version_info[1] <= 10)):
+    raise RuntimeError("Python 3.10 and lower are not supported anymore")
 
 
 from .core import sensor as sensor
