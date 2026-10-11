@@ -110,9 +110,20 @@ class Boy17(object):
         dz = sensor.altitude - dem
         rho2 = x**2 + y**2
 
-        alpha = sensor.alpha if self.with_earth_curvature else 1
+        if self.with_earth_curvature:
+            height_ratio = dem / sensor.altitude
+            altitude_ratio = sensor.alpha - 1  # altitude / Earth radius
+            sin2_half_central_angle = np.sin(altitude_ratio * np.sqrt(rho2) / (2 * sensor.altitude)) ** 2
+            surface_radius_ratio = 1 + altitude_ratio * height_ratio
+            radial_offset = altitude_ratio * (1 - height_ratio)
+            slant_range_ratio = np.sqrt(
+                radial_offset**2 + 4 * sensor.alpha * surface_radius_ratio * sin2_half_central_angle
+            )
+            slant_range = sensor.altitude / altitude_ratio * slant_range_ratio
+            rang = slant_range - sensor.altitude
+        else:
+            rang = np.sqrt(dz**2 + rho2) - sensor.altitude
 
-        rang = alpha * (np.sqrt(dz**2 + rho2) - sensor.altitude)
         # deduce the gate range.
         irange = (
             np.floor(rang * (2 / C_SPEED * sensor.pulse_bandwidth * self.oversampling_time)).astype(int)
@@ -155,9 +166,10 @@ class Boy17(object):
         for j, sigma0 in enumerate(sigma0_list):
             if callable(sigma0):
                 # global incidence angle at the x, y position. Neglecting the local slope.
-                # theta_i = np.arctan(np.sqrt(rho2) / dz)
-                # cos(theta_i) = dz / (np.sqrt(rho2 + dz**2))
-                mu_i = np.minimum(dz / (rang + sensor.altitude), 1.0)
+                if self.with_earth_curvature:
+                    mu_i = (radial_offset - 2 * sensor.alpha * sin2_half_central_angle) / slant_range_ratio
+                else:
+                    mu_i = dz / np.sqrt(rho2 + dz**2)
                 sigma0_values = sigma0(mu_i)
             else:
                 sigma0_values = sigma0
