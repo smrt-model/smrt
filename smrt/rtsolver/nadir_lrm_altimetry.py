@@ -126,9 +126,23 @@ class NadirLRMAltimetry(object):
             # regular sampling in time
             if self.sensor.ngate % self.theta_inc_sampling != 0:
                 raise SMRTError("The number 'theta_inc_sampling' must be a true divider of the number of gates.")
+            # we need to calculate the interface backscatter at several incidence angles.
+            # Let choose something optimal to cover the footprint
             t_inc_sample = np.linspace(0, self.sensor.ngate / self.sensor.pulse_bandwidth, self.theta_inc_sampling + 1)
-            # cosine is adjacent divided by hypothenuse. This neglects the Earth sphericity.
-            mu_i = 1.0 / (1.0 + C_SPEED * t_inc_sample / sensor.altitude)
+
+            # mu_i is cosine of the angle between the slant coming from the satellite and the normal to the surface
+            # (i.e. extension of a radius of the earth).
+            # The cosine of the (pi - angle) between the slant and the radius is:
+            # 2 * R * slant_range * (-cos(pi-angle)) + R**2 + slant_range**2 = (R + altitude)**2
+            # mu_i = ((R + altitude)**2 - R**2 - slant_range**2) / (2 * R * slant_range)
+            # mu_i = (alpha**2 - 1 -(alpha-1)**2 relative_slant_range**2) / (2 * (alpha-1) * relative_slant_range)
+
+            relative_slant_range = 1 + C_SPEED * t_inc_sample / (2 * sensor.altitude)
+            # the factor 2 is because the slant range is the distance to the surface, and t_inc_sample is the two-way
+            # travel time
+            mu_i = (sensor.alpha**2 - 1 - (sensor.alpha - 1) ** 2 * relative_slant_range**2) / (
+                2 * (sensor.alpha - 1) * relative_slant_range
+            )
         else:
             # nadir only
             mu_i = 1.0
@@ -418,7 +432,7 @@ class NadirLRMAltimetry(object):
         # for each gate (PFS convolution).
 
         eps_upper_interface = np.insert(eps[:-1], 0, 1.0)
-        mu_upper_interface = np.sqrt(1 - (1 - mu_i[None, :]) / eps_upper_interface[:, None]).real
+        mu_upper_interface = np.sqrt(1 - (1 - mu_i[None, :] ** 2) / eps_upper_interface[:, None]).real
 
         if self.compute_coherent_reflection:
             flat = Flat()
@@ -446,7 +460,7 @@ class NadirLRMAltimetry(object):
         # note that the division by eps_1 takes into account the divergence of the upwelling stream due to refraction
 
         if self.snowpack.substrate is not None:
-            mu_last_layer = np.sqrt(1 - (1 - mu_i) / eps[-1]).real
+            mu_last_layer = np.sqrt(1 - (1 - mu_i**2) / eps[-1]).real
             # TODO: add the coherent component
             interface_echo += [
                 (
