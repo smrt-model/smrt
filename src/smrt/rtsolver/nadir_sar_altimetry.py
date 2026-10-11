@@ -236,8 +236,20 @@ class NadirSARAltimetry(object):
             # we need to calculate the interface backscatter at several incidence angles.
             # Let choose something optimal to cover the footprint
             t_inc_sample = np.linspace(0, self.sensor.ngate / self.sensor.pulse_bandwidth, self.theta_inc_sampling + 1)
-            # cosine is adjacent divided by hypotenuse. This neglects the Earth's sphericity.
-            mu_i = 1.0 / (1.0 + C_SPEED * t_inc_sample / sensor.altitude)
+
+            # mu_i is cosine of the angle between the slant coming from the satellite and the normal to the surface
+            # (i.e. extension of a radius of the earth).
+            # The cosine of the (pi - angle) between the slant and the radius is:
+            # 2 * R * slant_range * (-cos(pi-angle)) + R**2 + slant_range**2 = (R + altitude)**2
+            # mu_i = ((R + altitude)**2 - R**2 - slant_range**2) / (2 * R * slant_range)
+            # mu_i = (alpha**2 - 1 -(alpha-1)**2 relative_slant_range**2) / (2 * (alpha-1) * relative_slant_range)
+
+            relative_slant_range = 1 + C_SPEED * t_inc_sample / (2 * sensor.altitude)
+            # the factor 2 is because the slant range is the distance to the surface, and t_inc_sample is the two-way
+            # travel time
+            mu_i = (sensor.alpha**2 - 1 - (sensor.alpha - 1) ** 2 * relative_slant_range**2) / (
+                2 * (sensor.alpha - 1) * relative_slant_range
+            )
         else:
             # for models based on constant sigma0 and geometrical optics, we only need strict nadir
             mu_i = 1
@@ -658,7 +670,7 @@ class NadirSARAltimetry(object):
         flat = Flat()
         # convert to local angle (accounting for small pitch and roll)
 
-        mu_upper_interface = np.sqrt(1 - (1 - mu_i[None, :]) / upper_eps[:, None]).real
+        mu_upper_interface = np.sqrt(1 - (1 - mu_i[None, :] ** 2) / upper_eps[:, None]).real
 
         interface_echo = [
             (
@@ -711,7 +723,7 @@ class NadirSARAltimetry(object):
         # now add the contribution of the substrate if any
         if self.snowpack.substrate is not None:
             s = self.snowpack.substrate
-            mu_last_layer = np.sqrt(1 - (1 - mu_i) / lower_eps[-1].real)
+            mu_last_layer = np.sqrt(1 - (1 - mu_i**2) / lower_eps[-1].real)
             interface_echo += [
                 (
                     cm(
