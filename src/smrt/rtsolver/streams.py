@@ -189,9 +189,14 @@ def compute_stream_gaussian(n_max_stream, permittivity, mode="most_refringent"):
 
     #  calculate the nodes and weights of all the other layers
 
-    # calculate real part of the index. It is an approximation.
+    # calculate real part of the index. It is an approximation. See fresnel.exact_snell_angle
     # See for instance "Semiconductor Physics, Quantum Electronics & Optoelectronics. 2001. V. 4, N 3. P. 214-218."
-    real_index = np.real(np.sqrt(permittivity[k_most_refringent] / permittivity[:]))
+    # See also: Guimarães, L. G., & Sampaio, E. E. S. (2008). A note on Snell laws for electromagnetic plane waves in
+    # lossy media. Journal of Quantitative Spectroscopy and Radiative Transfer, 109(11), 2124–2140.
+    # https://doi.org/10.1016/j.jqsrt.2008.03.014
+
+    # Snell law should use real part of the index at first order.
+    real_index = np.real(np.sqrt(permittivity[k_most_refringent]) / np.sqrt(permittivity[:]))
 
     # calculate the angles (=node)
     relsin = real_index[:, np.newaxis] * np.sqrt(1 - mu_most_refringent[np.newaxis, :] ** 2)

@@ -193,6 +193,7 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu
 
     # incident wavenumber
     n1 = np.sqrt(eps_1)
+    n2 = np.sqrt(eps_2)
 
     if mu_medium == "1":
         kiz2 = n1.real**2 * (1 - mu**2)
@@ -218,7 +219,7 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu
         n1.conjugate() * (eps_2 * kyi - eps_1 * kyt) / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))
     )  # Eq 61
 
-    mu2 = -kyt.real / np.sqrt(eps_2).real  # by definition of kyt
+    mu2 = np.sqrt(np.maximum(1 - kiz2 / n2.real**2, 0.0))
 
     return rv, rh, mu2
 
@@ -289,7 +290,8 @@ def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium
 
     # we use the real part to avoid numerical issues with complex numbers but in principle we should use the
     # complex cosine, only selecting the positive imag branch
-    mu2 = -kyt.real / np.sqrt(eps_2).real  # by definition of kyt
+    # Snell's law
+    mu2 = np.sqrt(np.maximum(1 - kiz2 / n2.real**2, 0.0))
 
     return rv, rh, tv, th, mu2
 
@@ -340,6 +342,7 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2,
     # incident wavenumber
 
     n1 = np.sqrt(eps_1)
+    n2 = np.sqrt(eps_2)
 
     if mu_medium == "1":
         kiz2 = n1.real**2 * (1 - mu**2)  # this the square of kiz = n1 * sin(theta)
@@ -360,12 +363,12 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2,
         n1.conjugate() * (eps_2 * kyi - eps_1 * kyt) / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))
     )  # Eq 61
 
-    mu2 = -kyt.real / np.sqrt(eps_2).real  # by definition of kyt
+    # Snell's law
+    mu2 = np.sqrt(np.maximum(1 - kiz2 / n2.real**2, 0.0))
 
     # this part is for the full_output
     # full_output
     #
-    n2 = np.sqrt(eps_2)
 
     th = 2 * kyi.real / (kyi.conjugate() + kyt)  # Eq 60; in the paper is with kyi + kyi.conjugate() == 2 * kyi.real
 
@@ -383,8 +386,8 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2,
         abs2(n1) * (eps_2.conjugate() * kyt).real / (abs2(n2) * (eps_1.conjugate() * kyi).real) * abs2(tv)
     )  # Optimized Eq 36
 
-    assert np.allclose(Rv + Tv, 1)  # check energy conservation
-    assert np.allclose(Rh + Th, 1)  # check energy conservation
+    assert np.allclose(Rv + Tv, 1), f"Energy conservation error in Rv + Tv: {Rv + Tv}"  # check energy conservation
+    assert np.allclose(Rh + Th, 1), f"Energy conservation error in Rh + Th: {Rh + Th}"  # check energy conservation
 
     return rv, rh, tv, th, Rv, Rh, Tv, Th, mu2
 
@@ -395,6 +398,9 @@ fresnel_reflection_coefficients = fresnel_reflection_coefficients_maezawa09_rigo
 
 def snell_angle(eps_1, eps_2, mu1):
     """Compute mu2 the cos(angle) in the second medium according to Snell's law.
+
+    This is exact for lossless media and an approximation for lossy media in O(L^2) where L is the loss tangent of the
+    medium. For lossy media, use :py:func:`exact_snell_angle`.
 
     Args:
         eps_1: permittivity of medium 1.
@@ -409,12 +415,68 @@ def snell_angle(eps_1, eps_2, mu1):
     n1 = np.sqrt(eps_1)
     kiz2 = n1.real**2 * (1 - mu1**2)  # this the square of kiz = n1 * sin(theta)
 
-    ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-    kyt = -np.sqrt(eps_2 - ktz2, dtype=np.complex128)  # Eq 8 for t
-
-    mu2 = -kyt.real / np.sqrt(eps_2).real  # by definition of kyt
+    # Snell's law
+    mu2 = np.sqrt(np.maximum(1 - kiz2 / (np.sqrt(eps_2).real) ** 2, 0.0))
 
     return mu2
+
+
+def exact_snell_angle(eps_1, eps_2, mu1):
+    """Cosine of the refraction angle in medium 2 (non-magnetic, lossy-to-lossy).
+
+    Refs: Guimarães, L. G., & Sampaio, E. E. S. (2008). A note on Snell laws for electromagnetic plane waves in lossy
+    media. Journal of Quantitative Spectroscopy and Radiative Transfer, 109(11),
+    2124–2140. https://doi.org/10.1016/j.jqsrt.2008.03.014
+
+    Angles are the real energy-flow (Poynting) directions; the tangential wavenumber kiz is conserved and real. F
+    or TE (h) the Poynting direction equals the phase direction; for TM (v) it differs slightly.
+
+    Args:
+        eps_1: complex permittivity of medium 1 (Re > 0, Im >= 0).
+        eps_2: complex permittivity of medium 2 (Re > 0, Im >= 0).
+        mu1:   cosine of the zenith angle in medium 1.
+
+    Returns:
+        mu2_h, mu2_v: cosine of the zenith angle in medium 2 (0 if the wave is
+             evanescent, NaN for pol="v" if no real angle exists in medium 1,
+             i.e. mu1 <= L1 / sqrt(1 + L1**2)).
+    """
+    eps_1 = np.asarray(eps_1, dtype=complex)
+    eps_2 = np.asarray(eps_2, dtype=complex)
+
+    mu1_squared = mu1**2
+    sin2 = 1.0 - mu1_squared  # sin^2(theta1)
+    L1_squared = (eps_1.imag / eps_1.real) ** 2  # loss tangent of medium 1 (squared)
+
+    # kiz^2 = Re(eps_1) * kappa^2 * sin^2(theta1)
+
+    kappa1_h_squared = 0.5 * (1.0 + np.sqrt(1.0 + L1_squared / mu1_squared))
+
+    tan2 = sin2 / mu1_squared
+    with np.errstate(invalid="ignore", divide="ignore"):
+        kappa1_v_squared = 0.5 * (1.0 + L1_squared) * (1.0 + np.sqrt((1.0 + L1_squared) / (1.0 - L1_squared * tan2)))
+
+    kiz_h_squared = eps_1.real * kappa1_h_squared * sin2
+    kiz_v_squared = eps_1.real * kappa1_v_squared * sin2
+
+    L2_squared = (eps_2.imag / eps_2.real) ** 2  # loss tangent of medium 2 (squared)
+
+    # 1st order H
+    mu2_h_squared = 1.0 - kiz_h_squared / eps_2.real
+    # 2nd order H
+    with np.errstate(invalid="ignore", divide="ignore"):
+        kappa2_h_squared = 0.5 * (1.0 + np.sqrt(1.0 + L2_squared / mu2_h_squared))
+        mu2_h_squared = np.maximum(1.0 - kiz_h_squared / (eps_2.real * kappa2_h_squared), 0.0)
+
+    # 1st order V
+    mu2_v_squared = 1.0 - kiz_v_squared / eps_2.real
+    # 2nd order V
+    with np.errstate(invalid="ignore", divide="ignore"):
+        tan2 = 1 / mu2_v_squared - 1
+        kappa2_v_squared = 0.5 * (1.0 + L2_squared) * (1.0 + np.sqrt((1.0 + L2_squared) / (1.0 - L2_squared * tan2)))
+        mu2_v_squared = np.maximum(1.0 - kiz_v_squared / (eps_2.real * kappa2_v_squared), 0.0)
+
+    return np.sqrt(mu2_h_squared), np.sqrt(mu2_v_squared)
 
 
 def brewster_angle(eps_1, eps_2):
@@ -449,7 +511,7 @@ def fresnel_matrix(eps_1, eps_2, mu1, npol) -> tuple[smrt_matrix, smrt_matrix, n
     mu1 = np.atleast_1d(mu1)
     assert len(mu1.shape) == 1  # 1D array
 
-    rv, rh, tv, th, mu2 = fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1)
+    rv, rh, mu2 = fresnel_reflection_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1)
 
     reflection_coefficients = smrt_matrix.ones((npol, len(mu1)))
     transmission_coefficients = smrt_matrix.zeros((npol, len(mu1)))
@@ -457,8 +519,8 @@ def fresnel_matrix(eps_1, eps_2, mu1, npol) -> tuple[smrt_matrix, smrt_matrix, n
     reflection_coefficients[0] = abs2(rv)
     reflection_coefficients[1] = abs2(rh)
 
-    transmission_coefficients[0] = abs2(tv)
-    transmission_coefficients[1] = abs2(th)
+    transmission_coefficients[0] = 1 - abs2(rv)
+    transmission_coefficients[1] = 1 - abs2(rh)
 
     if npol >= 3:
         reflection_coefficients[2] = (rv * np.conj(rh)).real  # TsangI  Eq 7.2.93
@@ -486,7 +548,7 @@ def fresnel_reflection_matrix(eps_1, eps_2, mu1, npol) -> tuple[smrt_matrix, np.
 
     reflection_coefficients = smrt_matrix.ones((npol, len(mu1)))
 
-    rv, rh, mu2 = fresnel_reflection_coefficients(eps_1, eps_2, mu1)
+    rv, rh, mu2 = fresnel_reflection_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1)
 
     reflection_coefficients[0] = abs2(rv)
     reflection_coefficients[1] = abs2(rh)
@@ -516,7 +578,7 @@ def fresnel_transmission_matrix(eps_1, eps_2, mu1, npol) -> tuple[smrt_matrix, n
 
     transmission_coefficients = smrt_matrix.zeros((npol, len(mu1)))
 
-    rv, rh, mu2 = fresnel_reflection_coefficients(eps_1, eps_2, mu1)
+    rv, rh, mu2 = fresnel_reflection_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1)
 
     transmission_coefficients[0] = 1 - abs2(rv)
     transmission_coefficients[1] = 1 - abs2(rh)
