@@ -1,8 +1,10 @@
+import numpy as np
 import pytest
 
 from smrt import make_interface, make_model, make_snowpack
 from smrt.core.terrain import TerrainInfo
 from smrt.inputs import altimeter_list
+from smrt.rtsolver.delay_doppler_model.landy19 import Landy19
 
 
 @pytest.fixture
@@ -82,3 +84,52 @@ def test_boy17(reduced_cryosat2, onelayer_snowpack):
     )
 
     m.run(reduced_cryosat2, onelayer_snowpack)
+
+
+def test_landy19_local_slope_flat_dem(reduced_cryosat2, onelayer_snowpack):
+    pytest.importorskip("finufft")
+
+    def run(use_local_slope):
+        m = make_altim_model(
+            "landy19",
+            oversampling_time=1,
+            oversampling_doppler=1,
+            delay_doppler_model_options=dict(grid_space=500, use_local_slope=use_local_slope),
+        )
+        return m.run(reduced_cryosat2, onelayer_snowpack).delay_doppler_map()
+
+    ddm_slope = run(True)
+    ddm_noslope = run(False)
+
+    np.testing.assert_allclose(ddm_slope.values, ddm_noslope.values, rtol=1e-6)
+
+
+def test_landy19_sigma0func_vs_constant_sigma0(reduced_cryosat2, onelayer_snowpack):
+    pytest.importorskip("finufft")
+
+    class Landy19ConstantSigma0Func(Landy19):
+        # sigma0func branch, with sigma0 functions frozen to their nadir value
+        def delay_doppler_map_with_sigma0func(self, terrain_info, sigma0=1):
+            sigma0 = [float(s(np.array([1.0]))[0]) if callable(s) else s for s in sigma0]
+            return super().delay_doppler_map_with_sigma0func(terrain_info=terrain_info, sigma0=sigma0)
+
+    class Landy19NoSigma0Func(Landy19):
+        # hide the sigma0func method to force the constant-sigma0 branch of the solver
+        def __getattribute__(self, name):
+            if name == "delay_doppler_map_with_sigma0func":
+                raise AttributeError(name)
+            return super().__getattribute__(name)
+
+        def delay_doppler_map(self, terrain_info):
+            return Landy19.delay_doppler_map_with_sigma0func(self, terrain_info=terrain_info, sigma0=1)
+
+    def run(ddm_class):
+        m = make_altim_model(
+            ddm_class,
+            oversampling_time=1,
+            oversampling_doppler=1,
+            delay_doppler_model_options=dict(grid_space=500),
+        )
+        return m.run(reduced_cryosat2, onelayer_snowpack).delay_doppler_map()
+
+    np.testing.assert_allclose(run(Landy19ConstantSigma0Func).values, run(Landy19NoSigma0Func).values, rtol=1e-6)
