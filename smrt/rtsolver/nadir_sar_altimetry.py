@@ -100,6 +100,14 @@ class NadirSARAltimetry(object):
         PTR_doppler, if set to True.
     :param theta_inc_sampling: number of subdivisions used to calculate the incidence angular variations of surface and
         interface backscatter (the higher the better but the more computationally expensive).
+    :param theta_inc_sampling_mode: "auto" (default), "shared", "uniform", "coherent". "auto" try to automatically guess
+        the best option. If set to "uniform", the incidence angles are sampled uniformly between 0 and the maximum
+        incidence angle in the footprint. However, this is insufficient if the coherent backscatter is significant.
+        If set to "shared", the incidence angles are sampled in two parts: one part is sampled uniformly between 0 and
+        the maximum incidence angle, and the other part is sampled uniformly between 0 and the maximum incidence angle.
+        If set to "coherent", the incidence angles are sampled in a way that the coherent backscatter is maximized.
+        The "auto" mode automatically selects the best mode based on the roughness of the surface and interfaces to
+        guess whether the coherent backscatter is significant or not. Use with care.
     :param error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
         If set to "nan", return a nan, so the calculation can continue, but the result is of course unusable and the
         error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
@@ -118,7 +126,8 @@ class NadirSARAltimetry(object):
         return_oversampled=False,
         skip_convolutions=False,
         return_contributions=False,
-        theta_inc_sampling=8,
+        theta_inc_sampling=16,
+        theta_inc_sampling_mode="auto",
         error_handling="exception",
         prune_deep_snowpack=True,
     ):
@@ -161,6 +170,7 @@ class NadirSARAltimetry(object):
         self.return_oversampled = return_oversampled
         self.skip_convolutions = skip_convolutions
         self.theta_inc_sampling = theta_inc_sampling
+        self.theta_inc_sampling_mode = theta_inc_sampling_mode
 
         self.prune_deep_snowpack = prune_deep_snowpack
 
@@ -234,23 +244,16 @@ class NadirSARAltimetry(object):
 
         if hasattr(self.delay_doppler_model, "delay_doppler_map_with_sigma0func"):
             # we need to calculate the interface backscatter at several incidence angles.
-            # Let choose something optimal to cover the footprint
-            t_inc_sample = np.linspace(0, self.sensor.ngate / self.sensor.pulse_bandwidth, self.theta_inc_sampling + 1)
 
-            # mu_i is cosine of the angle between the slant coming from the satellite and the normal to the surface
-            # (i.e. extension of a radius of the earth).
-            # The cosine of the (pi - angle) between the slant and the radius is:
-            # 2 * R * slant_range * (-cos(pi-angle)) + R**2 + slant_range**2 = (R + altitude)**2
-            # mu_i = ((R + altitude)**2 - R**2 - slant_range**2) / (2 * R * slant_range)
-            # mu_i = (alpha + 1 - (alpha-1) * relative_slant_range**2) / (2 *relative_slant_range)
-
-            delta_relative_slant_range = C_SPEED * t_inc_sample / (2 * sensor.altitude)
-            # the factor 2 is because the slant range is the distance to the surface, and t_inc_sample is the two-way
-            # travel time
-            mu_i = (1 - (sensor.alpha - 1) * delta_relative_slant_range * (1 + delta_relative_slant_range / 2)) / (
-                1 + delta_relative_slant_range
+            min_rouhness_rms = min(
+                min(getattr(i, "rms_roughness", np.inf) for i in self.snowpack.interfaces),
+                getattr(self.snowpack.substrate, "rms_roughness", np.inf),
             )
-            # if rounding problems, we'll use np.maximum to clip <=1
+
+            mu_i = compute_incidence_sampling(
+                self.theta_inc_sampling_mode, self.sensor, self.theta_inc_sampling, min_rouhness_rms
+            )
+
         else:
             # for models based on constant sigma0 and geometrical optics, we only need strict nadir
             mu_i = 1
@@ -801,6 +804,71 @@ def coherent_reflection_factor(sensor, roughness_rms, mu):
     beta12 = coherent_reflection_square_decay(sensor)
 
     return np.exp(-4 * (sensor.wavenumber * roughness_rms) ** 2 - theta2 / beta12) / beta12 / (4 * np.pi)
+
+
+def compute_incidence_sampling(mode, sensor, theta_inc_sampling, minimum_roughness_rms):
+    if mode == "auto":
+        # we need to calculate the interface backscatter at several incidence angles.
+        # Let choose something optimal to cover the footprint
+        sqrt_efold = np.sqrt(6)  #
+        if sensor.wavenumber * minimum_roughness_rms > sqrt_efold / 2:
+            mode = "uniform"
+        else:
+            mode = "shared"
+
+    if mode == "uniform":
+        n_uniform = theta_inc_sampling
+        n_coherent = 0
+    elif mode == "coherent":
+        n_uniform = 0
+        n_coherent = theta_inc_sampling
+    elif mode == "shared":
+        n_uniform = theta_inc_sampling // 2
+        n_coherent = theta_inc_sampling - n_uniform
+    else:
+        raise ValueError(f"Unknown mode {mode} for incidence angle sampling")
+
+    mu_i = []
+
+    if n_uniform > 0:
+        # we need to calculate the interface backscatter at several incidence angles.
+        # Let choose something optimal to cover the footprint
+        t_inc_sample = np.linspace(0, sensor.ngate / sensor.pulse_bandwidth, n_uniform + 1)
+
+        # mu_i is cosine of the angle between the slant coming from the satellite and the normal to the surface
+        # (i.e. extension of a radius of the earth).
+        # The cosine of the (pi - angle) between the slant and the radius is:
+        # 2 * R * slant_range * (-cos(pi-angle)) + R**2 + slant_range**2 = (R + altitude)**2
+        # mu_i = ((R + altitude)**2 - R**2 - slant_range**2) / (2 * R * slant_range)
+        # mu_i = (alpha + 1 - (alpha-1) * relative_slant_range**2) / (2 *relative_slant_range)
+
+        delta_relative_slant_range = C_SPEED * t_inc_sample / (2 * sensor.altitude)
+        # the factor 2 is because the slant range is the distance to the surface, and t_inc_sample is the two-way
+        # travel time
+        mu_i.append(
+            (1 - (sensor.alpha - 1) * delta_relative_slant_range * (1 + delta_relative_slant_range / 2))
+            / (1 + delta_relative_slant_range)
+        )
+
+    if n_coherent > 0:
+        # The coherent component decays as exp(-theta**2 / beta**2) with beta ~ 1 mrad, much narrower than the
+        # spacing of the delay-based nodes (4-5 mrad for theta_inc_sampling=8).
+        # we need to resolve the coherent lobe explicitly: add nodes uniform in theta (step beta/8) up to 6 beta.
+
+        beta12 = coherent_reflection_square_decay(sensor)
+
+        efold = 6  # number of e-folds to reach the end of the coherent lobe
+        mu_i.append(np.linspace(1 - 0.5 * beta12, (1 - efold * 0.5 * beta12), n_coherent))  # decreasing
+        # beta12 = np.sqrt(coherent_reflection_square_decay(sensor))
+        # theta_nodes = np.union1d(np.linspace(0, 6 * beta, 49), np.arccos(np.clip(mu_i, -1, 1)))
+        # mu_i = np.cos(theta_nodes)  # decreasing
+
+    if len(mu_i) == 1:
+        return mu_i[0]
+    elif len(mu_i) == 2:
+        return np.union1d((mu_i[0], mu_i[1]))
+    else:
+        raise ValueError(f"Unknown mode {mode} for incidence angle sampling")
 
 
 def local_incidence_cosine(sensor, mu):
