@@ -25,7 +25,7 @@ import numba
 import numpy as np
 import numpy.typing as npt
 
-from smrt.core.error import SMRTError
+from smrt.core.error import SMRTError, smrt_warn
 from smrt.core.globalconstants import C_SPEED, TWO_PI
 from smrt.core.terrain import TerrainInfo, generate_dem
 
@@ -33,10 +33,15 @@ from .delay_doppler_utils import delay_compensation, delay_sampling_vector, ptr_
 
 try:
     import finufft
+
+    from .fsinc.fsinc_1d import sincsq1d
 except ImportError:
+    smrt_warn(
+        "The package finufft is not installed. The fast sinc^2 transform will not be available. "
+        "The computation is going to be significantly slower."
+    )
     finufft = None
 
-from .fsinc.fsinc_1d import sincsq1d
 
 SQRTLOG2 = 0.8325546111576977  # np.sqrt(LOG2)
 
