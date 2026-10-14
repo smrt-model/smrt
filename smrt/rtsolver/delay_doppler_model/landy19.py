@@ -25,18 +25,23 @@ import numba
 import numpy as np
 import numpy.typing as npt
 
-from smrt.core.error import SMRTError
-from smrt.core.globalconstants import C_SPEED
+from smrt.core.error import SMRTError, smrt_warn
+from smrt.core.globalconstants import C_SPEED, TWO_PI
 from smrt.core.terrain import TerrainInfo, generate_dem
 
 from .delay_doppler_utils import delay_compensation, delay_sampling_vector, ptr_function, sinc2
 
 try:
     import finufft
+
+    from .fsinc.fsinc_1d import sincsq1d
 except ImportError:
+    smrt_warn(
+        "The package finufft is not installed. The fast sinc^2 transform will not be available. "
+        "The computation is going to be significantly slower."
+    )
     finufft = None
 
-from .fsinc.fsinc_1d import sincsq1d
 
 SQRTLOG2 = 0.8325546111576977  # np.sqrt(LOG2)
 
@@ -100,8 +105,8 @@ class Landy19(object):
             raise SMRTError("slant_range_correction attribute must be False, True, 'analytical' or 'numerical'")
 
         # gamma is after W18 eq 5
-        self.gamma_1 = np.deg2rad(sensor.beamwidth_alongtrack / 2) / SQRTLOG2
-        self.gamma_2 = np.deg2rad(sensor.beamwidth_acrosstrack / 2) / SQRTLOG2
+        self.gamma_1 = np.deg2rad(sensor.beamwidth_along_track / 2) / SQRTLOG2
+        self.gamma_2 = np.deg2rad(sensor.beamwidth_cross_track / 2) / SQRTLOG2
 
         # L19 Eq 4. There is an error in the text, it's written xi_k but it is xi_0
         self.xi_0 = sensor.wavelength * sensor.pulse_repetition_frequency / (2 * sensor.ndoppler * sensor.velocity)
@@ -228,7 +233,7 @@ class Landy19(object):
             cosphi2 = np.zeros_like(theta_g)
             cosphi2 = np.divide(xg2, yg2 + xg2, out=cosphi2, where=(xg2 != 0))
 
-            G2 = sensor.antenna_gain**2 * np.exp(
+            G2 = sensor.two_way_antenna_gain**2 * np.exp(
                 -2 * theta_g**2 * (cosphi2 * (1 / self.gamma_1**2 - 1 / self.gamma_2**2) + 1 / self.gamma_2**2)
             )  # here, we used sin² = 1 - cos²
 
@@ -300,7 +305,7 @@ class Landy19(object):
 
 @numba.vectorize(nopython=True, cache=True)
 def ptr_doppler_landy19(phi: float, wavelength, velocity, pulse_repetition_frequency, ndoppler):
-    k0 = 2 * np.pi / wavelength
+    k0 = TWO_PI / wavelength
     angle = (k0 * velocity / pulse_repetition_frequency) * np.sin(phi)
     return (np.sin(ndoppler * angle) / np.sin(angle)) ** 2 if np.abs(angle) > 1e-6 else float(ndoppler**2)  # unit: no
 

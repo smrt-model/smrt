@@ -41,3 +41,4 @@ cm = 1e-2  # centimeter
 mm = 1e-3  # millimeter
 micron = 1e-6  # micron
 PSU = 1e-3  # g/kg -> kg/kg
+TWO_PI = 2 * np.pi
