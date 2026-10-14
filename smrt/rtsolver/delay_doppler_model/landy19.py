@@ -192,11 +192,11 @@ class Landy19(object):
             if self.use_local_slope:
                 mu_local_i = -(
                     rang_vector[0] * dem_normal[0] + rang_vector[1] * dem_normal[1] + rang_vector[2] * dem_normal[2]
-                ) / np.sqrt(rang_vector[0] ** 2 + rang_vector[1] ** 2 + rang_vector[2] ** 2)
+                ) / np.sqrt(rang_vector[2] ** 2 + rho2)
 
             else:
                 #  neglected the local slope
-                mu_local_i = -rang_vector[2] / rang
+                mu_local_i = -rang_vector[2] / np.sqrt(rang_vector[2] ** 2 + rho2)
 
             mu_local_i = np.minimum(mu_local_i, 1.0)
 
