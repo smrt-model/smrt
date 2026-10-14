@@ -135,14 +135,15 @@ class NadirLRMAltimetry(object):
             # The cosine of the (pi - angle) between the slant and the radius is:
             # 2 * R * slant_range * (-cos(pi-angle)) + R**2 + slant_range**2 = (R + altitude)**2
             # mu_i = ((R + altitude)**2 - R**2 - slant_range**2) / (2 * R * slant_range)
-            # mu_i = (alpha**2 - 1 -(alpha-1)**2 relative_slant_range**2) / (2 * (alpha-1) * relative_slant_range)
+            # mu_i = (alpha + 1 - (alpha-1) * relative_slant_range**2) / (2 *relative_slant_range)
 
-            relative_slant_range = 1 + C_SPEED * t_inc_sample / (2 * sensor.altitude)
+            delta_relative_slant_range = C_SPEED * t_inc_sample / (2 * sensor.altitude)
             # the factor 2 is because the slant range is the distance to the surface, and t_inc_sample is the two-way
             # travel time
-            mu_i = (sensor.alpha**2 - 1 - (sensor.alpha - 1) ** 2 * relative_slant_range**2) / (
-                2 * (sensor.alpha - 1) * relative_slant_range
+            mu_i = (1 - (sensor.alpha - 1) * delta_relative_slant_range * (1 + delta_relative_slant_range / 2)) / (
+                1 + delta_relative_slant_range
             )
+            # if rounding problems, we'll use np.maximum to clip <=1
         else:
             # nadir only
             mu_i = 1.0
