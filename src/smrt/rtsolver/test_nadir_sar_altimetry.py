@@ -133,3 +133,40 @@ def test_landy19_sigma0func_vs_constant_sigma0(reduced_cryosat2, onelayer_snowpa
         return m.run(reduced_cryosat2, onelayer_snowpack).delay_doppler_map()
 
     np.testing.assert_allclose(run(Landy19ConstantSigma0Func).values, run(Landy19NoSigma0Func).values, rtol=1e-6)
+
+
+def test_landy19_coherent_interfaces_delay():
+    # With IEM interfaces the coherent components are computed with sigma0 functions (sigma0func branch). Their DDMs
+    # must be delayed by the propagation time to their own interface, as the incoherent DDMs. The full-size sensor is
+    # used because the reduced sensor gives a zero DDM for the interfaces.
+    pytest.importorskip("finufft")
+    iem = make_interface("iem_fung92", roughness_rms=0.002, corr_length=0.02)
+    sp = make_snowpack(
+        thickness=[0.5, 1],
+        microstructure_model="exponential",
+        density=[300, 350],
+        corr_length=200e-6,
+        temperature=260,
+        interface=[iem, iem],
+    )
+    sp.terrain_info = TerrainInfo(sigma_surface=0)
+
+    m = make_altim_model(
+        "landy19",
+        oversampling_time=4,
+        oversampling_doppler=1,
+        return_oversampled=True,
+        return_contributions="full coherent",
+        delay_doppler_model_options=dict(grid_space=200),
+    )
+    ddm = m.run(altimeter_list.cryosat2(), sp).delay_doppler_map().sum("doppler_frequency").squeeze()
+
+    def half_power_index(contribution):
+        waveform = ddm.sel(contribution=contribution).values
+        assert waveform.max() > 0
+        return int(np.argmax(waveform >= 0.5 * waveform.max()))
+
+    for i in range(2):
+        assert abs(half_power_index(f"coherent interface {i}") - half_power_index(f"incoherent interface {i}")) <= 1
+    # 0.5 m of snow (eps ~ 1.52) delays the second interface by about 4.1 ns, i.e. 5 samples at 4 x 320 MHz
+    assert half_power_index("incoherent interface 1") - half_power_index("incoherent interface 0") >= 4
