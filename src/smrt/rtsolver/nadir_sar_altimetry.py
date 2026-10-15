@@ -251,6 +251,16 @@ class NadirSARAltimetry(object):
                 1 + delta_relative_slant_range
             )
             # if rounding problems, we'll use np.maximum to clip <=1
+
+            # The coherent component decays as exp(-theta**2 / beta**2) with beta ~ 1 mrad (CryoSat-2), much narrower
+            # than the spacing of the delay-based nodes (about 5 mrad for theta_inc_sampling=8). As the backscatter is
+            # interpolated linearly in mu, the coherent lobe must be resolved explicitly: add nodes uniform in theta
+            # (step beta/8) up to 6 beta. The interpolation of the sigma0 functions is in mu, so the nodes do not need to
+            # be tied to the delays.
+            coherent_beta = np.sqrt(coherent_reflection_square_decay(sensor))
+            theta_coherent_nodes = np.linspace(0, 6 * coherent_beta, 49)
+            theta_nodes = np.union1d(theta_coherent_nodes, np.arccos(np.clip(mu_i, -1, 1)))
+            mu_i = np.cos(theta_nodes)  # decreasing, as expected by the interpolation in the sigma0 functions
         else:
             # for models based on constant sigma0 and geometrical optics, we only need strict nadir
             mu_i = 1
