@@ -86,6 +86,31 @@ def test_boy17(reduced_cryosat2, onelayer_snowpack):
     m.run(reduced_cryosat2, onelayer_snowpack)
 
 
+def test_landy19_coherent_lobe_resolved():
+    # The coherent lobe (beta ~ 1 mrad for CryoSat-2) is much narrower than the spacing of the delay-based angular
+    # nodes. Once it is resolved, the coherent echo must not depend on theta_inc_sampling. The full-size sensor is used
+    # because the reduced sensor gives a zero DDM for the interfaces.
+    pytest.importorskip("finufft")
+    iem = make_interface("iem_fung92", roughness_rms=0.002, corr_length=0.02)
+    sp = make_snowpack(
+        thickness=[1], microstructure_model="exponential", density=300, corr_length=200e-6, temperature=260, surface=iem
+    )
+    sp.terrain_info = TerrainInfo(sigma_surface=0)
+
+    def coherent_energy(theta_inc_sampling):
+        m = make_altim_model(
+            "landy19",
+            oversampling_time=1,
+            oversampling_doppler=1,
+            theta_inc_sampling=theta_inc_sampling,
+            return_contributions="full coherent",
+            delay_doppler_model_options=dict(grid_space=200),
+        )
+        ddm = m.run(altimeter_list.cryosat2(), sp).delay_doppler_map()
+        return float(ddm.sel(contribution="coherent interface 0").sum())
+
+    np.testing.assert_allclose(coherent_energy(2), coherent_energy(8), rtol=0.01)
+
 def test_landy19_local_slope_flat_dem(reduced_cryosat2, onelayer_snowpack):
     pytest.importorskip("finufft")
 
