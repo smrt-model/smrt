@@ -459,13 +459,17 @@ class NadirSARAltimetry(object):
 
             # merge the ddms (first incoherent, second coherent)
             all_ddm_i = ddm_i + coh_ddm_i
+            n_interfaces = len(self.all_interfaces)
             for i, (action, param) in enumerate(actions):  # loop over the actions in the same order
+                # actions (and all_ddm_i) list the incoherent components of all the interfaces, then the coherent ones,
+                # so the interface index is i modulo the number of interfaces
+                interface_index = i % n_interfaces
                 if action == "func":  # a specific DDM has been calculated for this interface
-                    all_ddm_i[i] = shift_ddm(ddm_list[j], self.t_interface[i])
+                    all_ddm_i[i] = shift_ddm(ddm_list[j], self.t_interface[interface_index])
                     j += 1  # increment the index of calculated function
                 elif action == "mul":  # all backscatter are equal
                     # use the DDM for the volume (without dependency can be used here) and the mulfactor
-                    all_ddm_i[i] = shift_ddm(param * ddm_list[0], self.t_interface[i])
+                    all_ddm_i[i] = shift_ddm(param * ddm_list[0], self.t_interface[interface_index])
 
             # split the incoherent and coherent
             ddm_i, coh_ddm_i = all_ddm_i[: len(ddm_i)], all_ddm_i[len(ddm_i) :]
