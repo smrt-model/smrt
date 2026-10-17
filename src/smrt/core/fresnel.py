@@ -109,7 +109,7 @@ def fresnel_coefficients_maezawa09_classical(eps_1, eps_2, mu, mu_medium="1", fu
 
 
 def fresnel_reflection_coefficients_maezawa09_rigorous(
-    eps_1, eps_2, mu, mu_medium="1"
+    eps_1, eps_2, mu1=None, *, mu0=None
 ) -> tuple[complex, complex, float]:
     """Compute the reflection in two polarizations (H and V) for lossy media with the "rigorous Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between
@@ -125,8 +125,7 @@ def fresnel_reflection_coefficients_maezawa09_rigorous(
         eps_1: permittivity of medium 1.
         eps_2: permittivity of medium 2.
         mu: cosine zenith angle in medium 1 or in the void according to mu_medium.
-        mu_medium: string indicating which medium the angle is defined in ("1" or "void").
-
+        mu0: cosine zenith angle in the void (real, scalar or array). mu must be None if mu0 is provided.
     Returns:
         rv: complex
             reflection coefficient for vertical polarization.
@@ -139,12 +138,13 @@ def fresnel_reflection_coefficients_maezawa09_rigorous(
 
     # incident wavenumber
     n1 = np.sqrt(eps_1)
-    if mu_medium == "1":
-        kiz2 = n1.real**2 * (1 - mu**2)  # this the square of kiz = n1 * sin(theta)
-    elif mu_medium == "void":
-        kiz2 = 1 - mu**2  # this the square of kiz = sin(theta0)
+    n2 = np.sqrt(eps_2)
+
+    if mu1 is not None:
+        assert mu0 is None
+        kiz2 = n1.real**2 * (1 - mu1**2)  # this the square of kiz = n1 * sin(theta)
     else:
-        raise SMRTError("mu_medium must be either '1' or 'void'")
+        kiz2 = 1 - mu0**2  # this the square of kiz = sin(theta0)
 
     kyi = -np.sqrt(eps_1 - kiz2, dtype=np.complex128)  # Eq 8 for i
 
@@ -158,13 +158,20 @@ def fresnel_reflection_coefficients_maezawa09_rigorous(
     )  # Eq 61
     # n1.conjugate() / n1 can be replaced by eps_1.conjugate / abs(eps_1)
 
-    mu2 = -kyt.real / np.sqrt(eps_2).real  # by definition of kyt
+    mu2 = np.sqrt(np.maximum(1 - kiz2 / n2.real**2, 0.0))
 
     return rv, rh, mu2
 
 
+#
+#
+##### fresnel_reflection_coefficients_maezawa09_rigorous_compiled ####
+#
+#
+
+
 @numba.jit(nopython=True, cache=True)
-def fresnel_reflection_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium="1"):
+def fresnel_reflection_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1):
     """Compute the reflection in two polarizations (H and V) for lossy media with the "rigorous Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between
     absorbing media. Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
@@ -176,45 +183,52 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu
     This function only returns the FIELD reflection coefficients and the cosine angle in the medium 2
 
     Args:
-        eps_1: permittivity of medium 1.
-        eps_2: permittivity of medium 2.
-        mu: cosine zenith angle in medium 1 or in the void according to mu_medium.
-        mu_medium: string indicating which medium the angle is defined in ("1" or "void").
+        eps_1: permittivity of medium 1 (real or complex, scalar or array).
+        eps_2: permittivity of medium 2 (real or complex, scalar or array).
+        mu1: cosine zenith angle in medium 1 (real, scalar or array).
 
     Returns:
-        rv: complex
-            reflection coefficient for vertical polarization.
-        rh: complex
-            reflection coefficient for horizontal polarization.
-        mu2: float
-            cosine of the angle in medium 2.
+        rv, rh, mu2: field reflection coefficients (V, H) and cosine angle in medium 2, with the broadcast shape
+        of the inputs.
     """
-    # y is the axis normal to the interface (usually z, but here it is y!)
+    eps_1 = eps_1 + 0j  # promote real inputs to complex
+    eps_2 = eps_2 + 0j
+    kiz2 = np.sqrt(eps_1).real ** 2 * (1 - mu1**2)  # square of n1 * sin(theta)
 
-    # incident wavenumber
+    return _fresnel_reflection_maezawa09_rigorous_reflection_core(eps_1, eps_2, kiz2)
+
+
+@numba.jit(nopython=True, cache=True)
+def fresnel_reflection_coefficients_maezawa09_rigorous_mu0_compiled(eps_1, eps_2, *, mu0):
+    """Same as :py:func:`fresnel_reflection_coefficients_maezawa09_rigorous_compiled`
+    with the angle defined in the void.
+
+    Args:
+        eps_1: permittivity of medium 1 (real or complex, scalar or array).
+        eps_2: permittivity of medium 2 (real or complex, scalar or array).
+        mu0: cosine zenith angle in the void (real, scalar or array).
+
+    Returns:
+        rv, rh, mu2: field reflection coefficients (V, H) and cosine angle in medium 2, with the broadcast shape
+        of the inputs.
+    """
+    eps_1 = eps_1 + 0j  # promote real inputs to complex
+    eps_2 = eps_2 + 0j
+    kiz2 = 1 - mu0**2  # square of sin(theta0)
+
+    return _fresnel_reflection_maezawa09_rigorous_reflection_core(eps_1, eps_2, kiz2)
+
+
+@numba.jit(nopython=True, cache=True)
+def _fresnel_reflection_maezawa09_rigorous_reflection_core(eps_1, eps_2, kiz2):
+    # eps_1 and eps_2 are complex (scalar or array); kiz2 is the squared tangential wavenumber (real).
     n1 = np.sqrt(eps_1)
     n2 = np.sqrt(eps_2)
 
-    if mu_medium == "1":
-        kiz2 = n1.real**2 * (1 - mu**2)
-
-        kyi = -np.sqrt(np.complex128(eps_1) - kiz2)  # Eq 8 for i
-
-        ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-        kyt = -np.sqrt(np.complex128(eps_2) - ktz2)  # Eq 8 for t
-    elif mu_medium == "void":
-        kiz2 = 1 - mu**2
-
-        # repeating is necessary for the compilation typing pass
-        kyi = -np.sqrt(np.complex128(eps_1) - kiz2)  # Eq 8 for i
-
-        ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-        kyt = -np.sqrt(np.complex128(eps_2) - ktz2)  # Eq 8 for t
-    else:
-        raise SMRTError("mu_medium must be either '1' or 'void'")
+    kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
+    kyt = -np.sqrt(eps_2 - kiz2)  # Eq 8 for t (tangential k is conserved: Snell law)
 
     rh = (kyi - kyt) / (kyi.conjugate() + kyt)  # Eq 59
-
     rv = (
         n1.conjugate() * (eps_2 * kyi - eps_1 * kyt) / (n1 * (eps_2 * kyi.conjugate() + eps_1.conjugate() * kyt))
     )  # Eq 61
@@ -224,61 +238,69 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu
     return rv, rh, mu2
 
 
+#
+#
+##### fresnel_coefficients_maezawa09_rigorous_compiled ####
+#
+#
+
+
 @numba.jit(nopython=True, cache=True)
-def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium="1"):
-    """Compute the reflection and transmission in two polarizations (H and V) for lossy media with the
-    "rigorous Fresnel" based on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at
-    interfaces between absorbing media. Journal of the Optical Society of America A, 26(2), 330.
+def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu1):
+    """Compute the FIELD reflection and transmission coefficients in two polarizations (H and V) for lossy media with
+    the "rigorous Fresnel" based on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations
+    at interfaces between absorbing media. Journal of the Optical Society of America A, 26(2), 330.
     https://doi.org/10.1364/josaa.26.000330
 
     The 'rigorous' derivation respects the energy conservation even for strongly lossy media.
-    The returned reflection coefficients apply to the electric field. Use abs2(rv), abs2(rh) to obtain the power
-    reflection coefficient.
-
-    This function only returns the FIELD reflection and transmission coefficients and the cosine angle in the medium 2
+    Use abs2(rv), abs2(rh) to obtain the power reflection coefficient. The angle is defined in medium 1; for the angle
+    defined in the void, use :py:func:`fresnel_coefficients_maezawa09_rigorous_muvoid_compiled`.
 
     Args:
-        eps_1: permittivity of medium 1.
-        eps_2: permittivity of medium 2.
-        mu: cosine zenith angle in medium 1 or in the void according to mu_medium.
-        mu_medium: string indicating which medium the angle is defined in ("1" or "void").
+        eps_1: permittivity of medium 1 (real or complex, scalar or array).
+        eps_2: permittivity of medium 2 (real or complex, scalar or array).
+        mu1: cosine zenith angle in medium 1 (real, scalar or array).
 
     Returns:
-        rv: complex
-            reflection coefficient for vertical polarization.
-        rh: complex
-            reflection coefficient for horizontal polarization.
-        tv: complex
-            transmission coefficient for vertical polarization.
-        th: complex
-            transmission coefficient for horizontal polarization.
-        mu2: float
-            cosine of the angle in medium 2.
+        rv, rh, tv, th, mu2: field reflection and transmission coefficients (V, H) and cosine angle in medium 2,
+        with the broadcast shape of the inputs.
     """
-    # y is the axis normal to the interface (usually z, but here it is y!)
+    eps_1 = eps_1 + 0j  # promote real inputs to complex
+    eps_2 = eps_2 + 0j
+    kiz2 = np.sqrt(eps_1).real ** 2 * (1 - mu1**2)  # square of n1 * sin(theta)
 
-    # incident wavenumber
+    return _fresnel_coefficients_maezawa09_rigorous_core(eps_1, eps_2, kiz2)
+
+
+@numba.jit(nopython=True, cache=True)
+def fresnel_coefficients_maezawa09_rigorous_mu0_compiled(eps_1, eps_2, *, mu0):
+    """Same as :py:func:`fresnel_coefficients_maezawa09_rigorous_compiled` with the angle defined in the void.
+
+    Args:
+        eps_1: permittivity of medium 1 (real or complex, scalar or array).
+        eps_2: permittivity of medium 2 (real or complex, scalar or array).
+        mu0: cosine zenith angle in the void (real, scalar or array).
+
+    Returns:
+        rv, rh, tv, th, mu2: field reflection and transmission coefficients (V, H) and cosine angle in medium 2,
+        with the broadcast shape of the inputs.
+    """
+    eps_1 = eps_1 + 0j  # promote real inputs to complex
+    eps_2 = eps_2 + 0j
+    kiz2 = 1 - mu0**2  # square of sin(theta0)
+
+    return _fresnel_coefficients_maezawa09_rigorous_core(eps_1, eps_2, kiz2)
+
+
+@numba.jit(nopython=True, cache=True)
+def _fresnel_coefficients_maezawa09_rigorous_core(eps_1, eps_2, kiz2):
+    # eps_1 and eps_2 are complex (scalar or array); kiz2 is the squared tangential wavenumber (real).
     n1 = np.sqrt(eps_1)
     n2 = np.sqrt(eps_2)
 
-    if mu_medium == "1":
-        kiz2 = n1.real**2 * (1 - mu**2)
-
-        # M09: We take the minus sign for the incidence and transmission field and plus sign for the reflection field.
-        kyi = -np.sqrt(np.complex128(eps_1) - kiz2)  # Eq 8 for i
-
-        ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-        kyt = -np.sqrt(np.complex128(eps_2) - ktz2)  # Eq 8 for t
-    elif mu_medium == "void":
-        kiz2 = 1 - mu**2
-
-        # repeating is necessary for the compilation typing pass
-        kyi = -np.sqrt(np.complex128(eps_1) - kiz2)  # Eq 8 for i
-
-        ktz2 = kiz2  # unnumbered equation before 22  -> tangential k is conserved throught the interface (=Snell law)
-        kyt = -np.sqrt(np.complex128(eps_2) - ktz2)  # Eq 8 for t
-    else:
-        raise SMRTError("mu_medium must be either '1' or 'void'")
+    # M09: We take the minus sign for the incidence and transmission field and plus sign for the reflection field.
+    kyi = -np.sqrt(eps_1 - kiz2)  # Eq 8 for i
+    kyt = -np.sqrt(eps_2 - kiz2)  # Eq 8 for t (tangential k is conserved: Snell law)
 
     denom_h = kyi.conjugate() + kyt
     rh = (kyi - kyt) / denom_h  # Eq 59
@@ -288,15 +310,13 @@ def fresnel_coefficients_maezawa09_rigorous_compiled(eps_1, eps_2, mu, mu_medium
     rv = n1.conjugate() * (eps_2 * kyi - eps_1 * kyt) / denom_v  # Eq 61
     tv = n2 * 2 * (eps_1.conjugate() * kyi).real / denom_v  # Eq 62
 
-    # we use the real part to avoid numerical issues with complex numbers but in principle we should use the
-    # complex cosine, only selecting the positive imag branch
-    # Snell's law
+    # the real part of n2 is used instead of the complex cosine (positive imag branch)
     mu2 = np.sqrt(np.maximum(1 - kiz2 / n2.real**2, 0.0))
 
     return rv, rh, tv, th, mu2
 
 
-def fresnel_reflection_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu, mu_medium="1"):
+def fresnel_reflection_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2, mu1=None, *, mu0=None):
     """Compute the reflection in two polarizations (H and V) for lossy media with the "rigorous Fresnel" based
     on Maezawa, H., & Miyauchi, H. (2009). Rigorous expressions for the Fresnel equations at interfaces between
     absorbing media. Journal of the Optical Society of America A, 26(2), 330. https://doi.org/10.1364/josaa.26.000330
@@ -344,10 +364,11 @@ def fresnel_reflection_coefficients_maezawa09_rigorous_full_output(eps_1, eps_2,
     n1 = np.sqrt(eps_1)
     n2 = np.sqrt(eps_2)
 
-    if mu_medium == "1":
-        kiz2 = n1.real**2 * (1 - mu**2)  # this the square of kiz = n1 * sin(theta)
-    elif mu_medium == "void":
-        kiz2 = 1 - mu**2  # this the square of kiz = sin(theta0)
+    if mu1 is not None:
+        assert mu0 is None
+        kiz2 = n1.real**2 * (1 - mu1**2)  # this the square of kiz = n1 * sin(theta)
+    elif mu0 is not None:
+        kiz2 = 1 - mu0**2  # this the square of kiz = sin(theta0)
     else:
         raise SMRTError("mu_medium must be either '1' or 'void'")
 
@@ -490,7 +511,7 @@ def brewster_angle(eps_1, eps_2):
         angle: float
             brewster angle in radians.
     """
-    return np.arctan(np.sqrt(eps_2 / eps_1).real)
+    return np.arctan(np.sqrt(eps_2.real / eps_1.real))
 
 
 def fresnel_matrix(eps_1, eps_2, mu1, npol) -> tuple[smrt_matrix, smrt_matrix, np.ndarray]:
