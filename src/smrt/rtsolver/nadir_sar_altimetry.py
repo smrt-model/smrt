@@ -424,16 +424,17 @@ class NadirSARAltimetry(object):
             # either None=nothing
             # either use a sigma0 function
             # or a multiplicative factor
+            # it also contains the backscatter (if relevant) and the interface number to which the action applies
             actions = []
 
             for backscatt in (backscatter_i, coh_backscatter_i):  # iterate over the incoherent and coherent components
                 for i, interface in enumerate(self.all_interfaces):  # iterate over the interfaces
                     if np.all(backscatt[:, i] == 0):
                         # no backscatter... skip the complex calculations of the DDM
-                        actions.append((None, None))
+                        actions.append((None, None, i))
                     elif np.all(backscatt[:, i] == backscatt[0, i]):  # all backscatter are equal ?
                         # no need to use a function for sigma0. The DDM for the volume can be used
-                        actions.append(("mul", backscatt[0, i]))
+                        actions.append(("mul", backscatt[0, i], i))
                     else:
                         # need to define a function able to compute the backscatter for any theta. We use interpolation
                         # i.e. mu = np.cos(theta)
@@ -444,11 +445,11 @@ class NadirSARAltimetry(object):
                             backscatter_map = np.interp(-mu, -mu_i, bs)
                             return backscatter_map
 
-                        actions.append(("func", sigma0))
+                        actions.append(("func", sigma0, i))
 
             # compute the ddm for all sigma0
             ddm_list = self.delay_doppler_model.delay_doppler_map_with_sigma0func(  # type: ignore
-                terrain_info=self.terrain_info, sigma0=[1] + [func for action, func in actions if action == "func"]
+                terrain_info=self.terrain_info, sigma0=[1] + [func for action, func, i in actions if action == "func"]
             )  # [1] is for the volume and the surface with constant backscatter. It is very important!
 
             # convolve the ddm with the volume backscatter
@@ -456,18 +457,18 @@ class NadirSARAltimetry(object):
 
             # for each interface calculate the ddm
             j = 1  # index in the ddm_list (start at the first calculated interface)
-
             # merge the ddms (first incoherent, second coherent)
             all_ddm_i = ddm_i + coh_ddm_i
-            for i, (action, param) in enumerate(actions):  # loop over the actions in the same order
+            for i, (action, param, interface_index) in enumerate(actions):  # loop over the actions in the same order
                 if action == "func":  # a specific DDM has been calculated for this interface
-                    all_ddm_i[i] = shift_ddm(ddm_list[j], self.t_interface[i])
+                    # shift the DDM to the right time
+                    all_ddm_i[i] = shift_ddm(ddm_list[j], self.t_interface[interface_index])
                     j += 1  # increment the index of calculated function
                 elif action == "mul":  # all backscatter are equal
                     # use the DDM for the volume (without dependency can be used here) and the mulfactor
-                    all_ddm_i[i] = shift_ddm(param * ddm_list[0], self.t_interface[i])
+                    all_ddm_i[i] = shift_ddm(param * ddm_list[0], self.t_interface[interface_index])
 
-            # split the incoherent and coherent
+            # split the incoherent and coherent contributions
             ddm_i, coh_ddm_i = all_ddm_i[: len(ddm_i)], all_ddm_i[len(ddm_i) :]
 
         else:
