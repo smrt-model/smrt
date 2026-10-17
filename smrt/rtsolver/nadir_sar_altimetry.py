@@ -102,12 +102,14 @@ class NadirSARAltimetry(object):
         interface backscatter (the higher the better but the more computationally expensive).
     :param theta_inc_sampling_mode: "auto" (default), "shared", "uniform", "coherent". "auto" try to automatically guess
         the best option. If set to "uniform", the incidence angles are sampled uniformly between 0 and the maximum
-        incidence angle in the footprint. However, this is insufficient if the coherent backscatter is significant.
-        If set to "shared", the incidence angles are sampled in two parts: one part is sampled uniformly between 0 and
-        the maximum incidence angle, and the other part is sampled uniformly between 0 and the maximum incidence angle.
-        If set to "coherent", the incidence angles are sampled in a way that the coherent backscatter is maximized.
-        The "auto" mode automatically selects the best mode based on the roughness of the surface and interfaces to
-        guess whether the coherent backscatter is significant or not. Use with care.
+        incidence angle in the footprint using theta_inc_sampling samples. However, this is insufficient if the
+        coherent backscatter is significant. For this use "shared", the incidence angles are sampled in two parts:
+        one part is sampled uniformly between 0 and the maximum incidence angle (theta_inc_sampling samples), and
+        the other part is sampled uniformly between 0 and the maximum incidence angle (another theta_inc_sampling
+        samples). "shared" uses 2 *theta_inc_sampling samples. If set to "coherent", the incidence angles are sampled
+        in a way that the coherent backscatter is maximized. The "auto" mode automatically selects the best mode based
+        on the roughness of the surface and interfaces to guess whether the coherent backscatter is significant or not.
+        Use with care.
     :param error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
         If set to "nan", return a nan, so the calculation can continue, but the result is of course unusable and the
         error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
@@ -824,8 +826,8 @@ def compute_incidence_sampling(mode, sensor, theta_inc_sampling, minimum_roughne
         n_uniform = 0
         n_coherent = theta_inc_sampling
     elif mode == "shared":
-        n_uniform = theta_inc_sampling // 2
-        n_coherent = theta_inc_sampling - n_uniform
+        n_uniform = theta_inc_sampling
+        n_coherent = theta_inc_sampling
     else:
         raise ValueError(f"Unknown mode {mode} for incidence angle sampling")
 
