@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 
+import smrt
 from smrt import make_interface, make_model, make_snowpack
 from smrt.core.terrain import TerrainInfo
 from smrt.inputs import altimeter_list
@@ -12,7 +13,7 @@ def reduced_cryosat2():  # reduce sensor to accelerate the computation.
     sensor = altimeter_list.cryosat2(force_circular_antenna=True)
     sensor.ngate = 8
     sensor.nominal_gate = 3
-    sensor.ndoppler = 4
+    sensor.ndoppler = 8
     return sensor
 
 
@@ -71,11 +72,31 @@ def test_wingham18(reduced_cryosat2, onelayer_snowpack):
 
 def test_landy19(reduced_cryosat2, onelayer_snowpack):
     pytest.importorskip("finufft")
+
+    # fixed seed for reproducibility; the run must be sequential, otherwise the DEM is drawn in a worker process
+    smrt.core.terrain.random_generator = np.random.default_rng(0)
+
     m = make_altim_model(
         "landy19", oversampling_time=1, oversampling_doppler=1, delay_doppler_model_options=dict(grid_space=500)
     )
-
-    m.run(reduced_cryosat2, onelayer_snowpack)
+    res = m.run(reduced_cryosat2, onelayer_snowpack, parallel_computation=False)
+    print(res.waveform())
+    np.testing.assert_allclose(
+        res.waveform(),
+        np.array(
+            [
+                3.797554e-21,
+                2.480975e-20,
+                3.678233e-20,
+                2.542715e-20,
+                2.338288e-20,
+                1.644454e-20,
+                4.500541e-22,
+                2.551174e-22,
+            ]
+        ),
+        rtol=1e-6,
+    )
 
 
 def test_boy17(reduced_cryosat2, onelayer_snowpack):
@@ -88,6 +109,7 @@ def test_boy17(reduced_cryosat2, onelayer_snowpack):
 
 def test_landy19_local_slope_flat_dem(reduced_cryosat2, onelayer_snowpack):
     pytest.importorskip("finufft")
+    onelayer_snowpack.terrain_info = TerrainInfo(sigma_surface=0)  # flat DEM
 
     def run(use_local_slope):
         m = make_altim_model(
@@ -96,7 +118,7 @@ def test_landy19_local_slope_flat_dem(reduced_cryosat2, onelayer_snowpack):
             oversampling_doppler=1,
             delay_doppler_model_options=dict(grid_space=500, use_local_slope=use_local_slope),
         )
-        return m.run(reduced_cryosat2, onelayer_snowpack).delay_doppler_map()
+        return m.run(reduced_cryosat2, onelayer_snowpack, parallel_computation=False).delay_doppler_map()
 
     ddm_slope = run(True)
     ddm_noslope = run(False)
@@ -130,6 +152,7 @@ def test_landy19_sigma0func_vs_constant_sigma0(reduced_cryosat2, onelayer_snowpa
             oversampling_doppler=1,
             delay_doppler_model_options=dict(grid_space=500),
         )
-        return m.run(reduced_cryosat2, onelayer_snowpack).delay_doppler_map()
+        smrt.core.terrain.random_generator = np.random.default_rng(0)  # same DEM for both runs
+        return m.run(reduced_cryosat2, onelayer_snowpack, parallel_computation=False).delay_doppler_map()
 
     np.testing.assert_allclose(run(Landy19ConstantSigma0Func).values, run(Landy19NoSigma0Func).values, rtol=1e-6)
