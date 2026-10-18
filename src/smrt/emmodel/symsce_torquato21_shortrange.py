@@ -14,7 +14,7 @@ also provides a good reference for this implementation. The only difference is i
 # local import
 from smrt.permittivity.generic_mixing_formula import polder_van_santen
 
-from .emmodel_utils import AdjustableEffectivePermittivityMixins, derived_EMModel
+from .emmodel_utils import AdjustableEffectivePermittivityMixin, derived_EMModel
 from .sce_common import SCEBase
 
 #
@@ -36,7 +36,7 @@ def derived_SymSCETK21_ShortRange(effective_permittivity_model):
     return derived_EMModel(SymSCETK21_ShortRange, effective_permittivity_model)
 
 
-class SymSCETK21_ShortRange(AdjustableEffectivePermittivityMixins, SCEBase):
+class SymSCETK21_ShortRange(AdjustableEffectivePermittivityMixin, SCEBase):
     """To be documented."""
 
     # default effective_permittivity_model is polder_van_santen according to the SymSCE theory
