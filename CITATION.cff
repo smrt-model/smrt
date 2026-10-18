@@ -1,0 +1,35 @@
+cff-version: 1.2.0
+message: "If you use SMRT, please cite the 2018 reference paper listed below."
+title: "SMRT: Snow Microwave Radiative Transfer"
+url: "https://github.com/smrt-model/smrt"
+type: software
+authors:
+  - family-names: "Picard"
+    given-names: "Ghislain"
+    orcid: "https://orcid.org/0000-0003-1475-5853"
+  - family-names: "Sandells"
+    given-names: "Melody"
+    orcid: "https://orcid.org/0000-0002-4120-5163"
+  - family-names: "Löwe"
+    given-names: "Henning"
+    orcid: "https://orcid.org/0000-0001-7515-6809"
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Picard"
+      given-names: "Ghislain"
+      orcid: "https://orcid.org/0000-0003-1475-5853"
+    - family-names: "Sandells"
+      given-names: "Melody"
+      orcid: "https://orcid.org/0000-0002-4120-5163"
+    - family-names: "Löwe"
+      given-names: "Henning"
+      orcid: "https://orcid.org/0000-0001-7515-5853"
+  title: "SMRT: an active–passive microwave radiative transfer model for snow with multiple microstructure and scattering formulations (v1.0)"
+  journal: "Geoscientific Model Development"
+  volume: 11
+  issue: 7
+  start: 2763
+  end: 2788
+  year: 2018
+  doi: "10.5194/gmd-11-2763-2018"
