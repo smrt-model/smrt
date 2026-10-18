@@ -236,6 +236,8 @@ class NadirSARAltimetry(object):
             self.all_interfaces = self.all_interfaces + [self.snowpack.substrate]  # copy and add
 
         # compute the effective permittivity
+        for emmodel in emmodels:
+            emmodel.precompute()
         self.effective_permittivity = np.array([em.effective_permittivity for em in self.emmodels])
 
         # create the DDM model

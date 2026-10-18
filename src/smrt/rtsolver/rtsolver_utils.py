@@ -47,6 +47,8 @@ class RTSolverBase(metaclass=ABCMeta):
 
         self.atmosphere = atmosphere
 
+        for emmodel in emmodels:
+            emmodel.precompute()
         self.effective_permittivity = np.array([emmodel.effective_permittivity for emmodel in emmodels])
         # self.substrate_permittivity = (
         #     self.snowpack.substrate.permittivity(self.sensor.frequency) if self.snowpack.substrate is not None else

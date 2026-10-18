@@ -226,7 +226,7 @@ def get_emmodel(emmodel):
     return emmodel
 
 
-def make_emmodel_instance(emmodel, sensor, layer, **emmodel_options):
+def make_emmodel_instance(emmodel, sensor, layer, *, precompute=True, **emmodel_options):
     """Create a new emmodel instance based on the emmodel class or string. This function used to be called
     `make_emmodel` but was renamed in SMRT v1.4 and will soon be deprecated. It is recommended to use instead::
 
@@ -242,13 +242,14 @@ def make_emmodel_instance(emmodel, sensor, layer, **emmodel_options):
             string) or a class.
         sensor: sensor to use for the calculation.
         layer: layer to use for the calculation
+        precompute: whether to precompute the emmodel or not.
         **emmodel_options: Additional arguments to pass to the emmodel constructor.
     """
     # instantiate
     emmodel = make_emmodel(emmodel)  # get the class
     if not isinstance(sensor, SensorBase):
         raise SMRTError("the first argument of 'run' must be a sensor")
-    return emmodel(sensor, layer, **emmodel_options)  # create a emmodel
+    return emmodel(sensor, layer, precompute=precompute, **emmodel_options)  # create a emmodel
 
 
 class Model(object):
@@ -543,7 +544,7 @@ class Model(object):
 
         return simulations, dimensions
 
-    def prepare_emmodels(self, sensor, snowpack):
+    def prepare_emmodels(self, sensor, snowpack, precompute=False):
         """Return emmodels instances for each layer.
 
         Args:
@@ -590,7 +591,7 @@ class Model(object):
         # create a list of emmodel instances (ready to run)
         # take from the arguments unless it is defined in the layer
         emmodel_instances = [
-            make_emmodel_instance(emmodel, sensor, layer, **emmodel_options)
+            make_emmodel_instance(emmodel, sensor, layer, precompute=precompute, **emmodel_options)
             for emmodel, emmodel_options, layer in zip(
                 emmodel_list, emmodel_options_list, snowpack.layers, strict=False
             )
@@ -608,7 +609,8 @@ class Model(object):
         """
         sensor, snowpack = simulation
 
-        emmodel_instances = self.prepare_emmodels(sensor, snowpack)
+        precompute = self.rtsolver is None  # precompute if we don't have a rtsolver to do it.
+        emmodel_instances = self.prepare_emmodels(sensor, snowpack, precompute=precompute)
 
         if self.rtsolver is not None:
             # need to create the rtsolver ?

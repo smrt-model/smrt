@@ -120,6 +120,8 @@ class NadirLRMAltimetry(object):
         self.emmodels = emmodels
         self.sensor = sensor  # setting this make this solver incompatible with // computing
         self.waveform_model = self.waveform_model_class(sensor)
+        for emmodel in emmodels:
+            emmodel.precompute()
 
         # do we compute the surface and interface backscatter at nadir only or for several incidence angles ?
         if self.theta_inc_sampling > 1:

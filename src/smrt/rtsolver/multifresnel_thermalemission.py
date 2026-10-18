@@ -103,6 +103,8 @@ class MultiFresnelThermalEmission(object):
 
         thickness = snowpack.layer_thicknesses
         temperature = snowpack.profile("temperature")
+        for emmodel in emmodels:
+            emmodel.precompute()
         effective_permittivity = [emmodel.effective_permittivity for emmodel in emmodels]
 
         if snowpack.substrate is not None:
