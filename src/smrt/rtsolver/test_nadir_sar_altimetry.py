@@ -155,4 +155,8 @@ def test_landy19_sigma0func_vs_constant_sigma0(reduced_cryosat2, onelayer_snowpa
         smrt.core.terrain.random_generator = np.random.default_rng(0)  # same DEM for both runs
         return m.run(reduced_cryosat2, onelayer_snowpack, parallel_computation=False).delay_doppler_map()
 
-    np.testing.assert_allclose(run(Landy19ConstantSigma0Func).values, run(Landy19NoSigma0Func).values, rtol=1e-6)
+    res_cst = run(Landy19ConstantSigma0Func).values
+    res_nosigma0 = run(Landy19NoSigma0Func).values
+
+    assert np.any(res_cst > 0)
+    np.testing.assert_allclose(res_cst, res_nosigma0, rtol=1e-6)
