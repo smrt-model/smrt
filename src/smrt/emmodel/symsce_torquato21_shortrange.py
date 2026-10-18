@@ -42,5 +42,5 @@ class SymSCETK21_ShortRange(AdjustableEffectivePermittivityMixins, SCEBase):
     # default effective_permittivity_model is polder_van_santen according to the SymSCE theory
     effective_permittivity_model = staticmethod(polder_van_santen)
 
-    def __init__(self, sensor, layer, scaled=True):
-        super().__init__(sensor, layer, symmetrical=True, local=True, scaled=scaled)
+    def __init__(self, sensor, layer, *, precompute=True, scaled=True):
+        super().__init__(sensor, layer, symmetrical=True, local=True, scaled=scaled, precompute=precompute)

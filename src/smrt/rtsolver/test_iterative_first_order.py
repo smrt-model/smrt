@@ -107,8 +107,8 @@ def test_infinite_pack(setup_inf_snowpack):
     mu = np.cos(sensor.theta)
     emmodels = IBA(sensor, sp.layers[0])
     # direct backscatter (phase function * 1 * dense snow factor)
-    specific_intensity_conversion = (1 / emmodels.effective_permittivity().real) * (
-        mu / snell_angle(1, emmodels.effective_permittivity().real, mu)
+    specific_intensity_conversion = (1 / emmodels.effective_permittivity.real) * (
+        mu / snell_angle(1, emmodels.effective_permittivity.real, mu)
     )
     phase = emmodels.phase(-mu, mu, np.pi, 2).values.squeeze() * specific_intensity_conversion
 

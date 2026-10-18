@@ -336,7 +336,7 @@ class NadirLRMAltimetry(object):
         # """return gate depth that cover the snowpack for a regular time sampling"""
 
         if eps is None:
-            eps = [em.effective_permittivity().real for em in self.emmodels]
+            eps = [em.effective_permittivity.real for em in self.emmodels]
 
         c_lay = C_SPEED / np.sqrt(eps).real
         t_lay = 2 * np.cumsum(self.snowpack.layer_thicknesses / c_lay)
@@ -383,7 +383,7 @@ class NadirLRMAltimetry(object):
         mu_i = np.atleast_1d(mu_i)
 
         # propagation time
-        eps = np.array([em.effective_permittivity().real for em in self.emmodels])
+        eps = np.array([em.effective_permittivity.real for em in self.emmodels])
 
         # compute the merged depth grid including gates and layers
         z_top, dz, b_gate, b_layer, b_interface = self.combined_depth_grid()

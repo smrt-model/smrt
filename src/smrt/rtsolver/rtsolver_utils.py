@@ -47,7 +47,7 @@ class RTSolverBase(metaclass=ABCMeta):
 
         self.atmosphere = atmosphere
 
-        self.effective_permittivity = np.array([emmodel.effective_permittivity() for emmodel in emmodels])
+        self.effective_permittivity = np.array([emmodel.effective_permittivity for emmodel in emmodels])
         # self.substrate_permittivity = (
         #     self.snowpack.substrate.permittivity(self.sensor.frequency) if self.snowpack.substrate is not None else
         # None
@@ -384,7 +384,7 @@ def prepare_kskaeps_profile_information(snowpack, emmodels, effective_permittivi
         mu: cosine angles where to compute ks.
     """
     if effective_permittivity is None:
-        effective_permittivity = np.array([emmodel.effective_permittivity() for emmodel in emmodels])
+        effective_permittivity = np.array([emmodel.effective_permittivity for emmodel in emmodels])
 
     # store other diagnostic information
     layer_index = "layer", range(len(emmodels))

@@ -266,8 +266,8 @@ class AdjustableEffectivePermittivityMixin(object):
 
     """
 
-    def effective_permittivity(self):
-        """Calculation of complex effective permittivity of the medium.
+    def compute_effective_permittivity(self):
+        """Compute the complex effective permittivity of the medium.
 
         :returns effective_permittivity: complex effective permittivity of the medium
 
@@ -275,10 +275,10 @@ class AdjustableEffectivePermittivityMixin(object):
         # eps = type(self).effective_permittivity_model(
         #    self.frac_volume, self.e0, self.eps, self.depol_xyz, self.inclusion_shape)
 
-        effective_permittivity_model = type(self).effective_permittivity_model
+        eps_model = type(self).effective_permittivity_model
 
         # inspect the signature of the effective_permittivity_model
-        signature = inspect.signature(effective_permittivity_model).parameters
+        signature = inspect.signature(eps_model).parameters
         args = dict(e0=self.e0, eps=self.eps, frequency=self.frequency)
         args = {k: v for k, v in args.items() if k in signature}  # filter the arguments needed by the function
 
@@ -286,11 +286,12 @@ class AdjustableEffectivePermittivityMixin(object):
         if eps.imag < -1e-10:
             print(eps)
             raise SMRTError("the imaginary part of the permittivity must be positive, by convention, in SMRT")
-        return eps
+
+        self.effective_permittivity = eps
 
 
 def derived_EMModel(base_class, effective_permittivity_model):
-    """Return a new IBA/SCE model with variant from the default IBA/SCE.
+    """Return a new IBA/SCE model with a different effective permittivity model from the default IBA/SCE.
 
     :param effective_permittivity_model: permittivity mixing formula.
 

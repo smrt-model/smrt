@@ -18,11 +18,20 @@ from .rayleigh import Rayleigh
 class Prescribed_KsKaEps(Rayleigh):
     """ """
 
-    def __init__(self, sensor, layer):
+    def __init__(self, sensor, layer, *, precompute=True):
         # super().__init__()  # must not be called. Todo: write a generic RayleighBase object with phase function
         # methods only
+        self.sensor = sensor
+        self.layer = layer
 
-        self._effective_permittivity = layer.effective_permittivity
+        if precompute:
+            self.precompute()
+
+    def precompute(self):
+        layer = self.layer
+
+        self.effective_permittivity = layer.effective_permittivity
 
         self._ks = layer.ks
         self.ka = layer.ka
+        return self

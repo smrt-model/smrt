@@ -26,15 +26,21 @@ from .sce_common import SCEBase
 class SCER08(SCEBase):
     """To be documented."""
 
-    def __init__(self, sensor, layer):
-        super().__init__(sensor, layer)
+    def __init__(self, sensor, layer, *, precompute=True):
+        super().__init__(sensor, layer, precompute=precompute)
+
+    def precompute(self):
+        super().precompute()
+        # SCEBase.precompute is not used here: this model has its own scheme.
+
+        self.k1 = self.k0 * np.sqrt(self.e0)
+        self.k2 = self.k0 * np.sqrt(self.eps)
 
         self.A2 = self.compute_A2(self.k1, self.microstructure)
         self._ke, self.ks = self.compute_ke_ks()
 
-        self._effective_permittivity = self.effective_permittivity()
-
         self.ka = self.compute_ka()
+        return self
 
         # another way:
         # self.eps, self.e0 = self.eps.real, self.e0.real
@@ -72,11 +78,10 @@ class SCER08(SCEBase):
 
         return ke, ke - 2 * self.k0 * np.sqrt(Eeff0).imag
 
-    def effective_permittivity(self):
-        """Calculation of complex effective permittivity of the medium,
-        which is given by Maxwell Garnet in the case of Rechtsman and Torquato, 2008
+    def compute_effective_permittivity(self):
+        """Compute the complex effective permittivity of the medium.
 
-        Returns:
-            float: Effective permittivity.
+        :returns effective_permittivity: complex effective permittivity of the medium
+
         """
-        return maxwell_garnett_for_spheres(self.frac_volume, self.e0, self.eps)
+        self.effective_permittivity = maxwell_garnett_for_spheres(self.frac_volume, self.e0, self.eps)

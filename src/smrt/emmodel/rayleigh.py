@@ -18,17 +18,24 @@ from .emmodel_utils import IsotropicScatteringMixin, rayleigh_scattering_matrix_
 class Rayleigh(IsotropicScatteringMixin):
     """ """
 
-    def __init__(self, sensor, layer):
+    def __init__(self, sensor, layer, *, precompute=True):
         super().__init__()
+        self.sensor = sensor
+        self.layer = layer
+
+        if precompute:
+            self.precompute()
+
+    def precompute(self):
+        sensor = self.sensor
+        layer = self.layer
 
         # check here the limit of the Rayleigh model
-
-        f = layer.frac_volume
 
         e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
         eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
 
-        self._effective_permittivity = e0  # Rayleigh is for sparse medium only
+        self.effective_permittivity = e0  # Rayleigh is for sparse medium only
 
         # TODO Ghi: solve the problem of dielectric constant dependency. Which object is responsible of running
         # Probably the emmodule
@@ -36,6 +43,7 @@ class Rayleigh(IsotropicScatteringMixin):
         radius = layer.microstructure.radius
 
         k0 = WAVENUMBER_PER_HZ * sensor.frequency * np.sqrt(e0)
+        f = layer.frac_volume
 
         self._ks = f * 2 * abs((eps - e0) / (eps + 2 * e0)) ** 2 * radius**3 * abs(e0) ** 2 * k0**4
         self.ka = f * k0 * eps.imag * abs(3 * e0 / (eps + 2 * e0)) ** 2 + (1 - f) * 2 * k0 * np.sqrt(e0).imag
@@ -307,6 +315,3 @@ class Rayleigh(IsotropicScatteringMixin):
         p, sin_half_scatt = rayleigh_scattering_matrix_and_angle(mu_s, mu_i, dphi, npol)
 
         return smrt_matrix(1.5 * self._ks * p)
-
-    def effective_permittivity(self):
-        return self._effective_permittivity

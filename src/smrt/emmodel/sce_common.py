@@ -5,6 +5,8 @@ It is not to be used by the end-user.
 # Stdlib import
 
 # other import
+from abc import ABC, abstractmethod
+
 import numpy as np
 import scipy.integrate
 
@@ -20,33 +22,37 @@ from .emmodel_utils import (
 )
 
 
-class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
-    def __init__(self, sensor, layer, local=False, symmetrical=False, scaled=True):
-        # set value of interest in self and that's it. No calculation is involved here.
+class SCEBase(ABC, IsotropicScatteringMixin, GenericFTPhaseMixin):
+    def __init__(self, sensor, layer, *, precompute=True, local=False, symmetrical=False, scaled=True):
+        self.sensor = sensor
+        self.layer = layer
+        self.local = local
+        self.symmetrical = symmetrical
+        self.scaled = scaled
+
+        self.frequency = sensor.frequency
+        self.k0 = WAVENUMBER_PER_HZ * sensor.frequency  # Wavenumber in free space
 
         # Set size of phase matrix: active needs an extended phase matrix
-        if sensor.mode == "P":
-            self.npol = 2
-        else:
-            self.npol = 3
+        self.npol = 2 if sensor.mode == "P" else 3
+
+        if precompute:
+            self.precompute()
+
+    def precompute(self):
+        sensor = self.sensor
+        layer = self.layer
 
         # Bring layer and sensor properties into emmodel
-        self.layer = layer
         self.frac_volume = layer.frac_volume
         self.microstructure = layer.microstructure  # Do this here, so can pass FT of correlation fn to phase function
         self.e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
         self.eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
-        self.frequency = sensor.frequency
-        self.k0 = WAVENUMBER_PER_HZ * sensor.frequency  # Wavenumber in free space
 
         self.k1 = self.k0 * np.sqrt(self.e0)
         self.k2 = self.k0 * np.sqrt(self.eps)
 
-        self._effective_permittivity = self.effective_permittivity()
-
-        self.symmetrical = symmetrical
-        self.local = local
-        self.scaled = scaled
+        self.compute_effective_permittivity()
 
         if self.symmetrical:
             self.A2A2inv = self.compute_A2A2inv()
@@ -83,7 +89,7 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
             #
             # k_symHS = self.k0 * np.sqrt(eps_symHS)
 
-            k_symHS = self.k0 * np.sqrt(self._effective_permittivity)
+            k_symHS = self.k0 * np.sqrt(self.effective_permittivity)
 
             A2 = self.compute_A2(k_symHS, self.microstructure)
             A2inv = self.compute_A2(k_symHS, inverted_microstructure)
@@ -186,7 +192,7 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         # Calculate wavevector difference
         sintheta_2 = np.sqrt((1.0 - mu) / 2.0)  # = np.sin(theta / 2.)
 
-        k_diff = np.asarray(2.0 * self.k0 * sintheta_2 * np.abs(np.sqrt(self._effective_permittivity)))
+        k_diff = np.asarray(2.0 * self.k0 * sintheta_2 * np.abs(np.sqrt(self.effective_permittivity)))
 
         # Calculate microstructure term
         if hasattr(self.microstructure, "ft_autocorrelation_function"):
@@ -219,7 +225,7 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
         p, sin_half_scatt = rayleigh_scattering_matrix_and_angle(mu_s, mu_i, dphi, npol)
 
         # IBA phase function = rayleigh phase function * angular part of microstructure term
-        k_diff = 2.0 * self.k0 * np.sqrt(self._effective_permittivity) * sin_half_scatt
+        k_diff = 2.0 * self.k0 * np.sqrt(self.effective_permittivity) * sin_half_scatt
 
         # Calculate microstructure term
         if hasattr(self.microstructure, "ft_autocorrelation_function"):
@@ -245,7 +251,11 @@ class SCEBase(IsotropicScatteringMixin, GenericFTPhaseMixin):
             This may not be suitable for high density material
 
         """
-        return 2 * self.k0 * np.sqrt(self._effective_permittivity).imag
+        return 2 * self.k0 * np.sqrt(self.effective_permittivity).imag
+
+    @abstractmethod
+    def compute_effective_permittivity(self):
+        raise NotImplementedError()
 
 
 def compute_A2_local(Q, microstructure):

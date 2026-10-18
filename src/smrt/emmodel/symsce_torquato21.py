@@ -41,5 +41,5 @@ def derived_SymSCETK21(effective_permittivity_model):
 class SymSCETK21(AdjustableEffectivePermittivityMixin, SCEBase):
     effective_permittivity_model = staticmethod(polder_van_santen)
 
-    def __init__(self, sensor, layer, scaled=True):
-        super().__init__(sensor, layer, local=False, symmetrical=True, scaled=scaled)
+    def __init__(self, sensor, layer, *, precompute=True, scaled=True):
+        super().__init__(sensor, layer, local=False, symmetrical=True, scaled=scaled, precompute=precompute)

@@ -62,11 +62,21 @@ class DMRT_QCA_ShortRange(Rayleigh):
         should be developed in the future.
     """
 
-    def __init__(self, sensor, layer, dense_snow_correction="auto"):
+    def __init__(self, sensor, layer, *, precompute=True, dense_snow_correction="auto"):
         # super().__init__()  # must not be called. Todo: write a generic RayleighBase object with phase function
         # methods only
+        self.sensor = sensor
+        self.layer = layer
+        self.dense_snow_correction = dense_snow_correction
 
-        if layer.frac_volume > 0.5 and dense_snow_correction == "auto":
+        if precompute:
+            self.precompute()
+
+    def precompute(self):
+        sensor = self.sensor
+        layer = self.layer
+
+        if layer.frac_volume > 0.5 and self.dense_snow_correction == "auto":
             layer = layer.inverted_medium()
 
         f = layer.frac_volume
@@ -107,7 +117,7 @@ class DMRT_QCA_ShortRange(Rayleigh):
                 "Mie calculations."
             )
 
-        self._effective_permittivity = Eeff
+        self.effective_permittivity = Eeff
         self._ks = Ks
         self.ka = beta - self._ks
 
@@ -124,7 +134,3 @@ class DMRT_QCA_ShortRange(Rayleigh):
     # The ke function is inherited from Rayleigh  // Don't remove the commented code
     # def ke(self, mhu):
     #    return np.full(2*len(mhu), self.ks+self.ka)
-
-    # The effective_permittivity is inherited from Rayleigh  // Don't remove the commented code
-    # def effective_permittivity(self):
-    #    return self._effective_permittivity

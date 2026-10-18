@@ -82,17 +82,29 @@ class IBA(AdjustableEffectivePermittivityMixin, IsotropicScatteringMixin, Generi
     # default effective_permittivity_model is polder_van_santen in Matzler 1998 and Matzler&Wiesman 1999
     effective_permittivity_model = staticmethod(polder_van_santen)
 
-    def __init__(self, sensor, layer, dense_snow_correction=None):
+    def __init__(self, sensor, layer, *, precompute=True, dense_snow_correction=None):
         super().__init__()
 
+        self.sensor = sensor
+        self.layer = layer
+        self.dense_snow_correction = dense_snow_correction
+        self.frequency = sensor.frequency
+        self.k0 = WAVENUMBER_PER_HZ * sensor.frequency
+
         # Set size of phase matrix: active needs an extended phase matrix
-        if sensor.mode == "P":
-            self.npol = 2
-        else:
-            self.npol = 3
+        self.npol = 2 if sensor.mode == "P" else 3
+
+        if precompute:
+            self.precompute()
+
+    def precompute(self):
+        """Compute the effective permittivity, absorption and scattering coefficients."""
+
+        sensor = self.sensor
+        layer = self.layer
 
         # Bring layer and sensor properties into emmodel
-        if layer.frac_volume > 0.5 and dense_snow_correction == "auto":
+        if layer.frac_volume > 0.5 and self.dense_snow_correction == "auto":
             layer = layer.inverted_medium()
 
         self.layer = layer
@@ -108,8 +120,6 @@ become a default in the future.""")
         self.microstructure = layer.microstructure  # Do this here, so can pass FT of correlation fn to phase function
         self.e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
         self.eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
-        self.frequency = sensor.frequency
-        self.k0 = WAVENUMBER_PER_HZ * sensor.frequency
         self.inclusion_shape = layer.inclusion_shape  # for assuming spherical or ellipsoidal inclusions
 
         # Calculate depolarization factors and iba_coefficient
@@ -122,7 +132,10 @@ become a default in the future.""")
             self.depol_xyz = depolarization_factors_spheroids(getattr(layer, "length_ratio", None))
         # default depol_xyz is spheres
 
-        self._effective_permittivity = self.effective_permittivity()
+        # compute effective permittivity with the selected mixing formula
+        self.compute_effective_permittivity()
+
+        # compute the angular independent IBA coefficient
         self.iba_coeff = self.compute_iba_coeff()
 
         # Absorption coefficient for general lossy medium under assumption of low-loss medium.
@@ -155,7 +168,7 @@ become a default in the future.""")
         Uses layer effective permittivity.
 
         """
-        apparent_permittivity = self._effective_permittivity * (1 - self.depol_xyz) + self.e0 * self.depol_xyz
+        apparent_permittivity = self.effective_permittivity * (1 - self.depol_xyz) + self.e0 * self.depol_xyz
         y2 = (1.0 / 3.0) * np.sum(
             np.absolute(apparent_permittivity / (apparent_permittivity + (self.eps - self.e0) * self.depol_xyz)) ** 2.0
         )
@@ -207,7 +220,7 @@ become a default in the future.""")
         # Calculate wavevector difference
         sintheta_2 = np.sqrt((1.0 - mu) / 2.0)  # = np.sin(theta / 2.)
 
-        k_diff = np.asarray(2.0 * self.k0 * sintheta_2 * abs(np.sqrt(self._effective_permittivity)))
+        k_diff = np.asarray(2.0 * self.k0 * sintheta_2 * abs(np.sqrt(self.effective_permittivity)))
 
         # Calculate microstructure term
         if hasattr(self.microstructure, "ft_autocorrelation_function"):
@@ -230,7 +243,7 @@ become a default in the future.""")
         p, sin_half_scatt = rayleigh_scattering_matrix_and_angle(mu_s, mu_i, dphi, npol)
 
         # IBA phase function = rayleigh phase function * angular part of microstructure term
-        k_diff = 2.0 * self.k0 * np.sqrt(self._effective_permittivity).real * sin_half_scatt
+        k_diff = 2.0 * self.k0 * np.sqrt(self.effective_permittivity).real * sin_half_scatt
 
         # Calculate microstructure term
         if hasattr(self.microstructure, "ft_autocorrelation_function"):
@@ -262,23 +275,24 @@ become a default in the future.""")
         # PvS is also now recommended by Christian Matzler and has been implemented in MEMLS modified for sea-ice.
         # This is therefore the default in SMRT. The fully MEMLS compatible IBA is in iba_original.py
 
-        return 2 * self.k0 * np.sqrt(self._effective_permittivity).imag
+        return 2 * self.k0 * np.sqrt(self.effective_permittivity).imag
 
 
 class IBA_MM(IBA):
     # Undocumented: this is test code for comparison with MEMLS, and may be removed from later versions.
 
-    def __init__(self, sensor, layer):
+    def __init__(self, sensor, layer, *, precompute=True):
+        IBA.__init__(self, sensor, layer, precompute=precompute)
+
+    def precompute(self):
         # Gives all IBA parameters. Some need to be recalculated (effective permittivity, scattering and absorption
         # coefficients):
-        IBA.__init__(self, sensor, layer)
-
-        self._effective_permittivity = polder_van_santen(self.frac_volume, e0=1, eps=3.185)
+        IBA.precompute(self)
 
         # Imaginary component for effective permittivity from Wiesmann and Matzler (1999)
         y2 = self.mean_sq_field_ratio(self.e0, self.eps)
-        effective_permittivity_imag = self.frac_volume * self.eps.imag * y2 * np.sqrt(self._effective_permittivity)
-        self._effective_permittivity = self._effective_permittivity + 1j * effective_permittivity_imag
+        effective_permittivity_imag = self.frac_volume * self.eps.imag * y2 * np.sqrt(self.effective_permittivity)
+        self.effective_permittivity = self.effective_permittivity + 1j * effective_permittivity_imag
 
         self.iba_coeff = self.compute_iba_coeff()
         ks_int, ks_err = scipy.integrate.quad(self._mm_integrand, 0, np.pi)
@@ -288,7 +302,7 @@ class IBA_MM(IBA):
 
     def _mm_integrand(self, theta):
         # Calculate wavevector difference
-        k_diff = np.asarray(2.0 * self.k0 * np.sin(theta / 2.0) * np.sqrt(self._effective_permittivity).real)
+        k_diff = np.asarray(2.0 * self.k0 * np.sin(theta / 2.0) * np.sqrt(self.effective_permittivity).real)
 
         # Calculate microstructure term
         if hasattr(self.microstructure, "ft_autocorrelation_function"):
@@ -304,3 +318,11 @@ class IBA_MM(IBA):
         ks_int = p_mm * np.sin(theta)
 
         return ks_int.real
+
+    def compute_effective_permittivity(self):
+        """Compute the complex effective permittivity of the medium.
+
+        :returns effective_permittivity: complex effective permittivity of the medium
+
+        """
+        self.effective_permittivity = polder_van_santen(self.frac_volume, e0=1, eps=3.185)

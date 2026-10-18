@@ -42,5 +42,5 @@ class SCETK21_ShortRange(AdjustableEffectivePermittivityMixin, SCEBase):
     # default effective_permittivity_model is maxwell_garnett according to the SCE theory
     effective_permittivity_model = staticmethod(maxwell_garnett_for_spheres)
 
-    def __init__(self, sensor, layer, scaled=True):
-        super().__init__(sensor, layer, local=True, symmetrical=False, scaled=scaled)
+    def __init__(self, sensor, layer, *, precompute=True, scaled=True):
+        super().__init__(sensor, layer, local=True, symmetrical=False, scaled=scaled, precompute=precompute)

@@ -17,21 +17,29 @@ from .emmodel_utils import IsotropicScatteringMixin, extinction_matrix
 class NonScattering(IsotropicScatteringMixin):
     """ """
 
-    def __init__(self, sensor, layer):
+    def __init__(self, sensor, layer, *, precompute=True):
+        self.sensor = sensor
+        self.layer = layer
         self.frac_volume = layer.frac_volume
-
-        self.e0 = layer.permittivity(0, sensor.frequency)  # background permittivity
-        self.eps = layer.permittivity(1, sensor.frequency)  # scatterer permittivity
-
-        # effective permittivity using the classical polder van santen
-        self._effective_permittivity = polder_van_santen(self.frac_volume, self.e0, self.eps)
-
-        # Wavenumber in free space
         self.k0 = WAVENUMBER_PER_HZ * sensor.frequency  # Wavenumber in free space
 
-        self.ka = 2 * self.k0 * np.sqrt(self.effective_permittivity()).imag
+        if precompute:
+            self.precompute()
+
+    def precompute(self):
+        freq = self.sensor.frequency
+        layer = self.layer
+
+        self.e0 = layer.permittivity(0, freq)  # background permittivity
+        self.eps = layer.permittivity(1, freq)  # scatterer permittivity
+
+        # effective permittivity using the classical polder van santen
+        self.effective_permittivity = polder_van_santen(self.frac_volume, self.e0, self.eps)
+
+        self.ka = 2 * self.k0 * np.sqrt(self.effective_permittivity).imag
         # no scattering
         self._ks = 0
+        return self
 
     def basic_check(self):
         # Need to be defined
@@ -78,11 +86,3 @@ class NonScattering(IsotropicScatteringMixin):
 
     def ke(self, mu, npol=2):
         return extinction_matrix(self.ka, mu=mu, npol=npol)
-
-    def effective_permittivity(self):
-        # very basic mixing formula. It is recommended to use either with frac_volume=0 or 1 a better mixings when
-        # available.
-        # return self.e0 * (1 - self.frac_volume) + self.eps * self.frac_volume
-
-        # change to polder von santen
-        return self._effective_permittivity

@@ -101,7 +101,7 @@ def format_vars(lay, show_vars, delimiter=" "):
 class CosineComputor(object):
     # this class mimics a RT solver but only do very basic computation and return the cosine angle instead of radiances
     def solve(self, snowpack, emmodel_instances, sensor, atmosphere):
-        eps = np.array([emmodel.effective_permittivity() for emmodel in emmodel_instances])
+        eps = np.array([emmodel.effective_permittivity for emmodel in emmodel_instances])
         n = [1] + list(np.real(np.sqrt(eps)))
 
         sensor_in_layer = getattr(sensor, "in_layer", None)

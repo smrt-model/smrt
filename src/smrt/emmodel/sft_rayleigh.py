@@ -16,9 +16,9 @@ from .rayleigh import Rayleigh
 class SFT_Rayleigh(Rayleigh):
     """ """
 
-    def __init__(self, sensor, layer):
-        # super().__init__()  # must not be called. Todo: write a generic RayleighBase object with phase function
-        # methods only
+    def precompute(self):
+        sensor = self.sensor
+        layer = self.layer
 
         # check here the limit of the Rayleigh model
 
@@ -32,8 +32,8 @@ class SFT_Rayleigh(Rayleigh):
 
         corr_length = layer.microstructure.corr_length
 
-        self._effective_permittivity = polder_van_santen(f, eb, es)
-        eg = self._effective_permittivity  # short
+        self.effective_permittivity = polder_van_santen(f, eb, es)
+        eg = self.effective_permittivity  # short
         kg = k0 * np.sqrt(eg / e0)
 
         delta = 9 * eg**2 / e0**2 * (f * ((es - eg) / (es + 2 * eg)) ** 2 + (1 - f) * ((eb - eg) / (eb + 2 * eg)) ** 2)
