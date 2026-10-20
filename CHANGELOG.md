@@ -10,7 +10,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+	- add a precompute method to all emmodels, to separate initialization from computation
+	- change the substrate class to converge to interface+layer
+	- remove the emissivity_matrix method in the substrates
+	- rename and duplicate some fresnel functions for a smoother numba jit
+
 ### Bug
+	- fix several computational bugs in the SAR altimetry related to the computation of the incidence sampling
+	and delays. This only affected Landy19 and Boy17.
 
 ## [v1.7]
 ### Added

@@ -19,6 +19,10 @@ def test_reflector_backscattering():
     # Substrate: same for both sample locations. Permittivity is irrelevant parameter
     backscatter_reflector = make_reflector(specular_reflection=0, backscattering_coefficient=backscattering_coefficient)
 
+    assert backscatter_reflector.temperature == 273.15, (
+        "The temperature of the backscatter reflector should be 273.15 K"
+    )
+
     snowpack = make_snowpack(
         thickness, "homogeneous", density=density, temperature=temperature, substrate=backscatter_reflector
     )

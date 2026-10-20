@@ -68,7 +68,6 @@ class Layer(object):
                 Override the default emmodel_options in make_model.
             **kwargs: Additional parameters for the layer or microstructure model.
         """
-        super().__init__()
 
         self.thickness = thickness
 

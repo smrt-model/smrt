@@ -51,11 +51,12 @@ import numpy as np
 from smrt import SMRTError
 
 # local import
+from smrt.core.globalconstants import FREEZING_POINT
 from smrt.core.interface import Substrate
 from smrt.core.lib import smrt_matrix
 
 
-def make_reflector(temperature=None, specular_reflection=None, backscattering_coefficient=None):
+def make_reflector(temperature=FREEZING_POINT, specular_reflection=None, backscattering_coefficient=None):
     """Construct a reflector or absorber instance."""
     # create the instance
     return ReflectorBackscatter(

@@ -34,7 +34,7 @@ def test_make_soil():
 def test_make_soil_default_permittivity():
     substrate = make_soil_substrate("flat")
 
-    assert substrate.permittivity_model.__name__ == "soil_permittivity_dobson85_peplinski95"
+    assert substrate.permittivity_model[1].__name__ == "soil_permittivity_dobson85_peplinski95"
 
 
 def test_make_soil_column(soil_parameters):

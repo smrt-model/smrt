@@ -8,10 +8,13 @@ rather than the class constructor.
 
 import inspect
 import itertools
-import numbers
+
+import numpy as np
 
 from smrt.core import lib
 from smrt.core.error import SMRTError
+from smrt.core.globalconstants import FREEZING_POINT
+from smrt.core.layer import Layer
 from smrt.core.plugin import import_class
 
 
@@ -83,87 +86,47 @@ class Interface(object):
             setattr(self, arg, kwargs.get(arg, self.optional_args[arg]))
 
 
-class SubstrateBase(object):
-    """Abstract class for substrate at the bottom of the snowpack.
+class SubstrateBase(Layer):
+    # a SubstrateBase is a Layer with infinite thickness and fraction volume 1.
+    # to become a substrate, it must also be an interface, so it can be used as a substrate in the RT solver.
+    def __init__(self, temperature=FREEZING_POINT, permittivity_model=None, **kwargs):
+        super().__init__(
+            thickness=np.inf,
+            frac_volume=1,
+            temperature=temperature,
+            permittivity_model=[1, permittivity_model],  # layers need two permittivity values
+            **kwargs,
+        )
+        self.microstructure = None  # a substrate has no microstructure, it is a homogeneous layer
 
-    It provides calculation of the permittivity constant for soil case. Argument handline is delegated to the instance
-    of the interface.
+    def permittivity(self, frequency):
+        return Layer.permittivity(self, 1, frequency)  # call the Layer method, not the Substrate method
+
+    @property
+    def frac_volume(self):
+        return 1.0
+
+    @frac_volume.setter
+    def frac_volume(self, value):
+        if value != 1.0:
+            raise SMRTError("The fraction volume of a substrate is always 1.0")
+
+    def emissivity_matrix(self, frequency, eps_1, mu1, npol):
+        raise DeprecationWarning(
+            "The method 'emissivity_matrix' is deprecated. Use 'coherent_transmission_matrix' instead."
+        )
+
+
+class Substrate(SubstrateBase, Interface):
+    """A substrate is a layer with infinite thickness and fraction volume 1. It is also an interface, so it can be used
+    as a substrate in the RT solver.
 
     """
 
-    def __init__(self, temperature=None, permittivity_model=None, **kwargs):
-        """Build the substrate at the base of the snowpack.
-
-        Args:
-            temperature: temperature of the base of the snowpack. Can be the effective temperature if the substrate is
-                slightly transparent.
-            permittivity_model: a function that returns the permittivity as a function of frequency and temperature. Can
-                also be a numerical value.
-            **kwargs: other parameters such as roughness_rms, corr_length, Q, N, etc are
-                required or optional depending on the model. See the document of the model.
-
-        """
-        # super().__init__()  # must not be call. This interfers with substrate_from_interface presumably
-
-        self.temperature = temperature
-        # this is a function, so it automatically becomes a method of substrate
-
-        if callable(permittivity_model):
-            kwargs = dict(kwargs)
-            kwargs.setdefault("temperature", temperature)
-            # we have a callable function and it is very likely defined with the @layer_properties decorator.
-            # This means that it has required_arguments and optional_arguments
-            # -> transfer these arguments from kwargs to the substrate instance
-            for arg in getattr(permittivity_model, "required_arguments", []):
-                if arg in kwargs:
-                    setattr(self, arg, kwargs.get(arg))
-                else:
-                    raise SMRTError(f"Parameter {arg} must be specified")
-
-            for arg, default in getattr(permittivity_model, "optional_arguments", {}).items():
-                setattr(self, arg, kwargs.get(arg, default))
-
-            self.permittivity_model = permittivity_model
-
-        elif isinstance(permittivity_model, numbers.Number):
-            # make a function that returns the constant value
-            def const_permittivity_model(frequency, _private_permittivity_value=permittivity_model, **kwargs):
-                return _private_permittivity_value
-
-            self.permittivity_model = const_permittivity_model
-        elif permittivity_model is None:
-            self.permittivity_model = None
-        else:
-            raise SMRTError(
-                "permittivity_model must be either a function or a numerical value (or None in some cases)."
-            )
-
-    def permittivity(self, frequency):
-        """Compute the permittivity for the given frequency using permittivity_model. This method returns None when no
-        permittivity model is available. This must be handled by the calling code and interpreted suitably.
-
-        Args:
-            frequency: frenquency in Hz
-        """
-        if self.permittivity_model is None:
-            raise SMRTError(
-                "No permittivity_model have been given to the substrate. "
-                "This substrate is not suitable with RT solvers that require a permittivity."
-            )
-
-        return self.permittivity_model(frequency, _properties_to_inject=self)
-
-    def __add__(self, other):
-        raise SMRTError(
-            "Adding to a substrate is not valid. Only adding a snowpack and a substrate (in that order) is valid"
-        )
-        # return Snowpack(layers=other.layers,
-        #                 interfaces=other.interfaces,
-        #                 substrate=other.substrate,
-        #                 atmosphere=self)
-
-    def __iadd__(self, other):
-        raise SMRTError("Inplace addition with a substrate is not a valid operation.")
+    def __init__(self, temperature=FREEZING_POINT, permittivity_model=None, **kwargs):
+        SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model, **kwargs)
+        # call the interface with the optional arguments
+        Interface.__init__(self, **kwargs)
 
 
 def substrate_from_interface(interface_cls):
@@ -175,7 +138,7 @@ def substrate_from_interface(interface_cls):
 
     def decorator(cls):
         def __init__(self, temperature=None, permittivity_model=None, **kwargs):
-            SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model, **kwargs)
+            Substrate.__init__(self, temperature=temperature, permittivity_model=permittivity_model, **kwargs)
             # create an interface instance
             self.interface_inst = interface_cls(**kwargs)
             # transfer the interface_instance's args and optional args here
@@ -243,13 +206,6 @@ def substrate_from_interface(interface_cls):
         return newcls
 
     return decorator
-
-
-# define the Substrate class that is to be derived for object that are not build from Interface
-class Substrate(SubstrateBase, Interface):
-    def __init__(self, temperature=None, permittivity_model=None, **kwargs):
-        SubstrateBase.__init__(self, temperature=temperature, permittivity_model=permittivity_model, **kwargs)
-        Interface.__init__(self, **kwargs)
 
 
 def get_substrate_model(substrate_model):

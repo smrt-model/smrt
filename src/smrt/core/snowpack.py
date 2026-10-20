@@ -337,6 +337,8 @@ class Snowpack(object):
     def __radd__(self, other):
         if other == 0:
             return self
+        elif isinstance(other, SubstrateBase):
+            raise SMRTError("Adding a substrate above a snowpack not allowed.")
         elif isinstance(other, Layer):
             newsp = copy.deepcopy(self)
             newsp.layers.insert(0, copy.deepcopy(other))
