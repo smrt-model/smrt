@@ -400,7 +400,9 @@ class Model(object):
 
             if (parallel_computation == "outer") or (parallel_computation is True):  # True for legacy reasons
                 runner = JoblibParallelRunner(progressbar=progressbar)
-            elif (parallel_computation == "none") or (parallel_computation is False):  # False for legacy reasons
+            elif (parallel_computation in ("none", "inner")) or (
+                parallel_computation is False  # False for legacy reasons
+            ):
                 runner = SequentialRunner(progressbar=progressbar)
             else:
                 raise SMRTError(
