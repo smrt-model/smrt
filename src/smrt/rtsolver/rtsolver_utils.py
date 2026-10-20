@@ -546,7 +546,9 @@ class InterfaceProperties(object):
 
             elif substrate is not None:
                 # sub-snow
-                self.Tbottom_coh[nlayer - 1] = substrate.emissivity_matrix(frequency, eps_l, streams.mu[layer], npol)
+                self.Tbottom_coh[nlayer - 1] = substrate.coherent_transmission_matrix(
+                    frequency, eps_l, streams.mu[layer], npol
+                )
                 self.Tbottom_diff[nlayer - 1] = smrt_matrix(0)
             else:
                 # sub-snow

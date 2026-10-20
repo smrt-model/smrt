@@ -11,6 +11,7 @@ Args:
 
 import numpy as np
 
+from smrt.core.error import smrt_warn
 from smrt.core.fresnel import fresnel_reflection_matrix, fresnel_transmission_matrix
 
 # local import
@@ -32,7 +33,7 @@ class ChoudhuryReflectivity(Substrate):
 
         # Raise warning if outside validity
         if ksigma > 0.1:
-            raise Warning("Reflectivity may be outside validity range. ksigma should be << 1")
+            smrt_warn(f"Reflectivity may be outside validity range. ksigma should be << 1 {ksigma=}")
 
         #  Calculation of rh with ksigma
         rh *= np.exp(-4 * ksigma**2 * mu1**2)  # H pola
@@ -55,7 +56,7 @@ class ChoudhuryReflectivity(Substrate):
 
         return reflection_coefficients
 
-    def emissivity_matrix(self, frequency, eps_1, mu1, npol):
+    def coherent_transmission_matrix(self, frequency, eps_1, mu1, npol):
         # this function is a bit complex because we have to change first and second component but not the third one.
         # this is an approximation, as the third component should be affected by the roughness...
 

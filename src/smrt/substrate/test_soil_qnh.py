@@ -20,58 +20,32 @@ def soil_setup():
         H=0.65,
     )
 
-    frequency = 1.4e9
-    mu1 = np.cos(np.radians(np.arange(10, 80)))
-
-    return s, frequency, mu1
+    return s
 
 
-def test_make_soil_qnh():
-    make_soil(
-        "soil_qnh",
-        "soil_permittivity_dobson85_peplinski95",
-        275,
-        moisture=0.9,
-        sand=0.2,
-        clay=0.3,
-        drymatter=1100,
-        Q=0.16,
-        Nv=0.11,
-        Nh=1.63,
-        H=0.65,
-    )
-
-
-def test_make_soil_qnh_params():
-    make_soil(
-        "soil_qnh",
-        "soil_permittivity_dobson85_peplinski95",
-        275,
-        moisture=0.9,
-        sand=0.2,
-        clay=0.3,
-        drymatter=1100,
-        H=0.65,
-    )
+def test_make_soil_qnh(soil_setup):
+    assert soil_setup.moisture == 0.9
 
 
 def test_soil_qnh_reflection(soil_setup):
-    s, frequency, mu1 = soil_setup
+    s = soil_setup
+    frequency = 1.4e9
+    mu1 = np.cos(np.radians(np.arange(10, 80)))
 
-    npol = 2
-
-    refl = s.specular_reflection_matrix(frequency, 1, mu1, npol)
-    print(refl)
-    np.testing.assert_allclose(refl[0, 0], 0.330933, atol=1e-6)
-    np.testing.assert_allclose(refl[1, 69], 0.748025, atol=1e-6)
+    for npol in [2, 3]:
+        refl = s.specular_reflection_matrix(frequency, 1, mu1, npol)
+        print(refl)
+        np.testing.assert_allclose(refl[0, 0], 0.330933, atol=1e-6)
+        np.testing.assert_allclose(refl[1, 69], 0.748025, atol=1e-6)
 
 
 def test_soil_qnh_emissivity(soil_setup):
-    s, frequency, mu1 = soil_setup
+    s = soil_setup
+    frequency = 1.4e9
+    mu1 = np.cos(np.radians(np.arange(10, 80)))
 
-    npol = 2
-
-    abso = s.emissivity_matrix(frequency, 1, mu1, npol)
-    print(abso)
-    np.testing.assert_allclose(abso[0, 0], 0.669067, atol=1e-6)
-    np.testing.assert_allclose(abso[1, 69], 0.251975, atol=1e-6)
+    for npol in [2, 3]:
+        abso = s.coherent_transmission_matrix(frequency, 1, mu1, npol)
+        print(abso)
+        np.testing.assert_allclose(abso[0, 0], 0.669067, atol=1e-6)
+        np.testing.assert_allclose(abso[1, 69], 0.251975, atol=1e-6)

@@ -188,7 +188,7 @@ def substrate_from_interface(interface_cls):
                 raise SMRTError(f"No permittivity_model have been given to the substrate '{interface_cls!s}'")
             return self.interface_inst.specular_reflection_matrix(frequency, eps_1, eps_2, mu1, npol)
 
-        def emissivity_matrix(self, frequency, eps_1, mu1, npol):
+        def coherent_transmission_matrix(self, frequency, eps_1, mu1, npol):
             eps_2 = self.permittivity(frequency)
             if eps_2 is None:
                 raise SMRTError(f"No permittivity_model have been given to the substrate '{interface_cls!s}'")
@@ -228,7 +228,7 @@ def substrate_from_interface(interface_cls):
             "args": interface_cls.args,  # interface must define args and optional_args
             "optional_args": interface_cls.optional_args,
         }
-        auto_add(emissivity_matrix, "coherent_transmission_matrix")
+        auto_add(coherent_transmission_matrix, "coherent_transmission_matrix")
         auto_add(specular_reflection_matrix, "specular_reflection_matrix")
         auto_add(ft_even_diffuse_reflection_matrix, "ft_even_diffuse_reflection_matrix")
         auto_add(diffuse_reflection_matrix, "diffuse_reflection_matrix")

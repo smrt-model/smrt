@@ -52,7 +52,7 @@ def test_missing_frequency_warning():
 
 def test_emissivity_reflectivity_relation(reflector_dict):
     r = reflector_dict.specular_reflection_matrix(21e9, None, mu, 2)
-    e = reflector_dict.emissivity_matrix(21e9, None, mu, 2)
+    e = reflector_dict.coherent_transmission_matrix(21e9, None, mu, 2)
     assert np.all((r + e).values == 1.0)
 
 

@@ -57,7 +57,7 @@ class SoilWegmuller(Substrate):
 
         return reflection_coefficients
 
-    def emissivity_matrix(self, frequency, eps_1, mu1, npol):
+    def coherent_transmission_matrix(self, frequency, eps_1, mu1, npol):
         # this function is a bit complex because we have to change first and second component but not the third one.
         # this is an approximation, as the third component should be affected by the roughness...
 

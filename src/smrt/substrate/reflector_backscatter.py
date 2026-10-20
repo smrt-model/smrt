@@ -116,7 +116,7 @@ class ReflectorBackscatter(Substrate):
 
         return diffuse_refl_coeff
 
-    def emissivity_matrix(self, frequency, eps_1, mu1, npol):
+    def coherent_transmission_matrix(self, frequency, eps_1, mu1, npol):
         if self.specular_reflection is None and self.backscattering_coefficient is None:
             self.specular_reflection = 1
 
