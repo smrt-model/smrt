@@ -100,6 +100,7 @@ class SubstrateBase(Layer):
         self.microstructure = None  # a substrate has no microstructure, it is a homogeneous layer
 
     def permittivity(self, frequency):
+        # This function is temperature, all the code will be updated to use the normal Layer method with the same name
         return Layer.permittivity(self, 1, frequency)  # call the Layer method, not the Substrate method
 
     @property
