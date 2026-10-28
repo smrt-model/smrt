@@ -87,7 +87,7 @@ def soil_permittivity_dobson85(frequency, temperature, moisture, sand, clay):
     raise SMRTError(
         "The model labelled 'dobson85' in SMRT was using dobson85 modified peplinski95. "
         "To avoid this misleading name, the new recommended name is 'soil_permittivity_dobson85_peplinski95'. "
-        "In addition, the original dobson85 model is now available under the name 'dobson85_original'."
+        "In addition, the original dobson85 model is now available under the name 'soil_permittivity_dobson85_original'."
     )
 
 
