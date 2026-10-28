@@ -445,8 +445,7 @@ class NadirSARAltimetry(object):
                         def sigma0(mu: npt.NDArray, bs=backscatt[:, i]) -> npt.NDArray:
                             # it is important to add the bs= argument, otherwise the last backscatt[:, i] is taken due
                             # to the local context
-                            # we know that mu_i is decreasing, so the minus
-                            backscatter_map = np.interp(-mu, -mu_i, bs)
+                            backscatter_map = np.interp(-mu, -mu_i, bs)  # we know that mu_i is decreasing, so the minus
                             return backscatter_map
 
                         actions.append(("func", sigma0, i))
