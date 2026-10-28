@@ -100,16 +100,12 @@ class NadirSARAltimetry(object):
         PTR_doppler, if set to True.
     :param theta_inc_sampling: number of subdivisions used to calculate the incidence angular variations of surface and
         interface backscatter (the higher the better but the more computationally expensive).
-    :param theta_inc_sampling_mode: "auto" (default), "shared", "uniform", "coherent". "auto" try to automatically guess
-        the best option. If set to "uniform", the incidence angles are sampled uniformly between 0 and the maximum
-        incidence angle in the footprint using theta_inc_sampling samples. However, this is insufficient if the
-        coherent backscatter is significant. For this use "shared", the incidence angles are sampled in two parts:
-        one part is sampled uniformly between 0 and the maximum incidence angle (theta_inc_sampling samples), and
-        the other part is sampled uniformly between 0 and the maximum incidence angle (another theta_inc_sampling
-        samples). "shared" uses 2 *theta_inc_sampling samples. If set to "coherent", the incidence angles are sampled
-        in a way that the coherent backscatter is maximized. The "auto" mode automatically selects the best mode based
-        on the roughness of the surface and interfaces to guess whether the coherent backscatter is significant or not.
-        Use with care.
+    :param theta_inc_sampling_mode: "auto" (default), "shared", "uniform", "coherent". If set to "uniform", the
+        incidence angles are sampled uniformly in delay between 0 and the maximum incidence angle in the footprint
+        using theta_inc_sampling samples. However, this is insufficient if the coherent backscatter is significant,
+        because the coherent lobe (beta ~ 1 mrad) is much narrower than the spacing of these nodes. If set to
+        "coherent", only the coherent lobe is sampled, uniformly in theta from nadir to 6 beta (step beta/8). "shared"
+        uses the union of both sets of nodes. "auto" currently selects "shared", as the additional nodes are cheap.
     :param error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
         If set to "nan", return a nan, so the calculation can continue, but the result is of course unusable and the
         error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
@@ -250,8 +246,8 @@ class NadirSARAltimetry(object):
             # we need to calculate the interface backscatter at several incidence angles.
 
             min_rouhness_rms = min(
-                min(getattr(i, "rms_roughness", np.inf) for i in self.snowpack.interfaces),
-                getattr(self.snowpack.substrate, "rms_roughness", np.inf),
+                min(getattr(i, "roughness_rms", np.inf) for i in self.snowpack.interfaces),
+                getattr(self.snowpack.substrate, "roughness_rms", np.inf),
             )
 
             mu_i = compute_incidence_sampling(
@@ -813,13 +809,10 @@ def coherent_reflection_factor(sensor, roughness_rms, mu):
 
 def compute_incidence_sampling(mode, sensor, theta_inc_sampling, minimum_roughness_rms):
     if mode == "auto":
-        # we need to calculate the interface backscatter at several incidence angles.
-        # Let choose something optimal to cover the footprint
-        sqrt_efold = np.sqrt(6)  #
-        if sensor.wavenumber * minimum_roughness_rms > sqrt_efold / 2:
-            mode = "uniform"
-        else:
-            mode = "shared"
+        # The coherent echo can dominate even when exp(-4 k^2 s^2) is small, because its peak is scaled by
+        # 1 / (4 pi beta^2) (~1e5 for CryoSat-2). The coherent nodes are cheap (the DDMs are not computed per node),
+        # so always resolve the coherent lobe.
+        mode = "shared"
 
     if mode == "uniform":
         n_uniform = theta_inc_sampling
@@ -856,22 +849,21 @@ def compute_incidence_sampling(mode, sensor, theta_inc_sampling, minimum_roughne
         )
 
     if n_coherent > 0:
-        # The coherent component decays as exp(-theta**2 / beta**2) with beta ~ 1 mrad, much narrower than the
-        # spacing of the delay-based nodes (4-5 mrad for theta_inc_sampling=8).
-        # we need to resolve the coherent lobe explicitly: add nodes uniform in theta (step beta/8) up to 6 beta.
+        # The coherent component decays as exp(-theta**2 / beta**2) with beta ~ 1 mrad, much narrower than the first
+        # delay-based node (4.8 mrad for CryoSat-2 with theta_inc_sampling=8).
+        # we need to resolve the coherent lobe explicitly: add nodes uniform in theta (step beta/8) from nadir up to
+        # 6 beta. The step is relative to beta, so it does not depend on theta_inc_sampling. The additional nodes only
+        # slightly increase the cost of the DDM calculation.
+        beta = np.sqrt(coherent_reflection_square_decay(sensor))
 
-        beta12 = coherent_reflection_square_decay(sensor)
-
-        efold = 6  # number of e-folds to reach the end of the coherent lobe
-        mu_i.append(np.linspace(1 - 0.5 * beta12, (1 - efold * 0.5 * beta12), n_coherent))  # decreasing
-        # beta12 = np.sqrt(coherent_reflection_square_decay(sensor))
-        # theta_nodes = np.union1d(np.linspace(0, 6 * beta, 49), np.arccos(np.clip(mu_i, -1, 1)))
-        # mu_i = np.cos(theta_nodes)  # decreasing
+        n_beta = 6  # extent of the coherent lobe in units of beta
+        mu_i.append(np.cos(np.linspace(0, n_beta * beta, 8 * n_beta + 1)))  # decreasing
 
     if len(mu_i) == 1:
         return mu_i[0]
     elif len(mu_i) == 2:
-        return np.union1d((mu_i[0], mu_i[1]))
+        # union1d returns increasing values, but mu_i must be decreasing for the interpolation in the sigma0 functions
+        return np.union1d(mu_i[0], mu_i[1])[::-1]
     else:
         raise ValueError(f"Unknown mode {mode} for incidence angle sampling")
 
