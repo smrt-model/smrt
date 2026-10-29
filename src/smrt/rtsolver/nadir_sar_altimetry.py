@@ -99,17 +99,16 @@ class NadirSARAltimetry(object):
     :param skip_convolutions: return the vertical backscatter without the convolution by the PFS, PTR_time, and
         PTR_doppler, if set to True.
     :param theta_inc_sampling: number of subdivisions used to calculate the incidence angular variations of surface and
-        interface backscatter (the higher the better but the more computationally expensive).
-    :param theta_inc_sampling_mode: "auto" (default), "shared", "uniform", "coherent". "auto" try to automatically guess
-        the best option. If set to "uniform", the incidence angles are sampled uniformly between 0 and the maximum
-        incidence angle in the footprint using theta_inc_sampling samples. However, this is insufficient if the
-        coherent backscatter is significant. For this use "shared", the incidence angles are sampled in two parts:
-        one part is sampled uniformly between 0 and the maximum incidence angle (theta_inc_sampling samples), and
-        the other part is sampled uniformly between 0 and the maximum incidence angle (another theta_inc_sampling
-        samples). "shared" uses 2 *theta_inc_sampling samples. If set to "coherent", the incidence angles are sampled
-        in a way that the coherent backscatter is maximized. The "auto" mode automatically selects the best mode based
-        on the roughness of the surface and interfaces to guess whether the coherent backscatter is significant or not.
-        Use with care.
+        interface backscatter (the higher the better but the more computationally expensive if using a costly rough
+        surface model).
+    :param theta_inc_sampling_mode: "shared" (default), "uniform", "coherent". If set to "uniform", the cosine of the
+        incidence angles are sampled uniformly between 0 and the maximum incidence angle in the footprint using
+        theta_inc_sampling samples. However, this is insufficient if the coherent backscatter is significant.
+        For this use "shared" (the default), the incidence angles are sampled in two parts: one part is sampled
+        uniformly between 0 and the maximum incidence angle (theta_inc_sampling samples), and the other part is sampled
+        uniformly between 0 and the maximum incidence angle (another theta_inc_sampling samples). "shared" uses
+        2 *theta_inc_sampling samples. If set to "coherent", the incidence angles are sampled
+        in a way that the coherent backscatter is maximized.
     :param error_handling: If set to "exception" (the default), raise an exception in case of error, stopping the code.
         If set to "nan", return a nan, so the calculation can continue, but the result is of course unusable and the
         error message is not accessible. This is only recommended for long simulations that sometimes produce an error.
@@ -128,8 +127,8 @@ class NadirSARAltimetry(object):
         return_oversampled=False,
         skip_convolutions=False,
         return_contributions=False,
-        theta_inc_sampling=16,
-        theta_inc_sampling_mode="auto",
+        theta_inc_sampling=24,
+        theta_inc_sampling_mode="shared",
         error_handling="exception",
         prune_deep_snowpack=True,
     ):
@@ -249,14 +248,12 @@ class NadirSARAltimetry(object):
         if hasattr(self.delay_doppler_model, "delay_doppler_map_with_sigma0func"):
             # we need to calculate the interface backscatter at several incidence angles.
 
-            min_rouhness_rms = min(
-                min(getattr(i, "rms_roughness", np.inf) for i in self.snowpack.interfaces),
-                getattr(self.snowpack.substrate, "rms_roughness", np.inf),
-            )
+            # min_rouhness_rms = min(
+            #     min(getattr(i, "rms_roughness", np.inf) for i in self.snowpack.interfaces),
+            #     getattr(self.snowpack.substrate, "rms_roughness", np.inf),
+            # )
 
-            mu_i = compute_incidence_sampling(
-                self.theta_inc_sampling_mode, self.sensor, self.theta_inc_sampling, min_rouhness_rms
-            )
+            mu_i, _ = compute_incidence_sampling(self.theta_inc_sampling_mode, self.sensor, self.theta_inc_sampling)
 
         else:
             # for models based on constant sigma0 and geometrical optics, we only need strict nadir
@@ -810,16 +807,7 @@ def coherent_reflection_factor(sensor, roughness_rms, mu):
     return np.exp(-4 * (sensor.wavenumber * roughness_rms) ** 2 - theta2 / beta12) / beta12 / (4 * np.pi)
 
 
-def compute_incidence_sampling(mode, sensor, theta_inc_sampling, minimum_roughness_rms):
-    if mode == "auto":
-        # we need to calculate the interface backscatter at several incidence angles.
-        # Let choose something optimal to cover the footprint
-        sqrt_efold = np.sqrt(6)  #
-        if sensor.wavenumber * minimum_roughness_rms > sqrt_efold / 2:
-            mode = "uniform"
-        else:
-            mode = "shared"
-
+def compute_incidence_sampling(mode, sensor, theta_inc_sampling):
     if mode == "uniform":
         n_uniform = theta_inc_sampling
         n_coherent = 0
@@ -862,17 +850,20 @@ def compute_incidence_sampling(mode, sensor, theta_inc_sampling, minimum_roughne
         beta12 = coherent_reflection_square_decay(sensor)
 
         efold = 6  # number of e-folds to reach the end of the coherent lobe
-        mu_i.append(np.linspace(1 - 0.5 * beta12, (1 - efold * 0.5 * beta12), n_coherent))  # decreasing
-        # beta12 = np.sqrt(coherent_reflection_square_decay(sensor))
-        # theta_nodes = np.union1d(np.linspace(0, 6 * beta, 49), np.arccos(np.clip(mu_i, -1, 1)))
-        # mu_i = np.cos(theta_nodes)  # decreasing
+        # mu_i.append(np.linspace(1, (1 - efold * 0.5 * beta12), n_coherent))  # decreasing
+        # it is critical to sample in the middle (=> starting 0.5)
+        mu_i.append(1 - np.arange(0.5, n_coherent) * (0.5 * efold * beta12 / n_coherent))  # decreasing
+        h = efold / n_coherent
+        correction_factor = (h / 2) / np.sinh(h / 2)
 
     if len(mu_i) == 1:
-        return mu_i[0]
+        mu_i = np.sort(mu_i[0], descending=True)  # decreasing, to be sure
     elif len(mu_i) == 2:
-        return np.union1d((mu_i[0], mu_i[1]))
+        mu_i = np.union1d(mu_i[0], mu_i[1])[::-1]  # decreasing
     else:
         raise ValueError(f"Unknown mode {mode} for incidence angle sampling")
+
+    return mu_i, correction_factor
 
 
 def local_incidence_cosine(sensor, mu):
