@@ -37,7 +37,7 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: ✨ Lint with ruff
-        uses: astral-sh/ruff-action@v3
+        uses: astral-sh/ruff-action@v4
 
       - name: 🧪 Test with pytest
         run: uv run pytest
